@@ -15,6 +15,6 @@ add_library(${PROJECT_NAME}
     Framebuffer.cpp
     RenderPass.cpp
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC vkckbk_compiler_flags)
+target_link_libraries(${PROJECT_NAME} PUBLIC vkckbk_compiler_flags INTERFACE volk)
 message(STATUS "Vulkan DIR: " ${Vulkan_INCLUDE_DIR})
 include_directories(${Vulkan_INCLUDE_DIR})
