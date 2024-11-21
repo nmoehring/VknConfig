@@ -7,6 +7,8 @@
 #endif
 #endif
 
+#define VMA_IMPLEMENTATION
+
 // #include <vulkan/vulkan.h>
 #define VK_NO_PROTOTYPES
 #include <volk.h>
@@ -22,7 +24,8 @@
 #define VK_CHECK(func)                                                                 \
   {                                                                                    \
     const VkResult result = func;                                                      \
-    if (result != VK_SUCCESS) {                                                        \
+    if (result != VK_SUCCESS)                                                          \
+    {                                                                                  \
       std::cerr << "Error calling function " << #func << " at " << __FILE__ << ":"     \
                 << __LINE__ << ". Result is " << string_VkResult(result) << std::endl; \
       assert(false);                                                                   \
@@ -32,7 +35,8 @@
 #define VK_CHECK(func)                                                             \
   {                                                                                \
     const VkResult result = func;                                                  \
-    if (result != VK_SUCCESS) {                                                    \
+    if (result != VK_SUCCESS)                                                      \
+    {                                                                              \
       std::cerr << "Error calling function " << #func << " at " << __FILE__ << ":" \
                 << __LINE__ << ". Result is " << result << std::endl;              \
       assert(false);                                                               \
@@ -49,7 +53,8 @@
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 #else
 #define LOGE(format, ...)                 \
-  do {                                    \
+  do                                      \
+  {                                       \
     fprintf(stderr, format, __VA_ARGS__); \
     fprintf(stderr, "\n");                \
   } while (0)
@@ -58,13 +63,14 @@
 #define LOGD(format, ...) LOGE(format, __VA_ARGS__)
 #endif
 
-namespace VulkanCore {
+namespace VulkanCore
+{
 
-constexpr glm::vec4 RENDER_COLOR{1.f, 0.f, 0.f, 1.0f};
+  constexpr glm::vec4 RENDER_COLOR{1.f, 0.f, 0.f, 1.0f};
 
-VkImageViewType imageTypeToImageViewType(VkImageType imageType, VkImageCreateFlags flags,
-                                         bool multiview);
+  VkImageViewType imageTypeToImageViewType(VkImageType imageType, VkImageCreateFlags flags,
+                                           bool multiview);
 
-uint32_t bytesPerPixel(VkFormat format);
+  uint32_t bytesPerPixel(VkFormat format);
 
-}  // namespace VulkanCore
+} // namespace VulkanCore
