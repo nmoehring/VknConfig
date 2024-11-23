@@ -1,0 +1,17 @@
+{
+    "name": "my-project",
+    "dependencies": [
+        "googletest",
+        "pthread-win32",
+        "llvm",
+        "glm",
+        "gli",
+        "glfw",
+        "spirv-headers",
+        "spirv-tools",
+        "spirv-reflect",
+        "volk",
+        "glslang",
+        "vulkan-memory-allocator"
+    ]
+}

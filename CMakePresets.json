@@ -9,7 +9,26 @@
     {
       "name": "default",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "binaryDir": "../VkCkBk_build/"
+      "binaryDir": "../VkCkBk_build/",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "description": "Debug build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "description": "Release build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ]
 }

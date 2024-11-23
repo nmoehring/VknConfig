@@ -1,0 +1,6 @@
+#Ignore the vcpkg directory
+/vcpkg_installed/
+
+# Ignore temporary files 
+*.log 
+*.tmp
