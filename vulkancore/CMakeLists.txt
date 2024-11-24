@@ -14,6 +14,7 @@ add_library(${PROJECT_NAME}
     Texture.cpp
     Framebuffer.cpp
     RenderPass.cpp
+    Sampler.cpp
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC vkckbk_compiler_flags INTERFACE volk)
 message(STATUS "Vulkan DIR: " ${Vulkan_INCLUDE_DIR})

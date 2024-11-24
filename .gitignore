@@ -1,5 +1,8 @@
-#Ignore the vcpkg directory
+#Ignore vcpkg if present (its in the build dir now)
 /vcpkg_installed/
+
+#Ignore CMake cache
+CMakeCache.txt
 
 # Ignore temporary files 
 *.log 
