@@ -16,7 +16,7 @@
 #include "ShaderModule.hpp"
 #include "Swapchain.hpp"
 #include "Utility.hpp"
-#include "vk_mem_alloc.h"
+#include "vma/vk_mem_alloc.h"
 
 namespace VulkanCore
 {

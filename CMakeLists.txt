@@ -16,12 +16,8 @@ message("If this points to some other installed Vulkan header files and not your
  maybe delete them and the CMakeCache and try again.")
 include_directories(
     ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/enginecore
-    ${CMAKE_SOURCE_DIR}/vulkancore
     ${Vulkan_INCLUDE_DIRS}
     ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
-    ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/vma
-    ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/spirv-reflect
 )
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
