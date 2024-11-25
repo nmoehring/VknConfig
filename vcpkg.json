@@ -10,6 +10,10 @@
             "version>=": "3.0.0#14"
         },
         {
+            "name": "glslang",
+            "version>=": "15.0.0"
+        },
+        {
             "name": "llvm",
             "version>=": "18.1.6#1"
         },
@@ -40,10 +44,6 @@
         {
             "name": "volk",
             "version>=": "1.3.296"
-        },
-        {
-            "name": "glslang",
-            "version>=": "15.0.0"
         },
         {
             "name": "vulkan-memory-allocator",

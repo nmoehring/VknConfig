@@ -3,7 +3,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(VkCkBk VERSION 0.1 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
-# include(${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 find_package(Vulkan REQUIRED)
 find_package(SPIRV-Tools CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
@@ -25,10 +24,24 @@ include_directories(
     ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/spirv-reflect_${VCPKG_TARGET_TRIPLET}/include/spirv-reflect
     ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/tracy_${VCPKG_TARGET_TRIPLET}/include/
     ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/glm_${VCPKG_TARGET_TRIPLET}/include
+    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/glslang_${VCPKG_TARGET_TRIPLET}/include
 )
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    message("Adding debug library.")
+    link_directories(
+        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
+    )
+else()
+    message("Adding release library.")
+    link_directories(
+        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
+    )
+endif()
 
 add_library(vkckbk_compiler_flags INTERFACE)
 target_compile_features(vkckbk_compiler_flags INTERFACE cxx_std_20)
+#add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=1>)
 
 add_subdirectory(vulkancore)
 

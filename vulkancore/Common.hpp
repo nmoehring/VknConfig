@@ -7,8 +7,6 @@
 #endif
 #endif
 
-#define VMA_IMPLEMENTATION
-
 // #include <vulkan/vulkan.h>
 #define VK_NO_PROTOTYPES
 #include <volk.h>
