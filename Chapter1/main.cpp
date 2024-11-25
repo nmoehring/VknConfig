@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
   // Create Shader Modules
   const auto shadersPath =
-      std::filesystem::current_path() / "resources/shaders";
+      std::filesystem::current_path() / "resources" / "shaders";
   const auto vertexShaderPath = shadersPath / "triangle.vert";
   const auto fragShaderPath = shadersPath / "triangle.frag";
   const auto vertexShader = context.createShaderModule(

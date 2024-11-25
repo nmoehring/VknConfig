@@ -4,11 +4,11 @@
 
 cmake_minimum_required(VERSION 3.29)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-project(VkCkBk VERSION 0.2 LANGUAGES CXX)
+project(VkCkBk VERSION 0.3 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
 find_package(Vulkan REQUIRED)
-#not sure why these still need to be found but other vcpkg's dont'
+#not sure why these still need to be found but other vcpkg's don't
 #might try running without them and figure it out
 find_package(SPIRV-Tools CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
@@ -48,7 +48,7 @@ target_compile_features(vkckbk_compiler_flags INTERFACE cxx_std_20)
 #Single-header libraries
 #Decided not to include stb here because it's more work than it's worth
 add_library(vma INTERFACE) #this is a special thing (no sources after INTERFACE)
-target_sources(vma INTERFACE vma/vma.cpp) #this is how to add sources to an interface lib
+target_sources(vma INTERFACE single-headers/vma.cpp) #this is how to add sources to an interface lib
 
 add_subdirectory(vulkancore)
 # add_subdirectory(enginecore)

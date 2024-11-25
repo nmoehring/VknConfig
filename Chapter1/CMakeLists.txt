@@ -11,4 +11,8 @@ target_link_libraries(Chapter1
     PRIVATE glfw
 )
 
-file(COPY resources DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    file(COPY resources DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/Debug")
+else()
+    file(COPY resources DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
