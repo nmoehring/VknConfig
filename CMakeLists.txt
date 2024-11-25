@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.29)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-project(VkCkBk VERSION 0.1 LANGUAGES CXX)
+project(VkCkBk VERSION 0.2 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
 find_package(Vulkan REQUIRED)
@@ -19,12 +19,9 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/enginecore
     ${CMAKE_SOURCE_DIR}/vulkancore
     ${Vulkan_INCLUDE_DIRS}
-    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/volk_${VCPKG_TARGET_TRIPLET}/include
-    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/vulkan-memory-allocator_${VCPKG_TARGET_TRIPLET}/include/vma
-    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/spirv-reflect_${VCPKG_TARGET_TRIPLET}/include/spirv-reflect
-    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/tracy_${VCPKG_TARGET_TRIPLET}/include/
-    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/glm_${VCPKG_TARGET_TRIPLET}/include
-    ${VCPKG_INSTALLED_DIR}/vcpkg/pkgs/glslang_${VCPKG_TARGET_TRIPLET}/include
+    ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
+    ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/vma
+    ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/spirv-reflect
 )
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
