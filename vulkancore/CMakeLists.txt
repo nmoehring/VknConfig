@@ -14,22 +14,23 @@ add_library(${PROJECT_NAME}
     Framebuffer.cpp
     RenderPass.cpp
     Sampler.cpp
-    vma.cpp
 )
+
+# Deal with debug libraries suffixed with 'd'
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_link_libraries(${PROJECT_NAME} 
-        PUBLIC vkckbk_compiler_flags 
+        PRIVATE vkckbk_compiler_flags
+        PUBLIC vma
         PRIVATE volk 
         PRIVATE glslangd
         PRIVATE glslang-default-resource-limitsd
     )
 else()
     target_link_libraries(${PROJECT_NAME} 
-        PUBLIC vkckbk_compiler_flags 
+        PRIVATE vkckbk_compiler_flags 
+        PUBLIC vma
         PRIVATE volk 
         PRIVATE glslang
         PRIVATE glslang-default-resource-limits
     )
 endif()
-message(STATUS "Vulkan DIR: " ${Vulkan_INCLUDE_DIR})
-include_directories(${Vulkan_INCLUDE_DIR})
