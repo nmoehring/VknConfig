@@ -1,33 +1,46 @@
 {
-    "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
+            "name": "MSVC Debug Chapter",
+            "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/MyApplication.exe",
+            "cwd": "${fileDirname}\\..\\..\\VkCkBk_build\\${input:targetChapter}\\Debug",
+            "program": "${fileDirname}\\..\\..\\VkCkBk_build\\${input:targetChapter}\\Debug\\${input:targetChapter}.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "CMake build and MSVC Debug",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "cwd": "${fileDirname}\\..\\..\\VkCkBk_build\\${input:targetChapter}\\Debug",
+            "program": "${fileDirname}\\..\\..\\VkCkBk_build\\${input:targetChapter}\\Debug\\${input:targetChapter}.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "(Debug) CMake configure and build"
+        },
+    ],
+    "inputs": [
+        {
+            "id": "targetChapter",
+            "type": "pickString",
+            "description": "Select the subproject to run.",
+            "options": [
+                "Chapter1",
+                "Chapter2",
+                "Chapter3",
+                "Chapter4",
+                "Chapter5",
+                "Chapter6",
+                "Chapter7",
+                "Chapter8",
             ],
-            "preLaunchTask": "build",
-            "miDebuggerPath": "C:/path/to/gdb.exe",
-            "logging": {
-                "moduleLoad": false,
-                "trace": true,
-                "engineLogging": false,
-                "programOutput": true,
-                "exceptions": true
-            }
+            "default": "Chapter1"
         }
-    ]
+    ],
+    "version": "2.0.0"
 }
