@@ -1,5 +1,6 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_EXPOSE_NATIVE_WGL
+#define BS_THREAD_POOL_ENABLE_PAUSE
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <stb_image.h>
@@ -30,9 +31,10 @@
 #include <tracy/TracyVulkan.hpp>
 // clang-format on
 
-GLFWwindow* window_ = nullptr;
+GLFWwindow *window_ = nullptr;
 EngineCore::Camera camera(glm::vec3(-9.f, 2.f, 2.f));
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
   initWindow(&window_, &camera);
 
 #pragma region Context initialization
@@ -45,12 +47,12 @@ int main(int argc, char* argv[]) {
 
   const std::vector<std::string> deviceExtension = {
 #if defined(VK_EXT_calibrated_timestamps)
-    VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
+      VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
 #endif
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
 #if defined(VK_EXT_fragment_density_map)
-    VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME,
+      VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME,
 #endif
   };
 
@@ -61,15 +63,15 @@ int main(int argc, char* argv[]) {
 
   VulkanCore::Context::enableDefaultFeatures();
   VulkanCore::Context::enableIndirectRenderingFeature();
-  VulkanCore::Context::enableSynchronization2Feature();  // needed for acquire/release
-                                                         // barriers
+  VulkanCore::Context::enableSynchronization2Feature(); // needed for acquire/release
+                                                        // barriers
   VulkanCore::Context::enableBufferDeviceAddressFeature();
   VulkanCore::Context::enableFragmentDensityMapFeatures();
 
-  VulkanCore::Context context((void*)glfwGetWin32Window(window_),
-                              validationLayers,  // layers
-                              instExtension,     // instance extensions
-                              deviceExtension,   // device extensions
+  VulkanCore::Context context((void *)glfwGetWin32Window(window_),
+                              validationLayers, // layers
+                              instExtension,    // instance extensions
+                              deviceExtension,  // device extensions
                               VkQueueFlags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT),
                               true);
 #pragma endregion
@@ -112,7 +114,7 @@ int main(int argc, char* argv[]) {
   constexpr uint32_t TEXTURES_SET = 1;
   constexpr uint32_t SAMPLER_SET = 2;
   constexpr uint32_t STORAGE_BUFFER_SET =
-      3;  // storing vertex/index/indirect/material buffer in array
+      3; // storing vertex/index/indirect/material buffer in array
   constexpr uint32_t BINDING_0 = 0;
   constexpr uint32_t BINDING_1 = 1;
   constexpr uint32_t BINDING_2 = 2;
@@ -142,7 +144,8 @@ int main(int argc, char* argv[]) {
 
   std::shared_ptr<VulkanCore::Pipeline> pipeline;
 
-  auto textureReadyCB = [&pipeline, &textures](int textureIndex, int modelId) {
+  auto textureReadyCB = [&pipeline, &textures](int textureIndex, int modelId)
+  {
     pipeline->bindResource(TEXTURES_SET, BINDING_0, 0,
                            {textures.begin() + textureIndex, 1}, nullptr, textureIndex);
   };
@@ -150,7 +153,8 @@ int main(int argc, char* argv[]) {
   EngineCore::AsyncDataUploader dataUploader(context, textureReadyCB);
 
   auto glbTextureDataLoadedCB = [&context, &bistro, &textures, &dataUploader](
-                                    int textureIndex, int modelId) {
+                                    int textureIndex, int modelId)
+  {
     EngineCore::AsyncDataUploader::TextureLoadTask t;
     textures[textureIndex] = context.createTexture(
         VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0,
@@ -224,7 +228,8 @@ int main(int argc, char* argv[]) {
 #if defined(VK_EXT_fragment_density_map)
   if (std::find(deviceExtensions.begin(), deviceExtensions.end(),
                 std::string(VK_EXT_FRAGMENT_DENSITY_MAP_EXTENSION_NAME)) !=
-      deviceExtensions.end()) {
+      deviceExtensions.end())
+  {
     const glm::vec2 mapSize =
         glm::vec2(std::ceilf(context.swapchain()->extent().width /
                              context.physicalDevice()
@@ -246,12 +251,15 @@ int main(int argc, char* argv[]) {
     std::vector<uint8_t> fdmData(mapSize.x * mapSize.y * 2, 128);
     constexpr uint16_t high_res_radius = 8;
     const glm::vec2 center = mapSize / 2.f;
-    for (uint32_t x = 0; x < mapSize.x; ++x) {
-      for (uint32_t y = 0; y < mapSize.y; ++y) {
+    for (uint32_t x = 0; x < mapSize.x; ++x)
+    {
+      for (uint32_t y = 0; y < mapSize.y; ++y)
+      {
         const float length = glm::length(glm::vec2(x, y) - center);
-        if (length < high_res_radius) {
+        if (length < high_res_radius)
+        {
           const uint32_t index = (y * mapSize.x * 2) + x * 2;
-          fdmData[index] = 255;  // full density
+          fdmData[index] = 255; // full density
         }
       }
     }
@@ -294,7 +302,7 @@ int main(int argc, char* argv[]) {
 
   const std::vector<VulkanCore::Pipeline::SetDescriptor> setLayout = {
       {
-          .set_ = CAMERA_SET,  // set number
+          .set_ = CAMERA_SET, // set number
           .bindings_ =
               {
                   // vector of bindings
@@ -304,7 +312,7 @@ int main(int argc, char* argv[]) {
               },
       },
       {
-          .set_ = TEXTURES_SET,  // set number
+          .set_ = TEXTURES_SET, // set number
           .bindings_ =
               {
                   // vector of bindings
@@ -314,7 +322,7 @@ int main(int argc, char* argv[]) {
               },
       },
       {
-          .set_ = SAMPLER_SET,  // set number
+          .set_ = SAMPLER_SET, // set number
           .bindings_ =
               {
                   // vector of bindings
@@ -362,7 +370,8 @@ int main(int argc, char* argv[]) {
 #pragma endregion
 
 #pragma region Swapchain Framebuffers Initialization
-  for (size_t index = 0; index < context.swapchain()->numberImages(); ++index) {
+  for (size_t index = 0; index < context.swapchain()->numberImages(); ++index)
+  {
     swapchain_framebuffers[index] = context.createFramebuffer(
         renderPass->vkRenderPass(), {context.swapchain()->texture(index), depthTexture},
         nullptr, nullptr,
@@ -386,7 +395,7 @@ int main(int argc, char* argv[]) {
                          sizeof(UniformTransforms), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
   pipeline->bindResource(STORAGE_BUFFER_SET, BINDING_0, 0,
                          {buffers[0], buffers[1], buffers[3],
-                          buffers[2]},  // vertex, index, indirect, material
+                          buffers[2]}, // vertex, index, indirect, material
                          VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
   pipeline->bindResource(TEXTURES_SET, BINDING_0, 0, {textures.begin(), textures.end()});
   pipeline->bindResource(SAMPLER_SET, BINDING_0, 0, {samplers.begin(), 1});
@@ -409,10 +418,12 @@ int main(int argc, char* argv[]) {
   dataUploader.startProcessing();
   pool.unpause();
 
-  while (!glfwWindowShouldClose(window_)) {
+  while (!glfwWindowShouldClose(window_))
+  {
     const auto now = glfwGetTime();
     const auto delta = now - time;
-    if (delta > 1) {
+    if (delta > 1)
+    {
       const auto fps = static_cast<double>(frame - previousFrame) / delta;
       std::cerr << "FPS: " << fps << std::endl;
       previousFrame = frame;
@@ -443,7 +454,8 @@ int main(int argc, char* argv[]) {
         .pClearValues = clearValues.data(),
     };
 
-    if (!imguiMgr) {
+    if (!imguiMgr)
+    {
       imguiMgr = std::make_unique<EngineCore::GUI::ImguiManager>(
           window_, context, commandBuffer,
           renderPass ? renderPass->vkRenderPass() : VK_NULL_HANDLE,
@@ -452,7 +464,8 @@ int main(int argc, char* argv[]) {
 
     vkCmdBeginRenderPass(commandBuffer, &renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    if (imguiMgr) {
+    if (imguiMgr)
+    {
       imguiMgr->frameBegin();
       imguiMgr->createMenu();
       imguiMgr->createDummyText();
@@ -484,7 +497,8 @@ int main(int argc, char* argv[]) {
 #pragma region Render
     pipeline->bind(commandBuffer);
 
-    if (camera.isDirty()) {
+    if (camera.isDirty())
+    {
       transform.view = camera.viewMatrix();
       camera.setNotDirty();
     }
@@ -508,7 +522,8 @@ int main(int argc, char* argv[]) {
     }
 #pragma endregion
 
-    if (imguiMgr) {
+    if (imguiMgr)
+    {
       imguiMgr->recordCommands(commandBuffer);
     }
 

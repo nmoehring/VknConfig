@@ -14,6 +14,7 @@
         "gtest",
         "HARFBUZZ",
         "imgui",
+        "imguid",
         "limitsd",
         "LOGD",
         "LOGI",

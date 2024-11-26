@@ -10,9 +10,20 @@ add_library(
     Model.cpp
     RingBuffer.cpp
 )
-target_link_libraries(
-    ${PROJECT_NAME} 
-    vkckbk_compiler_flags
-    GLTFSDK
-    imgui
-)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    message("Linking debug libraries for EngineCore.")
+    target_link_libraries(
+        ${PROJECT_NAME} 
+        vkckbk_compiler_flags
+        GLTFSDK
+        imguid
+    )
+else()
+    message("Linking release libraries for EngineCore.")
+    target_link_libraries(
+        ${PROJECT_NAME} 
+        vkckbk_compiler_flags
+        GLTFSDK
+        imgui    
+    )
+endif()

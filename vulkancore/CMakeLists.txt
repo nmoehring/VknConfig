@@ -19,6 +19,7 @@ add_library(${PROJECT_NAME}
 
 # Deal with debug libraries suffixed with 'd'
 if(CMAKE_BUILD_TYPE MATCHES Debug)
+    message("Linking debug libraries for VulkanCore.")
     target_link_libraries(${PROJECT_NAME} 
         PRIVATE vkckbk_compiler_flags
         INTERFACE vma
@@ -27,6 +28,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
         PRIVATE glslang-default-resource-limitsd
     )
 else()
+    message("Linking release libraries for VulkanCore.")
     target_link_libraries(${PROJECT_NAME} 
         PRIVATE vkckbk_compiler_flags 
         INTERFACE vma

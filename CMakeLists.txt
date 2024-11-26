@@ -11,7 +11,11 @@ message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CM
 include(FetchContent)
 
 # The ones that vcpkg couldn't get
-FetchContent_Declare(bs-thread-pool GIT_REPOSITORY https://github.com/bshoshany/thread-pool.git)
+FetchContent_Declare(
+    bs-thread-pool 
+    GIT_REPOSITORY https://github.com/bshoshany/thread-pool.git
+    GIT_TAG v4.1.0
+)
 FetchContent_MakeAvailable(bs-thread-pool)
 
 find_package(Vulkan REQUIRED)
