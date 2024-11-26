@@ -3,6 +3,7 @@
         "Bindfull",
         "blds",
         "buildsystems",
+        "cmakelists",
         "DFONT",
         "endforeach",
         "endfunction",

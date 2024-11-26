@@ -17,6 +17,9 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
         vkckbk_compiler_flags
         GLTFSDK
         imguid
+        meshoptimizer
+        imgui_impl_glfw
+        imgui_impl_vulkan
     )
 else()
     message("Linking release libraries for EngineCore.")
@@ -24,6 +27,9 @@ else()
         ${PROJECT_NAME} 
         vkckbk_compiler_flags
         GLTFSDK
-        imgui    
+        imgui
+        meshoptimizer
+        imgui_impl_glfw
+        imgui_impl_vulkan   
     )
 endif()

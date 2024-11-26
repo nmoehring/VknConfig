@@ -27,10 +27,14 @@ find_package(volk CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 
-file(
-    COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends 
-    DESTINATION "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include"
-)
+if(NOT EXISTS imguiBackends)
+    file(
+        COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends 
+        DESTINATION ${CMAKE_SOURCE_DIR}
+    )
+    file(RENAME backends imguiBackends)
+    file(COPY_FILE cmakelists.txt.imguiBackends imguiBackends/CMakeLists.txt)
+endif()
 
 message("Vulkan header version: ${VulkanHeaderVersion}")
 message("Vulkan include directory: ${Vulkan_INCLUDE_DIRS}")
@@ -49,11 +53,13 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     message("Adding debug libraries.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
+        ${CMAKE_BINARY_DIR}/imguiBackends/Debug
     )
 else()
     message("Adding release libraries.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
+        ${CMAKE_BINARY_DIR}/imguiBackends
     )
 endif()
 
@@ -84,5 +90,6 @@ endfunction()
 
 add_subdirectory(vulkancore)
 add_subdirectory(enginecore)
+add_subdirectory(imguiBackends)
 add_subdirectory(Chapter1)
 add_subdirectory(Chapter2)

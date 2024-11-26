@@ -2,8 +2,8 @@
 
 #if defined(_WIN32)
 
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
+#include "imguiBackends/imgui_impl_glfw.h"
+#include "imguiBackends/imgui_impl_vulkan.h"
 #include "imgui.h"
 namespace EngineCore
 {
