@@ -1,6 +1,9 @@
 #Ignore vcpkg if present (its in the build dir now)
 /vcpkg_installed/
 
+#Ignore imgui backends
+/imguiBackends
+
 #Ignore CMake cache
 CMakeCache.txt
 
