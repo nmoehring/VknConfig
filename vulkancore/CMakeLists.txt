@@ -14,13 +14,14 @@ add_library(${PROJECT_NAME}
     Framebuffer.cpp
     RenderPass.cpp
     Sampler.cpp
+    DynamicRendering.cpp
 )
 
 # Deal with debug libraries suffixed with 'd'
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_link_libraries(${PROJECT_NAME} 
         PRIVATE vkckbk_compiler_flags
-        PUBLIC vma
+        INTERFACE vma
         PRIVATE volk 
         PRIVATE glslangd
         PRIVATE glslang-default-resource-limitsd
@@ -28,7 +29,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 else()
     target_link_libraries(${PROJECT_NAME} 
         PRIVATE vkckbk_compiler_flags 
-        PUBLIC vma
+        INTERFACE vma
         PRIVATE volk 
         PRIVATE glslang
         PRIVATE glslang-default-resource-limits
