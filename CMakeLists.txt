@@ -1,5 +1,5 @@
-#  Uses vcpkg to install all the dependencies. vcpkg is included via CMakePresets.json
-#  Output files are written to a neighboring VkCkBk_build folder. This directory is 
+# Uses vcpkg to install all the dependencies. vcpkg is included via CMakePresets.json
+# Output files are written to a neighboring VkCkBk_build folder. This directory is
 # meant to stay unchanged, as it typically has version control through git.
 # cmake minimum version is set to 3.29 because it ships with Visual Studio 2022
 
@@ -12,15 +12,16 @@ include(FetchContent)
 
 # The ones that vcpkg couldn't get
 FetchContent_Declare(
-    bs-thread-pool 
+    bs-thread-pool
     GIT_REPOSITORY https://github.com/bshoshany/thread-pool.git
     GIT_TAG v4.1.0
 )
 FetchContent_MakeAvailable(bs-thread-pool)
 
 find_package(Vulkan REQUIRED)
-#not sure why these still need to be found but other vcpkg's don't
-#might try running without them and figure it out
+
+# not sure why these still need to be found but other vcpkg's don't
+# might try running without them and figure it out
 find_package(SPIRV-Tools CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 find_package(volk CONFIG REQUIRED)
@@ -29,7 +30,7 @@ find_package(Stb REQUIRED)
 
 if(NOT EXISTS imguiBackends)
     file(
-        COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends 
+        COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends
         DESTINATION ${CMAKE_SOURCE_DIR}
     )
     file(RENAME backends imguiBackends)
@@ -47,7 +48,7 @@ include_directories(
     ${CMAKE_BINARY_DIR}/_deps/bs-thread-pool-src/include # MakeAvailable fails me again
 )
 
-#Some debug libraries are suffixed with the letter 'd'
+# Some debug libraries are suffixed with the letter 'd'
 # which is nice because we need to link to the release builds eventually, anyway
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message("Adding debug libraries.")
@@ -63,23 +64,23 @@ else()
     )
 endif()
 
+# Optimizations (referenced in bs::thread-pool)
+# For Clang or GCC, use the -O3 flag.
+# For MSVC, use /O2.
 
-#Optimizations (referenced in bs::thread-pool)
-#For Clang or GCC, use the -O3 flag.
-#For MSVC, use /O2.
-
-#CMake docs recommended this style of modifying compiler/linker flags and
+# CMake docs recommended this style of modifying compiler/linker flags and
 # specifying the C++ version
 add_library(vkckbk_compiler_flags INTERFACE)
 target_compile_features(vkckbk_compiler_flags INTERFACE cxx_std_20)
-#target_compile_options(vkckbk_compiler_flags INTERFACE /O2)
 
-#Single-header libraries
-#Decided not to include stb here because it's more work than it's worth
-add_library(vma INTERFACE) #this is a special thing (no sources after INTERFACE)
-target_sources(vma INTERFACE single-headers/vma.cpp) #this is how to add sources to an interface lib
+# target_compile_options(vkckbk_compiler_flags INTERFACE /O2)
 
-#Saves some space in the subdirectory CMakeLists.txt
+# Single-header libraries
+# Decided not to include stb here because it's more work than it's worth
+add_library(vma INTERFACE) # this is a special thing (no sources after INTERFACE)
+target_sources(vma INTERFACE single-headers/vma.cpp) # this is how to add sources to an interface lib
+
+# Saves some space in the subdirectory CMakeLists.txt
 function(copyResources)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         file(COPY resources DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/Debug")
@@ -88,8 +89,15 @@ function(copyResources)
     endif()
 endfunction()
 
+function(buildChapter chapter)
+    if(NOT TARGET_CHAPTER OR TARGET_CHAPTER MATCHES ${chapter})
+        message("BUILDING ${chapter}")
+        add_subdirectory(${chapter})
+    endif()
+endfunction()
+
 add_subdirectory(vulkancore)
 add_subdirectory(enginecore)
 add_subdirectory(imguiBackends)
-add_subdirectory(Chapter1)
-add_subdirectory(Chapter2)
+buildChapter(Chapter1)
+buildChapter(Chapter2)

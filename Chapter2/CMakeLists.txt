@@ -9,7 +9,7 @@ set (
 )
 
 foreach (recipe ${recipe_names})
-    add_executable(Chapter2_${recipe} main${recipe}.cpp)
+    add_executable(Chapter2_${recipe} Chapter2_${recipe}.cpp)
     target_link_libraries(
         Chapter2_${recipe}       
         PRIVATE vkckbk_compiler_flags
