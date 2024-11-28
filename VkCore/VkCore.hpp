@@ -1,0 +1,6 @@
+
+
+class VkCore
+{
+    VkCore();
+};

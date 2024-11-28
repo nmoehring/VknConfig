@@ -11,7 +11,7 @@ std::vector<std::string> getExtensionList()
 {
     std::vector<std::string> extList = std::vector<std::string>(2);
     std::unique_ptr<std::ifstream> file = std::make_unique<std::ifstream>();
-    file->open("extensionList.txt", std::ios::in);
+    file->open("resources/extensionList.txt", std::ios::in);
     if (!file->is_open())
     {
         std::cout << "Failed to open extension list (extensionList.txt)!" << std::endl;

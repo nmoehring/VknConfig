@@ -26,6 +26,7 @@
         "MINIMIZEBOX",
         "MSAA",
         "MSVC",
+        "objname",
         "OPENXR",
         "pkgs",
         "pthreads",
