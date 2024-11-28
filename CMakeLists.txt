@@ -55,12 +55,14 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
         ${CMAKE_BINARY_DIR}/imguiBackends/Debug
+        ${Vulkan_INCLUDE_DIR}/../lib
     )
 else()
     message("Adding release libraries.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
         ${CMAKE_BINARY_DIR}/imguiBackends
+        ${Vulkan_INCLUDE_DIR}/../lib
     )
 endif()
 
@@ -101,3 +103,17 @@ add_subdirectory(enginecore)
 add_subdirectory(imguiBackends)
 buildChapter(Chapter1)
 buildChapter(Chapter2)
+
+add_executable(VkExtCheck VkExtCheck.cpp)
+target_link_libraries(VkExtCheck PRIVATE vkckbk_compiler_flags PRIVATE vulkan-1)
+
+# TODO: Copying into debug folders doesn't work on the first run, pre-build
+# file will be copied during the config step and the Debug directory won't be there
+# maybe theres an option to create the directory if it doesn't exist OR
+# TODO Repurpose the copyResources function to copy any files or folders and
+# allow arguments to create folders or do other necessary things
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    file(COPY extensionList.txt DESTINATION "${CMAKE_BINARY_DIR}/Debug")
+else()
+    file(COPY extensionList.txt DESTINATION "${CMAKE_BINARY_DIR}")
+endif()
