@@ -20,20 +20,21 @@ FetchContent_MakeAvailable(bs-thread-pool)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-# imgui surely exists by now, and the backends need to be linked below
-if(NOT EXISTS imguiBackends)
+if(TARGET imgui AND NOT EXISTS imguiBackends) # if imgui installed and backends not copied yet
     file(
         COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends
         DESTINATION ${CMAKE_SOURCE_DIR}
     )
     file(RENAME backends imguiBackends)
     file(COPY_FILE cmakelists.txt.imguiBackends imguiBackends/CMakeLists.txt)
+elseif(NOT TARGET imgui) # if imgui target hasn't been created
+    message("failed to install imgui (vcpkg), imgui backends not copied to source dir.")
 endif()
 
 # ########## LIB AND INCLUDE ############
 message("Vulkan header version: ${VulkanHeaderVersion}")
 message("Vulkan include directory: ${Vulkan_INCLUDE_DIRS}")
-message("If this points to some other installed Vulkan header files and not your SDK install,
+message("^If this points to some other installed Vulkan header files and not your SDK install,
  maybe delete them and the CMakeCache and try again.")
 include_directories(
     ${CMAKE_SOURCE_DIR}
@@ -43,16 +44,15 @@ include_directories(
 )
 
 # Some debug libraries are suffixed with the letter 'd'
-# which is nice because we need to link to the release builds eventually, anyway
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    message("Adding debug libraries.")
+    message("Adding debug library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
         ${CMAKE_BINARY_DIR}/imguiBackends/Debug
         ${Vulkan_INCLUDE_DIR}/../lib
     )
 else()
-    message("Adding release libraries.")
+    message("Adding release library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
         ${CMAKE_BINARY_DIR}/imguiBackends
@@ -61,6 +61,9 @@ else()
 endif()
 
 # Optimizations (referenced in bs::thread-pool)
+# TODO: Cxx compiler optimizations
+# TODO: SPIR-V optimizations
+# TODO: Translate SPIR-V to LLVM and use LLVM optimizations, translate back to SPIR-V.
 # For Clang or GCC, use the -O3 flag.
 # For MSVC, use /O2.
 
@@ -69,7 +72,9 @@ endif()
 add_library(vkckbk_compiler_flags INTERFACE)
 target_compile_features(vkckbk_compiler_flags INTERFACE cxx_std_20)
 
-# target_compile_options(vkckbk_compiler_flags INTERFACE /O2)
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    target_compile_options(vkckbk_compiler_flags INTERFACE /O2)
+endif()
 
 # Single-header libraries
 # Decided not to include stb here because it's more work than it's worth
@@ -104,7 +109,6 @@ add_subdirectory(imguiBackends)
 
 # add_subdirectory(VkCore)
 buildSubDir(VkExtCheck)
-
-# buildSubDir(minTest)
+buildSubDir(minTest)
 buildSubDir(Chapter1)
 buildSubDir(Chapter2)
