@@ -6,9 +6,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal"
         },
         {
@@ -17,9 +15,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build this subdirectory"
         },
@@ -29,9 +25,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all"
         },
@@ -41,9 +35,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build this subdirectory w/ logs"
         },
@@ -53,9 +45,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ logs"
         },
@@ -65,9 +55,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build this subdirectory w/ trace"
         },
@@ -77,9 +65,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug",
             "program": "${workspaceFolder}\\..\\VkCkBk_build\\${relativeFileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
-            "args": [],
             "stopAtEntry": false,
-            "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ trace"
         }

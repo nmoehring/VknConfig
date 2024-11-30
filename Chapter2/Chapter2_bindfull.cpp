@@ -29,9 +29,10 @@
 #include <tracy/TracyVulkan.hpp>
 // clang-format on
 
-GLFWwindow* window_ = nullptr;
+GLFWwindow *window_ = nullptr;
 EngineCore::Camera camera(glm::vec3(-9.f, 2.f, 2.f));
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
   initWindow(&window_, &camera);
 
 #pragma region Context initialization
@@ -44,10 +45,10 @@ int main(int argc, char* argv[]) {
 
   const std::vector<std::string> deviceExtension = {
 #if defined(VK_EXT_calibrated_timestamps)
-    VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
+      VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
 #endif
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
   };
 
   std::vector<std::string> validationLayers;
@@ -59,11 +60,11 @@ int main(int argc, char* argv[]) {
   VulkanCore::Context::enableBufferDeviceAddressFeature();
   VulkanCore::Context::enableDynamicRenderingFeature();
 
-  VulkanCore::Context context((void*)glfwGetWin32Window(window_),
-                              validationLayers,  // layers
-                              instExtension,     // instance extensions
-                              deviceExtension,   // device extensions
-                              0,                 // request a graphics queue only
+  VulkanCore::Context context((void *)glfwGetWin32Window(window_),
+                              validationLayers, // layers
+                              instExtension,    // instance extensions
+                              deviceExtension,  // device extensions
+                              0,                // request a graphics queue only
                               true);
 #pragma endregion
 
@@ -74,7 +75,7 @@ int main(int argc, char* argv[]) {
   const VkFormat swapChainFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
   context.createSwapchain(swapChainFormat, VK_COLORSPACE_SRGB_NONLINEAR_KHR,
-                          VK_PRESENT_MODE_MAILBOX_KHR, extents);
+                          VK_PRESENT_MODE_FIFO_KHR, extents);
 
   static const uint32_t framesInFlight = (uint32_t)context.swapchain()->numberImages();
 #pragma endregion
@@ -124,7 +125,8 @@ int main(int argc, char* argv[]) {
       EngineCore::convertModel2OneMeshPerBuffer(
           context, commandMgr, commandBuffer, *bistro.get(), buffers, textures, samplers);
 
-      if (textures.size() == 0) {
+      if (textures.size() == 0)
+      {
         textures.push_back(context.createTexture(
             VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, 0,
             VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
@@ -179,7 +181,7 @@ int main(int argc, char* argv[]) {
 
   const std::vector<VulkanCore::Pipeline::SetDescriptor> setLayout = {
       {
-          .set_ = CAMERA_SET,  // set number
+          .set_ = CAMERA_SET, // set number
           .bindings_ =
               {
                   // vector of bindings
@@ -188,8 +190,8 @@ int main(int argc, char* argv[]) {
               },
       },
       {
-          .set_ = TEXTURES_AND_SAMPLER_SET,  // set
-                                             // number
+          .set_ = TEXTURES_AND_SAMPLER_SET, // set
+                                            // number
           .bindings_ =
               {
                   // vector of bindings
@@ -217,7 +219,8 @@ int main(int argc, char* argv[]) {
 
   std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
 
-  for (uint32_t i = 0; i < vertexAttributesFormatAndOffset.size(); ++i) {
+  for (uint32_t i = 0; i < vertexAttributesFormatAndOffset.size(); ++i)
+  {
     auto [format, offset] = vertexAttributesFormatAndOffset[i];
     vertexInputAttributes.push_back(VkVertexInputAttributeDescription{
         .location = i,
@@ -308,7 +311,8 @@ int main(int argc, char* argv[]) {
   pipelineWithoutTexture->bindResource(TEXTURES_AND_SAMPLER_SET, BINDING_1, 0,
                                        {samplers.begin(), 1});
 
-  for (uint32_t i = 0; i < textures.size(); ++i) {
+  for (uint32_t i = 0; i < textures.size(); ++i)
+  {
     pipelineWithTexture->bindResource(TEXTURES_AND_SAMPLER_SET, BINDING_0, i,
                                       {textures.begin() + i, 1});
     pipelineWithTexture->bindResource(TEXTURES_AND_SAMPLER_SET, BINDING_1, i,
@@ -331,10 +335,12 @@ int main(int argc, char* argv[]) {
   TracyPlotConfig("Swapchain image index", tracy::PlotFormatType::Number, true, false,
                   tracy::Color::Aqua);
 
-  while (!glfwWindowShouldClose(window_)) {
+  while (!glfwWindowShouldClose(window_))
+  {
     const auto now = glfwGetTime();
     const auto delta = now - time;
-    if (delta > 1) {
+    if (delta > 1)
+    {
       const auto fps = static_cast<double>(frame - previousFrame) / delta;
       std::cerr << "FPS: " << fps << std::endl;
       previousFrame = frame;
@@ -399,21 +405,25 @@ int main(int argc, char* argv[]) {
 
 #pragma region Render
 
-    if (camera.isDirty()) {
+    if (camera.isDirty())
+    {
       transform.view = camera.viewMatrix();
       camera.setNotDirty();
     }
     cameraBuffer.buffer()->copyDataToBuffer(&transform, sizeof(UniformTransforms));
 
-    for (uint32_t meshIdx = 0; meshIdx < numMeshes; ++meshIdx) {
+    for (uint32_t meshIdx = 0; meshIdx < numMeshes; ++meshIdx)
+    {
       EngineCore::Material mat;
-      if (bistro->meshes[meshIdx].material != -1) {
+      if (bistro->meshes[meshIdx].material != -1)
+      {
         mat = bistro->materials[bistro->meshes[meshIdx].material];
       }
 
       auto pipeline = pipelineWithTexture;
 
-      if (mat.basecolorTextureId == -1) {
+      if (mat.basecolorTextureId == -1)
+      {
         pipeline = pipelineWithoutTexture;
       }
 

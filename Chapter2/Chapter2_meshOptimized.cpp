@@ -29,9 +29,10 @@
 #include <tracy/TracyVulkan.hpp>
 // clang-format on
 
-GLFWwindow* window_ = nullptr;
+GLFWwindow *window_ = nullptr;
 EngineCore::Camera camera(glm::vec3(-9.f, 2.f, 2.f));
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
   initWindow(&window_, &camera);
 
 #pragma region Context initialization
@@ -44,10 +45,10 @@ int main(int argc, char* argv[]) {
 
   const std::vector<std::string> deviceExtension = {
 #if defined(VK_EXT_calibrated_timestamps)
-    VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
+      VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
 #endif
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_EXT_MEMORY_BUDGET_EXTENSION_NAME,
   };
 
   std::vector<std::string> validationLayers;
@@ -58,11 +59,11 @@ int main(int argc, char* argv[]) {
   VulkanCore::Context::enableDefaultFeatures();
   VulkanCore::Context::enableBufferDeviceAddressFeature();
 
-  VulkanCore::Context context((void*)glfwGetWin32Window(window_),
-                              validationLayers,  // layers
-                              instExtension,     // instance extensions
-                              deviceExtension,   // device extensions
-                              0,                 // request a graphics queue only
+  VulkanCore::Context context((void *)glfwGetWin32Window(window_),
+                              validationLayers, // layers
+                              instExtension,    // instance extensions
+                              deviceExtension,  // device extensions
+                              0,                // request a graphics queue only
                               true);
 #pragma endregion
 
@@ -73,7 +74,7 @@ int main(int argc, char* argv[]) {
   const VkFormat swapChainFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
   context.createSwapchain(swapChainFormat, VK_COLORSPACE_SRGB_NONLINEAR_KHR,
-                          VK_PRESENT_MODE_MAILBOX_KHR, extents);
+                          VK_PRESENT_MODE_FIFO_KHR, extents);
 
   static const uint32_t framesInFlight = (uint32_t)context.swapchain()->numberImages();
 #pragma endregion
@@ -167,12 +168,12 @@ int main(int argc, char* argv[]) {
 
   const std::vector<VulkanCore::Pipeline::SetDescriptor> setLayout = {
       {
-          .set_ = CAMERA_SET,  // set number
+          .set_ = CAMERA_SET, // set number
           .bindings_ = {VkDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                                      1, VK_SHADER_STAGE_VERTEX_BIT)},
       },
       {
-          .set_ = TEXTURES_AND_SAMPLER_SET,  // set number
+          .set_ = TEXTURES_AND_SAMPLER_SET, // set number
           .bindings_ = {VkDescriptorSetLayoutBinding(
                             0, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000,
                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -225,7 +226,8 @@ int main(int argc, char* argv[]) {
 #pragma endregion
 
 #pragma region Swapchain Framebuffers Initialization
-  for (size_t idx = 0; idx < context.swapchain()->numberImages(); ++idx) {
+  for (size_t idx = 0; idx < context.swapchain()->numberImages(); ++idx)
+  {
     swapchain_framebuffers[idx] = context.createFramebuffer(
         renderPass->vkRenderPass(), {context.swapchain()->texture(idx), depthTexture},
         nullptr, nullptr,
@@ -273,10 +275,12 @@ int main(int argc, char* argv[]) {
   TracyPlotConfig("Swapchain image index", tracy::PlotFormatType::Number, true, false,
                   tracy::Color::Aqua);
 
-  while (!glfwWindowShouldClose(window_)) {
+  while (!glfwWindowShouldClose(window_))
+  {
     const auto now = glfwGetTime();
     const auto delta = now - time;
-    if (delta > 1) {
+    if (delta > 1)
+    {
       const auto fps = static_cast<double>(frame - previousFrame) / delta;
       std::cerr << "FPS: " << fps << std::endl;
       previousFrame = frame;
@@ -334,7 +338,8 @@ int main(int argc, char* argv[]) {
 #pragma region Render
     pipeline->bind(commandBuffer);
 
-    if (camera.isDirty()) {
+    if (camera.isDirty())
+    {
       transform.view = camera.viewMatrix();
       camera.setNotDirty();
     }

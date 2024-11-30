@@ -20,14 +20,17 @@ FetchContent_MakeAvailable(bs-thread-pool)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-if(TARGET imgui AND NOT EXISTS imguiBackends) # if imgui installed and backends not copied yet
+# IF imgui installed and backends not copied yet THEN copy them
+if(((CMAKE_BUILD_TYPE MATCHES Debug AND TARGET imguid) OR TARGET imgui) AND NOT EXISTS imguiBackends)
     file(
         COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends
         DESTINATION ${CMAKE_SOURCE_DIR}
     )
     file(RENAME backends imguiBackends)
     file(COPY_FILE cmakelists.txt.imguiBackends imguiBackends/CMakeLists.txt)
-elseif(NOT TARGET imgui) # if imgui target hasn't been created
+
+# ELSE IF imgui target hasn't been created THEN tell the user
+elseif(NOT TARGET imgui)
     message("failed to install imgui (vcpkg), imgui backends not copied to source dir.")
 endif()
 
@@ -61,7 +64,7 @@ else()
 endif()
 
 # Optimizations (referenced in bs::thread-pool)
-# TODO: Cxx compiler optimizations
+# TODO: Other system Cxx compiler optimizations
 # TODO: SPIR-V optimizations
 # TODO: Translate SPIR-V to LLVM and use LLVM optimizations, translate back to SPIR-V.
 # For Clang or GCC, use the -O3 flag.
@@ -77,9 +80,8 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
 endif()
 
 # Single-header libraries
-# Decided not to include stb here because it's more work than it's worth
-add_library(vma INTERFACE) # this is a special thing (no sources after INTERFACE)
-target_sources(vma INTERFACE single-headers/vma.cpp) # this is how to add sources to an interface lib
+add_library(vma INTERFACE)
+target_sources(vma INTERFACE single-headers/vma.cpp)
 
 # ########### UTILITY FUNCTIONS ##############
 # Copy directories to build folders keeping in mind debug configs

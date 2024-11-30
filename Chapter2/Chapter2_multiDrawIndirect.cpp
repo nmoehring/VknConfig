@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
   const VkFormat swapChainFormat = VK_FORMAT_B8G8R8A8_UNORM;
 
   context.createSwapchain(swapChainFormat, VK_COLORSPACE_SRGB_NONLINEAR_KHR,
-                          VK_PRESENT_MODE_MAILBOX_KHR, extents);
+                          VK_PRESENT_MODE_FIFO_KHR, extents);
 
   static const uint32_t framesInFlight = (uint32_t)context.swapchain()->numberImages();
 #pragma endregion
