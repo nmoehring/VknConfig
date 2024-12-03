@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 #endif
 
   VulkanCore::Context::enableDefaultFeatures();
-  VulkanCore::Context::enableBufferDeviceAddressFeature();
+  // VulkanCore::Context::enableBufferDeviceAddressFeature();
   VulkanCore::Context::enableDynamicRenderingFeature();
 
   VulkanCore::Context context((void *)glfwGetWin32Window(window_),

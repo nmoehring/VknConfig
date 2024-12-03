@@ -108,6 +108,7 @@ endfunction()
 add_subdirectory(vulkancore)
 add_subdirectory(enginecore)
 add_subdirectory(imguiBackends)
+add_subdirectory(VknConfig)
 
 # add_subdirectory(VkCore)
 buildSubDir(VkExtCheck)

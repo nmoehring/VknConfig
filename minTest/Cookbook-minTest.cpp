@@ -27,7 +27,7 @@ int main()
 
     VulkanCore::Context::enableDefaultFeatures();
     // VulkanCore::Context::enableBufferDeviceAddressFeature();
-    // VulkanCore::Context::enableDynamicRenderingFeature();
+    VulkanCore::Context::enableDynamicRenderingFeature();
 
     const std::vector<std::string> instExtension = {
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,

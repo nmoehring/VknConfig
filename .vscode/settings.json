@@ -49,6 +49,7 @@
         "vertexbuffer",
         "VKAPI",
         "vkckbk",
+        "vkncore",
         "volk",
         "vulkancore"
     ],
