@@ -4,25 +4,25 @@
 
 namespace vkn
 {
-    VknConfig::VknConfig()
-    {
-        VknResult res(VK_SUCCESS, "null");
-        if (!(res = this->createInstance()).isSuccess())
-            throw std::runtime_error(res.toErr("Error creating instance."));
+    VknConfig::VknConfig() {}
 
-        if (!(res = this->selectPhysicalDevice()).isSuccess())
-            throw std::runtime_error(res.toErr("Failed to get physical devices."));
+    void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
+                                std::string engineName, VkApplicationInfo *pNext,
+                                uint32_t appVersion, uint32_t engineVersion)
+    {
+        m_infos.fillAppInfo(apiVersion, appName, engineName, pNext, appVersion, engineVersion);
     }
-    /*
-        VknConfig::~VknConfig()
-        {
-            vkDestroyInstance(m_instance, nullptr);
-        }
-    */
+
     VknResult VknConfig::createInstance()
     {
         VknResult res{vkCreateInstance(m_infos.getInstanceCreateInfo(), nullptr, &m_instance),
                       "Create instance."};
+        if (!(res.isSuccess()))
+            throw std::runtime_error(res.toErr("Error creating instance."));
+
+        if (!(res = this->selectPhysicalDevice()).isSuccess())
+            throw std::runtime_error(res.toErr("Failed to get physical devices."));
+
         return res;
     }
 
@@ -47,12 +47,7 @@ namespace vkn
         return res2;
     }
 
-    void VknConfig::archiveResult(VknResult res)
-    {
-        m_resultArchive.push_back(res);
-    }
-
-    void VknConfig::createDevice(bool chooseAllAvailableQueues)
+    VknResult VknConfig::createDevice(bool chooseAllAvailableQueues)
     {
         for (int i = 0; i < m_device.getQueues().size(); ++i)
         {
@@ -62,8 +57,15 @@ namespace vkn
             m_infos.fillDeviceQueueCreateInfo(i, numSelected);
             m_device.getQueue(i).setNumSelected(numSelected);
         }
+
         VknResult res(VK_SUCCESS, "null");
         if (!(res = m_device.createDevice()).isSuccess())
             throw std::runtime_error(res.toErr("Error creating device."));
+        return res;
+    }
+
+    void VknConfig::archiveResult(VknResult res)
+    {
+        m_resultArchive.push_back(res);
     }
 }

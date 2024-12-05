@@ -18,7 +18,7 @@ namespace vkn
         bool supportsSparseBinding() { return ((m_properties.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) > 0); }
         bool supportsMemoryProtection() { return ((m_properties.queueFlags & VK_QUEUE_PROTECTED_BIT) > 0); }
         int getNumSelected() { return m_numSelected; }
-        int setNumSelected(int num)
+        void setNumSelected(int num)
         {
             if (num <= this->getNumAvailable())
                 m_numSelected = num;

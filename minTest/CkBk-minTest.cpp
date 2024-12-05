@@ -9,6 +9,8 @@ void printFamProps(std::vector<VkQueueFamilyProperties> famProps);
 int main()
 {
     vkn::VknConfig vknConfig{};
+    vknConfig.fillAppInfo(VK_API_VERSION_1_1, "MinTest", "MinVknEngine");
+    vknConfig.createInstance();
     vknConfig.createDevice();
     int idx = 0;
     for (auto queue : vknConfig.getDevice().getQueues())

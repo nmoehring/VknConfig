@@ -58,9 +58,15 @@ namespace vkn
         bool checkFill(checkFillFunctions functionName);
         void fillDefaultInfos();
 
-        void fillAppInfo(std::string appName, std::string engineName,
-                         VkApplicationInfo *pNext = nullptr, uint32_t applicationVersion = 0,
-                         uint32_t engineVersion = 0, uint32_t apiVersion = VK_API_VERSION_1_1);
+        void fillAppInfo(uint32_t apiVersion, std::string appName,
+                         std::string engineName,
+                         VkApplicationInfo *pNext = nullptr,
+                         uint32_t applicationVersion = 0,
+                         uint32_t engineVersion = 0);
+        void fillInstanceCreateInfo(VkInstanceCreateInfo *pNext = nullptr,
+                                    VkInstanceCreateFlags flags = 0,
+                                    std::vector<std::string> enabledLayerNames = std::vector<std::string>{},
+                                    std::vector<std::string> enabledExtensionNames = std::vector<std::string>{});
         void fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
                                        VkApplicationInfo *pNext = nullptr,
                                        VkDeviceQueueCreateFlags flags = INT_MAX,

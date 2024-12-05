@@ -22,9 +22,13 @@ namespace vkn
     {
     public:
         VknConfig();
-        //~VknConfig();
-
-        void createDevice(bool chooseAllAvailable = false);
+        void fillAppInfo(uint32_t apiVersion, std::string appName,
+                         std::string engineName,
+                         VkApplicationInfo *pNext = nullptr,
+                         uint32_t applicationVersion = 0,
+                         uint32_t engineVersion = 0);
+        VknResult createInstance();
+        VknResult createDevice(bool chooseAllAvailable = false);
         VknDevice getDevice() { return m_device; }
 
     private:
@@ -34,7 +38,6 @@ namespace vkn
         // VknPipeline m_pipeline{};
         std::vector<VknResult> m_resultArchive;
 
-        VknResult createInstance();
         VknResult selectPhysicalDevice();
 
         void archiveResult(VknResult res);

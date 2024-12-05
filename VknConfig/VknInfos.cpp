@@ -94,9 +94,9 @@ namespace vkn
         return true;
     }
 
-    void VknInfos::fillAppInfo(std::string appName, std::string engineName,
-                               VkApplicationInfo *pNext, uint32_t applicationVersion,
-                               uint32_t engineVersion, uint32_t apiVersion)
+    void VknInfos::fillAppInfo(uint32_t apiVersion, std::string appName,
+                               std::string engineName, VkApplicationInfo *pNext,
+                               uint32_t applicationVersion, uint32_t engineVersion)
     {
         m_appName = appName;
         m_engineName = engineName;
@@ -113,6 +113,27 @@ namespace vkn
         m_appInfo.apiVersion = VK_API_VERSION_1_1;
 
         m_filledAppInfo = true;
+        this->fillInstanceCreateInfo();
+    }
+
+    void VknInfos::fillInstanceCreateInfo(VkInstanceCreateInfo *pNext,
+                                          VkInstanceCreateFlags flags,
+                                          std::vector<std::string> enabledLayerNames,
+                                          std::vector<std::string> enabledExtensionNames)
+    {
+        m_instanceCreateInfo.pNext = nullptr;
+        m_instanceCreateInfo.flags = VkInstanceCreateFlagBits{};
+        m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
+        m_instanceCreateInfo.enabledLayerCount = enabledLayerNames.size();
+        std::vector<const char *> layerNames;
+        for (auto name : enabledLayerNames)
+            layerNames.push_back(name.c_str());
+        m_instanceCreateInfo.ppEnabledLayerNames = layerNames.data();
+        m_instanceCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
+        std::vector<const char *> extNames;
+        for (auto name : enabledExtensionNames)
+            extNames.push_back(name.c_str());
+        m_instanceCreateInfo.ppEnabledExtensionNames = extNames.data();
     }
 
     void VknInfos::fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
