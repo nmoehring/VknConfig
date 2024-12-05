@@ -14,7 +14,8 @@ namespace vkn
     {
         m_appInfo = this->getDefaultAppInfo();
         m_instanceCreateInfo = this->getDefaultInstanceCreateInfo();
-        m_deviceQueueCreateInfo = this->getDefaultDeviceQueueCreateInfo();
+        for (int i = 0; i < m_queueCreateInfos.size(); ++i)
+            m_queueCreateInfos[i] = this->getDefaultDeviceQueueCreateInfo(i);
         m_deviceCreateInfo = this->getDefaultDeviceCreateInfo();
     }
 
@@ -46,7 +47,7 @@ namespace vkn
         return info;
     }
 
-    VkDeviceQueueCreateInfo VknInfos::getDefaultDeviceQueueCreateInfo()
+    VkDeviceQueueCreateInfo VknInfos::getDefaultDeviceQueueCreateInfo(int index)
     {
         VkDeviceQueueCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -54,7 +55,7 @@ namespace vkn
         info.flags = 0; // Only flag is a protected memory bit, for a queue family that supports it
         info.queueFamilyIndex = 0;
         info.queueCount = 1;
-        info.pQueuePriorities = &m_queuePriorities;
+        info.pQueuePriorities = &(m_queuePriorities[index]);
         return info;
     }
 
@@ -112,20 +113,16 @@ namespace vkn
     }
 
     void VknInfos::fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx,
-                                             VkApplicationInfo *pNext,
-                                             VkDeviceQueueCreateFlags flags,
-                                             uint32_t queueCount,
-                                             float queuePriorities)
+                                             VkApplicationInfo *pNext, VkDeviceQueueCreateFlags flags,
+                                             uint32_t queueCount, float queuePriorities)
     {
-        m_deviceQueueCreateInfo.queueFamilyIndex = queueFamilyIdx;
+        m_queueCreateInfos[queueFamilyIdx].queueFamilyIndex = queueFamilyIdx;
 
-        m_deviceQueueCreateInfo.pNext = pNext;
-        m_deviceQueueCreateInfo.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        m_deviceQueueCreateInfo.queueFamilyIndex = 0;
-        m_deviceQueueCreateInfo.queueCount = 1;
-        m_queuePriorities = queuePriorities;
-        m_deviceQueueCreateInfo.pQueuePriorities = &m_queuePriorities;
-
-        m_filledDeviceQueueCreateInfo = true;
+        m_queueCreateInfos[queueFamilyIdx].pNext = pNext;
+        m_queueCreateInfos[queueFamilyIdx].flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
+        m_queueCreateInfos[queueFamilyIdx].queueFamilyIndex = 0;
+        m_queueCreateInfos[queueFamilyIdx].queueCount = 1;
+        m_queuePriorities[queueFamilyIdx] = queuePriorities;
+        m_queueCreateInfos[queueFamilyIdx].pQueuePriorities = &(m_queuePriorities[queueFamilyIdx]);
     }
 }

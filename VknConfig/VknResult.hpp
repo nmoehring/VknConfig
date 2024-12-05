@@ -9,6 +9,7 @@ namespace vkn
     class VknResult
     {
     public:
+        VknResult();
         VknResult(VkResult result, std::string opDesc) : m_result{result}, m_opDesc{opDesc} {};
 
         std::string toString();
@@ -21,6 +22,6 @@ namespace vkn
 
     private:
         VkResult m_result;
-        std::string m_opDesc;
+        std::string m_opDesc{""};
     };
 }

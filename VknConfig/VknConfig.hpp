@@ -1,12 +1,18 @@
 // I decided to use a Vkn prefix to stand apart from Vk prefixes of the API
 // All the structs are in info.hpp
+// Interface: need to select a physical device,
+//           need to select queue families
 
 #pragma once
 
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <memory>
+#include <functional>
 
+#include "VknDevice.hpp"
+// #include "VknPipeline.hpp"
+#include "VknQueueFamily.hpp"
 #include "vknInfos.hpp"
 #include "VknResult.hpp"
 
@@ -16,24 +22,21 @@ namespace vkn
     {
     public:
         VknConfig();
-        ~VknConfig();
+        //~VknConfig();
+
+        void createDevice(bool chooseAllAvailable = false);
+        VknDevice getDevice() { return m_device; }
 
     private:
         VknInfos m_infos{};
-
         VkInstance m_instance;
-        std::vector<VkPhysicalDevice> m_physicalDevices;
-        int m_idxSelectedPhysicalDevice;
-        VkQueueFamilyProperties m_queueFamilyProperties;
-        VkDevice m_device;
+        VknDevice m_device;
+        // VknPipeline m_pipeline{};
         std::vector<VknResult> m_resultArchive;
-
-        void archiveResult(VknResult res);
-        void runVkFunction(std::function<VknResult()> func, std::string errMsg);
 
         VknResult createInstance();
         VknResult selectPhysicalDevice();
-        VknResult getQueueFamilyProperties();
-        VknResult createDevice();
+
+        void archiveResult(VknResult res);
     };
 }
