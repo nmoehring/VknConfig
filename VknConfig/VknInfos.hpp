@@ -3,6 +3,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <vulkan/vulkan.h>
 
@@ -14,15 +15,19 @@ namespace vkn
         enum checkFillFunctions
         {
             APP_INFO = 0,
-            DEVICE_QUEUE_CREATE_INFO = 1
+            DEVICE_QUEUE_CREATE_INFO = 1,
+            DEVICE_CREATE_INFO
         };
 
         VknInfos();
         //~VknInfos();
         void setNumQueueFamilies(int num)
         {
-            m_queuePriorities.resize(num);
-            m_queueCreateInfos.resize(num);
+            for (int i = 1; i < num; ++i)
+            {
+                m_queueCreateInfos.push_back(this->getDefaultDeviceQueueCreateInfo());
+                m_queuePriorities.push_back(1.0f);
+            }
         };
 
         // getters
@@ -31,23 +36,41 @@ namespace vkn
             if (this->checkFill(APP_INFO))
                 return &m_appInfo;
             else
-                throw std::runtime_error("ApplicationInfo not filled before get call.");
+                return nullptr;
         };
         VkInstanceCreateInfo *getInstanceCreateInfo() { return &m_instanceCreateInfo; };
         VkDeviceQueueCreateInfo *getDeviceQueueCreateInfo(int index)
         {
-            std::cout << "create device checkfill : " << checkFill(DEVICE_QUEUE_CREATE_INFO) << std::endl;
             if (this->checkFill(DEVICE_QUEUE_CREATE_INFO))
                 return &(m_queueCreateInfos[index]);
             else
-                throw std::runtime_error("DeviceQueueCreateInfos not filled before get call.");
+                return nullptr;
         };
-        VkDeviceCreateInfo *getDeviceCreateInfo() { return &m_deviceCreateInfo; };
+        VkDeviceCreateInfo *getDeviceCreateInfo()
+        {
+            if (this->checkFill(DEVICE_CREATE_INFO))
+                return &m_deviceCreateInfo;
+            else
+                return nullptr;
+        };
+
+        // Fill
+        bool checkFill(checkFillFunctions functionName);
+        void fillDefaultInfos();
+
+        void fillAppInfo(std::string appName, std::string engineName,
+                         VkApplicationInfo *pNext = nullptr, uint32_t applicationVersion = 0,
+                         uint32_t engineVersion = 0, uint32_t apiVersion = VK_API_VERSION_1_1);
+        void fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
+                                       VkApplicationInfo *pNext = nullptr,
+                                       VkDeviceQueueCreateFlags flags = INT_MAX,
+                                       float queuePriorities = -1);
+        void fillDeviceCreateInfo();
 
     private:
         std::string m_appName = "Default App Name";
         std::string m_engineName = "Default Engine Name";
-        std::vector<float> m_queuePriorities{1.0f};
+        std::vector<float> m_queuePriorities;
 
         // Info's
         VkApplicationInfo m_appInfo;
@@ -58,22 +81,12 @@ namespace vkn
         // Defaults
         VkApplicationInfo getDefaultAppInfo();
         VkInstanceCreateInfo getDefaultInstanceCreateInfo();
-        VkDeviceQueueCreateInfo getDefaultDeviceQueueCreateInfo(int index);
+        VkDeviceQueueCreateInfo getDefaultDeviceQueueCreateInfo();
         VkDeviceCreateInfo getDefaultDeviceCreateInfo();
-
-        // Fill
-        bool checkFill(checkFillFunctions functionName);
-        void fillDefaultInfos();
-
-        void fillAppInfo(std::string appName, std::string engineName,
-                         VkApplicationInfo *pNext = nullptr, uint32_t applicationVersion = 0,
-                         uint32_t engineVersion = 0, uint32_t apiVersion = VK_API_VERSION_1_1);
-        void fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx,
-                                       VkApplicationInfo *pNext, VkDeviceQueueCreateFlags flags,
-                                       uint32_t queueCount, float queuePriorities);
 
         // Required fill checklist
         bool m_filledAppInfo{false};
         bool m_filledDeviceQueueCreateInfo{false};
+        bool m_filledDeviceCreateInfo{false};
     };
 }

@@ -14,10 +14,11 @@ int main()
     for (auto queue : vknConfig.getDevice().getQueues())
     {
         std::cout << "Queue " << idx << ": " << std::endl;
-        std::cout << "Compute: " << queue.supportsCompute() << std::endl;
         std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;
+        std::cout << "Compute: " << queue.supportsCompute() << std::endl;
         std::cout << "Transfer: " << queue.supportsTransfer() << std::endl;
         std::cout << "Sparse Binding: " << queue.supportsSparseBinding() << std::endl;
         std::cout << "Mem Protection: " << queue.supportsMemoryProtection() << std::endl;
+        ++idx;
     }
 }

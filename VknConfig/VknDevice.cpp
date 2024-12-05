@@ -34,8 +34,8 @@ namespace vkn
             m_physicalDevice.getDevice(), &propertyCount, nullptr);
         if (propertyCount == 0)
             throw std::runtime_error("No available queue families found.");
-        m_queues.resize(propertyCount);
-        std::vector<VkQueueFamilyProperties> queues(propertyCount);
+        std::vector<VkQueueFamilyProperties> queues;
+        queues.resize(propertyCount);
         m_infos->setNumQueueFamilies(propertyCount);
 
         vkGetPhysicalDeviceQueueFamilyProperties(
@@ -50,7 +50,6 @@ namespace vkn
 
     VknResult VknDevice::createDevice()
     {
-        std::cout << "createInfo is device: " << (m_infos->getDeviceCreateInfo()->sType == VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO) << std::endl;
         VknResult res{
             vkCreateDevice(
                 m_physicalDevice.getDevice(),

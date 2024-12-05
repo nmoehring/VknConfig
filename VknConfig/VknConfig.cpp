@@ -54,12 +54,13 @@ namespace vkn
 
     void VknConfig::createDevice(bool chooseAllAvailableQueues)
     {
-        for (auto &family : m_device.getQueues())
+        for (int i = 0; i < m_device.getQueues().size(); ++i)
         {
+            int numSelected = 1;
             if (chooseAllAvailableQueues)
-                family.setNumSelected(family.getNumAvailable());
-            else
-                family.setNumSelected(1);
+                numSelected = m_device.getQueue(i).getNumAvailable();
+            m_infos.fillDeviceQueueCreateInfo(i, numSelected);
+            m_device.getQueue(i).setNumSelected(numSelected);
         }
         VknResult res(VK_SUCCESS, "null");
         if (!(res = m_device.createDevice()).isSuccess())

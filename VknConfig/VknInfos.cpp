@@ -7,6 +7,7 @@ namespace vkn
 {
     VknInfos::VknInfos()
     {
+        m_queuePriorities.push_back(1.0f);
         fillDefaultInfos();
     }
 
@@ -14,8 +15,7 @@ namespace vkn
     {
         m_appInfo = this->getDefaultAppInfo();
         m_instanceCreateInfo = this->getDefaultInstanceCreateInfo();
-        for (int i = 0; i < m_queueCreateInfos.size(); ++i)
-            m_queueCreateInfos[i] = this->getDefaultDeviceQueueCreateInfo(i);
+        m_queueCreateInfos.push_back(this->getDefaultDeviceQueueCreateInfo());
         m_deviceCreateInfo = this->getDefaultDeviceCreateInfo();
     }
 
@@ -47,7 +47,7 @@ namespace vkn
         return info;
     }
 
-    VkDeviceQueueCreateInfo VknInfos::getDefaultDeviceQueueCreateInfo(int index)
+    VkDeviceQueueCreateInfo VknInfos::getDefaultDeviceQueueCreateInfo()
     {
         VkDeviceQueueCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -55,7 +55,7 @@ namespace vkn
         info.flags = 0; // Only flag is a protected memory bit, for a queue family that supports it
         info.queueFamilyIndex = 0;
         info.queueCount = 1;
-        info.pQueuePriorities = &(m_queuePriorities[index]);
+        info.pQueuePriorities = &(m_queuePriorities[0]);
         return info;
     }
 
@@ -87,6 +87,9 @@ namespace vkn
         case DEVICE_QUEUE_CREATE_INFO:
             if (!m_filledDeviceQueueCreateInfo)
                 throw std::runtime_error("DeviceQueueCreateInfo not filled before get.");
+        case DEVICE_CREATE_INFO:
+            if (!m_filledDeviceCreateInfo)
+                throw std::runtime_error("DeviceCreateInfo not filled before get.");
         }
         return true;
     }
@@ -112,17 +115,34 @@ namespace vkn
         m_filledAppInfo = true;
     }
 
-    void VknInfos::fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx,
-                                             VkApplicationInfo *pNext, VkDeviceQueueCreateFlags flags,
-                                             uint32_t queueCount, float queuePriorities)
+    void VknInfos::fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
+                                             VkApplicationInfo *pNext,
+                                             VkDeviceQueueCreateFlags flags,
+                                             float queuePriorities)
     {
         m_queueCreateInfos[queueFamilyIdx].queueFamilyIndex = queueFamilyIdx;
-
-        m_queueCreateInfos[queueFamilyIdx].pNext = pNext;
-        m_queueCreateInfos[queueFamilyIdx].flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        m_queueCreateInfos[queueFamilyIdx].queueFamilyIndex = 0;
-        m_queueCreateInfos[queueFamilyIdx].queueCount = 1;
-        m_queuePriorities[queueFamilyIdx] = queuePriorities;
+        if (pNext != nullptr)
+            m_queueCreateInfos[queueFamilyIdx].pNext = pNext;
+        if (flags != INT_MAX)
+            m_queueCreateInfos[queueFamilyIdx].flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
+        m_queueCreateInfos[queueFamilyIdx].queueCount = queueCount;
+        if (queuePriorities != -1)
+            m_queuePriorities[queueFamilyIdx] = queuePriorities;
         m_queueCreateInfos[queueFamilyIdx].pQueuePriorities = &(m_queuePriorities[queueFamilyIdx]);
+        if (queueFamilyIdx == (m_queueCreateInfos.size() - 1))
+        {
+            m_filledDeviceQueueCreateInfo = true;
+            this->fillDeviceCreateInfo();
+        }
+    }
+
+    void VknInfos::fillDeviceCreateInfo()
+    {
+        m_deviceCreateInfo.queueCreateInfoCount = m_queueCreateInfos.size();
+        m_deviceCreateInfo.pQueueCreateInfos = m_queueCreateInfos.data();
+        m_filledDeviceCreateInfo = true;
+        // m_deviceCreateInfo.enabledExtensionCount = 0;
+        // m_deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+        // m_deviceCreateInfo.pEnabledFeatures = nullptr;
     }
 }

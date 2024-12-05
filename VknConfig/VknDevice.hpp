@@ -28,6 +28,7 @@ namespace vkn
             return m_physicalDevice.getProperties();
         }
         std::vector<VknQueueFamily> getQueues() { return m_queues; }
+        VknQueueFamily getQueue(int idx) { return m_queues[idx]; }
 
     private:
         VkDevice m_logicalDevice;
