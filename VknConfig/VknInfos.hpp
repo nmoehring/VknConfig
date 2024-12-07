@@ -84,6 +84,18 @@ namespace vkn
         std::vector<VkDeviceQueueCreateInfo> m_queueCreateInfos;
         VkDeviceCreateInfo m_deviceCreateInfo;
 
+        std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
+        VkPipelineShaderStageCreateInfo m_shaderStageCreateInfo;
+        VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
+        VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
+        VkPipelineTessellationStateCreateInfo tessellationStateCreateInfo;
+        VkPipelineViewportStateCreateInfo viewportStateCreateInfo;
+        VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
+        VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
+        VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
+        VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo;
+        VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo;
+
         // Defaults
         VkApplicationInfo getDefaultAppInfo();
         VkInstanceCreateInfo getDefaultInstanceCreateInfo();

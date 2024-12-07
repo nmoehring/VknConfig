@@ -6,6 +6,13 @@ namespace vkn
 {
     VknConfig::VknConfig() {}
 
+    void VknConfig::deviceInfo()
+    {
+        this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
+        this->createInstance();
+        this->createDevice();
+    }
+
     void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
                                 std::string engineName, VkApplicationInfo *pNext,
                                 uint32_t appVersion, uint32_t engineVersion)
