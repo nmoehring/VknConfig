@@ -105,13 +105,9 @@ function(buildSubDir subdir)
 endfunction()
 
 # ############ PROCESS SUBDIRECTORIES #################
-add_subdirectory(vulkancore)
-add_subdirectory(enginecore)
 add_subdirectory(imguiBackends)
 add_subdirectory(VknConfig)
 
 # add_subdirectory(VkCore)
 buildSubDir(VkExtCheck)
 buildSubDir(minTest)
-buildSubDir(Chapter1)
-buildSubDir(Chapter2)

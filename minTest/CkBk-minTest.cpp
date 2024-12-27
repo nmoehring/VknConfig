@@ -23,4 +23,8 @@ int main()
         std::cout << "Mem Protection: " << queue.supportsMemoryProtection() << std::endl;
         ++idx;
     }
+
+    // Pipeline experiments
+
+    // VkResult res = VkCreateGraphicsPipelines
 }

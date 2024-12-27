@@ -10,10 +10,10 @@
 namespace vkn
 {
     VknDevice::VknDevice() {}
-    VknDevice::VknDevice(VkPhysicalDevice dev, VknInfos *infos)
+
+    VknDevice::VknDevice(VkInstance *instance, VknInfos *infos, VknResultArchive *archive)
+        : m_physicalDevice{instance, archive, infos}, m_infos{infos}, m_resultArchive{archive}
     {
-        m_physicalDevice = VknPhysicalDevice(dev);
-        m_infos = infos;
         requestQueueFamilyProperties();
     }
     /*
@@ -24,7 +24,7 @@ namespace vkn
     */
     void VknDevice::archiveResult(VknResult res)
     {
-        m_resultArchive.push_back(res);
+        m_resultArchive->store(res);
     }
 
     void VknDevice::requestQueueFamilyProperties()

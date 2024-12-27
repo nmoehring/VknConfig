@@ -11,7 +11,7 @@
 #include <functional>
 
 #include "VknDevice.hpp"
-#include "VknPipeline.hpp"
+// #include "VknPipeline.hpp"
 #include "VknQueueFamily.hpp"
 #include "vknInfos.hpp"
 #include "VknResult.hpp"
@@ -32,16 +32,14 @@ namespace vkn
         VknResult createInstance();
         VknResult createDevice(bool chooseAllAvailable = false);
         std::vector<vkn::VknQueueFamily> getQueueData();
-        VknDevice getDevice() { return m_device; }
+        VknDevice &getDevice() { return m_device; }
 
     private:
         VknInfos m_infos{};
-        VkInstance m_instance;
-        VknDevice m_device;
+        VkInstance m_instance{};
+        VknDevice m_device{};
         // VknPipeline m_pipeline{};
-        std::vector<VknResult> m_resultArchive;
-
-        VknResult selectPhysicalDevice();
+        VknResultArchive m_resultArchive{};
 
         void archiveResult(VknResult res);
     };

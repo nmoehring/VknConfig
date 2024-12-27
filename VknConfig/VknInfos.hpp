@@ -73,6 +73,65 @@ namespace vkn
                                        float queuePriorities = -1);
         void fillDeviceCreateInfo();
 
+        VkPipelineShaderStageCreateInfo &fillShaderStageCreateInfo(
+            VkShaderModule module = VkShaderModule{}, std::string name = "",
+            VkSpecializationInfo *pSpecializationInfo = nullptr,
+            VkPipelineShaderStageCreateFlags flags = VkPipelineShaderStageCreateFlags{},
+            VkShaderStageFlagBits stage = VkShaderStageFlagBits{});
+        VkPipelineVertexInputStateCreateInfo &fillVertexInputStateCreateInfo(
+            std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
+            std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions);
+        VkPipelineInputAssemblyStateCreateInfo &fillInputAssemblyStateCreateInfo(
+            VkPrimitiveTopology topology = VkPrimitiveTopology{},
+            VkBool32 primitiveRestartEnable = VK_FALSE);
+        VkPipelineTessellationStateCreateInfo &fillTessellationStateCreateInfo(uint32_t patchControlPoints = 0);
+        VkPipelineViewportStateCreateInfo &fillViewportStateCreateInfo(
+            std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors);
+        VkPipelineRasterizationStateCreateInfo &fillRasterizationStateCreateInfo(
+            VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
+            float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
+            float lineWidth = 0, VkBool32 depthClampEnable = VK_FALSE,
+            VkBool32 rasterizerDiscardEnable = VK_FALSE, VkBool32 depthBiasEnable = VK_FALSE);
+        VkPipelineMultisampleStateCreateInfo &fillMultisampleStateCreateInfo(
+            float minSampleShading, VkSampleMask *pSampleMask,
+            VkSampleCountFlagBits rasterizationSamples = VkSampleCountFlagBits{},
+            VkBool32 sampleShadingEnable = VK_FALSE,
+            VkBool32 alphaToCoverageEnable = VK_FALSE, VkBool32 alphaToOneEnable = VK_FALSE);
+        VkPipelineDepthStencilStateCreateInfo &fillDepthStencilStateCreateInfo(
+            VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
+            float minDepthBounds, float maxDepthBounds,
+            VkPipelineDepthStencilStateCreateFlags flags = VkPipelineDepthStencilStateCreateFlags{},
+            VkBool32 depthTestEnable = VK_FALSE,
+            VkBool32 depthWriteEnable = VK_FALSE,
+            VkBool32 depthBoundsTestEnable = VK_FALSE, VkBool32 stencilTestEnable = VK_FALSE);
+        VkPipelineColorBlendStateCreateInfo &fillColorBlendStateCreateInfo(
+            VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
+            float blendConstants[4], VkBool32 logicOpEnable = VK_FALSE,
+            VkPipelineColorBlendStateCreateFlags flags = VkPipelineColorBlendStateCreateFlags{});
+        VkPipelineDynamicStateCreateInfo &fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates);
+        VkGraphicsPipelineCreateInfo &fillGfxPipelineCreateInfo(
+            std::vector<VkPipelineShaderStageCreateInfo> &stages,
+            VkPipelineLayout layout, VkRenderPass renderPass, uint32_t subpass,
+            VkPipeline basePipelineHandle, int32_t basePipelineIndex,
+            VkPipelineCreateFlags flags = VkPipelineCreateFlags{},
+            VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
+            VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
+            VkPipelineTessellationStateCreateInfo *pTessellationState = nullptr,
+            VkPipelineViewportStateCreateInfo *pViewportState = nullptr,
+            VkPipelineRasterizationStateCreateInfo *pRasterizationState = nullptr,
+            VkPipelineMultisampleStateCreateInfo *pMultisampleState = nullptr,
+            VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = nullptr,
+            VkPipelineColorBlendStateCreateInfo *pColorBlendState = nullptr,
+            VkPipelineDynamicStateCreateInfo *pDynamicState = nullptr);
+        VkPipelineLayoutCreateInfo &fillPipelineLayoutCreateInfo(
+            std::vector<VkDescriptorSetLayout> setLayouts = std::vector<VkDescriptorSetLayout>{},
+            std::vector<VkPushConstantRange> pushConstantRanges = std::vector<VkPushConstantRange>{},
+            VkPipelineLayoutCreateFlags flags = VkPipelineLayoutCreateFlags{});
+        VkPipelineCacheCreateInfo &fillPipelineCacheCreateInfo(
+            size_t initialDataSize = 0,
+            const void *pInitialData = nullptr,
+            VkPipelineCacheCreateFlags flags = VkPipelineCacheCreateFlags{});
+
     private:
         std::string m_appName = "Default App Name";
         std::string m_engineName = "Default Engine Name";
@@ -85,16 +144,18 @@ namespace vkn
         VkDeviceCreateInfo m_deviceCreateInfo;
 
         std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
-        VkPipelineShaderStageCreateInfo m_shaderStageCreateInfo;
-        VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
-        VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
-        VkPipelineTessellationStateCreateInfo tessellationStateCreateInfo;
-        VkPipelineViewportStateCreateInfo viewportStateCreateInfo;
-        VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
-        VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
-        VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
-        VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo;
-        VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo;
+        std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageCreateInfos;
+        std::vector<VkPipelineVertexInputStateCreateInfo> m_vertexInputStateCreateInfos;
+        std::vector<VkPipelineInputAssemblyStateCreateInfo> m_inputAssemblyStateCreateInfos;
+        std::vector<VkPipelineTessellationStateCreateInfo> m_tessellationStateCreateInfos;
+        std::vector<VkPipelineViewportStateCreateInfo> m_viewportStateCreateInfos;
+        std::vector<VkPipelineRasterizationStateCreateInfo> m_rasterizationStateCreateInfos;
+        std::vector<VkPipelineMultisampleStateCreateInfo> m_multisampleStateCreateInfos;
+        std::vector<VkPipelineDepthStencilStateCreateInfo> m_depthStencilStateCreateInfos;
+        std::vector<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos;
+        std::vector<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos;
+        std::vector<VkPipelineLayoutCreateInfo> m_layoutCreateInfos;
+        std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
 
         // Defaults
         VkApplicationInfo getDefaultAppInfo();
