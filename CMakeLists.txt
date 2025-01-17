@@ -1,22 +1,16 @@
 # Uses vcpkg to install all the dependencies. vcpkg is included via CMakePresets.json
-# Output files are written to a neighboring VkCkBk_build folder. This directory is
+# Output files are written to a neighboring vknconfig_build folder. This directory is
 # meant to stay unchanged, as it typically has version control through git.
 # cmake minimum version is set to 3.29 because it ships with Visual Studio 2022
 
 # ######## INITIALIZE ###########
 cmake_minimum_required(VERSION 3.29)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-project(VkCkBk VERSION 0.3 LANGUAGES CXX)
+project(VknConfig VERSION 0.3 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
 # ##### FIND, CONFIGURE, AND BUILD DEPENDENCIES #####(What's left anyway after vcpkg ran)
 include(FetchContent)
-FetchContent_Declare(
-    bs-thread-pool
-    GIT_REPOSITORY https://github.com/bshoshany/thread-pool.git
-    GIT_TAG v4.1.0
-)
-FetchContent_MakeAvailable(bs-thread-pool)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
@@ -46,23 +40,6 @@ include_directories(
     ${CMAKE_BINARY_DIR}/_deps/bs-thread-pool-src/include # MakeAvailable fails me again
 )
 
-# Some debug libraries are suffixed with the letter 'd'
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    message("Adding debug library directories.")
-    link_directories(
-        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
-        ${CMAKE_BINARY_DIR}/imguiBackends/Debug
-        ${Vulkan_INCLUDE_DIR}/../lib
-    )
-else()
-    message("Adding release library directories.")
-    link_directories(
-        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
-        ${CMAKE_BINARY_DIR}/imguiBackends
-        ${Vulkan_INCLUDE_DIR}/../lib
-    )
-endif()
-
 # Optimizations (referenced in bs::thread-pool)
 # TODO: Other system Cxx compiler optimizations
 # TODO: SPIR-V optimizations
@@ -72,11 +49,26 @@ endif()
 
 # CMake docs recommended this style of modifying compiler/linker flags and
 # specifying the C++ version
-add_library(vkckbk_compiler_flags INTERFACE)
-target_compile_features(vkckbk_compiler_flags INTERFACE cxx_std_20)
+add_library(vknconfig_compiler_args INTERFACE)
+target_compile_features(vknconfig_compiler_args INTERFACE cxx_std_20)
 
-if(CMAKE_BUILD_TYPE MATCHES Release)
-    target_compile_options(vkckbk_compiler_flags INTERFACE /O2)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    message("Adding debug library directories.")
+    link_directories(
+        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
+        ${CMAKE_BINARY_DIR}/imguiBackends/Debug
+        ${Vulkan_INCLUDE_DIR}/../lib
+    )
+elseif(CMAKE_BUILD_TYPE MATCHES Release)
+    target_compile_options(vknconfig_compiler_args INTERFACE /O2)
+    message("Adding release library directories.")
+    link_directories(
+        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
+        ${CMAKE_BINARY_DIR}/imguiBackends
+        ${Vulkan_INCLUDE_DIR}/../lib
+    )
+else()
+    message("Unknown build type.")
 endif()
 
 # Single-header libraries

@@ -78,6 +78,11 @@ namespace vkn
         return info;
     }
 
+    VkWin32SurfaceCreateInfoKHR &VknInfos::fillWin32SurfaceCreateInfo()
+    {
+        VkWin32SurfaceCreateInfoKHR
+    }
+
     VkGraphicsPipelineCreateInfo &VknInfos::fillGfxPipelineCreateInfo(
         std::vector<VkPipelineShaderStageCreateInfo> &stages,
         VkPipelineLayout layout, VkRenderPass renderPass, uint32_t subpass,
@@ -162,11 +167,22 @@ namespace vkn
         return info;
     }
 
+    VkShaderModuleCreateInfo &VknInfos::fillShaderModuleCreateInfo(
+        std::vector<char> &code, VkShaderModuleCreateFlags flags)
+    {
+        m_shaderModuleCreateInfos.push_back(VkShaderModuleCreateInfo{});
+        VkShaderModuleCreateInfo &info = m_shaderModuleCreateInfos.back();
+        info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        info.pNext = nullptr;
+        info.flags = flags;
+        info.codeSize = code.size();
+        info.pCode = reinterpret_cast<const uint32_t *>(code.data());
+        return info;
+    }
+
     VkPipelineShaderStageCreateInfo &VknInfos::fillShaderStageCreateInfo(
-        VkShaderModule module, std::string name,
-        VkSpecializationInfo *pSpecializationInfo,
-        VkPipelineShaderStageCreateFlags flags,
-        VkShaderStageFlagBits stage)
+        VkShaderModule module, VkShaderStageFlagBits stage, std::string entryPointName,
+        VkSpecializationInfo *pSpecializationInfo, VkPipelineShaderStageCreateFlags flags)
     {
         m_shaderStageCreateInfos.push_back(VkPipelineShaderStageCreateInfo{});
         VkPipelineShaderStageCreateInfo &info = m_shaderStageCreateInfos.back();
@@ -175,7 +191,7 @@ namespace vkn
         info.flags = flags;                             // need fill
         info.stage = stage;                             // need fill
         info.module = module;                           // need fill
-        info.pName = name.c_str();                      // need fill
+        info.pName = entryPointName.c_str();            // need fill
         info.pSpecializationInfo = pSpecializationInfo; // need fill
         return info;
     }

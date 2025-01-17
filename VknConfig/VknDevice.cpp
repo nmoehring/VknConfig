@@ -16,12 +16,18 @@ namespace vkn
     {
         requestQueueFamilyProperties();
     }
-    /*
-        VknDevice::~VknDevice()
-        {
-            vkDestroyDevice(m_logicalDevice, nullptr);
-        }
-    */
+
+    VknDevice::~VknDevice()
+    {
+        if (!m_destroyed)
+            this->destroy();
+    }
+
+    void VknDevice::destroy()
+    {
+        vkDestroyDevice(m_logicalDevice, nullptr);
+    }
+
     void VknDevice::archiveResult(VknResult res)
     {
         m_resultArchive->store(res);
@@ -31,7 +37,7 @@ namespace vkn
     {
         uint32_t propertyCount{0};
         vkGetPhysicalDeviceQueueFamilyProperties(
-            m_physicalDevice.getDevice(), &propertyCount, nullptr);
+            m_physicalDevice.getVkPhysicalDevice(), &propertyCount, nullptr);
         if (propertyCount == 0)
             throw std::runtime_error("No available queue families found.");
         std::vector<VkQueueFamilyProperties> queues;
@@ -39,7 +45,7 @@ namespace vkn
         m_infos->setNumQueueFamilies(propertyCount);
 
         vkGetPhysicalDeviceQueueFamilyProperties(
-            m_physicalDevice.getDevice(),
+            m_physicalDevice.getVkPhysicalDevice(),
             &propertyCount,
             queues.data());
         if (queues.size() == 0)
@@ -52,11 +58,12 @@ namespace vkn
     {
         VknResult res{
             vkCreateDevice(
-                m_physicalDevice.getDevice(),
+                m_physicalDevice.getVkPhysicalDevice(),
                 m_infos->getDeviceCreateInfo(),
                 nullptr,
                 &m_logicalDevice),
             "Create device"};
         return res;
     }
+
 } // namespace vkn

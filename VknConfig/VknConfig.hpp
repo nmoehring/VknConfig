@@ -11,7 +11,7 @@
 #include <functional>
 
 #include "VknDevice.hpp"
-// #include "VknPipeline.hpp"
+#include "VknPipeline.hpp"
 #include "VknQueueFamily.hpp"
 #include "vknInfos.hpp"
 #include "VknResult.hpp"
@@ -24,6 +24,7 @@ namespace vkn
         void deviceInfo(); // Create a simple program with just this call to get some device info
 
         VknConfig();
+        ~VknConfig();
         void fillAppInfo(uint32_t apiVersion, std::string appName,
                          std::string engineName,
                          VkApplicationInfo *pNext = nullptr,
@@ -32,14 +33,16 @@ namespace vkn
         VknResult createInstance();
         VknResult createDevice(bool chooseAllAvailable = false);
         std::vector<vkn::VknQueueFamily> getQueueData();
-        VknDevice &getDevice() { return m_device; }
+        VknDevice *getDevice() { return &m_device; }
+        VknInfos *getInfos() { return &m_infos; }
+        VknPipeline *getPipeline() { return &m_pipeline; }
 
     private:
+        VknResultArchive m_resultArchive{};
         VknInfos m_infos{};
         VkInstance m_instance{};
         VknDevice m_device{};
-        // VknPipeline m_pipeline{};
-        VknResultArchive m_resultArchive{};
+        VknPipeline m_pipeline{&m_device, &m_infos, &m_resultArchive};
 
         void archiveResult(VknResult res);
     };

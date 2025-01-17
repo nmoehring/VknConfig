@@ -19,7 +19,7 @@ namespace vkn
     public:
         VknDevice();
         VknDevice(VkInstance *instance, VknInfos *infos, VknResultArchive *archive);
-        //~VknDevice();
+        ~VknDevice();
         VknResult createDevice();
 
         VkPhysicalDeviceProperties getPhysicalDeviceProperties()
@@ -28,7 +28,9 @@ namespace vkn
         }
         std::vector<VknQueueFamily> getQueues() { return m_queues; }
         VknQueueFamily getQueue(int idx) { return m_queues[idx]; }
-        VkDevice getDevice() { return m_logicalDevice; }
+        VkDevice *getVkDevice() { return &m_logicalDevice; }
+        VknPhysicalDevice *getPhysicalDevice() { return &m_physicalDevice; }
+        void destroy();
 
     private:
         VkDevice m_logicalDevice{};
@@ -36,6 +38,7 @@ namespace vkn
         std::vector<VknQueueFamily> m_queues{};
         VknResultArchive *m_resultArchive{nullptr};
         VknInfos *m_infos{nullptr};
+        bool m_destroyed{false};
 
         // Other utilities
         void archiveResult(VknResult res);

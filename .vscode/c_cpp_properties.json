@@ -5,9 +5,8 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/",
-                "${workspaceFolder}/../VkCkBk_build/vcpkg_installed/x64-windows/include",
-                "${env:VULKAN_SDK}/include",
-                "${workspaceFolder}/../VkCkBk_build/_deps/bs-thread-pool-src/include"
+                "${workspaceFolder}/../VknConfig_build/vcpkg_installed/x64-windows/include",
+                "${env:VULKAN_SDK}/include"
             ],
             "defines": [
                 "_DEBUG",

@@ -16,7 +16,7 @@ namespace vkn
         {
             APP_INFO = 0,
             DEVICE_QUEUE_CREATE_INFO = 1,
-            DEVICE_CREATE_INFO
+            DEVICE_CREATE_INFO = 2
         };
 
         VknInfos();
@@ -54,7 +54,7 @@ namespace vkn
                 return nullptr;
         };
 
-        // Fill
+        // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
         void fillDefaultInfos();
 
@@ -73,11 +73,16 @@ namespace vkn
                                        float queuePriorities = -1);
         void fillDeviceCreateInfo();
 
+
+        //================FILL PIPELINE INFOS===================
+        VkShaderModuleCreateInfo &fillShaderModuleCreateInfo(
+            std::vector<char> &code, VkShaderModuleCreateFlags flags = VkShaderModuleCreateFlags{});
+        VkWin32SurfaceCreateInfoKHR &fillWin32SurfaceCreateInfo();
+        
         VkPipelineShaderStageCreateInfo &fillShaderStageCreateInfo(
-            VkShaderModule module = VkShaderModule{}, std::string name = "",
-            VkSpecializationInfo *pSpecializationInfo = nullptr,
-            VkPipelineShaderStageCreateFlags flags = VkPipelineShaderStageCreateFlags{},
-            VkShaderStageFlagBits stage = VkShaderStageFlagBits{});
+            VkShaderModule module, VkShaderStageFlagBits stage,
+            std::string entryPointName = "main", VkSpecializationInfo *pSpecializationInfo = nullptr,
+            VkPipelineShaderStageCreateFlags flags = VkPipelineShaderStageCreateFlags{});
         VkPipelineVertexInputStateCreateInfo &fillVertexInputStateCreateInfo(
             std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
             std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions);
@@ -111,8 +116,9 @@ namespace vkn
         VkPipelineDynamicStateCreateInfo &fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo &fillGfxPipelineCreateInfo(
             std::vector<VkPipelineShaderStageCreateInfo> &stages,
-            VkPipelineLayout layout, VkRenderPass renderPass, uint32_t subpass,
-            VkPipeline basePipelineHandle, int32_t basePipelineIndex,
+            VkPipelineLayout layout = VkPipelineLayout{},
+            VkRenderPass renderPass = VkRenderPass{}, uint32_t subpass = uint32_t{},
+            VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
             VkPipelineCreateFlags flags = VkPipelineCreateFlags{},
             VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
             VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
@@ -143,7 +149,9 @@ namespace vkn
         std::vector<VkDeviceQueueCreateInfo> m_queueCreateInfos;
         VkDeviceCreateInfo m_deviceCreateInfo;
 
-        std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
+        std::vector<VkPipelineLayoutCreateInfo> m_layoutCreateInfos;
+        std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
+        std::vector<VkShaderModuleCreateInfo> m_shaderModuleCreateInfos;
         std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageCreateInfos;
         std::vector<VkPipelineVertexInputStateCreateInfo> m_vertexInputStateCreateInfos;
         std::vector<VkPipelineInputAssemblyStateCreateInfo> m_inputAssemblyStateCreateInfos;
@@ -154,8 +162,7 @@ namespace vkn
         std::vector<VkPipelineDepthStencilStateCreateInfo> m_depthStencilStateCreateInfos;
         std::vector<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos;
         std::vector<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos;
-        std::vector<VkPipelineLayoutCreateInfo> m_layoutCreateInfos;
-        std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
+        std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
 
         // Defaults
         VkApplicationInfo getDefaultAppInfo();

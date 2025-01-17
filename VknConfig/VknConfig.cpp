@@ -6,6 +6,13 @@ namespace vkn
 {
     VknConfig::VknConfig() {}
 
+    VknConfig::~VknConfig()
+    {
+        m_pipeline.destroy();
+        m_device.destroy();
+        vkDestroyInstance(m_instance, nullptr);
+    }
+
     void VknConfig::deviceInfo()
     {
         this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");

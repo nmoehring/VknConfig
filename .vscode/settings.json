@@ -55,6 +55,7 @@
         "vertexbuffer",
         "VKAPI",
         "vkckbk",
+        "vknconfig",
         "vkncore",
         "volk",
         "voxigen",

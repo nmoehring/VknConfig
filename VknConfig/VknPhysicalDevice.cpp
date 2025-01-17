@@ -20,8 +20,22 @@ namespace vkn
         devices.resize(deviceCount);
         VknResult res2{vkEnumeratePhysicalDevices(*instance, &deviceCount, devices.data()),
                        "Enum physical devices and store."};
-        m_device = devices[0];
+        m_physicalDevice = devices[0];
 
         return res2;
+    }
+
+    bool VknPhysicalDevice::getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx)
+    {
+        VkBool32 presentSupport = false;
+        VknResult res{
+            vkGetPhysicalDeviceSurfaceSupportKHR(
+                m_physicalDevice, queueFamilyIdx, surface, &presentSupport), 
+            "Get Surface Support"};
+        if (!res.isSuccess())
+        {
+            throw std::runtime_error("Error while getting surface support.");
+        }
+        return presentSupport;
     }
 }

@@ -18,16 +18,17 @@ namespace vkn
                 throw std::runtime_error(res.toErr("Failed to get physical devices."));
             queryProperties();
         }
-        VkPhysicalDevice getDevice() { return m_device; };
+        VkPhysicalDevice getVkPhysicalDevice() { return m_physicalDevice; };
         VkPhysicalDeviceProperties getProperties() { return m_properties; };
+        bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);
 
     private:
-        VkPhysicalDevice m_device{};
+        VkPhysicalDevice m_physicalDevice{};
         VkPhysicalDeviceProperties m_properties{};
         VknResultArchive *m_archive{nullptr};
         VknInfos *m_infos{nullptr};
         VknResult selectPhysicalDevice(VkInstance *instance);
-        void queryProperties() { vkGetPhysicalDeviceProperties(m_device, &m_properties); }
+        void queryProperties() { vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties); }
     };
 
 }
