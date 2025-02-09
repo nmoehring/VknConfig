@@ -47,6 +47,7 @@
         "SPIRV",
         "spirvreflect",
         "SSCALED",
+        "subpasses",
         "Swapchain",
         "threadpool",
         "USCALED",

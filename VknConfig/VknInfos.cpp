@@ -78,11 +78,6 @@ namespace vkn
         return info;
     }
 
-    VkWin32SurfaceCreateInfoKHR &VknInfos::fillWin32SurfaceCreateInfo()
-    {
-        VkWin32SurfaceCreateInfoKHR
-    }
-
     VkGraphicsPipelineCreateInfo &VknInfos::fillGfxPipelineCreateInfo(
         std::vector<VkPipelineShaderStageCreateInfo> &stages,
         VkPipelineLayout layout, VkRenderPass renderPass, uint32_t subpass,
@@ -167,6 +162,43 @@ namespace vkn
         return info;
     }
 
+    VkRenderPassCreateInfo &fillRenderPassCreateInfo(
+        std::vector<VkAttachmentDescription> attachments,
+        std::vector<VkSubpassDescription> subpasses,
+        std::vector<VkSubpassDependency> dependencies,
+        VkRenderPassCreateFlags flags = VkRenderPassCreateFlags{})
+    {
+        m_renderPassCreateInfos.push_back(VkRenderPassCreateInfo{});
+        VkRenderPassCreateInfo &renderPassInfo = m_renderPassCreateInfos.back();
+
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.pNext = nullptr;
+        renderPassInfo.flags = flags;
+        renderPassInfo.attachmentCount = attachments.size();
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = subpasses.size();
+        renderPassInfo.pSubpasses = subpasses.data();
+        renderPassInfo.dependencyCount = dependencies.size();
+        renderPassInfo.pDependencies = dependencies.data();
+    }
+
+    VkRenderPassCreateInfo &fillDefaultRenderPass(
+        std::vector<VkAttachmentDescription> attachments,
+        std::vector<VkSubpassDescription> subpasses,
+        std::vector<VkSubpassDependency> dependencies)
+    {
+        m_renderPassCreateInfos.push_back(VkRenderPassCreateInfo{});
+        VkRenderPassCreateInfo &info = m_renderPassCreateInfos.back();
+
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = attachments.size();
+        renderPassInfo.pAttachments = attachments.data();
+        renderPassInfo.subpassCount = subpasses.size();
+        renderPassInfo.pSubpasses = subpasses.data();
+        renderPassInfo.dependencyCount = dependencies.size();
+        renderPassInfo.pDependencies = dependencies.data();
+    }
+
     VkShaderModuleCreateInfo &VknInfos::fillShaderModuleCreateInfo(
         std::vector<char> &code, VkShaderModuleCreateFlags flags)
     {
@@ -181,17 +213,17 @@ namespace vkn
     }
 
     VkPipelineShaderStageCreateInfo &VknInfos::fillShaderStageCreateInfo(
-        VkShaderModule module, VkShaderStageFlagBits stage, std::string entryPointName,
+        VkShaderModule module, VkShaderStageFlagBits stage,
         VkSpecializationInfo *pSpecializationInfo, VkPipelineShaderStageCreateFlags flags)
     {
         m_shaderStageCreateInfos.push_back(VkPipelineShaderStageCreateInfo{});
         VkPipelineShaderStageCreateInfo &info = m_shaderStageCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info.pNext = nullptr;
-        info.flags = flags;                             // need fill
-        info.stage = stage;                             // need fill
-        info.module = module;                           // need fill
-        info.pName = entryPointName.c_str();            // need fill
+        info.flags = flags; // need fill
+        info.stage = stage; // need fill
+        info.module = module;
+        info.pName = m_mainEntry;
         info.pSpecializationInfo = pSpecializationInfo; // need fill
         return info;
     }
@@ -210,6 +242,25 @@ namespace vkn
         info.vertexAttributeDescriptionCount = vertexAttributeDescriptions.size();
         info.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
         return info;
+    }
+
+    VkPipelineVertexInputStateCreateInfo &VknInfos::fillDefaultVertexInputState()
+    {
+        std::vector<VkVertexInputBindingDescription> vertexInputBinding;
+        vertexInputBinding.push_back(VkVertexInputBindingDescription{});
+        vertexInputBinding[0].binding = 0;
+        vertexInputBinding[0].stride = 0; // No actual vertex data
+        vertexInputBinding[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        // Minimal vertex input attribute description
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttribute;
+        vertexInputAttribute.push_back(VkVertexInputAttributeDescription{});
+        vertexInputAttribute[0].binding = 0;
+        vertexInputAttribute[0].location = 0;
+        vertexInputAttribute[0].format = VK_FORMAT_UNDEFINED;
+        vertexInputAttribute[0].offset = 0;
+
+        return this->fillVertexInputStateCreateInfo(vertexInputBinding, vertexInputAttribute);
     }
 
     VkPipelineInputAssemblyStateCreateInfo &VknInfos::fillInputAssemblyStateCreateInfo(
@@ -346,6 +397,19 @@ namespace vkn
         info.flags = 0; // reserved for future use
         info.dynamicStateCount = dynamicStates.size();
         info.pDynamicStates = dynamicStates.data();
+        return info;
+    }
+
+    VkDescriptorSetLayoutCreateInfo &VknInfos::fillDescriptorSetLayoutCreateInfo(
+        std::vector<VkDescriptorSetLayoutBinding> bindings, VkDescriptorSetLayoutCreateFlags flags)
+    {
+        m_descriptorSetLayoutCreateInfos.push_back(VkDescriptorSetLayoutCreateInfo{});
+        VkDescriptorSetLayoutCreateInfo &info = m_descriptorSetLayoutCreateInfos.back();
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        info.pNext = nullptr;
+        info.flags = flags;
+        info.bindingCount = bindings.size();
+        info.pBindings = bindings.data();
         return info;
     }
 

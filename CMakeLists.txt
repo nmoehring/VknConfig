@@ -37,7 +37,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
     ${Vulkan_INCLUDE_DIRS}
     ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
-    ${CMAKE_BINARY_DIR}/_deps/bs-thread-pool-src/include # MakeAvailable fails me again
+    ${glfw3_DIR}/include
 )
 
 # Optimizations (referenced in bs::thread-pool)

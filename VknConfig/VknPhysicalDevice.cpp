@@ -30,12 +30,13 @@ namespace vkn
         VkBool32 presentSupport = false;
         VknResult res{
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                m_physicalDevice, queueFamilyIdx, surface, &presentSupport), 
+                m_physicalDevice, queueFamilyIdx, surface, &presentSupport),
             "Get Surface Support"};
         if (!res.isSuccess())
         {
             throw std::runtime_error("Error while getting surface support.");
         }
+        m_archive->store(res);
         return presentSupport;
     }
 }

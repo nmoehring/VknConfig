@@ -36,6 +36,7 @@ namespace vkn
         VknDevice *getDevice() { return &m_device; }
         VknInfos *getInfos() { return &m_infos; }
         VknPipeline *getPipeline() { return &m_pipeline; }
+        void enableExtensions(std::vector<std::string> extensions);
 
     private:
         VknResultArchive m_resultArchive{};
@@ -43,6 +44,9 @@ namespace vkn
         VkInstance m_instance{};
         VknDevice m_device{};
         VknPipeline m_pipeline{&m_device, &m_infos, &m_resultArchive};
+        std::vector<std::string> m_instanceExtensions;
+
+        void fillInstanceCreateInfo();
 
         void archiveResult(VknResult res);
     };

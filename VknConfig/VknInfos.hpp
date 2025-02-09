@@ -1,5 +1,3 @@
-// I just don't want to look at all these structs every time I look at my code.
-
 #pragma once
 #include <string>
 #include <vector>
@@ -73,19 +71,18 @@ namespace vkn
                                        float queuePriorities = -1);
         void fillDeviceCreateInfo();
 
-
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo &fillShaderModuleCreateInfo(
             std::vector<char> &code, VkShaderModuleCreateFlags flags = VkShaderModuleCreateFlags{});
-        VkWin32SurfaceCreateInfoKHR &fillWin32SurfaceCreateInfo();
-        
+
         VkPipelineShaderStageCreateInfo &fillShaderStageCreateInfo(
             VkShaderModule module, VkShaderStageFlagBits stage,
-            std::string entryPointName = "main", VkSpecializationInfo *pSpecializationInfo = nullptr,
+            VkSpecializationInfo *pSpecializationInfo = nullptr,
             VkPipelineShaderStageCreateFlags flags = VkPipelineShaderStageCreateFlags{});
         VkPipelineVertexInputStateCreateInfo &fillVertexInputStateCreateInfo(
             std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
             std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions);
+        VkPipelineVertexInputStateCreateInfo &fillDefaultVertexInputState();
         VkPipelineInputAssemblyStateCreateInfo &fillInputAssemblyStateCreateInfo(
             VkPrimitiveTopology topology = VkPrimitiveTopology{},
             VkBool32 primitiveRestartEnable = VK_FALSE);
@@ -137,6 +134,14 @@ namespace vkn
             size_t initialDataSize = 0,
             const void *pInitialData = nullptr,
             VkPipelineCacheCreateFlags flags = VkPipelineCacheCreateFlags{});
+        VkRenderPassCreateInfo &fillRenderPassCreateInfo(
+            std::vector<VkAttachmentDescription> attachments,
+            std::vector<VkSubpassDescription> subpasses,
+            std::vector<VkSubpassDependency> dependencies,
+            VkRenderPassCreateFlags flags = VkRenderPassCreateFlags{});
+        VkDescriptorSetLayoutCreateInfo &fillDescriptorSetLayoutCreateInfo(
+            std::vector<VkDescriptorSetLayoutBinding> bindings = std::vector<VkDescriptorSetLayoutBinding>{},
+            VkDescriptorSetLayoutCreateFlags flags = VkDescriptorSetLayoutCreateFlags{});
 
     private:
         std::string m_appName = "Default App Name";
@@ -163,6 +168,11 @@ namespace vkn
         std::vector<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos;
         std::vector<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos;
         std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
+
+        std::vector<VkRenderPassCreateInfo> m_renderPassCreateInfos;
+        std::vector<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos;
+
+        const char m_mainEntry[5] = "main";
 
         // Defaults
         VkApplicationInfo getDefaultAppInfo();

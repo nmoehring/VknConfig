@@ -20,6 +20,15 @@ int main()
 {
     vkn::VknConfig vknConfig{};
     vknConfig.fillAppInfo(VK_API_VERSION_1_1, "MinTest", "MinVknEngine");
+    uint32_t glfwExtensionCount = 0;
+    const char **glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    std::vector<std::string> extensions;
+    for (int i = 0; i < glfwExtensionCount; ++i)
+    {
+        extensions.push_back(glfwExtensions[i]);
+    }
+    vknConfig.enableExtensions(extensions);
     vknConfig.createInstance();
     vknConfig.createDevice();
     auto infos = vknConfig.getInfos();
@@ -41,16 +50,16 @@ int main()
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
     std::unordered_map<vkn::ShaderStage, std::string> stages{
-        {vkn::VKN_VERTEX_STAGE, "triangle.vert"},
-        {vkn::VKN_FRAGMENT_STAGE, "triangle.frag"}};
+        {vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv"},
+        {vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv"}};
     std::vector<int> idxs;
     for (auto stage : stages)
     {
         int idx = vknConfig.getPipeline()->createShaderStage(stage.first, stage.second);
         idxs.push_back(idx);
     }
-    /*auto vertexInputStateCreateInfos{infos->fillVertexInputStateCreateInfo()};
-    auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
+    auto vertexInputStateCreateInfo{infos->fillDefaultVertexInputState()};
+    /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
     auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};
     auto rasterizationStateCreateInfos{infos->fillRasterizationStateCreateInfo()};
@@ -58,8 +67,17 @@ int main()
     auto depthStencilStateCreateInfos{infos->fillDepthStencilStateCreateInfo()};
     auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
     auto stageInfos{vknConfig.getPipeline()->getShaderStageInfos(idxs)};
+    VkAttachmentReference colorAttachmentRef = vknConfig.getPipeline()->createAttachment();
+    vknConfig.getPipeline()->createSubpass(
+        VkSubpassDescriptionFlagBits{}, VK_PIPELINE_BIND_POINT_GRAPHICS,
+        std::vector<VkAttachmentReference>{colorAttachmentRef});
+    vknConfig.getPipeline()->createSubpassDependency();
+    VkPipelineLayoutCreateInfo layoutInfo = vknConfig.getPipeline()->fillPipelineLayoutCreateInfo();
+    VkPipelineLayout vknConfig.getPipeline()->createLayout(layoutInfo);
+    VkRenderPassCreateInfo rpCreateInfo = vknConfig.getPipeline()->fillRenderPassCreateInfo();
+    VkRenderPass rp = vknConfig.getPipeline()->createRenderPass(&rpCreateInfo);
     auto gfxPipelineCreateInfo{
-        infos->fillGfxPipelineCreateInfo(stageInfos)
+        infos->fillGfxPipelineCreateInfo(stageInfos, , renderPass)
         /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
             basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
             tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
@@ -86,8 +104,6 @@ bool initWindow(GLFWwindow **outWindow)
     uint32_t posY = 200;
     uint32_t width = 800;
     uint32_t height = 600;
-
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);
 

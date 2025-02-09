@@ -4,13 +4,21 @@
 
 namespace vkn
 {
-    VknConfig::VknConfig() {}
+    VknConfig::VknConfig()
+    {
+    }
 
     VknConfig::~VknConfig()
     {
         m_pipeline.destroy();
         m_device.destroy();
         vkDestroyInstance(m_instance, nullptr);
+    }
+
+    void VknConfig::enableExtensions(std::vector<std::string> extensions)
+    {
+        for (auto name : extensions)
+            m_instanceExtensions.push_back(name);
     }
 
     void VknConfig::deviceInfo()
@@ -27,12 +35,19 @@ namespace vkn
         m_infos.fillAppInfo(apiVersion, appName, engineName, pNext, appVersion, engineVersion);
     }
 
+    void VknConfig::fillInstanceCreateInfo()
+    {
+        m_infos.fillInstanceCreateInfo(
+            nullptr, 0U, std::vector<std::string>{}, m_instanceExtensions);
+    }
+
     VknResult VknConfig::createInstance()
     {
         VknResult res{vkCreateInstance(m_infos.getInstanceCreateInfo(), nullptr, &m_instance),
                       "Create instance."};
         if (!(res.isSuccess()))
             throw std::runtime_error(res.toErr("Error creating instance."));
+        m_resultArchive.store(res);
 
         return res;
     }
@@ -49,9 +64,10 @@ namespace vkn
             m_device.getQueue(i).setNumSelected(numSelected);
         }
 
-        VknResult res(VK_SUCCESS, "null");
+        VknResult res;
         if (!(res = m_device.createDevice()).isSuccess())
             throw std::runtime_error(res.toErr("Error creating device."));
+        m_resultArchive.store(res);
         return res;
     }
 

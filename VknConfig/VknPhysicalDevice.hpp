@@ -16,6 +16,7 @@ namespace vkn
             VknResult res;
             if (!(res = selectPhysicalDevice(instance)).isSuccess())
                 throw std::runtime_error(res.toErr("Failed to get physical devices."));
+            m_archive->store(res);
             queryProperties();
         }
         VkPhysicalDevice getVkPhysicalDevice() { return m_physicalDevice; };

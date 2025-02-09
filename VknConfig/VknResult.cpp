@@ -12,9 +12,13 @@ namespace vkn
         {
         case VK_SUCCESS:
             return "VK_SUCCESS";
+            break;
+        case VK_ERROR_VALIDATION_FAILED_EXT:
+            return "VK_ERROR_VALIDATION_FAILED_EXT";
+            break;
         default:
         {
-            throw std::range_error("toString() error: Unknown result");
+            throw std::runtime_error("toString() error: Unknown result");
             return "FAILURE";
         }
         }
