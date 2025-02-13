@@ -9,12 +9,14 @@
 #include <stb_image.h>
 
 #include "VknConfig/VknConfig.hpp"
+#include "VknConfig/VknRenderPass.hpp"
 
 // GLFWwindow *window_ = nullptr;
 
 void printDevProps(std::vector<VkPhysicalDeviceProperties> devProps);
 void printFamProps(std::vector<VkQueueFamilyProperties> famProps);
 std::vector<char> readFile(const std::string &filename);
+std::vector<const char *> noNames{};
 bool initWindow(GLFWwindow **outWindow);
 int main()
 {
@@ -23,13 +25,25 @@ int main()
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    std::vector<std::string> extensions;
+    std::vector<const char *> instanceExtensions;
     for (int i = 0; i < glfwExtensionCount; ++i)
     {
-        extensions.push_back(glfwExtensions[i]);
+        instanceExtensions.push_back(glfwExtensions[i]);
+        std::cout << glfwExtensions[i] << std::endl;
     }
-    vknConfig.enableExtensions(extensions);
+    instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+    vknConfig.fillInstanceCreateInfo(noNames, instanceExtensions);
     vknConfig.createInstance();
+    vknConfig.selectPhysicalDevice();
+    vknConfig.getDevice()->requestQueueFamilyProperties();
+    std::vector<const char *>
+        deviceExtensions;
+    deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    vknConfig.getDevice()->addExtensions(deviceExtensions);
+
+    // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+    // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+    // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
     vknConfig.createDevice();
     auto infos = vknConfig.getInfos();
 
@@ -45,19 +59,27 @@ int main()
         ++idx;
     }
 
-    // Pipeline experiments
+    // RenderPass experiments
     // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
-    std::unordered_map<vkn::ShaderStage, std::string> stages{
-        {vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv"},
-        {vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv"}};
+    vkn::VknRenderPass *renderPass = vknConfig.getRenderPass();
+    renderPass->addPipeline();
+    vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
+    std::vector<VkAttachmentReference> attach;
+    attach.push_back(renderPass->createAttachment());
+    pipeline->createSubpass(VkSubpassDescriptionFlags{}, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            attach);
+    renderPass->fillRenderPassCreateInfo();
+    renderPass->createRenderPass();
+
+    std::unordered_map<vkn::ShaderStage, std::string>
+        stages{
+            {vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv"},
+            {vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv"}};
     std::vector<int> idxs;
     for (auto stage : stages)
-    {
-        int idx = vknConfig.getPipeline()->createShaderStage(stage.first, stage.second);
-        idxs.push_back(idx);
-    }
+        int idx = pipeline->createShaderStage(stage.first, stage.second);
     auto vertexInputStateCreateInfo{infos->fillDefaultVertexInputState()};
     /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
@@ -66,26 +88,16 @@ int main()
     auto multisampleStateCreateInfos{infos->fillMultisampleStateCreateInfo()};
     auto depthStencilStateCreateInfos{infos->fillDepthStencilStateCreateInfo()};
     auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
-    auto stageInfos{vknConfig.getPipeline()->getShaderStageInfos(idxs)};
-    VkAttachmentReference colorAttachmentRef = vknConfig.getPipeline()->createAttachment();
-    vknConfig.getPipeline()->createSubpass(
-        VkSubpassDescriptionFlagBits{}, VK_PIPELINE_BIND_POINT_GRAPHICS,
-        std::vector<VkAttachmentReference>{colorAttachmentRef});
-    vknConfig.getPipeline()->createSubpassDependency();
-    VkPipelineLayoutCreateInfo layoutInfo = vknConfig.getPipeline()->fillPipelineLayoutCreateInfo();
-    VkPipelineLayout vknConfig.getPipeline()->createLayout(layoutInfo);
-    VkRenderPassCreateInfo rpCreateInfo = vknConfig.getPipeline()->fillRenderPassCreateInfo();
-    VkRenderPass rp = vknConfig.getPipeline()->createRenderPass(&rpCreateInfo);
-    auto gfxPipelineCreateInfo{
-        infos->fillGfxPipelineCreateInfo(stageInfos, , renderPass)
-        /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
-            basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
-            tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
-            multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
-        */
-    };
+    pipeline->fillPipelineLayoutCreateInfo();
+    pipeline->createLayout();
+    pipeline->fillPipelineCreateInfo(*(renderPass->getVkRenderPass()));
+    /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
+        basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
+        tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
+        multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
+    */
 
-    vknConfig.getPipeline()->createPipeline(gfxPipelineCreateInfo);
+    renderPass->createPipelines();
 
     GLFWwindow *window_ = nullptr;
     initWindow(&window_);

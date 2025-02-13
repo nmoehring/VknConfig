@@ -15,12 +15,12 @@ namespace vkn
     class VknPipeline
     {
     public:
-        VknPipeline();
-        VknPipeline(VknDevice *dev, VknInfos *infos, VknResultArchive *archive);
+        VknPipeline() {}
+        VknPipeline(VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index);
         ~VknPipeline();
-        int createShaderStage(ShaderStage, std::string);
         void destroy();
 
+        int createShaderStage(ShaderStage, std::string);
         void createDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
@@ -29,57 +29,59 @@ namespace vkn
         void createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo &descriptorSetLayoutCreateInfo);
         void createPushConstantRange(VkShaderStageFlags stageFlags = VkShaderStageFlags{}, uint32_t offset = 0,
                                      uint32_t size = 0);
-        VkPipelineLayoutCreateInfo fillPipelineLayoutCreateInfo(
+        void fillPipelineLayoutCreateInfo(
             VkPipelineLayoutCreateFlags flags = VkPipelineLayoutCreateFlags{});
-        void createLayout(VkPipelineLayoutCreateInfo &pCreateInfo);
-
-        VkAttachmentReference createAttachment(
-            VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
-            VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
-            VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-            VkAttachmentLoadOp stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-            VkAttachmentStoreOp stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-            VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-            VkImageLayout attachmentRefLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        void createLayout();
         void createSubpass(
             VkSubpassDescriptionFlags flags = VkSubpassDescriptionFlags{},
-            VkPipelineBindPoint pipelineBindPoint = VkPipelineBindPoint{},
+            VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             std::vector<VkAttachmentReference> colorAttachments = std::vector<VkAttachmentReference>{},
             VkAttachmentReference *depthStencilAttachment = nullptr,
             std::vector<VkAttachmentReference> inputAttachments = std::vector<VkAttachmentReference>{},
             std::vector<VkAttachmentReference> resolveAttachments = std::vector<VkAttachmentReference>{},
             std::vector<uint32_t> preserveAttachments = std::vector<uint32_t>{});
-        void createSubpassDependency();
-        VkRenderPassCreateInfo fillRenderPassCreateInfo(
-            VkRenderPassCreateFlags flags = VkRenderPassCreateFlags{});
-        VkRenderPass createRenderPass(VkRenderPassCreateInfo *renderPassInfo);
 
-        VkGraphicsPipelineCreateInfo &fillPipelineCreateInfo();
-        void createPipeline(VkGraphicsPipelineCreateInfo pipelineCreateInfo);
+        void fillPipelineCreateInfo(
+            VkRenderPass renderPass,
+            VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
+            VkPipelineCreateFlags flags = VkPipelineCreateFlags{},
+            VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
+            VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
+            VkPipelineTessellationStateCreateInfo *pTessellationState = nullptr,
+            VkPipelineViewportStateCreateInfo *pViewportState = nullptr,
+            VkPipelineRasterizationStateCreateInfo *pRasterizationState = nullptr,
+            VkPipelineMultisampleStateCreateInfo *pMultisampleState = nullptr,
+            VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = nullptr,
+            VkPipelineColorBlendStateCreateInfo *pColorBlendState = nullptr,
+            VkPipelineDynamicStateCreateInfo *pDynamicState = nullptr);
+
+        VkGraphicsPipelineCreateInfo &getCreateInfo() { return m_createInfo; }
+        VkPipeline &getVkPipeline() { return m_pipeline; }
+        VkSubpassDescription &getSubpassDescription() { return m_subpass; }
+        void setPipelineCreated() { m_pipelineCreated = true; }
 
     private:
         VknDevice *m_device{nullptr};
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
-        std::vector<VkGraphicsPipelineCreateInfo> m_pipelineCreateInfos{};
-        VkPipeline m_pipeline{};
+
+        VkGraphicsPipelineCreateInfo m_createInfo{};
+        VkPipeline m_pipeline{}; // 1 Subpass per pipeline
+        VkSubpassDescription m_subpass;
+
         std::vector<VkShaderModule> m_shaderModules{};
         std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageInfos{};
 
-        std::vector<VkDescriptorSetLayoutBinding> m_bindings{};
-        std::vector<VkPushConstantRange> m_pushConstantRanges{};
-        std::vector<VkDescriptorSetLayout> m_setLayouts{};
-        VkDescriptorSetLayout m_descriptorSetLayout{};
-        VkPipelineLayout m_layout{};
+        std::vector<VkDescriptorSetLayoutBinding> m_bindings{};      //+
+        std::vector<VkPushConstantRange> m_pushConstantRanges{};     //=
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
+        VkPipelineLayoutCreateInfo m_layoutCreateInfo{};             // Takes an array of descriptor set layouts and an array of push constant ranges ^
+        VkPipelineLayout m_layout{};                                 // Takes an array of descriptor set layouts ^
 
-        std::vector<VkAttachmentDescription> m_attachments;
-        std::vector<VkSubpassDescription> m_subpasses;
-        std::vector<VkSubpassDependency> m_dependencies;
-        std::vector<VkRenderPass> m_renderPasses{};
-
-        bool m_destroyed = false;
+        bool m_destroyed{false};
+        bool m_pipelineCreated{false};
+        bool m_pipelineLayoutCreated{false};
+        uint32_t m_index;
 
         int createShaderModule(const std::string &filename);
 

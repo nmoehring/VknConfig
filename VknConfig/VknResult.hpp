@@ -16,7 +16,7 @@ namespace vkn
         std::string toString();
         std::string toErr(std::string msg = "test")
         {
-            return std::format("Error: {}: {}", msg, this->toString());
+            return std::format("{}: {}", msg, this->toString());
         }
 
         bool isSuccess() { return m_result == VK_SUCCESS; }
@@ -42,7 +42,7 @@ namespace vkn
         void store(VknResult res)
         {
             results.push(res);
-            manage();
+            this->manage();
         }
     };
 }

@@ -6,10 +6,9 @@
 
 namespace vkn
 {
-    VknPipeline::VknPipeline() {}
 
-    VknPipeline::VknPipeline(VknDevice *dev, VknInfos *infos, VknResultArchive *archive)
-        : m_device{dev}, m_infos{infos}, m_archive{archive} {}
+    VknPipeline::VknPipeline(VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index)
+        : m_device{dev}, m_infos{infos}, m_archive{archive}, m_index{index} {}
 
     VknPipeline::~VknPipeline()
     {
@@ -19,44 +18,37 @@ namespace vkn
 
     void VknPipeline::destroy()
     {
-        vkDestroyPipeline(*(m_device->getVkDevice()), m_pipeline, nullptr);
-        for (auto renderPass : m_renderPasses)
-            vkDestroyRenderPass(*(m_device->getVkDevice()), renderPass, nullptr);
-        vkDestroyPipelineLayout(*(m_device->getVkDevice()), m_layout, nullptr);
-        vkDestroyDescriptorSetLayout(*(m_device->getVkDevice()), m_descriptorSetLayout, nullptr);
-        for (auto module : m_shaderModules)
-            vkDestroyShaderModule(*(m_device->getVkDevice()), module, nullptr);
-        m_destroyed = true;
+        if (!m_destroyed)
+        {
+            if (m_pipelineCreated)
+                vkDestroyPipeline(*(m_device->getVkDevice()), m_pipeline, nullptr);
+            if (m_pipelineLayoutCreated)
+                vkDestroyPipelineLayout(*(m_device->getVkDevice()), m_layout, nullptr);
+            for (auto descriptorSetLayout : m_descriptorSetLayouts)
+                vkDestroyDescriptorSetLayout(*(m_device->getVkDevice()), descriptorSetLayout, nullptr);
+            for (auto module : m_shaderModules)
+                vkDestroyShaderModule(*(m_device->getVkDevice()), module, nullptr);
+            m_destroyed = true;
+        }
     }
 
-    VkGraphicsPipelineCreateInfo &VknPipeline::fillPipelineCreateInfo(
-        uint32_t subpass = uint32_t{},
-        VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
-        VkPipelineCreateFlags flags = VkPipelineCreateFlags{},
-        VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
-        VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
-        VkPipelineTessellationStateCreateInfo *pTessellationState = nullptr,
-        VkPipelineViewportStateCreateInfo *pViewportState = nullptr,
-        VkPipelineRasterizationStateCreateInfo *pRasterizationState = nullptr,
-        VkPipelineMultisampleStateCreateInfo *pMultisampleState = nullptr,
-        VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = nullptr,
-        VkPipelineColorBlendStateCreateInfo *pColorBlendState = nullptr,
-        VkPipelineDynamicStateCreateInfo *pDynamicState = nullptr);
-    )
+    void VknPipeline::fillPipelineCreateInfo(
+        VkRenderPass renderPass,
+        VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags,
+        VkPipelineVertexInputStateCreateInfo *pVertexInputState,
+        VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState,
+        VkPipelineTessellationStateCreateInfo *pTessellationState,
+        VkPipelineViewportStateCreateInfo *pViewportState,
+        VkPipelineRasterizationStateCreateInfo *pRasterizationState,
+        VkPipelineMultisampleStateCreateInfo *pMultisampleState,
+        VkPipelineDepthStencilStateCreateInfo *pDepthStencilState,
+        VkPipelineColorBlendStateCreateInfo *pColorBlendState,
+        VkPipelineDynamicStateCreateInfo *pDynamicState)
     {
-        return m_infos->fillGraphicsPipelineCreateInfo(m_shaderStageInfos, m_layout, m_renderPass);
-    }
-
-    void VknPipeline::createPipeline(VkGraphicsPipelineCreateInfo pipelineCreateInfo)
-    {
-        std::vector<VkGraphicsPipelineCreateInfo> infos{};
-        infos.push_back(pipelineCreateInfo);
-        VknResult res{vkCreateGraphicsPipelines(
-                          *(m_device->getVkDevice()), nullptr, 1, infos.data(), nullptr, &m_pipeline),
-                      "Create pipeline."};
-        if (!res.isSuccess())
-            throw std::runtime_error(res.toErr("Error creating pipeline."));
-        m_archive->store(res);
+        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_shaderStageInfos, m_layout, renderPass, m_index,
+                                                          basePipelineHandle, basePipelineIndex, flags, pVertexInputState,
+                                                          pInputAssemblyState, pTessellationState, pViewportState,
+                                                          pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState, pDynamicState);
     }
 
     VkDescriptorSetLayoutCreateInfo &VknPipeline::fillDescriptorSetLayoutCreateInfo(
@@ -76,20 +68,14 @@ namespace vkn
         m_bindings.back().stageFlags = stageFlags;
         m_bindings.back().pImmutableSamplers = pImmutableSamplers;
     }
-    {
-        uint32_t binding;
-        VkDescriptorType descriptorType;
-        uint32_t descriptorCount;
-        VkShaderStageFlags stageFlags;
-        const VkSampler *pImmutableSamplers;
-    }
 
     void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo &descriptorSetLayoutCreateInfo)
     {
+        m_descriptorSetLayouts.push_back(VkDescriptorSetLayout{});
         VknResult res{
             vkCreateDescriptorSetLayout(
                 *(m_device->getVkDevice()), &descriptorSetLayoutCreateInfo,
-                nullptr, &m_descriptorSetLayout),
+                nullptr, &(m_descriptorSetLayouts.back())),
             "Create descriptor set layout."};
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating descriptor set layout."));
@@ -105,14 +91,15 @@ namespace vkn
         m_pushConstantRanges.back().size = size;
     }
 
-    VkPipelineLayoutCreateInfo VknPipeline::fillPipelineLayoutCreateInfo(VkPipelineLayoutCreateFlags flags)
+    void VknPipeline::fillPipelineLayoutCreateInfo(VkPipelineLayoutCreateFlags flags)
     {
-        return m_infos->fillPipelineLayoutCreateInfo(m_setLayouts, m_pushConstantRanges, flags);
+        m_layoutCreateInfo = m_infos->fillPipelineLayoutCreateInfo(m_descriptorSetLayouts, m_pushConstantRanges, flags);
     }
 
-    void VknPipeline::createLayout(VkPipelineLayoutCreateInfo &createInfo)
+    void VknPipeline::createLayout()
     {
-        vkCreatePipelineLayout(*(m_device->getVkDevice()), &createInfo, nullptr, &m_layout);
+        vkCreatePipelineLayout(*(m_device->getVkDevice()), &m_layoutCreateInfo, nullptr, &m_layout);
+        m_pipelineLayoutCreated = true;
     }
 
     int VknPipeline::createShaderModule(const std::string &filename)
@@ -149,37 +136,6 @@ namespace vkn
         return m_shaderStageInfos.size() - 1;
     }
 
-    std::vector<VkPipelineShaderStageCreateInfo> VknPipeline::getShaderStageInfos(std::vector<int> idxs)
-    {
-        std::vector<VkPipelineShaderStageCreateInfo> infos;
-        for (int idx : idxs)
-            infos.push_back(m_shaderStageInfos[idx]);
-        return infos;
-    }
-
-    VkAttachmentReference VknPipeline::createAttachment(
-        VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
-        VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
-        VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
-        VkImageLayout finalLayout, VkImageLayout attachmentRefLayout)
-    {
-        m_attachments.push_back(VkAttachmentDescription{});
-        m_attachments.back().format = format; // Set to your swapchain image format
-        m_attachments.back().samples = samples;
-        m_attachments.back().loadOp = loadOp;
-        m_attachments.back().storeOp = storeOp;
-        m_attachments.back().stencilLoadOp = stencilLoadOp;
-        m_attachments.back().stencilStoreOp = stencilStoreOp;
-        m_attachments.back().initialLayout = initialLayout;
-        m_attachments.back().finalLayout = finalLayout;
-
-        VkAttachmentReference attachmentRef = {};
-        attachmentRef.attachment = m_attachments.size() - 1;
-        attachmentRef.layout = attachmentRefLayout;
-
-        return attachmentRef;
-    }
-
     void VknPipeline::createSubpass(
         VkSubpassDescriptionFlags flags, VkPipelineBindPoint pipelineBindPoint,
         std::vector<VkAttachmentReference> colorAttachments,
@@ -188,49 +144,19 @@ namespace vkn
         std::vector<VkAttachmentReference> resolveAttachments,
         std::vector<uint32_t> preserveAttachments)
     {
-        m_subpasses.push_back(VkSubpassDescription{});
-        m_subpasses.back().flags = flags;
-        m_subpasses.back().pipelineBindPoint = pipelineBindPoint;
-        m_subpasses.back().inputAttachmentCount = inputAttachments.size();
+        m_subpass.flags = flags;
+        m_subpass.pipelineBindPoint = pipelineBindPoint;
+        m_subpass.inputAttachmentCount = inputAttachments.size();
         if (!inputAttachments.empty())
-            m_subpasses.back().pInputAttachments = inputAttachments.data();
-        m_subpasses.back().colorAttachmentCount = colorAttachments.size();
+            m_subpass.pInputAttachments = inputAttachments.data();
+        m_subpass.colorAttachmentCount = colorAttachments.size();
         if (!colorAttachments.empty())
-            m_subpasses.back().pColorAttachments = colorAttachments.data();
+            m_subpass.pColorAttachments = colorAttachments.data();
         if (!resolveAttachments.empty())
-            m_subpasses.back().pResolveAttachments = resolveAttachments.data();
-        m_subpasses.back().pDepthStencilAttachment = depthStencilAttachment;
-        m_subpasses.back().preserveAttachmentCount = preserveAttachments.size();
+            m_subpass.pResolveAttachments = resolveAttachments.data();
+        m_subpass.pDepthStencilAttachment = depthStencilAttachment;
+        m_subpass.preserveAttachmentCount = preserveAttachments.size();
         if (!preserveAttachments.empty())
-            m_subpasses.back().pPreserveAttachments = preserveAttachments.data();
-    }
-
-    void VknPipeline::createSubpassDependency()
-    {
-        m_dependencies.push_back(VkSubpassDependency{});
-        m_dependencies.back().srcSubpass = VK_SUBPASS_EXTERNAL;
-        m_dependencies.back().dstSubpass = 0;
-        m_dependencies.back().srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        m_dependencies.back().srcAccessMask = 0;
-        m_dependencies.back().dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        m_dependencies.back().dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-    }
-
-    VkRenderPass VknPipeline::createRenderPass(VkRenderPassCreateInfo *renderPassInfo)
-    {
-        VkRenderPass renderPass;
-        VknResult res{vkCreateRenderPass(
-                          *(m_device->getVkDevice()), renderPassInfo, nullptr, &renderPass),
-                      "Create renderpass."};
-        if (!res.isSuccess())
-            throw std::runtime_error(res.toErr("Error creating renderpass."));
-        m_archive->store(res);
-        m_renderPasses.push_back(renderPass);
-        return renderPass;
-    }
-
-    VkRenderPassCreateInfo VknPipeline::fillRenderPassCreateInfo(VkRenderPassCreateFlags flags)
-    {
-        return m_infos->fillRenderPassCreateInfo(m_attachments, m_subpasses, m_dependencies, flags);
+            m_subpass.pPreserveAttachments = preserveAttachments.data();
     }
 }

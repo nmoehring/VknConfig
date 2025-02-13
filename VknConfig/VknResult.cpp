@@ -16,10 +16,12 @@ namespace vkn
         case VK_ERROR_VALIDATION_FAILED_EXT:
             return "VK_ERROR_VALIDATION_FAILED_EXT";
             break;
+        case VK_ERROR_EXTENSION_NOT_PRESENT:
+            return "VK_ERROR_EXTENSION_NOT_PRESENT";
+            break;
         default:
         {
-            throw std::runtime_error("toString() error: Unknown result");
-            return "FAILURE";
+            return "Vk Err " + std::to_string(this->m_result);
         }
         }
     }

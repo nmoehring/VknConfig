@@ -14,19 +14,12 @@ namespace vkn
         {
             APP_INFO = 0,
             DEVICE_QUEUE_CREATE_INFO = 1,
-            DEVICE_CREATE_INFO = 2
+            DEVICE_CREATE_INFO = 2,
+            INSTANCE_CREATE_INFO = 3
         };
 
         VknInfos();
         //~VknInfos();
-        void setNumQueueFamilies(int num)
-        {
-            for (int i = 1; i < num; ++i)
-            {
-                m_queueCreateInfos.push_back(this->getDefaultDeviceQueueCreateInfo());
-                m_queuePriorities.push_back(1.0f);
-            }
-        };
 
         // getters
         VkApplicationInfo *getAppInfo()
@@ -52,6 +45,8 @@ namespace vkn
                 return nullptr;
         };
 
+        int getNumDeviceQueues() { return m_queueCreateInfos.size(); };
+
         // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
         void fillDefaultInfos();
@@ -61,24 +56,35 @@ namespace vkn
                          VkApplicationInfo *pNext = nullptr,
                          uint32_t applicationVersion = 0,
                          uint32_t engineVersion = 0);
-        void fillInstanceCreateInfo(VkInstanceCreateInfo *pNext = nullptr,
-                                    VkInstanceCreateFlags flags = 0,
-                                    std::vector<std::string> enabledLayerNames = std::vector<std::string>{},
-                                    std::vector<std::string> enabledExtensionNames = std::vector<std::string>{});
+        void fillInstanceCreateInfo(std::vector<const char *> &enabledLayerNames,
+                                    std::vector<const char *> &enabledExtensionNames,
+                                    VkInstanceCreateInfo *pNext = nullptr,
+                                    VkInstanceCreateFlags flags = INT_MAX);
         void fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
                                        VkApplicationInfo *pNext = nullptr,
-                                       VkDeviceQueueCreateFlags flags = INT_MAX,
-                                       float queuePriorities = -1);
-        void fillDeviceCreateInfo();
+                                       VkDeviceQueueCreateFlags flags = INT_MAX);
+        VkDeviceCreateInfo &fillDeviceCreateInfo(
+            std::vector<const char *> &extensions,
+            VkPhysicalDeviceFeatures *features = nullptr);
+
+        VkSwapchainCreateInfoKHR &fillSwapChainCreateInfo(
+            VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
+            VkSurfaceFormatKHR surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
+            uint32_t numImageArrayLayers = 1, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            VkSurfaceTransformFlagBitsKHR preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+            VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR, VkBool32 clipped = VK_TRUE,
+            VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
 
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo &fillShaderModuleCreateInfo(
-            std::vector<char> &code, VkShaderModuleCreateFlags flags = VkShaderModuleCreateFlags{});
+            std::vector<char> &code, VkShaderModuleCreateFlags flags = INT_MAX);
 
         VkPipelineShaderStageCreateInfo &fillShaderStageCreateInfo(
             VkShaderModule module, VkShaderStageFlagBits stage,
-            VkSpecializationInfo *pSpecializationInfo = nullptr,
-            VkPipelineShaderStageCreateFlags flags = VkPipelineShaderStageCreateFlags{});
+            VkPipelineShaderStageCreateFlags flags = INT_MAX,
+            VkSpecializationInfo *pSpecializationInfo = nullptr);
         VkPipelineVertexInputStateCreateInfo &fillVertexInputStateCreateInfo(
             std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
             std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions);
@@ -102,21 +108,21 @@ namespace vkn
         VkPipelineDepthStencilStateCreateInfo &fillDepthStencilStateCreateInfo(
             VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
             float minDepthBounds, float maxDepthBounds,
-            VkPipelineDepthStencilStateCreateFlags flags = VkPipelineDepthStencilStateCreateFlags{},
+            VkPipelineDepthStencilStateCreateFlags flags = INT_MAX,
             VkBool32 depthTestEnable = VK_FALSE,
             VkBool32 depthWriteEnable = VK_FALSE,
             VkBool32 depthBoundsTestEnable = VK_FALSE, VkBool32 stencilTestEnable = VK_FALSE);
         VkPipelineColorBlendStateCreateInfo &fillColorBlendStateCreateInfo(
             VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
             float blendConstants[4], VkBool32 logicOpEnable = VK_FALSE,
-            VkPipelineColorBlendStateCreateFlags flags = VkPipelineColorBlendStateCreateFlags{});
+            VkPipelineColorBlendStateCreateFlags flags = INT_MAX);
         VkPipelineDynamicStateCreateInfo &fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo &fillGfxPipelineCreateInfo(
             std::vector<VkPipelineShaderStageCreateInfo> &stages,
             VkPipelineLayout layout = VkPipelineLayout{},
             VkRenderPass renderPass = VkRenderPass{}, uint32_t subpass = uint32_t{},
             VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
-            VkPipelineCreateFlags flags = VkPipelineCreateFlags{},
+            VkPipelineCreateFlags flags = INT_MAX,
             VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
             VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
             VkPipelineTessellationStateCreateInfo *pTessellationState = nullptr,
@@ -129,24 +135,24 @@ namespace vkn
         VkPipelineLayoutCreateInfo &fillPipelineLayoutCreateInfo(
             std::vector<VkDescriptorSetLayout> setLayouts = std::vector<VkDescriptorSetLayout>{},
             std::vector<VkPushConstantRange> pushConstantRanges = std::vector<VkPushConstantRange>{},
-            VkPipelineLayoutCreateFlags flags = VkPipelineLayoutCreateFlags{});
+            VkPipelineLayoutCreateFlags flags = INT_MAX);
         VkPipelineCacheCreateInfo &fillPipelineCacheCreateInfo(
             size_t initialDataSize = 0,
             const void *pInitialData = nullptr,
-            VkPipelineCacheCreateFlags flags = VkPipelineCacheCreateFlags{});
+            VkPipelineCacheCreateFlags flags = INT_MAX);
         VkRenderPassCreateInfo &fillRenderPassCreateInfo(
-            std::vector<VkAttachmentDescription> attachments,
-            std::vector<VkSubpassDescription> subpasses,
-            std::vector<VkSubpassDependency> dependencies,
-            VkRenderPassCreateFlags flags = VkRenderPassCreateFlags{});
+            std::vector<VkAttachmentDescription> &attachments,
+            std::vector<VkSubpassDescription> &subpasses,
+            std::vector<VkSubpassDependency> &dependencies,
+            VkRenderPassCreateFlags flags = INT_MAX);
         VkDescriptorSetLayoutCreateInfo &fillDescriptorSetLayoutCreateInfo(
             std::vector<VkDescriptorSetLayoutBinding> bindings = std::vector<VkDescriptorSetLayoutBinding>{},
-            VkDescriptorSetLayoutCreateFlags flags = VkDescriptorSetLayoutCreateFlags{});
+            VkDescriptorSetLayoutCreateFlags flags = INT_MAX);
 
     private:
         std::string m_appName = "Default App Name";
         std::string m_engineName = "Default Engine Name";
-        std::vector<float> m_queuePriorities;
+        std::vector<std::vector<float>> m_queuePriorities;
 
         // Info's
         VkApplicationInfo m_appInfo;
@@ -168,6 +174,7 @@ namespace vkn
         std::vector<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos;
         std::vector<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos;
         std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
+        std::vector<VkSwapchainCreateInfoKHR> m_swapChainCreateInfos;
 
         std::vector<VkRenderPassCreateInfo> m_renderPassCreateInfos;
         std::vector<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos;
@@ -182,6 +189,7 @@ namespace vkn
 
         // Required fill checklist
         bool m_filledAppInfo{false};
+        bool m_filledInstanceCreateInfo{false};
         bool m_filledDeviceQueueCreateInfo{false};
         bool m_filledDeviceCreateInfo{false};
     };

@@ -10,25 +10,20 @@ namespace vkn
     {
     public:
         VknPhysicalDevice() {}
-        VknPhysicalDevice(VkInstance *instance, VknResultArchive *archive, VknInfos *infos) : m_archive{archive}
-        {
-            m_infos = infos;
-            VknResult res;
-            if (!(res = selectPhysicalDevice(instance)).isSuccess())
-                throw std::runtime_error(res.toErr("Failed to get physical devices."));
-            m_archive->store(res);
-            queryProperties();
-        }
+        VknPhysicalDevice(VknResultArchive *archive, VknInfos *infos);
         VkPhysicalDevice getVkPhysicalDevice() { return m_physicalDevice; };
         VkPhysicalDeviceProperties getProperties() { return m_properties; };
         bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);
+        void addInstance(VkInstance *instance);
+        VknResult selectPhysicalDevice();
 
     private:
+        VkInstance *m_instance{nullptr};
         VkPhysicalDevice m_physicalDevice{};
         VkPhysicalDeviceProperties m_properties{};
         VknResultArchive *m_archive{nullptr};
         VknInfos *m_infos{nullptr};
-        VknResult selectPhysicalDevice(VkInstance *instance);
+        bool m_instanceAdded{false};
         void queryProperties() { vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties); }
     };
 

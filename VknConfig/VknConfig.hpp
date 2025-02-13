@@ -11,7 +11,7 @@
 #include <functional>
 
 #include "VknDevice.hpp"
-#include "VknPipeline.hpp"
+#include "VknRenderPass.hpp"
 #include "VknQueueFamily.hpp"
 #include "vknInfos.hpp"
 #include "VknResult.hpp"
@@ -25,28 +25,39 @@ namespace vkn
 
         VknConfig();
         ~VknConfig();
+        void destroy();
         void fillAppInfo(uint32_t apiVersion, std::string appName,
                          std::string engineName,
                          VkApplicationInfo *pNext = nullptr,
                          uint32_t applicationVersion = 0,
                          uint32_t engineVersion = 0);
+        void fillInstanceCreateInfo(std::vector<const char *> &enabledLayerNames,
+                                    std::vector<const char *> &enabledExtensionNames,
+                                    VkInstanceCreateInfo *pNext = nullptr,
+                                    VkInstanceCreateFlags flags = INT_MAX);
         VknResult createInstance();
+        void selectPhysicalDevice();
+        void requestQueueFamilies();
         VknResult createDevice(bool chooseAllAvailable = false);
+        VknResult createRenderPass();
         std::vector<vkn::VknQueueFamily> getQueueData();
         VknDevice *getDevice() { return &m_device; }
         VknInfos *getInfos() { return &m_infos; }
-        VknPipeline *getPipeline() { return &m_pipeline; }
+        VknRenderPass *getRenderPass();
         void enableExtensions(std::vector<std::string> extensions);
 
     private:
-        VknResultArchive m_resultArchive{};
-        VknInfos m_infos{};
-        VkInstance m_instance{};
-        VknDevice m_device{};
-        VknPipeline m_pipeline{&m_device, &m_infos, &m_resultArchive};
+        VknResultArchive m_resultArchive;
+        VknInfos m_infos;
+        VkInstance m_instance;
+        VknDevice m_device;
+        VknRenderPass m_renderPass;
         std::vector<std::string> m_instanceExtensions;
 
-        void fillInstanceCreateInfo();
+        bool m_instanceCreated{false};
+        bool m_physicalDeviceSelected{false};
+        bool m_queueFamiliesRequested{false};
+        bool m_destroyed{false};
 
         void archiveResult(VknResult res);
     };
