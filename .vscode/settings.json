@@ -49,6 +49,7 @@
         "SSCALED",
         "subpasses",
         "Swapchain",
+        "swapchains",
         "threadpool",
         "USCALED",
         "uvec",

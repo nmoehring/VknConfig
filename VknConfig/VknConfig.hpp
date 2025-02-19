@@ -34,7 +34,7 @@ namespace vkn
         void fillInstanceCreateInfo(std::vector<const char *> &enabledLayerNames,
                                     std::vector<const char *> &enabledExtensionNames,
                                     VkInstanceCreateInfo *pNext = nullptr,
-                                    VkInstanceCreateFlags flags = INT_MAX);
+                                    VkInstanceCreateFlags flags = 0);
         VknResult createInstance();
         void selectPhysicalDevice();
         void requestQueueFamilies();

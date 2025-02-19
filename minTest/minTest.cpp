@@ -64,15 +64,12 @@ int main()
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
     vkn::VknRenderPass *renderPass = vknConfig.getRenderPass();
-    renderPass->addPipeline();
-    vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
-    std::vector<VkAttachmentReference> attach;
+    std::vector<VkAttachmentReference *> attach;
     attach.push_back(renderPass->createAttachment());
-    pipeline->createSubpass(VkSubpassDescriptionFlags{}, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            attach);
-    renderPass->fillRenderPassCreateInfo();
+    renderPass->createSubpass(VK_PIPELINE_BIND_POINT_GRAPHICS, attach);
     renderPass->createRenderPass();
 
+    vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
     std::unordered_map<vkn::ShaderStage, std::string>
         stages{
             {vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv"},

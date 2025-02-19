@@ -1,5 +1,6 @@
 #include "VknRenderPass.hpp"
 #include "VknResult.hpp"
+#include "VknInfos.hpp"
 
 namespace vkn
 {
@@ -8,6 +9,8 @@ namespace vkn
     VknRenderPass::VknRenderPass(VknInfos *infos, VknResultArchive *archive)
         : m_infos{infos}, m_archive{archive}
     {
+        m_attachmentRefs = infos->getAllAttachmentReferences();
+        m_preserveAttachments = infos->getAllPreserveAttachments();
     }
 
     VknRenderPass::~VknRenderPass()
@@ -32,7 +35,14 @@ namespace vkn
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before adding pipeline.");
-        m_pipelines.push_back(VknPipeline(m_device, m_infos, m_archive, m_subpassCount++));
+        if (m_subpasses.size() != m_pipelines.size() + 1)
+            throw std::runtime_error("Subpass not created before pipeline added.");
+        int pipelineIdx = m_pipelines.size();
+        m_pipelineCreateInfos.push_back(nullptr);
+        m_rawPipelines.push_back(VkPipeline{});
+        m_pipelines.push_back(VknPipeline(m_subpasses.back(), &(m_rawPipelines.back()),
+                                          m_pipelineCreateInfos.back(), m_device, m_infos,
+                                          m_archive, pipelineIdx));
     }
 
     void VknRenderPass::addDevice(VknDevice *dev)
@@ -47,8 +57,11 @@ namespace vkn
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before creating VkRenderpass.");
+        if (m_pipelines.size() != m_subpasses.size())
+            throw std::runtime_error("Number of pipelines != number of subpasses at render pass creation.");
+        this->fillRenderPassCreateInfo();
         VknResult res{vkCreateRenderPass(
-                          *(m_device->getVkDevice()), &m_createInfo, nullptr, &m_renderPass),
+                          *(m_device->getVkDevice()), m_createInfo, nullptr, &m_renderPass),
                       "Create renderpass."};
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating renderpass."));
@@ -58,10 +71,10 @@ namespace vkn
 
     void VknRenderPass::fillRenderPassCreateInfo(VkRenderPassCreateFlags flags)
     {
+        // No flags available, no need to manually fill currently.
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before filling create info.");
-        this->collectSubpassDescriptions();
-        m_createInfo = m_infos->fillRenderPassCreateInfo(m_attachments, m_subpasses, m_dependencies, flags);
+        m_createInfo = m_infos->fillRenderPassCreateInfo(flags);
     }
 
     void VknRenderPass::createSubpassDependency(
@@ -70,49 +83,36 @@ namespace vkn
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before creating subpass dependency.");
-        m_dependencies.push_back(VkSubpassDependency{});
-        m_dependencies.back().srcSubpass = srcSubpass;
-        m_dependencies.back().dstSubpass = dstSubpass;
-        m_dependencies.back().srcStageMask = srcStageMask;
-        m_dependencies.back().srcAccessMask = srcAccessMask;
-        m_dependencies.back().dstStageMask = dstStageMask;
-        m_dependencies.back().dstAccessMask = dstAccessMask;
+        m_dependencies.push_back(m_infos->fillSubpassDependency(
+            srcSubpass, dstSubpass, srcStageMask, srcAccessMask, dstStageMask, dstAccessMask));
     }
 
-    VkAttachmentReference VknRenderPass::createAttachment(
+    void VknRenderPass::createAttachment(
+        uint32_t subpassIdx, VknAttachmentType attachmentType,
         VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
         VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
-        VkImageLayout finalLayout, VkImageLayout attachmentRefLayout)
+        VkImageLayout finalLayout, VkImageLayout attachmentRefLayout,
+        VkAttachmentDescriptionFlags flags)
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before creating attachment.");
-        m_attachments.push_back(VkAttachmentDescription{});
-        m_attachments.back().format = format; // Set to your swapchain image format
-        m_attachments.back().samples = samples;
-        m_attachments.back().loadOp = loadOp;
-        m_attachments.back().storeOp = storeOp;
-        m_attachments.back().stencilLoadOp = stencilLoadOp;
-        m_attachments.back().stencilStoreOp = stencilStoreOp;
-        m_attachments.back().initialLayout = initialLayout;
-        m_attachments.back().finalLayout = finalLayout;
-        m_attachments.back().flags = VK_ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT;
 
-        VkAttachmentReference attachmentRef = {};
-        attachmentRef.attachment = m_attachments.size() - 1;
-        attachmentRef.layout = attachmentRefLayout;
+        uint32_t attachIdx = m_attachments.size();
 
-        return attachmentRef;
+        m_attachments.push_back(m_infos->fillAttachmentDescription(
+            format, samples, loadOp, storeOp, stencilLoadOp, stencilStoreOp, initialLayout, finalLayout, flags));
+
+        m_infos->fillAttachmentReference(subpassIdx, attachmentType, attachIdx, attachmentRefLayout);
     }
 
     void VknRenderPass::createPipelines()
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before creating pipelines.");
-        this->collectRawPipelines();
         VknResult res{vkCreateGraphicsPipelines(
                           *(m_device->getVkDevice()), nullptr, m_pipelineCreateInfos.size(),
-                          m_pipelineCreateInfos.data(), nullptr, m_rawPipelines.data()),
+                          *(m_pipelineCreateInfos.data()), nullptr, m_rawPipelines.data()),
                       "Create pipeline."};
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating pipeline."));
@@ -121,25 +121,14 @@ namespace vkn
             pipeline.setPipelineCreated();
     }
 
-    void VknRenderPass::collectRawPipelines()
+    void VknRenderPass::createSubpass(
+        VkPipelineBindPoint pipelineBindPoint,
+        VkSubpassDescriptionFlags flags)
     {
         if (!m_deviceAdded)
-            throw std::runtime_error("Device not added to renderpass before collecting raw pipelines.");
-        m_pipelineCreateInfos.clear();
-        m_rawPipelines.clear();
-        for (auto pipeline : m_pipelines)
-        {
-            m_pipelineCreateInfos.push_back(pipeline.getCreateInfo());
-            m_rawPipelines.push_back(pipeline.getVkPipeline());
-        }
-    }
-
-    void VknRenderPass::collectSubpassDescriptions()
-    {
-        if (!m_deviceAdded)
-            throw std::runtime_error("Device not added to renderpass before collecting subpass descriptions.");
-        m_subpasses.clear();
-        for (auto pipeline : m_pipelines)
-            m_subpasses.push_back(pipeline.getSubpassDescription());
+            throw std::runtime_error("Device not added before creating subpass.");
+        uint32_t subpassIdx = m_subpasses.size();
+        m_subpasses.push_back(m_infos->fillSubpassDescription(subpassIdx, pipelineBindPoint, flags));
+        this->addPipeline();
     }
 }

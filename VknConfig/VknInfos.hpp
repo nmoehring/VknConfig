@@ -7,6 +7,15 @@
 
 namespace vkn
 {
+    enum VknAttachmentType
+    {
+        COLOR_ATTACHMENT = 0,
+        DEPTH_STENCIL_ATTACHMENT = 1,
+        RESOLVE_ATTACHMENT = 2,
+        INPUT_ATTACHMENT = 3,
+        PRESERVE_ATTACHMENT = 4
+    };
+
     class VknInfos
     {
     public:
@@ -59,15 +68,15 @@ namespace vkn
         void fillInstanceCreateInfo(std::vector<const char *> &enabledLayerNames,
                                     std::vector<const char *> &enabledExtensionNames,
                                     VkInstanceCreateInfo *pNext = nullptr,
-                                    VkInstanceCreateFlags flags = INT_MAX);
+                                    VkInstanceCreateFlags flags = 0);
         void fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
                                        VkApplicationInfo *pNext = nullptr,
-                                       VkDeviceQueueCreateFlags flags = INT_MAX);
-        VkDeviceCreateInfo &fillDeviceCreateInfo(
+                                       VkDeviceQueueCreateFlags flags = 0);
+        VkDeviceCreateInfo *fillDeviceCreateInfo(
             std::vector<const char *> &extensions,
             VkPhysicalDeviceFeatures *features = nullptr);
 
-        VkSwapchainCreateInfoKHR &fillSwapChainCreateInfo(
+        VkSwapchainCreateInfoKHR *fillSwapChainCreateInfo(
             VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
             VkSurfaceFormatKHR surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
             uint32_t numImageArrayLayers = 1, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -78,51 +87,51 @@ namespace vkn
             VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
 
         //================FILL PIPELINE INFOS===================
-        VkShaderModuleCreateInfo &fillShaderModuleCreateInfo(
-            std::vector<char> &code, VkShaderModuleCreateFlags flags = INT_MAX);
+        VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
+            std::vector<char> &code, VkShaderModuleCreateFlags flags = 0);
 
-        VkPipelineShaderStageCreateInfo &fillShaderStageCreateInfo(
+        VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
             VkShaderModule module, VkShaderStageFlagBits stage,
-            VkPipelineShaderStageCreateFlags flags = INT_MAX,
+            VkPipelineShaderStageCreateFlags flags = 0,
             VkSpecializationInfo *pSpecializationInfo = nullptr);
-        VkPipelineVertexInputStateCreateInfo &fillVertexInputStateCreateInfo(
+        VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(
             std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
             std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions);
-        VkPipelineVertexInputStateCreateInfo &fillDefaultVertexInputState();
-        VkPipelineInputAssemblyStateCreateInfo &fillInputAssemblyStateCreateInfo(
+        VkPipelineVertexInputStateCreateInfo *fillDefaultVertexInputState();
+        VkPipelineInputAssemblyStateCreateInfo *fillInputAssemblyStateCreateInfo(
             VkPrimitiveTopology topology = VkPrimitiveTopology{},
             VkBool32 primitiveRestartEnable = VK_FALSE);
-        VkPipelineTessellationStateCreateInfo &fillTessellationStateCreateInfo(uint32_t patchControlPoints = 0);
-        VkPipelineViewportStateCreateInfo &fillViewportStateCreateInfo(
+        VkPipelineTessellationStateCreateInfo *fillTessellationStateCreateInfo(uint32_t patchControlPoints = 0);
+        VkPipelineViewportStateCreateInfo *fillViewportStateCreateInfo(
             std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors);
-        VkPipelineRasterizationStateCreateInfo &fillRasterizationStateCreateInfo(
+        VkPipelineRasterizationStateCreateInfo *fillRasterizationStateCreateInfo(
             VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
             float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
             float lineWidth = 0, VkBool32 depthClampEnable = VK_FALSE,
             VkBool32 rasterizerDiscardEnable = VK_FALSE, VkBool32 depthBiasEnable = VK_FALSE);
-        VkPipelineMultisampleStateCreateInfo &fillMultisampleStateCreateInfo(
+        VkPipelineMultisampleStateCreateInfo *fillMultisampleStateCreateInfo(
             float minSampleShading, VkSampleMask *pSampleMask,
             VkSampleCountFlagBits rasterizationSamples = VkSampleCountFlagBits{},
             VkBool32 sampleShadingEnable = VK_FALSE,
             VkBool32 alphaToCoverageEnable = VK_FALSE, VkBool32 alphaToOneEnable = VK_FALSE);
-        VkPipelineDepthStencilStateCreateInfo &fillDepthStencilStateCreateInfo(
+        VkPipelineDepthStencilStateCreateInfo *fillDepthStencilStateCreateInfo(
             VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
             float minDepthBounds, float maxDepthBounds,
-            VkPipelineDepthStencilStateCreateFlags flags = INT_MAX,
+            VkPipelineDepthStencilStateCreateFlags flags = 0,
             VkBool32 depthTestEnable = VK_FALSE,
             VkBool32 depthWriteEnable = VK_FALSE,
             VkBool32 depthBoundsTestEnable = VK_FALSE, VkBool32 stencilTestEnable = VK_FALSE);
-        VkPipelineColorBlendStateCreateInfo &fillColorBlendStateCreateInfo(
+        VkPipelineColorBlendStateCreateInfo *fillColorBlendStateCreateInfo(
             VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
             float blendConstants[4], VkBool32 logicOpEnable = VK_FALSE,
-            VkPipelineColorBlendStateCreateFlags flags = INT_MAX);
-        VkPipelineDynamicStateCreateInfo &fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates);
-        VkGraphicsPipelineCreateInfo &fillGfxPipelineCreateInfo(
-            std::vector<VkPipelineShaderStageCreateInfo> &stages,
-            VkPipelineLayout layout = VkPipelineLayout{},
-            VkRenderPass renderPass = VkRenderPass{}, uint32_t subpass = uint32_t{},
+            VkPipelineColorBlendStateCreateFlags flags = 0);
+        VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates);
+        VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
+            std::vector<VkPipelineShaderStageCreateInfo *> &stages,
+            VkPipelineLayout *layout = nullptr,
+            VkRenderPass *renderPass = nullptr, uint32_t subpass = uint32_t{},
             VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
-            VkPipelineCreateFlags flags = INT_MAX,
+            VkPipelineCreateFlags flags = 0,
             VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
             VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
             VkPipelineTessellationStateCreateInfo *pTessellationState = nullptr,
@@ -132,22 +141,47 @@ namespace vkn
             VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = nullptr,
             VkPipelineColorBlendStateCreateInfo *pColorBlendState = nullptr,
             VkPipelineDynamicStateCreateInfo *pDynamicState = nullptr);
-        VkPipelineLayoutCreateInfo &fillPipelineLayoutCreateInfo(
+        VkPipelineLayoutCreateInfo *fillPipelineLayoutCreateInfo(
             std::vector<VkDescriptorSetLayout> setLayouts = std::vector<VkDescriptorSetLayout>{},
             std::vector<VkPushConstantRange> pushConstantRanges = std::vector<VkPushConstantRange>{},
-            VkPipelineLayoutCreateFlags flags = INT_MAX);
-        VkPipelineCacheCreateInfo &fillPipelineCacheCreateInfo(
+            VkPipelineLayoutCreateFlags flags = 0);
+        VkPipelineCacheCreateInfo *fillPipelineCacheCreateInfo(
             size_t initialDataSize = 0,
             const void *pInitialData = nullptr,
-            VkPipelineCacheCreateFlags flags = INT_MAX);
-        VkRenderPassCreateInfo &fillRenderPassCreateInfo(
-            std::vector<VkAttachmentDescription> &attachments,
-            std::vector<VkSubpassDescription> &subpasses,
-            std::vector<VkSubpassDependency> &dependencies,
-            VkRenderPassCreateFlags flags = INT_MAX);
-        VkDescriptorSetLayoutCreateInfo &fillDescriptorSetLayoutCreateInfo(
+            VkPipelineCacheCreateFlags flags = 0);
+        VkRenderPassCreateInfo *fillRenderPassCreateInfo(VkRenderPassCreateFlags flags = 0);
+        VkAttachmentDescription *fillAttachmentDescription(
+            VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
+            VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
+            VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+            VkAttachmentLoadOp stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            VkAttachmentStoreOp stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            VkImageLayout initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            VkAttachmentDescriptionFlags flags = 0);
+        void fillAttachmentReference(
+            uint32_t subpassIdx,
+            VknAttachmentType attachmentType,
+            uint32_t attachmentIdx,
+            VkImageLayout layout);
+        std::vector<std::vector<std::vector<VkAttachmentReference>>> *getAllAttachmentReferences();
+        std::vector<std::vector<VkAttachmentReference>> *getAttachmentReferences(uint32_t subpassIdx);
+        std::vector<uint32_t> *getPreserveAttachments(uint32_t subpassIdx);
+        std::vector<std::vector<uint32_t>> *getAllPreserveAttachments();
+        VkSubpassDescription *fillSubpassDescription(
+            uint32_t subpassIdx,
+            VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+            VkSubpassDescriptionFlags flags = 0);
+        VkSubpassDependency *fillSubpassDependency(
+            uint32_t srcSubpass = VK_SUBPASS_EXTERNAL, uint32_t dstSubpass = 0,
+            VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VkAccessFlags srcAccessMask = 0,
+            VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+        VkDescriptorSetLayoutCreateInfo *fillDescriptorSetLayoutCreateInfo(
             std::vector<VkDescriptorSetLayoutBinding> bindings = std::vector<VkDescriptorSetLayoutBinding>{},
-            VkDescriptorSetLayoutCreateFlags flags = INT_MAX);
+            VkDescriptorSetLayoutCreateFlags flags = 0);
 
     private:
         std::string m_appName = "Default App Name";
@@ -177,6 +211,11 @@ namespace vkn
         std::vector<VkSwapchainCreateInfoKHR> m_swapChainCreateInfos;
 
         std::vector<VkRenderPassCreateInfo> m_renderPassCreateInfos;
+        std::vector<VkAttachmentDescription> m_attachmentDescriptions;
+        std::vector<std::vector<std::vector<VkAttachmentReference>>> m_attachmentReferences{};
+        std::vector<std::vector<uint32_t>> m_preserveAttachments;
+        std::vector<VkSubpassDescription> m_subpassDescriptions;
+        std::vector<VkSubpassDependency> m_subpassDependencies;
         std::vector<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos;
 
         const char m_mainEntry[5] = "main";

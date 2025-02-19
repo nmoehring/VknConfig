@@ -7,8 +7,15 @@
 namespace vkn
 {
 
-    VknPipeline::VknPipeline(VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index)
-        : m_device{dev}, m_infos{infos}, m_archive{archive}, m_index{index} {}
+    VknPipeline::VknPipeline(VkSubpassDescription *subpass, VkPipeline *pipeline,
+                             VkGraphicsPipelineCreateInfo *createInfo, VknDevice *dev,
+                             VknInfos *infos, VknResultArchive *archive, uint32_t index)
+        : m_subpass{subpass}, m_pipeline{pipeline}, m_createInfo{createInfo}, m_device{dev},
+          m_infos{infos}, m_archive{archive}, m_index{index}
+    {
+        m_attachmentReferences = m_infos->getAttachmentReferences(m_index);
+        m_preserveAttachments = m_infos->getPreserveAttachments(m_index);
+    }
 
     VknPipeline::~VknPipeline()
     {
@@ -21,7 +28,7 @@ namespace vkn
         if (!m_destroyed)
         {
             if (m_pipelineCreated)
-                vkDestroyPipeline(*(m_device->getVkDevice()), m_pipeline, nullptr);
+                vkDestroyPipeline(*(m_device->getVkDevice()), *m_pipeline, nullptr);
             if (m_pipelineLayoutCreated)
                 vkDestroyPipelineLayout(*(m_device->getVkDevice()), m_layout, nullptr);
             for (auto descriptorSetLayout : m_descriptorSetLayouts)
@@ -33,7 +40,7 @@ namespace vkn
     }
 
     void VknPipeline::fillPipelineCreateInfo(
-        VkRenderPass renderPass,
+        VkRenderPass *renderPass,
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags,
         VkPipelineVertexInputStateCreateInfo *pVertexInputState,
         VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState,
@@ -45,13 +52,13 @@ namespace vkn
         VkPipelineColorBlendStateCreateInfo *pColorBlendState,
         VkPipelineDynamicStateCreateInfo *pDynamicState)
     {
-        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_shaderStageInfos, m_layout, renderPass, m_index,
+        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_shaderStageInfos, &m_layout, renderPass, m_index,
                                                           basePipelineHandle, basePipelineIndex, flags, pVertexInputState,
                                                           pInputAssemblyState, pTessellationState, pViewportState,
                                                           pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState, pDynamicState);
     }
 
-    VkDescriptorSetLayoutCreateInfo &VknPipeline::fillDescriptorSetLayoutCreateInfo(
+    VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(
         VkDescriptorSetLayoutCreateFlags flags)
     {
         return m_infos->fillDescriptorSetLayoutCreateInfo(m_bindings, flags);
@@ -69,12 +76,12 @@ namespace vkn
         m_bindings.back().pImmutableSamplers = pImmutableSamplers;
     }
 
-    void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo &descriptorSetLayoutCreateInfo)
+    void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo)
     {
         m_descriptorSetLayouts.push_back(VkDescriptorSetLayout{});
         VknResult res{
             vkCreateDescriptorSetLayout(
-                *(m_device->getVkDevice()), &descriptorSetLayoutCreateInfo,
+                *(m_device->getVkDevice()), descriptorSetLayoutCreateInfo,
                 nullptr, &(m_descriptorSetLayouts.back())),
             "Create descriptor set layout."};
         if (!res.isSuccess())
@@ -98,17 +105,17 @@ namespace vkn
 
     void VknPipeline::createLayout()
     {
-        vkCreatePipelineLayout(*(m_device->getVkDevice()), &m_layoutCreateInfo, nullptr, &m_layout);
+        vkCreatePipelineLayout(*(m_device->getVkDevice()), m_layoutCreateInfo, nullptr, &m_layout);
         m_pipelineLayoutCreated = true;
     }
 
-    int VknPipeline::createShaderModule(const std::string &filename)
+    int VknPipeline::createShaderModule(const std::string filename)
     {
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
         std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / filename)};
         auto createInfo{m_infos->fillShaderModuleCreateInfo(code)};
         VkShaderModule shaderModule;
-        if (vkCreateShaderModule(*(m_device->getVkDevice()), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        if (vkCreateShaderModule(*(m_device->getVkDevice()), createInfo, nullptr, &shaderModule) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create shader module!");
         }
@@ -134,29 +141,5 @@ namespace vkn
         m_shaderStageInfos.push_back(
             m_infos->fillShaderStageCreateInfo(m_shaderModules[module_idx], shaderStageFlagBits));
         return m_shaderStageInfos.size() - 1;
-    }
-
-    void VknPipeline::createSubpass(
-        VkSubpassDescriptionFlags flags, VkPipelineBindPoint pipelineBindPoint,
-        std::vector<VkAttachmentReference> colorAttachments,
-        VkAttachmentReference *depthStencilAttachment,
-        std::vector<VkAttachmentReference> inputAttachments,
-        std::vector<VkAttachmentReference> resolveAttachments,
-        std::vector<uint32_t> preserveAttachments)
-    {
-        m_subpass.flags = flags;
-        m_subpass.pipelineBindPoint = pipelineBindPoint;
-        m_subpass.inputAttachmentCount = inputAttachments.size();
-        if (!inputAttachments.empty())
-            m_subpass.pInputAttachments = inputAttachments.data();
-        m_subpass.colorAttachmentCount = colorAttachments.size();
-        if (!colorAttachments.empty())
-            m_subpass.pColorAttachments = colorAttachments.data();
-        if (!resolveAttachments.empty())
-            m_subpass.pResolveAttachments = resolveAttachments.data();
-        m_subpass.pDepthStencilAttachment = depthStencilAttachment;
-        m_subpass.preserveAttachmentCount = preserveAttachments.size();
-        if (!preserveAttachments.empty())
-            m_subpass.pPreserveAttachments = preserveAttachments.data();
     }
 }

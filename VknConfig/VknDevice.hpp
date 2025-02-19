@@ -58,7 +58,7 @@ namespace vkn
 
         std::vector<const char *> m_extensions{};
         VkPhysicalDeviceFeatures *m_features{nullptr};
-        std::vector<VkSwapchainCreateInfoKHR> m_swapChainCreateInfos{};
+        std::vector<VkSwapchainCreateInfoKHR *> m_swapChainCreateInfos{};
         std::vector<VkSwapchainKHR> m_swapChains{};
 
         bool m_destroyed{false};

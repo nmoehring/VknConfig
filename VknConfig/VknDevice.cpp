@@ -139,7 +139,7 @@ namespace vkn
         {
             m_swapChains.push_back(VkSwapchainKHR{});
             VknResult res{
-                vkCreateSwapchainKHR(m_logicalDevice, &swapchainInfo, nullptr, &(m_swapChains.back())),
+                vkCreateSwapchainKHR(m_logicalDevice, swapchainInfo, nullptr, &(m_swapChains.back())),
                 "Create swapchain"};
             if (!res.isSuccess())
                 throw std::runtime_error(res.toErr("Error creating swapchain."));

@@ -63,9 +63,9 @@ namespace vkn
         return info;
     }
 
-    VkGraphicsPipelineCreateInfo &VknInfos::fillGfxPipelineCreateInfo(
-        std::vector<VkPipelineShaderStageCreateInfo> &stages,
-        VkPipelineLayout layout, VkRenderPass renderPass, uint32_t subpass,
+    VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
+        std::vector<VkPipelineShaderStageCreateInfo *> &stages,
+        VkPipelineLayout *layout, VkRenderPass *renderPass, uint32_t subpass,
         VkPipeline basePipelineHandle, int32_t basePipelineIndex,
         VkPipelineCreateFlags flags,
         VkPipelineVertexInputStateCreateInfo *pVertexInputState,
@@ -82,10 +82,9 @@ namespace vkn
         VkGraphicsPipelineCreateInfo &info = m_gfxPipelineCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.stageCount = stages.size();                // Need fill
-        info.pStages = stages.data();                   // Need fill (other struct)
+        info.pStages = *(stages.data());                // Need fill (other struct)
         info.pVertexInputState = pVertexInputState;     // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
                                                         // set in pDynamicState below. Ignored if mesh shader stage
                                                         // included in pStages.
@@ -139,53 +138,62 @@ namespace vkn
                                                         // VK_DYNAMIC_STATE_BLEND_CONSTANTS are set in pDynamicState below
                                                         // Requires the VK_EXT_extended_dynamic_state3 extension.
         info.pDynamicState = pDynamicState;             // Could be null if no state in the pipeline needs to be dynamic.
-        info.layout = layout;                           // Need fill
-        info.renderPass = renderPass;                   // Need fill
-        info.subpass = subpass;                         // Need fill
-        info.basePipelineHandle = basePipelineHandle;   // Need fill
-        info.basePipelineIndex = basePipelineIndex;     // Need fill
+        if (layout == nullptr)
+            info.layout = VkPipelineLayout{};
+        else
+            info.layout = *layout; // Need fill
+        if (renderPass == nullptr)
+            info.renderPass = VkRenderPass{};
+        else
+            info.renderPass = *renderPass;            // Need fill
+        info.subpass = subpass;                       // Need fill
+        info.basePipelineHandle = basePipelineHandle; // Need fill
+        info.basePipelineIndex = basePipelineIndex;   // Need fill
 
-        return info;
+        return &info;
     }
 
-    VkRenderPassCreateInfo &VknInfos::fillRenderPassCreateInfo(
-        std::vector<VkAttachmentDescription> &attachments,
-        std::vector<VkSubpassDescription> &subpasses,
-        std::vector<VkSubpassDependency> &dependencies,
-        VkRenderPassCreateFlags flags)
+    VkRenderPassCreateInfo *VknInfos::fillRenderPassCreateInfo(VkRenderPassCreateFlags flags)
     {
         m_renderPassCreateInfos.push_back(VkRenderPassCreateInfo{});
         VkRenderPassCreateInfo &renderPassInfo = m_renderPassCreateInfos.back();
 
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.pNext = nullptr;
-        if (flags != INT_MAX)
-            renderPassInfo.flags = flags;
-        renderPassInfo.attachmentCount = attachments.size();
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = subpasses.size();
-        renderPassInfo.pSubpasses = subpasses.data();
-        renderPassInfo.dependencyCount = dependencies.size();
-        renderPassInfo.pDependencies = dependencies.data();
+        renderPassInfo.flags = flags;
+        renderPassInfo.attachmentCount = m_attachmentDescriptions.size();
+        if (m_attachmentDescriptions.empty())
+            renderPassInfo.pAttachments = VK_NULL_HANDLE;
+        else
+            renderPassInfo.pAttachments = m_attachmentDescriptions.data();
+        renderPassInfo.subpassCount = m_subpassDescriptions.size();
+        if (m_subpassDescriptions.empty())
+            renderPassInfo.pSubpasses = VK_NULL_HANDLE;
+        else
+            renderPassInfo.pSubpasses = m_subpassDescriptions.data();
+        renderPassInfo.dependencyCount = m_subpassDependencies.size();
+        if (m_subpassDependencies.empty())
+            renderPassInfo.pDependencies = VK_NULL_HANDLE;
+        else
+            renderPassInfo.pDependencies = m_subpassDependencies.data();
 
-        return renderPassInfo;
+        return &renderPassInfo;
     }
 
-    VkShaderModuleCreateInfo &VknInfos::fillShaderModuleCreateInfo(
+    VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
         std::vector<char> &code, VkShaderModuleCreateFlags flags)
     {
         m_shaderModuleCreateInfos.push_back(VkShaderModuleCreateInfo{});
         VkShaderModuleCreateInfo &info = m_shaderModuleCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.codeSize = code.size();
         info.pCode = reinterpret_cast<const uint32_t *>(code.data());
-        return info;
+        return &info;
     }
 
-    VkPipelineShaderStageCreateInfo &VknInfos::fillShaderStageCreateInfo(
+    VkPipelineShaderStageCreateInfo *VknInfos::fillShaderStageCreateInfo(
         VkShaderModule module, VkShaderStageFlagBits stage,
         VkPipelineShaderStageCreateFlags flags, VkSpecializationInfo *pSpecializationInfo)
     {
@@ -193,16 +201,15 @@ namespace vkn
         VkPipelineShaderStageCreateInfo &info = m_shaderStageCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags; // need fill
-        info.stage = stage;     // need fill
+        info.flags = flags; // need fill
+        info.stage = stage; // need fill
         info.module = module;
         info.pName = m_mainEntry;
         info.pSpecializationInfo = pSpecializationInfo; // need fill
-        return info;
+        return &info;
     }
 
-    VkPipelineVertexInputStateCreateInfo &VknInfos::fillVertexInputStateCreateInfo(
+    VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
         std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
         std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions)
     {
@@ -212,13 +219,19 @@ namespace vkn
         info.pNext = nullptr;
         info.flags = 0; // reserved for future use
         info.vertexBindingDescriptionCount = vertexBindingDescriptions.size();
-        info.pVertexBindingDescriptions = vertexBindingDescriptions.data();
+        if (vertexBindingDescriptions.empty())
+            info.pVertexBindingDescriptions = VK_NULL_HANDLE;
+        else
+            info.pVertexBindingDescriptions = vertexBindingDescriptions.data();
         info.vertexAttributeDescriptionCount = vertexAttributeDescriptions.size();
-        info.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
-        return info;
+        if (vertexAttributeDescriptions.empty())
+            info.pVertexAttributeDescriptions = VK_NULL_HANDLE;
+        else
+            info.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
+        return &info;
     }
 
-    VkPipelineVertexInputStateCreateInfo &VknInfos::fillDefaultVertexInputState()
+    VkPipelineVertexInputStateCreateInfo *VknInfos::fillDefaultVertexInputState()
     {
         std::vector<VkVertexInputBindingDescription> vertexInputBinding;
         vertexInputBinding.push_back(VkVertexInputBindingDescription{});
@@ -237,7 +250,7 @@ namespace vkn
         return this->fillVertexInputStateCreateInfo(vertexInputBinding, vertexInputAttribute);
     }
 
-    VkPipelineInputAssemblyStateCreateInfo &VknInfos::fillInputAssemblyStateCreateInfo(
+    VkPipelineInputAssemblyStateCreateInfo *VknInfos::fillInputAssemblyStateCreateInfo(
         VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
     {
         m_inputAssemblyStateCreateInfos.push_back(VkPipelineInputAssemblyStateCreateInfo{});
@@ -247,10 +260,10 @@ namespace vkn
         info.flags = 0; // reserved for future use
         info.topology = topology;
         info.primitiveRestartEnable = primitiveRestartEnable;
-        return info;
+        return &info;
     }
 
-    VkPipelineTessellationStateCreateInfo &VknInfos::fillTessellationStateCreateInfo(uint32_t patchControlPoints)
+    VkPipelineTessellationStateCreateInfo *VknInfos::fillTessellationStateCreateInfo(uint32_t patchControlPoints)
     {
         m_tessellationStateCreateInfos.push_back(VkPipelineTessellationStateCreateInfo{});
         VkPipelineTessellationStateCreateInfo &info = m_tessellationStateCreateInfos.back();
@@ -258,10 +271,10 @@ namespace vkn
         info.pNext = nullptr;
         info.flags = 0; // reserved for future use
         info.patchControlPoints = patchControlPoints;
-        return info;
+        return &info;
     }
 
-    VkPipelineViewportStateCreateInfo &VknInfos::fillViewportStateCreateInfo(
+    VkPipelineViewportStateCreateInfo *VknInfos::fillViewportStateCreateInfo(
         std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors)
     {
         m_viewportStateCreateInfos.push_back(VkPipelineViewportStateCreateInfo{});
@@ -270,13 +283,19 @@ namespace vkn
         info.pNext = nullptr;
         info.flags = 0; // reserved for future use
         info.viewportCount = viewports.size();
-        info.pViewports = viewports.data();
+        if (viewports.empty())
+            info.pViewports = VK_NULL_HANDLE;
+        else
+            info.pViewports = viewports.data();
         info.scissorCount = scissors.size();
-        info.pScissors = scissors.data();
-        return info;
+        if (scissors.empty())
+            info.pScissors = VK_NULL_HANDLE;
+        else
+            info.pScissors = scissors.data();
+        return &info;
     }
 
-    VkPipelineRasterizationStateCreateInfo &VknInfos::fillRasterizationStateCreateInfo(
+    VkPipelineRasterizationStateCreateInfo *VknInfos::fillRasterizationStateCreateInfo(
         VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
         float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
         float lineWidth, VkBool32 depthClampEnable,
@@ -297,10 +316,10 @@ namespace vkn
         info.depthBiasClamp = depthBiasClamp;
         info.depthBiasSlopeFactor = depthBiasSlopeFactor;
         info.lineWidth = lineWidth;
-        return info;
+        return &info;
     }
 
-    VkPipelineMultisampleStateCreateInfo &VknInfos::fillMultisampleStateCreateInfo(
+    VkPipelineMultisampleStateCreateInfo *VknInfos::fillMultisampleStateCreateInfo(
         float minSampleShading, VkSampleMask *pSampleMask,
         VkSampleCountFlagBits rasterizationSamples,
         VkBool32 sampleShadingEnable, VkBool32 alphaToCoverageEnable,
@@ -317,10 +336,10 @@ namespace vkn
         info.pSampleMask = pSampleMask;
         info.alphaToCoverageEnable = alphaToCoverageEnable;
         info.alphaToOneEnable = alphaToOneEnable;
-        return info;
+        return &info;
     }
 
-    VkPipelineDepthStencilStateCreateInfo &VknInfos::fillDepthStencilStateCreateInfo(
+    VkPipelineDepthStencilStateCreateInfo *VknInfos::fillDepthStencilStateCreateInfo(
         VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
         float minDepthBounds, float maxDepthBounds,
         VkPipelineDepthStencilStateCreateFlags flags,
@@ -331,8 +350,7 @@ namespace vkn
         VkPipelineDepthStencilStateCreateInfo &info = m_depthStencilStateCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.depthTestEnable = depthTestEnable;
         info.depthWriteEnable = depthWriteEnable;
         info.depthCompareOp = depthCompareOp;
@@ -342,10 +360,10 @@ namespace vkn
         info.back = back;
         info.minDepthBounds = minDepthBounds;
         info.maxDepthBounds = maxDepthBounds;
-        return info;
+        return &info;
     }
 
-    VkPipelineColorBlendStateCreateInfo &VknInfos::fillColorBlendStateCreateInfo(
+    VkPipelineColorBlendStateCreateInfo *VknInfos::fillColorBlendStateCreateInfo(
         VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
         float blendConstants[4], VkBool32 logicOpEnable,
         VkPipelineColorBlendStateCreateFlags flags)
@@ -354,17 +372,19 @@ namespace vkn
         VkPipelineColorBlendStateCreateInfo &info = m_colorBlendStateCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.logicOpEnable = logicOpEnable;
         info.logicOp = logicOp;
         info.attachmentCount = attachments.size();
-        info.pAttachments = attachments.data();
+        if (attachments.empty())
+            info.pAttachments = VK_NULL_HANDLE;
+        else
+            info.pAttachments = attachments.data();
         info.blendConstants[4] = {};
-        return info;
+        return &info;
     }
 
-    VkPipelineDynamicStateCreateInfo &VknInfos::fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates)
+    VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates)
     {
         m_dynamicStateCreateInfos.push_back(VkPipelineDynamicStateCreateInfo{});
         VkPipelineDynamicStateCreateInfo &info = m_dynamicStateCreateInfos.back();
@@ -372,25 +392,30 @@ namespace vkn
         info.pNext = nullptr;
         info.flags = 0; // reserved for future use
         info.dynamicStateCount = dynamicStates.size();
-        info.pDynamicStates = dynamicStates.data();
-        return info;
+        if (dynamicStates.empty())
+            info.pDynamicStates = VK_NULL_HANDLE;
+        else
+            info.pDynamicStates = dynamicStates.data();
+        return &info;
     }
 
-    VkDescriptorSetLayoutCreateInfo &VknInfos::fillDescriptorSetLayoutCreateInfo(
+    VkDescriptorSetLayoutCreateInfo *VknInfos::fillDescriptorSetLayoutCreateInfo(
         std::vector<VkDescriptorSetLayoutBinding> bindings, VkDescriptorSetLayoutCreateFlags flags)
     {
         m_descriptorSetLayoutCreateInfos.push_back(VkDescriptorSetLayoutCreateInfo{});
         VkDescriptorSetLayoutCreateInfo &info = m_descriptorSetLayoutCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.bindingCount = bindings.size();
-        info.pBindings = bindings.data();
-        return info;
+        if (bindings.empty())
+            info.pBindings = VK_NULL_HANDLE;
+        else
+            info.pBindings = bindings.data();
+        return &info;
     }
 
-    VkPipelineLayoutCreateInfo &VknInfos::fillPipelineLayoutCreateInfo(
+    VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
         std::vector<VkDescriptorSetLayout> setLayouts,
         std::vector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
@@ -399,17 +424,22 @@ namespace vkn
         VkPipelineLayoutCreateInfo &info = m_layoutCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.setLayoutCount = setLayouts.size();
-        info.pSetLayouts = setLayouts.data();
+        if (setLayouts.empty())
+            info.pSetLayouts = VK_NULL_HANDLE;
+        else
+            info.pSetLayouts = setLayouts.data();
         info.pushConstantRangeCount = pushConstantRanges.size();
-        info.pPushConstantRanges = pushConstantRanges.data();
+        if (pushConstantRanges.empty())
+            info.pPushConstantRanges = VK_NULL_HANDLE;
+        else
+            info.pPushConstantRanges = pushConstantRanges.data();
 
-        return info;
+        return &info;
     }
 
-    VkPipelineCacheCreateInfo &VknInfos::fillPipelineCacheCreateInfo(
+    VkPipelineCacheCreateInfo *VknInfos::fillPipelineCacheCreateInfo(
         size_t initialDataSize,
         const void *pInitialData,
         VkPipelineCacheCreateFlags flags)
@@ -418,12 +448,11 @@ namespace vkn
         VkPipelineCacheCreateInfo &info = m_cacheCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         info.pNext = nullptr;
-        if (flags != INT_MAX)
-            info.flags = flags;
+        info.flags = flags;
         info.initialDataSize = initialDataSize;
         info.pInitialData = pInitialData;
 
-        return info;
+        return &info;
     }
 
     bool VknInfos::checkFill(checkFillFunctions functionName)
@@ -476,21 +505,21 @@ namespace vkn
                                           VkInstanceCreateInfo *pNext,
                                           VkInstanceCreateFlags flags)
     {
-        if (pNext != nullptr)
-            m_instanceCreateInfo.pNext = pNext;
-        if (flags != INT_MAX)
-            m_instanceCreateInfo.flags = flags;
+        m_instanceCreateInfo.pNext = pNext;
+        m_instanceCreateInfo.flags = flags;
+        if (!m_filledAppInfo)
+            throw std::runtime_error("AppInfo not filled before InstanceCreateInfo.");
         m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
-        if (enabledLayerNames.size() > 0)
-        {
-            m_instanceCreateInfo.enabledLayerCount = enabledLayerNames.size();
+        m_instanceCreateInfo.enabledLayerCount = enabledLayerNames.size();
+        if (enabledLayerNames.empty())
+            m_instanceCreateInfo.ppEnabledLayerNames = nullptr;
+        else
             m_instanceCreateInfo.ppEnabledLayerNames = enabledLayerNames.data();
-        }
-        if (enabledExtensionNames.size() > 0)
-        {
-            m_instanceCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
+        m_instanceCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
+        if (enabledExtensionNames.empty())
+            m_instanceCreateInfo.ppEnabledExtensionNames = nullptr;
+        else
             m_instanceCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
-        }
         m_filledDeviceQueueCreateInfo = true;
     }
 
@@ -503,32 +532,37 @@ namespace vkn
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         info.queueFamilyIndex = queueFamilyIdx;
         info.queueCount = queueCount;
-        if (pNext != nullptr)
-            info.pNext = pNext;
-        if (flags != INT_MAX)
-            info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
+        info.pNext = pNext;
+        info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
         m_queuePriorities.push_back(std::vector<float>{});
         for (int i = 0; i < queueCount; ++i)
             m_queuePriorities.back().push_back(1.0f);
+        if (m_queuePriorities.empty())
+            throw std::runtime_error("No queue priorities set for device queue create info.");
         info.pQueuePriorities = m_queuePriorities.back().data();
         m_filledDeviceQueueCreateInfo = true;
     }
 
-    VkDeviceCreateInfo &VknInfos::fillDeviceCreateInfo(
+    VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(
         std::vector<const char *> &extensions,
         VkPhysicalDeviceFeatures *features)
     {
         m_deviceCreateInfo.queueCreateInfoCount = m_queueCreateInfos.size();
+        if (m_queueCreateInfos.empty())
+            throw std::runtime_error("No queue create infos set for device create info.");
         m_deviceCreateInfo.pQueueCreateInfos = m_queueCreateInfos.data();
         m_deviceCreateInfo.enabledExtensionCount = extensions.size();
-        m_deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+        if (extensions.empty())
+            m_deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+        else
+            m_deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
         m_deviceCreateInfo.pEnabledFeatures = features;
 
         m_filledDeviceCreateInfo = true;
-        return m_deviceCreateInfo;
+        return &m_deviceCreateInfo;
     }
 
-    VkSwapchainCreateInfoKHR &VknInfos::fillSwapChainCreateInfo(
+    VkSwapchainCreateInfoKHR *VknInfos::fillSwapChainCreateInfo(
         VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
         VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
         VkSharingMode sharingMode, VkSurfaceTransformFlagBitsKHR preTransform,
@@ -552,6 +586,144 @@ namespace vkn
         swapchainInfo.clipped = clipped;
         swapchainInfo.oldSwapchain = oldSwapchain;
 
-        return swapchainInfo;
+        return &swapchainInfo;
+    }
+
+    VkAttachmentDescription *VknInfos::fillAttachmentDescription(
+        VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
+        VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
+        VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
+        VkImageLayout finalLayout, VkAttachmentDescriptionFlags flags)
+    {
+        m_attachmentDescriptions.push_back(VkAttachmentDescription{});
+        VkAttachmentDescription &description = m_attachmentDescriptions.back();
+        description.format = format; // Set to your swapchain image format
+        description.samples = samples;
+        description.loadOp = loadOp;
+        description.storeOp = storeOp;
+        description.stencilLoadOp = stencilLoadOp;
+        description.stencilStoreOp = stencilStoreOp;
+        description.initialLayout = initialLayout;
+        description.finalLayout = finalLayout;
+        description.flags = flags;
+
+        return &description;
+    }
+
+    void VknInfos::fillAttachmentReference(
+        uint32_t subpassIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx, VkImageLayout layout)
+    {
+        for (int i = 0; i < (subpassIdx - (m_attachmentReferences.size() - 1)); ++i)
+        {
+            m_attachmentReferences.push_back(std::vector<std::vector<VkAttachmentReference>>{});
+            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // color
+            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // depth-stencil
+            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // resolve
+            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // input
+            m_preserveAttachments.push_back(std::vector<uint32_t>{});
+        }
+        if (attachmentType == PRESERVE_ATTACHMENT)
+            m_preserveAttachments.back().push_back(attachmentIdx);
+        else
+        {
+            m_attachmentReferences.back()[attachmentType].push_back(VkAttachmentReference{});
+            VkAttachmentReference &ref = m_attachmentReferences[subpassIdx][attachmentType].back();
+            ref.attachment = attachmentIdx;
+            ref.layout = layout;
+        }
+    }
+
+    std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getAllAttachmentReferences()
+    {
+        return &m_attachmentReferences;
+    }
+
+    std::vector<std::vector<VkAttachmentReference>> *VknInfos::getAttachmentReferences(uint32_t subpassIdx)
+    {
+        return &(m_attachmentReferences[subpassIdx]);
+    }
+
+    std::vector<uint32_t> *VknInfos::getPreserveAttachments(uint32_t subpassIdx)
+    {
+        return &(m_preserveAttachments[subpassIdx]);
+    }
+
+    std::vector<std::vector<uint32_t>> *VknInfos::getAllPreserveAttachments()
+    {
+        return &m_preserveAttachments;
+    }
+
+    VkSubpassDescription *VknInfos::fillSubpassDescription(
+        uint32_t subpassIdx,
+        VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        VkSubpassDescriptionFlags flags = 0)
+    {
+        m_subpassDescriptions.push_back(VkSubpassDescription{});
+        VkSubpassDescription &description = m_subpassDescriptions.back();
+        description.flags = flags;
+        description.pipelineBindPoint = pipelineBindPoint;
+        std::vector<VkAttachmentReference> &inputAttachments = m_attachmentReferences[subpassIdx][INPUT_ATTACHMENT];
+        std::vector<VkAttachmentReference> &colorAttachments = m_attachmentReferences[subpassIdx][COLOR_ATTACHMENT];
+        std::vector<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[subpassIdx][RESOLVE_ATTACHMENT];
+        std::vector<VkAttachmentReference> &preserveAttachments = m_attachmentReferences[subpassIdx][PRESERVE_ATTACHMENT];
+        std::vector<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[subpassIdx][DEPTH_STENCIL_ATTACHMENT];
+
+        if (inputAttachments.empty())
+        {
+            description.inputAttachmentCount = 0;
+            description.pInputAttachments = VK_NULL_HANDLE;
+        }
+        else
+        {
+            description.inputAttachmentCount = inputAttachments.size();
+            description.pInputAttachments = inputAttachments.data();
+        }
+        if (colorAttachments.empty())
+        {
+            description.colorAttachmentCount = 0;
+            description.pColorAttachments = VK_NULL_HANDLE;
+        }
+        else
+        {
+            description.colorAttachmentCount = colorAttachments.size();
+            description.pColorAttachments = colorAttachments.data();
+        }
+        if (preserveAttachments.empty())
+        {
+            description.colorAttachmentCount = 0;
+            description.pPreserveAttachments = VK_NULL_HANDLE;
+        }
+        else
+        {
+            description.preserveAttachmentCount = preserveAttachments.size();
+            description.pPreserveAttachments = preserveAttachments.data();
+        }
+        if ((!resolveAttachments.empty() && colorAttachments.empty()) || (!resolveAttachments.empty() && (resolveAttachments.size() > colorAttachments.size())))
+            throw std::runtime_error("Resolve attachments must be less than or equal to color attachments.");
+        else if (resolveAttachments.empty())
+            description.pResolveAttachments = VK_NULL_HANDLE;
+        else
+            description.pResolveAttachments = resolveAttachments.data();
+        if (!depthStencilAttachments.empty() && depthStencilAttachments.size() > 1)
+            throw std::runtime_error("Too many depth stencil attachments in subpass description.");
+        description.pDepthStencilAttachment = &(depthStencilAttachments.back());
+
+        return &description;
+    }
+
+    VkSubpassDependency *VknInfos::fillSubpassDependency(
+        uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
+        VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
+    {
+        m_subpassDependencies.push_back(VkSubpassDependency{});
+        VkSubpassDependency &dependency = m_subpassDependencies.back();
+        dependency.srcSubpass = srcSubpass;
+        dependency.dstSubpass = dstSubpass;
+        dependency.srcStageMask = srcStageMask;
+        dependency.srcAccessMask = srcAccessMask;
+        dependency.dstStageMask = dstStageMask;
+        dependency.dstAccessMask = dstAccessMask;
+
+        return &dependency;
     }
 }
