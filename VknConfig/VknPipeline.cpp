@@ -7,12 +7,12 @@
 namespace vkn
 {
 
-    VknPipeline::VknPipeline(VkSubpassDescription *subpass, VkPipeline *pipeline,
-                             VkGraphicsPipelineCreateInfo *createInfo, VknDevice *dev,
-                             VknInfos *infos, VknResultArchive *archive, uint32_t index)
-        : m_subpass{subpass}, m_pipeline{pipeline}, m_createInfo{createInfo}, m_device{dev},
+    VknPipeline::VknPipeline(VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,
+                             VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index)
+        : m_subpass{subpass}, m_pipeline{pipeline}, m_device{dev},
           m_infos{infos}, m_archive{archive}, m_index{index}
     {
+        m_renderPass = renderPass;
         m_attachmentReferences = m_infos->getAttachmentReferences(m_index);
         m_preserveAttachments = m_infos->getPreserveAttachments(m_index);
     }
@@ -40,7 +40,6 @@ namespace vkn
     }
 
     void VknPipeline::fillPipelineCreateInfo(
-        VkRenderPass *renderPass,
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags,
         VkPipelineVertexInputStateCreateInfo *pVertexInputState,
         VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState,
@@ -52,7 +51,7 @@ namespace vkn
         VkPipelineColorBlendStateCreateInfo *pColorBlendState,
         VkPipelineDynamicStateCreateInfo *pDynamicState)
     {
-        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_shaderStageInfos, &m_layout, renderPass, m_index,
+        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_shaderStageInfos, &m_layout, m_renderPass, m_index,
                                                           basePipelineHandle, basePipelineIndex, flags, pVertexInputState,
                                                           pInputAssemblyState, pTessellationState, pViewportState,
                                                           pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState, pDynamicState);

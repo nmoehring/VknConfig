@@ -53,6 +53,7 @@ namespace vkn
             else
                 return nullptr;
         };
+        std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos() { return &m_gfxPipelineCreateInfos; }
 
         int getNumDeviceQueues() { return m_queueCreateInfos.size(); };
 
@@ -91,7 +92,7 @@ namespace vkn
             std::vector<char> &code, VkShaderModuleCreateFlags flags = 0);
 
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
-            VkShaderModule module, VkShaderStageFlagBits stage,
+            uint32_t pipelineIdx, VkShaderModule module, VkShaderStageFlagBits stage,
             VkPipelineShaderStageCreateFlags flags = 0,
             VkSpecializationInfo *pSpecializationInfo = nullptr);
         VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(
@@ -127,6 +128,7 @@ namespace vkn
             VkPipelineColorBlendStateCreateFlags flags = 0);
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
+            uint32_t pipelineIdx,
             std::vector<VkPipelineShaderStageCreateInfo *> &stages,
             VkPipelineLayout *layout = nullptr,
             VkRenderPass *renderPass = nullptr, uint32_t subpass = uint32_t{},
@@ -197,7 +199,7 @@ namespace vkn
         std::vector<VkPipelineLayoutCreateInfo> m_layoutCreateInfos;
         std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
         std::vector<VkShaderModuleCreateInfo> m_shaderModuleCreateInfos;
-        std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageCreateInfos;
+        std::vector<std::vector<VkPipelineShaderStageCreateInfo>> m_shaderStageCreateInfos;
         std::vector<VkPipelineVertexInputStateCreateInfo> m_vertexInputStateCreateInfos;
         std::vector<VkPipelineInputAssemblyStateCreateInfo> m_inputAssemblyStateCreateInfos;
         std::vector<VkPipelineTessellationStateCreateInfo> m_tessellationStateCreateInfos;

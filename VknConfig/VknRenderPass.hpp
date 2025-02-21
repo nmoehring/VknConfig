@@ -16,8 +16,7 @@ namespace vkn
         void destroy();
 
         void createAttachment(
-            uint32_t subpassIdx,
-            VknAttachmentType attachmentType,
+            VknAttachmentType attachmentType = COLOR_ATTACHMENT,
             VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
             VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
             VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -59,7 +58,7 @@ namespace vkn
         std::vector<std::vector<std::vector<VkAttachmentReference>>> *m_attachmentRefs{nullptr};
         std::vector<std::vector<uint32_t>> *m_preserveAttachments{nullptr};
 
-        std::vector<VkGraphicsPipelineCreateInfo *> m_pipelineCreateInfos{};
+        std::vector<VkGraphicsPipelineCreateInfo> *m_pipelineCreateInfos{};
         std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
         std::vector<VknPipeline> m_pipelines;
 

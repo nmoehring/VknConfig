@@ -11,6 +11,7 @@ namespace vkn
     {
         m_attachmentRefs = infos->getAllAttachmentReferences();
         m_preserveAttachments = infos->getAllPreserveAttachments();
+        m_pipelineCreateInfos = infos->getPipelineCreateInfos();
     }
 
     VknRenderPass::~VknRenderPass()
@@ -38,11 +39,9 @@ namespace vkn
         if (m_subpasses.size() != m_pipelines.size() + 1)
             throw std::runtime_error("Subpass not created before pipeline added.");
         int pipelineIdx = m_pipelines.size();
-        m_pipelineCreateInfos.push_back(nullptr);
         m_rawPipelines.push_back(VkPipeline{});
-        m_pipelines.push_back(VknPipeline(m_subpasses.back(), &(m_rawPipelines.back()),
-                                          m_pipelineCreateInfos.back(), m_device, m_infos,
-                                          m_archive, pipelineIdx));
+        m_pipelines.push_back(VknPipeline(&m_renderPass, m_subpasses.back(), &(m_rawPipelines.back()),
+                                          m_device, m_infos, m_archive, pipelineIdx));
     }
 
     void VknRenderPass::addDevice(VknDevice *dev)
@@ -88,7 +87,7 @@ namespace vkn
     }
 
     void VknRenderPass::createAttachment(
-        uint32_t subpassIdx, VknAttachmentType attachmentType,
+        VknAttachmentType attachmentType,
         VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
         VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
@@ -97,6 +96,8 @@ namespace vkn
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before creating attachment.");
+
+        uint32_t subpassIdx = m_subpasses.size();
 
         uint32_t attachIdx = m_attachments.size();
 
@@ -110,9 +111,11 @@ namespace vkn
     {
         if (!m_deviceAdded)
             throw std::runtime_error("Device not added to renderpass before creating pipelines.");
+        if (m_pipelines.size() > m_pipelineCreateInfos->size())
+            throw std::runtime_error("Not all pipeline create infos filled before calling createPipelines().");
         VknResult res{vkCreateGraphicsPipelines(
-                          *(m_device->getVkDevice()), nullptr, m_pipelineCreateInfos.size(),
-                          *(m_pipelineCreateInfos.data()), nullptr, m_rawPipelines.data()),
+                          *(m_device->getVkDevice()), nullptr, m_pipelineCreateInfos->size(),
+                          m_pipelineCreateInfos->data(), nullptr, m_rawPipelines.data()),
                       "Create pipeline."};
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating pipeline."));

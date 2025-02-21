@@ -16,9 +16,8 @@ namespace vkn
     {
     public:
         VknPipeline() {}
-        VknPipeline(VkSubpassDescription *subpass, VkPipeline *pipeline,
-                    VkGraphicsPipelineCreateInfo *createInfo, VknDevice *dev,
-                    VknInfos *infos, VknResultArchive *archive, uint32_t index);
+        VknPipeline(VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,
+                    VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index);
         ~VknPipeline();
         void destroy();
 
@@ -36,7 +35,6 @@ namespace vkn
         void createLayout();
 
         void fillPipelineCreateInfo(
-            VkRenderPass *renderPass,
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0,
             VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
@@ -59,9 +57,10 @@ namespace vkn
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
         VkPipeline *m_pipeline{nullptr}; // 1 Subpass per pipeline
+        VkRenderPass *m_renderPass{nullptr};
         VkSubpassDescription *m_subpass{nullptr};
         VkGraphicsPipelineCreateInfo *m_createInfo{nullptr};
-        std::vector<VkAttachmentReference> *m_attachmentReferences{nullptr};
+        std::vector<std::vector<VkAttachmentReference>> *m_attachmentReferences{nullptr};
         std::vector<uint32_t> *m_preserveAttachments{nullptr};
 
         std::vector<VkShaderModule> m_shaderModules{};

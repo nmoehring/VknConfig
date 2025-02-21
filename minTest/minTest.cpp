@@ -65,8 +65,8 @@ int main()
 
     vkn::VknRenderPass *renderPass = vknConfig.getRenderPass();
     std::vector<VkAttachmentReference *> attach;
-    attach.push_back(renderPass->createAttachment());
-    renderPass->createSubpass(VK_PIPELINE_BIND_POINT_GRAPHICS, attach);
+    renderPass->createAttachment();
+    renderPass->createSubpass();
     renderPass->createRenderPass();
 
     vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
@@ -87,7 +87,7 @@ int main()
     auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
     pipeline->fillPipelineLayoutCreateInfo();
     pipeline->createLayout();
-    pipeline->fillPipelineCreateInfo(*(renderPass->getVkRenderPass()));
+    pipeline->fillPipelineCreateInfo();
     /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
         basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
         tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
