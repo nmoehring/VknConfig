@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <limits>
+#include <algorithm>
 
 #include "VknInfos.hpp"
 #include <vulkan/vulkan.h>
@@ -8,59 +9,6 @@ namespace vkn
 {
     VknInfos::VknInfos()
     {
-        fillDefaultInfos();
-    }
-
-    void VknInfos::fillDefaultInfos()
-    {
-        m_appInfo = this->getDefaultAppInfo();
-        m_instanceCreateInfo = this->getDefaultInstanceCreateInfo();
-        m_deviceCreateInfo = this->getDefaultDeviceCreateInfo();
-    }
-
-    VkApplicationInfo VknInfos::getDefaultAppInfo()
-    {
-        VkApplicationInfo info;
-        info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        info.pNext = nullptr;
-        info.pApplicationName = m_appName.c_str();
-        info.applicationVersion = 0;
-        info.pEngineName = m_engineName.c_str();
-        info.engineVersion = 0;
-        // Vulkan 1.0 only compatible with 1.0 (maybe stick with 1.1 at least)
-        info.apiVersion = VK_API_VERSION_1_1;
-        return info;
-    }
-
-    VkInstanceCreateInfo VknInfos::getDefaultInstanceCreateInfo()
-    {
-        VkInstanceCreateInfo info{};
-        info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.pApplicationInfo = &m_appInfo;
-        info.enabledLayerCount = 0;
-        info.ppEnabledLayerNames = nullptr;
-        info.enabledExtensionCount = 0;
-        info.ppEnabledExtensionNames = nullptr;
-        return info;
-    }
-
-    VkDeviceCreateInfo VknInfos::getDefaultDeviceCreateInfo()
-    {
-        VkDeviceCreateInfo info{};
-        info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // flags reserved, must = 0
-        info.queueCreateInfoCount = m_queueCreateInfos.size();
-        info.pQueueCreateInfos = m_queueCreateInfos.data();
-        // enabledLayerCount is deprecated and should not be used
-        info.enabledLayerCount = 0; // ignored, value doesn't matter
-        // ppEnabledLayerNames is deprecated and should not be used
-        info.ppEnabledLayerNames = nullptr; // ignored, value doesn't matter
-        info.enabledExtensionCount = 0;
-        info.ppEnabledExtensionNames = nullptr;
-        info.pEnabledFeatures = nullptr;
-        return info;
     }
 
     VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
@@ -182,23 +130,25 @@ namespace vkn
     }
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
-        std::vector<char> &code, VkShaderModuleCreateFlags flags)
+        uint32_t pipelineIdx, std::vector<char> &code, VkShaderModuleCreateFlags flags)
     {
-        m_shaderModuleCreateInfos.push_back(VkShaderModuleCreateInfo{});
-        VkShaderModuleCreateInfo &info = m_shaderModuleCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = flags;
-        info.codeSize = code.size();
-        info.pCode = reinterpret_cast<const uint32_t *>(code.data());
-        return &info;
+        for (int i = 0; i < (pipelineIdx - (m_shaderModuleCreateInfos.size() - 1)); ++i)
+            m_shaderModuleCreateInfos.push_back(std::vector<VkShaderModuleCreateInfo>{});
+        m_shaderModuleCreateInfos[pipelineIdx].push_back(VkShaderModuleCreateInfo{});
+        VkShaderModuleCreateInfo *info = &(m_shaderModuleCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = flags;
+        info->codeSize = code.size();
+        info->pCode = reinterpret_cast<const uint32_t *>(code.data());
+        return info;
     }
 
     VkPipelineShaderStageCreateInfo *VknInfos::fillShaderStageCreateInfo(
         uint32_t pipelineIdx, VkShaderModule module, VkShaderStageFlagBits stage,
         VkPipelineShaderStageCreateFlags flags, VkSpecializationInfo *pSpecializationInfo)
     {
-        for (pipelineIdx - (m_shaderStageCreateInfos.size() - 1))
+        for (int i = 0; i < (pipelineIdx - (m_shaderStageCreateInfos.size() - 1)); ++i)
             m_shaderStageCreateInfos.push_back(std::vector<VkPipelineShaderStageCreateInfo>{});
         m_shaderStageCreateInfos[pipelineIdx].push_back(VkPipelineShaderStageCreateInfo{});
         VkPipelineShaderStageCreateInfo *info = &(m_shaderStageCreateInfos[pipelineIdx].back());
@@ -212,194 +162,200 @@ namespace vkn
         return info;
     }
 
-    VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
-        std::vector<VkVertexInputBindingDescription> vertexBindingDescriptions,
-        std::vector<VkVertexInputAttributeDescription> vertexAttributeDescriptions)
+    VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(uint32_t pipelineIdx)
     {
-        m_vertexInputStateCreateInfos.push_back(VkPipelineVertexInputStateCreateInfo{});
-        VkPipelineVertexInputStateCreateInfo &info = m_vertexInputStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.vertexBindingDescriptionCount = vertexBindingDescriptions.size();
-        if (vertexBindingDescriptions.size() == 0)
-            info.pVertexBindingDescriptions = VK_NULL_HANDLE;
+        for (int i = 0; i < (pipelineIdx - (m_vertexInputStateCreateInfos.size() - 1)); ++i)
+            m_vertexInputStateCreateInfos.push_back(std::vector<VkPipelineVertexInputStateCreateInfo>{});
+        if ((m_vertexInputBindings.size() - 1) < pipelineIdx || m_vertexInputBindings[pipelineIdx].size() == 0)
+            throw std::runtime_error("Vertex input bindings not filled before filling vertex input state create info.");
+        if ((m_vertexInputAttributes.size() - 1) < pipelineIdx || m_vertexInputAttributes[pipelineIdx].size() == 0)
+            throw std::runtime_error("Vertex input attributes not filled before filling vertex input state create info.");
+
+        std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions = &(m_vertexInputBindings[pipelineIdx]);
+        std::vector<VkVertexInputAttributeDescription> *vertexAttributeDescriptions = &(m_vertexInputAttributes[pipelineIdx]);
+
+        m_vertexInputStateCreateInfos[pipelineIdx].push_back(VkPipelineVertexInputStateCreateInfo{});
+        VkPipelineVertexInputStateCreateInfo *info = &(m_vertexInputStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        info->pNext = VK_NULL_HANDLE;
+        info->flags = 0; // reserved for future use
+        info->vertexBindingDescriptionCount = vertexBindingDescriptions->size();
+        if (vertexBindingDescriptions->size() == 0)
+            info->pVertexBindingDescriptions = VK_NULL_HANDLE;
         else
-            info.pVertexBindingDescriptions = vertexBindingDescriptions.data();
-        info.vertexAttributeDescriptionCount = vertexAttributeDescriptions.size();
-        if (vertexAttributeDescriptions.size() == 0)
-            info.pVertexAttributeDescriptions = VK_NULL_HANDLE;
+            info->pVertexBindingDescriptions = vertexBindingDescriptions->data();
+        info->vertexAttributeDescriptionCount = vertexAttributeDescriptions->size();
+        if (vertexAttributeDescriptions->size() == 0)
+            info->pVertexAttributeDescriptions = VK_NULL_HANDLE;
         else
-            info.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
-        return &info;
-    }
-
-    VkPipelineVertexInputStateCreateInfo *VknInfos::fillDefaultVertexInputState()
-    {
-        std::vector<VkVertexInputBindingDescription> vertexInputBinding;
-        vertexInputBinding.push_back(VkVertexInputBindingDescription{});
-        vertexInputBinding[0].binding = 0;
-        vertexInputBinding[0].stride = 0; // No actual vertex data
-        vertexInputBinding[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        // Minimal vertex input attribute description
-        std::vector<VkVertexInputAttributeDescription> vertexInputAttribute;
-        vertexInputAttribute.push_back(VkVertexInputAttributeDescription{});
-        vertexInputAttribute[0].binding = 0;
-        vertexInputAttribute[0].location = 0;
-        vertexInputAttribute[0].format = VK_FORMAT_UNDEFINED;
-        vertexInputAttribute[0].offset = 0;
-
-        return this->fillVertexInputStateCreateInfo(vertexInputBinding, vertexInputAttribute);
+            info->pVertexAttributeDescriptions = vertexAttributeDescriptions->data();
+        return info;
     }
 
     VkPipelineInputAssemblyStateCreateInfo *VknInfos::fillInputAssemblyStateCreateInfo(
-        VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
+        uint32_t pipelineIdx, VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
     {
-        m_inputAssemblyStateCreateInfos.push_back(VkPipelineInputAssemblyStateCreateInfo{});
-        VkPipelineInputAssemblyStateCreateInfo &info = m_inputAssemblyStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.topology = topology;
-        info.primitiveRestartEnable = primitiveRestartEnable;
-        return &info;
+        for (int i = 0; i < (pipelineIdx - (m_inputAssemblyStateCreateInfos.size() - 1)); ++i)
+            m_inputAssemblyStateCreateInfos.push_back(std::vector<VkPipelineInputAssemblyStateCreateInfo>{});
+        m_inputAssemblyStateCreateInfos[pipelineIdx].push_back(VkPipelineInputAssemblyStateCreateInfo{});
+        VkPipelineInputAssemblyStateCreateInfo *info = &(m_inputAssemblyStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = 0; // reserved for future use
+        info->topology = topology;
+        info->primitiveRestartEnable = primitiveRestartEnable;
+        return info;
     }
 
-    VkPipelineTessellationStateCreateInfo *VknInfos::fillTessellationStateCreateInfo(uint32_t patchControlPoints)
+    VkPipelineTessellationStateCreateInfo *VknInfos::fillTessellationStateCreateInfo(uint32_t pipelineIdx, uint32_t patchControlPoints)
     {
-        m_tessellationStateCreateInfos.push_back(VkPipelineTessellationStateCreateInfo{});
-        VkPipelineTessellationStateCreateInfo &info = m_tessellationStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.patchControlPoints = patchControlPoints;
-        return &info;
+        for (int i = 0; i < (pipelineIdx - (m_tessellationStateCreateInfos.size() - 1)); ++i)
+            m_tessellationStateCreateInfos.push_back(std::vector<VkPipelineTessellationStateCreateInfo>{});
+        m_tessellationStateCreateInfos[pipelineIdx].push_back(VkPipelineTessellationStateCreateInfo{});
+        VkPipelineTessellationStateCreateInfo *info = &(m_tessellationStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = 0; // reserved for future use
+        info->patchControlPoints = patchControlPoints;
+        return info;
     }
 
     VkPipelineViewportStateCreateInfo *VknInfos::fillViewportStateCreateInfo(
-        std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors)
+        uint32_t pipelineIdx, std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors)
     {
-        m_viewportStateCreateInfos.push_back(VkPipelineViewportStateCreateInfo{});
-        VkPipelineViewportStateCreateInfo &info = m_viewportStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.viewportCount = viewports.size();
+        for (int i = 0; i < (pipelineIdx - (m_viewportStateCreateInfos.size() - 1)); ++i)
+            m_viewportStateCreateInfos.push_back(std::vector<VkPipelineViewportStateCreateInfo>{});
+        m_viewportStateCreateInfos[pipelineIdx].push_back(VkPipelineViewportStateCreateInfo{});
+        VkPipelineViewportStateCreateInfo *info = &(m_viewportStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = 0; // reserved for future use
+        info->viewportCount = viewports.size();
         if (viewports.size() == 0)
-            info.pViewports = VK_NULL_HANDLE;
+            info->pViewports = VK_NULL_HANDLE;
         else
-            info.pViewports = viewports.data();
-        info.scissorCount = scissors.size();
+            info->pViewports = viewports.data();
+        info->scissorCount = scissors.size();
         if (scissors.size() == 0)
-            info.pScissors = VK_NULL_HANDLE;
+            info->pScissors = VK_NULL_HANDLE;
         else
-            info.pScissors = scissors.data();
-        return &info;
+            info->pScissors = scissors.data();
+        return info;
     }
 
     VkPipelineRasterizationStateCreateInfo *VknInfos::fillRasterizationStateCreateInfo(
-        VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
+        uint32_t pipelineIdx, VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
         float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
         float lineWidth, VkBool32 depthClampEnable,
         VkBool32 rasterizerDiscardEnable, VkBool32 depthBiasEnable)
     {
-        m_rasterizationStateCreateInfos.push_back(VkPipelineRasterizationStateCreateInfo{});
-        VkPipelineRasterizationStateCreateInfo &info = m_rasterizationStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.depthClampEnable = depthClampEnable;
-        info.rasterizerDiscardEnable = rasterizerDiscardEnable;
-        info.polygonMode = polygonMode;
-        info.cullMode = cullMode;
-        info.frontFace = frontFace;
-        info.depthBiasEnable = depthBiasEnable;
-        info.depthBiasConstantFactor = depthBiasConstantFactor;
-        info.depthBiasClamp = depthBiasClamp;
-        info.depthBiasSlopeFactor = depthBiasSlopeFactor;
-        info.lineWidth = lineWidth;
-        return &info;
+        for (int i = 0; i < (pipelineIdx - (m_rasterizationStateCreateInfos.size() - 1)); ++i)
+            m_rasterizationStateCreateInfos.push_back(std::vector<VkPipelineRasterizationStateCreateInfo>{});
+        m_rasterizationStateCreateInfos[pipelineIdx].push_back(VkPipelineRasterizationStateCreateInfo{});
+        VkPipelineRasterizationStateCreateInfo *info = &(m_rasterizationStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = 0; // reserved for future use
+        info->depthClampEnable = depthClampEnable;
+        info->rasterizerDiscardEnable = rasterizerDiscardEnable;
+        info->polygonMode = polygonMode;
+        info->cullMode = cullMode;
+        info->frontFace = frontFace;
+        info->depthBiasEnable = depthBiasEnable;
+        info->depthBiasConstantFactor = depthBiasConstantFactor;
+        info->depthBiasClamp = depthBiasClamp;
+        info->depthBiasSlopeFactor = depthBiasSlopeFactor;
+        info->lineWidth = lineWidth;
+        return info;
     }
 
     VkPipelineMultisampleStateCreateInfo *VknInfos::fillMultisampleStateCreateInfo(
-        float minSampleShading, VkSampleMask *pSampleMask,
+        uint32_t pipelineIdx, float minSampleShading, VkSampleMask *pSampleMask,
         VkSampleCountFlagBits rasterizationSamples,
         VkBool32 sampleShadingEnable, VkBool32 alphaToCoverageEnable,
         VkBool32 alphaToOneEnable)
     {
-        m_multisampleStateCreateInfos.push_back(VkPipelineMultisampleStateCreateInfo{});
-        VkPipelineMultisampleStateCreateInfo &info = m_multisampleStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.rasterizationSamples = rasterizationSamples;
-        info.sampleShadingEnable = sampleShadingEnable;
-        info.minSampleShading = minSampleShading;
-        info.pSampleMask = pSampleMask;
-        info.alphaToCoverageEnable = alphaToCoverageEnable;
-        info.alphaToOneEnable = alphaToOneEnable;
-        return &info;
+        for (int i = 0; i < (pipelineIdx - (m_multisampleStateCreateInfos.size() - 1)); ++i)
+            m_multisampleStateCreateInfos.push_back(std::vector<VkPipelineMultisampleStateCreateInfo>{});
+        m_multisampleStateCreateInfos[pipelineIdx].push_back(VkPipelineMultisampleStateCreateInfo{});
+        VkPipelineMultisampleStateCreateInfo *info = &(m_multisampleStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = 0; // reserved for future use
+        info->rasterizationSamples = rasterizationSamples;
+        info->sampleShadingEnable = sampleShadingEnable;
+        info->minSampleShading = minSampleShading;
+        info->pSampleMask = pSampleMask;
+        info->alphaToCoverageEnable = alphaToCoverageEnable;
+        info->alphaToOneEnable = alphaToOneEnable;
+        return info;
     }
 
     VkPipelineDepthStencilStateCreateInfo *VknInfos::fillDepthStencilStateCreateInfo(
-        VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
+        uint32_t pipelineIdx, VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
         float minDepthBounds, float maxDepthBounds,
         VkPipelineDepthStencilStateCreateFlags flags,
         VkBool32 depthTestEnable, VkBool32 depthWriteEnable,
         VkBool32 depthBoundsTestEnable, VkBool32 stencilTestEnable)
     {
-        m_depthStencilStateCreateInfos.push_back(VkPipelineDepthStencilStateCreateInfo{});
-        VkPipelineDepthStencilStateCreateInfo &info = m_depthStencilStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = flags;
-        info.depthTestEnable = depthTestEnable;
-        info.depthWriteEnable = depthWriteEnable;
-        info.depthCompareOp = depthCompareOp;
-        info.depthBoundsTestEnable = depthBoundsTestEnable;
-        info.stencilTestEnable = stencilTestEnable;
-        info.front = front;
-        info.back = back;
-        info.minDepthBounds = minDepthBounds;
-        info.maxDepthBounds = maxDepthBounds;
-        return &info;
+        for (int i = 0; i < (pipelineIdx - (m_depthStencilStateCreateInfos.size() - 1)); ++i)
+            m_depthStencilStateCreateInfos.push_back(std::vector<VkPipelineDepthStencilStateCreateInfo>{});
+        m_depthStencilStateCreateInfos[pipelineIdx].push_back(VkPipelineDepthStencilStateCreateInfo{});
+        VkPipelineDepthStencilStateCreateInfo *info = &(m_depthStencilStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = flags;
+        info->depthTestEnable = depthTestEnable;
+        info->depthWriteEnable = depthWriteEnable;
+        info->depthCompareOp = depthCompareOp;
+        info->depthBoundsTestEnable = depthBoundsTestEnable;
+        info->stencilTestEnable = stencilTestEnable;
+        info->front = front;
+        info->back = back;
+        info->minDepthBounds = minDepthBounds;
+        info->maxDepthBounds = maxDepthBounds;
+        return info;
     }
 
     VkPipelineColorBlendStateCreateInfo *VknInfos::fillColorBlendStateCreateInfo(
-        VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
+        uint32_t pipelineIdx, VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
         float blendConstants[4], VkBool32 logicOpEnable,
         VkPipelineColorBlendStateCreateFlags flags)
     {
-        m_colorBlendStateCreateInfos.push_back(VkPipelineColorBlendStateCreateInfo{});
-        VkPipelineColorBlendStateCreateInfo &info = m_colorBlendStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = flags;
-        info.logicOpEnable = logicOpEnable;
-        info.logicOp = logicOp;
-        info.attachmentCount = attachments.size();
+        for (int i = 0; i < (pipelineIdx - (m_colorBlendStateCreateInfos.size() - 1)); ++i)
+            m_colorBlendStateCreateInfos.push_back(std::vector<VkPipelineColorBlendStateCreateInfo>{});
+        m_colorBlendStateCreateInfos[pipelineIdx].push_back(VkPipelineColorBlendStateCreateInfo{});
+        VkPipelineColorBlendStateCreateInfo *info = &(m_colorBlendStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = flags;
+        info->logicOpEnable = logicOpEnable;
+        info->logicOp = logicOp;
+        info->attachmentCount = attachments.size();
         if (attachments.size() == 0)
-            info.pAttachments = VK_NULL_HANDLE;
+            info->pAttachments = VK_NULL_HANDLE;
         else
-            info.pAttachments = attachments.data();
-        info.blendConstants[4] = {};
-        return &info;
+            info->pAttachments = attachments.data();
+        info->blendConstants[4] = {};
+        return info;
     }
 
-    VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(std::vector<VkDynamicState> dynamicStates)
+    VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(
+        uint32_t pipelineIdx, std::vector<VkDynamicState> dynamicStates)
     {
-        m_dynamicStateCreateInfos.push_back(VkPipelineDynamicStateCreateInfo{});
-        VkPipelineDynamicStateCreateInfo &info = m_dynamicStateCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = 0; // reserved for future use
-        info.dynamicStateCount = dynamicStates.size();
+        for (int i = 0; i < (pipelineIdx - (m_dynamicStateCreateInfos.size() - 1)); ++i)
+            m_dynamicStateCreateInfos.push_back(std::vector<VkPipelineDynamicStateCreateInfo>{});
+        m_dynamicStateCreateInfos[pipelineIdx].push_back(VkPipelineDynamicStateCreateInfo{});
+        VkPipelineDynamicStateCreateInfo *info = &(m_dynamicStateCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = 0; // reserved for future use
+        info->dynamicStateCount = dynamicStates.size();
         if (dynamicStates.size() == 0)
-            info.pDynamicStates = VK_NULL_HANDLE;
+            info->pDynamicStates = VK_NULL_HANDLE;
         else
-            info.pDynamicStates = dynamicStates.data();
-        return &info;
+            info->pDynamicStates = dynamicStates.data();
+        return info;
     }
 
     VkDescriptorSetLayoutCreateInfo *VknInfos::fillDescriptorSetLayoutCreateInfo(
@@ -419,27 +375,30 @@ namespace vkn
     }
 
     VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
+        uint32_t pipelineIdx,
         std::vector<VkDescriptorSetLayout> setLayouts,
         std::vector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {
-        m_layoutCreateInfos.push_back(VkPipelineLayoutCreateInfo{});
-        VkPipelineLayoutCreateInfo &info = m_layoutCreateInfos.back();
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        info.pNext = nullptr;
-        info.flags = flags;
-        info.setLayoutCount = setLayouts.size();
+        for (int i = 0; i < (pipelineIdx - (m_layoutCreateInfos.size() - 1)); ++i)
+            m_layoutCreateInfos.push_back(std::vector<VkPipelineLayoutCreateInfo>{});
+        m_layoutCreateInfos[pipelineIdx].push_back(VkPipelineLayoutCreateInfo{});
+        VkPipelineLayoutCreateInfo *info = &(m_layoutCreateInfos[pipelineIdx].back());
+        info->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        info->pNext = nullptr;
+        info->flags = flags;
+        info->setLayoutCount = setLayouts.size();
         if (setLayouts.size() == 0)
-            info.pSetLayouts = VK_NULL_HANDLE;
+            info->pSetLayouts = VK_NULL_HANDLE;
         else
-            info.pSetLayouts = setLayouts.data();
-        info.pushConstantRangeCount = pushConstantRanges.size();
+            info->pSetLayouts = setLayouts.data();
+        info->pushConstantRangeCount = pushConstantRanges.size();
         if (pushConstantRanges.size() == 0)
-            info.pPushConstantRanges = VK_NULL_HANDLE;
+            info->pPushConstantRanges = VK_NULL_HANDLE;
         else
-            info.pPushConstantRanges = pushConstantRanges.data();
+            info->pPushConstantRanges = pushConstantRanges.data();
 
-        return &info;
+        return info;
     }
 
     VkPipelineCacheCreateInfo *VknInfos::fillPipelineCacheCreateInfo(
@@ -482,47 +441,186 @@ namespace vkn
         return true;
     }
 
-    void VknInfos::fillAppInfo(uint32_t apiVersion, std::string appName,
-                               std::string engineName, VkApplicationInfo *pNext,
-                               uint32_t applicationVersion, uint32_t engineVersion)
+    void VknInfos::fillAppName(std::string name)
     {
-        m_appName = appName;
-        m_engineName = engineName;
+        m_appName = new std::vector<char>(name.size());
+        for (int i = 0; i <= name.size(); ++i)
+            m_appName->at(i) = name.c_str()[i];
+        m_filledAppName = true;
+    }
 
-        m_appInfo.pApplicationName = m_appName.c_str();
-        m_appInfo.pEngineName = m_engineName.c_str();
+    void VknInfos::fillEngineName(std::string name)
+    {
+        m_engineName = new std::vector<char>(name.size());
+        for (int i = 0; i <= name.size(); ++i)
+            m_engineName->at(i) = name.c_str()[i];
+        m_filledEngineName = true;
+    }
 
-        m_appInfo.pNext = nullptr;
-        m_appInfo.pApplicationName = m_appName.c_str();
-        m_appInfo.applicationVersion = 0;
-        m_appInfo.pEngineName = m_engineName.c_str();
-        m_appInfo.engineVersion = 0;
-        // Vulkan 1.0 only compatible with 1.0 (maybe stick with 1.1 at least)
-        m_appInfo.apiVersion = VK_API_VERSION_1_1;
+    void VknInfos::fillInstanceExtensionNames(std::vector<std::string> names)
+    {
+        m_enabledInstanceExtensionNames = new std::vector<char[100]>(names.size());
+        for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
+        {
+            for (int charIdx = 0; charIdx < 100; ++charIdx)
+                if (charIdx < names[nameIdx].size())
+                    m_enabledInstanceExtensionNames->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
+                else
+                    m_enabledInstanceExtensionNames->at(nameIdx)[charIdx] = char("\0");
+        }
+    }
+
+    void VknInfos::fillDeviceExtensionNames(std::vector<std::string> names)
+    {
+        m_enabledDeviceExtensionNames.push_back(new std::vector<char[100]>(names.size()));
+        for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
+        {
+            for (int charIdx = 0; charIdx < 100; ++charIdx)
+                if (charIdx < names[nameIdx].size(); ++nameIdx)
+                    m_enabledDeviceExtensionNames.back()->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
+                else
+                    m_enabledDeviceExtensionNames.back()->at(nameIdx)[charIdx] = char("\0");
+        }
+    }
+
+    void VknInfos::fillEnabledLayerNames(std::vector<std::string> names)
+    {
+        m_enabledLayerNames = new std::vector<char[100]>(names.size());
+        for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
+        {
+            for (int charIdx = 0; charIdx < 100; ++charIdx)
+                if (charIdx < names[nameIdx].size())
+                    m_enabledLayerNames->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
+                else
+                    m_enabledLayerNames->at(nameIdx)[charIdx] = char("\0");
+        }
+    }
+
+    void VknInfos::fillDeviceFeatures(bool robustBufferAccess, bool fullDrawIndexUint32, bool imageCubeArray,
+                                      bool independentBlend, bool geometryShader, bool tessellationShader,
+                                      bool sampleRateShading, bool dualSrcBlend, bool logicOp,
+                                      bool multiDrawIndirect, bool drawIndirectFirstInstance, bool depthClamp,
+                                      bool depthBiasClamp, bool fillModeNonSolid, bool depthBounds,
+                                      bool wideLines, bool largePoints, bool alphaToOne,
+                                      bool multiViewport, bool samplerAnisotropy, bool textureCompressionETC2,
+                                      bool textureCompressionASTC_LDR, bool textureCompressionBC, bool occlusionQueryPrecise,
+                                      bool pipelineStatisticsQuery, bool vertexPipelineStoresAndAtomics,
+                                      bool fragmentStoresAndAtomics, bool shaderTessellationAndGeometryPointSize,
+                                      bool shaderImageGatherExtended, bool shaderStorageImageExtendedFormats,
+                                      bool shaderStorageImageMultisample, bool shaderStorageImageReadWithoutFormat,
+                                      bool shaderStorageImageWriteWithoutFormat, bool shaderUniformBufferArrayDynamicIndexing,
+                                      bool shaderSampledImageArrayDynamicIndexing, bool shaderStorageBufferArrayDynamicIndexing,
+                                      bool shaderStorageImageArrayDynamicIndexing, bool shaderClipDistance,
+                                      bool shaderCullDistance, bool shaderFloat64, bool shaderInt64,
+                                      bool shaderInt16, bool shaderResourceResidency, bool shaderResourceMinLod,
+                                      bool sparseBinding, bool sparseResidencyBuffer, bool sparseResidencyImage2D,
+                                      bool sparseResidencyImage3D, bool sparseResidency2Samples,
+                                      bool sparseResidency4Samples, bool sparseResidency8Samples, bool sparseResidency16Samples,
+                                      bool sparseResidencyAliased, bool variableMultisampleRate, bool inheritedQueries)
+    {
+        m_enabledFeatures.push_back(VkPhysicalDeviceFeatures{});
+        VkPhysicalDeviceFeatures *info = &(m_enabledFeatures.back());
+        info->robustBufferAccess = robustBufferAccess;
+        info->fullDrawIndexUint32 = fullDrawIndexUint32;
+        info->imageCubeArray = imageCubeArray;
+        info->independentBlend = independentBlend;
+        info->geometryShader = geometryShader;
+        info->tessellationShader = tessellationShader;
+        info->sampleRateShading = sampleRateShading;
+        info->dualSrcBlend = dualSrcBlend;
+        info->logicOp = logicOp;
+        info->multiDrawIndirect = multiDrawIndirect;
+        info->drawIndirectFirstInstance = drawIndirectFirstInstance;
+        info->depthClamp = depthClamp;
+        info->depthBiasClamp = depthBiasClamp;
+        info->fillModeNonSolid = fillModeNonSolid;
+        info->depthBounds = depthBounds;
+        info->wideLines = wideLines;
+        info->largePoints = largePoints;
+        info->alphaToOne = alphaToOne;
+        info->multiViewport = multiViewport;
+        info->samplerAnisotropy = samplerAnisotropy;
+        info->textureCompressionETC2 = textureCompressionETC2;
+        info->textureCompressionASTC_LDR = textureCompressionASTC_LDR;
+        info->textureCompressionBC = textureCompressionBC;
+        info->occlusionQueryPrecise = occlusionQueryPrecise;
+        info->pipelineStatisticsQuery = pipelineStatisticsQuery;
+        info->vertexPipelineStoresAndAtomics = vertexPipelineStoresAndAtomics;
+        info->fragmentStoresAndAtomics = fragmentStoresAndAtomics;
+        info->shaderTessellationAndGeometryPointSize = shaderTessellationAndGeometryPointSize;
+        info->shaderImageGatherExtended = shaderImageGatherExtended;
+        info->shaderStorageImageExtendedFormats = shaderStorageImageExtendedFormats;
+        info->shaderStorageImageMultisample = shaderStorageImageMultisample;
+        info->shaderStorageImageReadWithoutFormat = shaderStorageImageReadWithoutFormat;
+        info->shaderStorageImageWriteWithoutFormat = shaderStorageImageWriteWithoutFormat;
+        info->shaderUniformBufferArrayDynamicIndexing = shaderUniformBufferArrayDynamicIndexing;
+        info->shaderSampledImageArrayDynamicIndexing = shaderSampledImageArrayDynamicIndexing;
+        info->shaderStorageBufferArrayDynamicIndexing = shaderStorageBufferArrayDynamicIndexing;
+        info->shaderStorageImageArrayDynamicIndexing = shaderStorageImageArrayDynamicIndexing;
+        info->shaderClipDistance = shaderClipDistance;
+        info->shaderCullDistance = shaderCullDistance;
+        info->shaderFloat64 = shaderFloat64;
+        info->shaderInt64 = shaderInt64;
+        info->shaderInt16 = shaderInt16;
+        info->shaderResourceResidency = shaderResourceResidency;
+        info->shaderResourceMinLod = shaderResourceMinLod;
+        info->sparseBinding = sparseBinding;
+        info->sparseResidencyBuffer = sparseResidencyBuffer;
+        info->sparseResidencyImage2D = sparseResidencyImage2D;
+        info->sparseResidencyImage3D = sparseResidencyImage3D;
+        info->sparseResidency2Samples = sparseResidency2Samples;
+        info->sparseResidency4Samples = sparseResidency4Samples;
+        info->sparseResidency8Samples = sparseResidency8Samples;
+        info->sparseResidency16Samples = sparseResidency16Samples;
+        info->sparseResidencyAliased = sparseResidencyAliased;
+        info->variableMultisampleRate = variableMultisampleRate;
+        info->inheritedQueries = inheritedQueries;
+    }
+
+    void VknInfos::fillAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion)
+    {
+        if (!m_filledAppName)
+            throw std::runtime_error("App name not filled before filling app info.");
+        if (!m_filledEngineName)
+            throw std::runtime_error("Engine name not filled before filling app info.");
+        m_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        m_appInfo.pNext = VK_NULL_HANDLE;
+        m_appInfo.pApplicationName = m_appName->data();
+        m_appInfo.applicationVersion = applicationVersion;
+        m_appInfo.pEngineName = m_engineName->data();
+        m_appInfo.engineVersion = engineVersion;
+        m_appInfo.apiVersion = apiVersion;
 
         m_filledAppInfo = true;
     }
 
-    void VknInfos::fillInstanceCreateInfo(std::vector<const char *> &enabledLayerNames,
-                                          std::vector<const char *> &enabledExtensionNames,
-                                          VkInstanceCreateInfo *pNext,
-                                          VkInstanceCreateFlags flags)
+    const char *const *VknInfos::getNamesPointer(std::vector<char[100]> *names)
     {
-        m_instanceCreateInfo.pNext = pNext;
-        m_instanceCreateInfo.flags = flags;
+        return reinterpret_cast<const char *const *>(names->data());
+    }
+
+    void VknInfos::fillInstanceCreateInfo(VkInstanceCreateFlags flags)
+    {
+        if (!m_filledLayerNames)
+            throw std::runtime_error("Layer names not filled before filling instance create info.");
+        if (!m_filledInstanceExtensionNames)
+            throw std::runtime_error("Instance extension names not filled before filling instance create info.");
         if (!m_filledAppInfo)
             throw std::runtime_error("AppInfo not filled before InstanceCreateInfo.");
+
+        m_instanceCreateInfo.pNext = VK_NULL_HANDLE;
+        m_instanceCreateInfo.flags = flags;
         m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
-        m_instanceCreateInfo.enabledLayerCount = enabledLayerNames.size();
-        if (enabledLayerNames.size() == 0)
-            m_instanceCreateInfo.ppEnabledLayerNames = nullptr;
+        m_instanceCreateInfo.enabledLayerCount = m_enabledLayerNames->size();
+        if (m_enabledLayerNames->size() == 0)
+            m_instanceCreateInfo.ppEnabledLayerNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledLayerNames = enabledLayerNames.data();
-        m_instanceCreateInfo.enabledExtensionCount = enabledExtensionNames.size();
-        if (enabledExtensionNames.size() == 0)
-            m_instanceCreateInfo.ppEnabledExtensionNames = nullptr;
+            m_instanceCreateInfo.ppEnabledLayerNames = this->getNamesPointer(m_enabledLayerNames);
+        m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNames->size();
+        if (m_enabledInstanceExtensionNames->size() == 0)
+            m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
+            m_instanceCreateInfo.ppEnabledExtensionNames = this->getNamesPointer(m_enabledInstanceExtensionNames);
         m_filledDeviceQueueCreateInfo = true;
     }
 
@@ -546,20 +644,27 @@ namespace vkn
         m_filledDeviceQueueCreateInfo = true;
     }
 
-    VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(
-        std::vector<const char *> &extensions,
-        VkPhysicalDeviceFeatures *features)
+    VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(uint32_t deviceIdx)
     {
-        m_deviceCreateInfo.queueCreateInfoCount = m_queueCreateInfos.size();
         if (m_queueCreateInfos.size() == 0)
-            throw std::runtime_error("No queue create infos set for device create info.");
-        m_deviceCreateInfo.pQueueCreateInfos = m_queueCreateInfos.data();
-        m_deviceCreateInfo.enabledExtensionCount = extensions.size();
-        if (extensions.size() == 0)
-            m_deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+            throw std::runtime_error("Queues not selected before filling device create info.");
+        VkDeviceCreateInfo &info = m_deviceCreateInfo;
+        // default
+        info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        info.pNext = VK_NULL_HANDLE;
+        info.flags = 0; // flags reserved, must = 0
+        info.queueCreateInfoCount = m_queueCreateInfos.size();
+        info.pQueueCreateInfos = m_queueCreateInfos.data();
+        // enabledLayerCount is deprecated and should not be used
+        info.enabledLayerCount = 0; // ignored, value doesn't matter
+        // ppEnabledLayerNames is deprecated and should not be used
+        info.ppEnabledLayerNames = VK_NULL_HANDLE; // ignored, value doesn't matter
+        m_deviceCreateInfo.enabledExtensionCount = m_enabledDeviceExtensionNames[deviceIdx]->size();
+        if (m_enabledDeviceExtensionNames[deviceIdx]->size() == 0)
+            m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            m_deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
-        m_deviceCreateInfo.pEnabledFeatures = features;
+            m_instanceCreateInfo.ppEnabledExtensionNames = this->getNamesPointer(m_enabledDeviceExtensionNames[deviceIdx]);
+        m_deviceCreateInfo.pEnabledFeatures = &(m_enabledFeatures[deviceIdx]);
 
         m_filledDeviceCreateInfo = true;
         return &m_deviceCreateInfo;
@@ -731,5 +836,28 @@ namespace vkn
         dependency.dstAccessMask = dstAccessMask;
 
         return &dependency;
+    }
+
+    void VknInfos::fillVertexInputBindingDescription(uint32_t idx, uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
+    {
+        for (int i = 0; i < (idx - (m_vertexInputBindings.size() - 1)); ++i)
+            m_vertexInputBindings.push_back(std::vector<VkVertexInputBindingDescription>{});
+        m_vertexInputBindings[idx].push_back(VkVertexInputBindingDescription{});
+        VkVertexInputBindingDescription *description = &(m_vertexInputBindings[idx].back());
+        description->binding = binding;
+        description->stride = stride;
+        description->inputRate = inputRate;
+    }
+
+    void VknInfos::fillVertexInputAttributeDescription(uint32_t idx, uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+    {
+        for (int i = 0; i < (idx - (m_vertexInputAttributes.size() - 1)); ++i)
+            m_vertexInputAttributes.push_back(std::vector<VkVertexInputAttributeDescription>{});
+        m_vertexInputAttributes[idx].push_back(VkVertexInputAttributeDescription{});
+        VkVertexInputAttributeDescription *description = &(m_vertexInputAttributes[idx].back());
+        description->binding = binding;
+        description->location = location;
+        description->format = format;
+        description->offset = offset;
     }
 }
