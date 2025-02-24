@@ -18,6 +18,7 @@ void printFamProps(std::vector<VkQueueFamilyProperties> famProps);
 std::vector<char> readFile(const std::string &filename);
 std::vector<const char *> noNames{};
 bool initWindow(GLFWwindow **outWindow);
+
 int main()
 {
     vkn::VknConfig vknConfig{};
@@ -36,6 +37,9 @@ int main()
     vknConfig.createInstance();
     vknConfig.selectPhysicalDevice();
     vknConfig.getDevice()->requestQueueFamilyProperties();
+    auto limits{vknConfig.getDevice()->getPhysicalDevice()->getLimits()};
+    std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
+    std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
     std::vector<const char *>
         deviceExtensions;
     deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -77,7 +81,10 @@ int main()
     std::vector<int> idxs;
     for (auto stage : stages)
         int idx = pipeline->createShaderStage(stage.first, stage.second);
-    auto vertexInputStateCreateInfo{infos->fillDefaultVertexInputState()};
+
+    pipeline->fillVertexAttributeDescription();
+    pipeline->fillVertexBindingDescription();
+    pipeline->setVertexInput();
     /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
     auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};

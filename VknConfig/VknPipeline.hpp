@@ -47,6 +47,20 @@ namespace vkn
             VkPipelineColorBlendStateCreateInfo *pColorBlendState = nullptr,
             VkPipelineDynamicStateCreateInfo *pDynamicState = nullptr);
 
+        void setVertexInput();
+        void setInputAssembly();
+        void setTessellation();
+        void setViewport();
+        void setRasterization();
+        void setMultisampling();
+        void setDepthStencil();
+        void setColorBlend();
+
+        void fillVertexBindingDescription(uint32_t binding = 0, uint32_t stride = 0,
+                                          VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
+        void fillVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
+                                            VkFormat format = VK_FORMAT_UNDEFINED, uint32_t offset = 0);
+
         VkGraphicsPipelineCreateInfo *getCreateInfo() { return m_createInfo; }
         VkPipeline *getVkPipeline() { return m_pipeline; }
         VkSubpassDescription *getSubpassDescription() { return m_subpass; }
@@ -62,6 +76,8 @@ namespace vkn
         VkGraphicsPipelineCreateInfo *m_createInfo{nullptr};
         std::vector<std::vector<VkAttachmentReference>> *m_attachmentReferences{nullptr};
         std::vector<uint32_t> *m_preserveAttachments{nullptr};
+        std::vector<VkVertexInputBindingDescription *> m_vertexBindingDescriptions{};
+        std::vector<VkVertexInputAttributeDescription *> m_vertexAttributeDescriptions{};
 
         std::vector<VkShaderModule> m_shaderModules{};
         std::vector<VkPipelineShaderStageCreateInfo *> m_shaderStageInfos{};
@@ -78,14 +94,5 @@ namespace vkn
         uint32_t m_index;
 
         int createShaderModule(const std::string filename);
-
-        void setVertexInput();
-        void setInputAssembly();
-        void setTessellation();
-        void setViewport();
-        void setRasterization();
-        void setMultisampling();
-        void setDepthStencil();
-        void setColorBlend();
     };
 }

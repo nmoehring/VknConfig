@@ -30,71 +30,74 @@ namespace vkn
         m_gfxPipelineCreateInfos.push_back(VkGraphicsPipelineCreateInfo{});
         VkGraphicsPipelineCreateInfo &info = m_gfxPipelineCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        info.pNext = nullptr;
+        info.pNext = VK_NULL_HANDLE;
         info.flags = flags;
         info.stageCount = m_shaderStageCreateInfos[pipelineIdx].size(); // Need fill
-        info.pStages = m_shaderStageCreateInfos[pipelineIdx].data();    // Need fill (other struct)
-        info.pVertexInputState = pVertexInputState;                     // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
-                                                                        // set in pDynamicState below. Ignored if mesh shader stage
-                                                                        // included in pStages.
-        info.pInputAssemblyState = pInputAssemblyState;                 // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
-                                                                        // and VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY are set in pDynamicState,
-                                                                        // below and dynamicPrimitiveTopologyUnrestricted is VK_TRUE in the
-                                                                        // VkPhysicalDeviceExtendedDynamicState3PropertiesEXT struct,
-                                                                        // which requires the VK_EXT_extended_dynamic_state3 extension.
-                                                                        // Also ignored if mesh shader stage included in pStages.
-        info.pTessellationState = pTessellationState;                   // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
-                                                                        // is set in the pDynamicState below.
-        info.pViewportState = pViewportState;                           // Can be null if rasterization not enabled.
-                                                                        // Can be null if VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT
-                                                                        // and VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT are set in pDynamicState
-                                                                        // below, and also requires the VK_EXT_extended_dynamic_state3
-                                                                        // extension enabled.
-        info.pRasterizationState = pRasterizationState;                 // I guess this could be null if rasterization is not enabled.
-                                                                        // Can be null if VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT,
-                                                                        // VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
-                                                                        // VK_DYNAMIC_STATE_POLYGON_MODE_EXT,
-                                                                        // VK_DYNAMIC_STATE_CULL_MODE, VK_DYNAMIC_STATE_FRONT_FACE,
-                                                                        // VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE, VK_DYNAMIC_STATE_DEPTH_BIAS,
-                                                                        // and VK_DYNAMIC_STATE_LINE_WIDTH are set in pDynamicState below,
-                                                                        // which also requires the VK_EXT_extended_dynamic_state3
-                                                                        // extension enabled.
-        info.pMultisampleState = pMultisampleState;                     // Can be null if rasterization not enabled.
-                                                                        //  Can be null if VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT,
-                                                                        //  VK_DYNAMIC_STATE_SAMPLE_MASK_EXT, and
-                                                                        //  VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT are set in
-                                                                        //  pDynamicState below, and
-                                                                        //  ((alphaToOne feature not enabled)
-                                                                        //  or
-                                                                        //  (VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT is set and
-                                                                        //  VkPipelineMultisampleStateCreateInfo::sampleShadingEnable
-                                                                        //  is VK_False).
-                                                                        //   VK_EXT_extended_dynamic_state3 extension needs to be enabled
-                                                                        //   to do this.
-        info.pDepthStencilState = pDepthStencilState;                   // Can be null if rasterization not enabled.
-                                                                        // Can be null if VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
-                                                                        // VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE, VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
-                                                                        // VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
-                                                                        // VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE, VK_DYNAMIC_STATE_STENCIL_OP,
-                                                                        // and VK_DYNAMIC_STATE_DEPTH_BOUNDS are set in pDynamicState below
-                                                                        // Also requires the  VK_EXT_extended_dynamic_state3 extension.
-        info.pColorBlendState = pColorBlendState;                       // Can be null if rasterization not enabled.
-                                                                        // Can be null if VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT,
-                                                                        // VK_DYNAMIC_STATE_LOGIC_OP_EXT,
-                                                                        // VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
-                                                                        // VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT,
-                                                                        // VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT, and
-                                                                        // VK_DYNAMIC_STATE_BLEND_CONSTANTS are set in pDynamicState below
-                                                                        // Requires the VK_EXT_extended_dynamic_state3 extension.
-        info.pDynamicState = pDynamicState;                             // Could be null if no state in the pipeline needs to be dynamic.
-        if (layout == nullptr)
-            info.layout = VkPipelineLayout{};
-        else
-            info.layout = *layout; // Need fill
-        if (renderPass == nullptr)
-            info.renderPass = VkRenderPass{};
-        else
-            info.renderPass = *renderPass;            // Need fill
+        info.pStages = m_shaderStageCreateInfos[pipelineIdx].data();    // Need fill
+        if (m_filledVertexInputStateInfo)
+            info.pVertexInputState = pVertexInputState; // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
+                                                        // set in pDynamicState below. Ignored if mesh shader stage
+                                                        // included in pStages.
+        if (m_filledInputAssemblyStateInfo)
+            info.pInputAssemblyState = pInputAssemblyState; // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
+                                                            // and VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY are set in pDynamicState,
+                                                            // below and dynamicPrimitiveTopologyUnrestricted is VK_TRUE in the
+                                                            // VkPhysicalDeviceExtendedDynamicState3PropertiesEXT struct,
+                                                            // which requires the VK_EXT_extended_dynamic_state3 extension.
+                                                            // Also ignored if mesh shader stage included in pStages.
+        if (m_filledTessellationStateInfo)
+            info.pTessellationState = pTessellationState; // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
+                                                          // is set in the pDynamicState below.
+        if (m_filledViewportStateInfo)
+            info.pViewportState = pViewportState; // Can be null if rasterization not enabled.
+                                                  // Can be null if VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT
+                                                  // and VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT are set in pDynamicState
+                                                  // below, and also requires the VK_EXT_extended_dynamic_state3
+                                                  // extension enabled.
+        if (m_filledRasterizationStateInfo)
+            info.pRasterizationState = pRasterizationState; // I guess this could be null if rasterization is not enabled.
+                                                            // Can be null if VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT,
+                                                            // VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
+                                                            // VK_DYNAMIC_STATE_POLYGON_MODE_EXT,
+                                                            // VK_DYNAMIC_STATE_CULL_MODE, VK_DYNAMIC_STATE_FRONT_FACE,
+                                                            // VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE, VK_DYNAMIC_STATE_DEPTH_BIAS,
+                                                            // and VK_DYNAMIC_STATE_LINE_WIDTH are set in pDynamicState below,
+                                                            // which also requires the VK_EXT_extended_dynamic_state3
+                                                            // extension enabled.
+        if (m_filledMultisampleStateInfo)
+            info.pMultisampleState = pMultisampleState; // Can be null if rasterization not enabled.
+                                                        //  Can be null if VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT,
+                                                        //  VK_DYNAMIC_STATE_SAMPLE_MASK_EXT, and
+                                                        //  VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT are set in
+                                                        //  pDynamicState below, and
+                                                        //  ((alphaToOne feature not enabled)
+                                                        //  or
+                                                        //  (VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT is set and
+                                                        //  VkPipelineMultisampleStateCreateInfo::sampleShadingEnable
+                                                        //  is VK_False).
+                                                        //   VK_EXT_extended_dynamic_state3 extension needs to be enabled
+                                                        //   to do this.
+        if (m_filledDepthStencilStateInfo)
+            info.pDepthStencilState = pDepthStencilState; // Can be null if rasterization not enabled.
+                                                          // Can be null if VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
+                                                          // VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE, VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
+                                                          // VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
+                                                          // VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE, VK_DYNAMIC_STATE_STENCIL_OP,
+                                                          // and VK_DYNAMIC_STATE_DEPTH_BOUNDS are set in pDynamicState below
+                                                          // Also requires the  VK_EXT_extended_dynamic_state3 extension.
+        if (m_filledColorBlendStateInfo)
+            info.pColorBlendState = pColorBlendState; // Can be null if rasterization not enabled.
+                                                      // Can be null if VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT,
+                                                      // VK_DYNAMIC_STATE_LOGIC_OP_EXT,
+                                                      // VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
+                                                      // VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT,
+                                                      // VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT, and
+                                                      // VK_DYNAMIC_STATE_BLEND_CONSTANTS are set in pDynamicState below
+                                                      // Requires the VK_EXT_extended_dynamic_state3 extension.
+        if (m_filledDynamicStateInfo)
+            info.pDynamicState = pDynamicState;       // Could be null if no state in the pipeline needs to be dynamic.
+        info.layout = *layout;                        // Need fill
+        info.renderPass = *renderPass;                // Need fill
         info.subpass = subpass;                       // Need fill
         info.basePipelineHandle = basePipelineHandle; // Need fill
         info.basePipelineIndex = basePipelineIndex;   // Need fill
@@ -108,7 +111,7 @@ namespace vkn
         VkRenderPassCreateInfo &renderPassInfo = m_renderPassCreateInfos.back();
 
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.pNext = nullptr;
+        renderPassInfo.pNext = VK_NULL_HANDLE;
         renderPassInfo.flags = flags;
         renderPassInfo.attachmentCount = m_attachmentDescriptions.size();
         if (m_attachmentDescriptions.size() == 0)
@@ -838,7 +841,8 @@ namespace vkn
         return &dependency;
     }
 
-    void VknInfos::fillVertexInputBindingDescription(uint32_t idx, uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
+    VkVertexInputBindingDescription *VknInfos::fillVertexInputBindingDescription(
+        uint32_t idx, uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
     {
         for (int i = 0; i < (idx - (m_vertexInputBindings.size() - 1)); ++i)
             m_vertexInputBindings.push_back(std::vector<VkVertexInputBindingDescription>{});
@@ -847,9 +851,11 @@ namespace vkn
         description->binding = binding;
         description->stride = stride;
         description->inputRate = inputRate;
+        return description;
     }
 
-    void VknInfos::fillVertexInputAttributeDescription(uint32_t idx, uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+    VkVertexInputAttributeDescription *VknInfos::fillVertexInputAttributeDescription(
+        uint32_t idx, uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
     {
         for (int i = 0; i < (idx - (m_vertexInputAttributes.size() - 1)); ++i)
             m_vertexInputAttributes.push_back(std::vector<VkVertexInputAttributeDescription>{});
@@ -859,5 +865,16 @@ namespace vkn
         description->location = location;
         description->format = format;
         description->offset = offset;
+        return description;
+    }
+
+    std::vector<VkVertexInputBindingDescription> *VknInfos::getVertexInputBindings(uint32_t index)
+    {
+        return &(m_vertexInputBindings[index]);
+    }
+
+    std::vector<VkVertexInputAttributeDescription> *VknInfos::getVertexInputAttributes(uint32_t index)
+    {
+        return &(m_vertexInputAttributes[index]);
     }
 }

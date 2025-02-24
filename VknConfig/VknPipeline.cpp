@@ -141,4 +141,18 @@ namespace vkn
             m_infos->fillShaderStageCreateInfo(m_shaderModules[module_idx], shaderStageFlagBits));
         return m_shaderStageInfos.size() - 1;
     }
+
+    void VknPipeline::setVertexInput()
+    {
+        m_infos->fillVertexInputStateCreateInfo(m_index);
+    }
+
+    void VknPipeline::fillVertexBindingDescription(uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
+    {
+        m_vertexBindingDescriptions.push_back(m_infos->fillVertexInputBindingDescription(m_index, binding, stride, inputRate));
+    }
+    void VknPipeline::fillVertexAttributeDescription(uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+    {
+        m_infos->fillVertexInputAttributeDescription(m_index, binding, location, format, offset);
+    }
 }

@@ -35,6 +35,7 @@ namespace vkn
         VknResult res2{vkEnumeratePhysicalDevices(*m_instance, &deviceCount, devices.data()),
                        "Enum physical devices and store."};
         m_physicalDevice = devices[0];
+        m_selectedPhysicalDevice = true;
 
         return res2;
     }
@@ -43,6 +44,8 @@ namespace vkn
     {
         if (!m_instanceAdded)
             throw std::runtime_error("Instance not added to device before getting surface support.");
+        if (!m_selectedPhysicalDevice)
+            throw std::runtime_error("Physical device not selected before getting surface support.");
 
         VkBool32 presentSupport = false;
         VknResult res{
@@ -55,5 +58,16 @@ namespace vkn
         }
         m_archive->store(res);
         return presentSupport;
+    }
+
+    VkPhysicalDeviceLimits *VknPhysicalDevice::getLimits()
+    {
+        {
+            if (!m_instanceAdded)
+                throw std::runtime_error("Instance not added to VknPhysicalDevice before getting device limits.");
+            if (!m_selectedPhysicalDevice)
+                throw std::runtime_error("Physical device not selected before getting device limits.");
+            return &(m_properties.limits);
+        }
     }
 }

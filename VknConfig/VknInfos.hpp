@@ -200,10 +200,15 @@ namespace vkn
         VkDescriptorSetLayoutCreateInfo *fillDescriptorSetLayoutCreateInfo(
             std::vector<VkDescriptorSetLayoutBinding> bindings = std::vector<VkDescriptorSetLayoutBinding>{},
             VkDescriptorSetLayoutCreateFlags flags = 0);
-        void fillVertexInputBindingDescription(uint32_t idx, uint32_t binding = 0, uint32_t stride = 0,
-                                               VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
-        void fillVertexInputAttributeDescription(uint32_t idx, uint32_t binding = 0, uint32_t location = 0,
-                                                 VkFormat format = VK_FORMAT_UNDEFINED, uint32_t offset = 0);
+        VkVertexInputBindingDescription *fillVertexInputBindingDescription(
+            uint32_t idx, uint32_t binding = 0, uint32_t stride = 0,
+            VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
+        VkVertexInputAttributeDescription *fillVertexInputAttributeDescription(
+            uint32_t idx, uint32_t binding = 0, uint32_t location = 0,
+            VkFormat format = VK_FORMAT_UNDEFINED, uint32_t offset = 0);
+
+        std::vector<VkVertexInputBindingDescription> *getVertexInputBindings(uint32_t index);
+        std::vector<VkVertexInputAttributeDescription> *getVertexInputAttributes(uint32_t index);
 
     private:
         std::vector<char> *m_appName{nullptr};
@@ -258,5 +263,15 @@ namespace vkn
         bool m_filledEngineName{false};
         bool m_filledLayerNames{false};
         bool m_filledInstanceExtensionNames{false};
+
+        bool m_filledVertexInputStateInfo{false};
+        bool m_filledInputAssemblyStateInfo{false};
+        bool m_filledTessellationStateInfo{false};
+        bool m_filledViewportStateInfo{false};
+        bool m_filledRasterizationStateInfo{false};
+        bool m_filledMultisampleStateInfo{false};
+        bool m_filledDepthStencilStateInfo{false};
+        bool m_filledColorBlendStateInfo{false};
+        bool m_filledDynamicStateInfo{false};
     };
 }
