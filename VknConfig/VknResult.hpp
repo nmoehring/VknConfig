@@ -1,9 +1,10 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <string>
 #include <format>
 #include <queue>
+
+#include <vulkan/vulkan.h>
 
 namespace vkn
 {

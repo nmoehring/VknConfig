@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "VknInfos.hpp"
-#include <vulkan/vulkan.h>
 
 namespace vkn
 {
@@ -11,10 +10,41 @@ namespace vkn
     {
     }
 
+    template <typename T>
+    void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3,
+                     std::vector<std::vector<std::vector<std::vector<T>>>> &vectors)
+    {
+        for (int i = 0; i < (idx1 - (vectors.size() - 1)); ++i)
+        {
+            vectors.push_back(std::vector<std::vector<std::vector<T>>>{});
+            for (int j = 0; j < (idx2 - (vectors.back().size() - 1)); ++j)
+            {
+                vectors.back().push_back(std::vector<std::vector<T>>{});
+                for (int k = 0; k < (idx3 - (vectors.back().back().size() - 1)); ++k)
+                    vectors.back().back().push_back(std::vector<T>{});
+            }
+        }
+    }
+
+    void VknInfos::fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated)
+    {
+        for (int i = 0; i < (deviceIdx - (m_renderPasses.size() - 1)); ++i)
+            m_renderPasses.push_back(std::vector<VkRenderPass *>{});
+        for (int i = 0; i < (renderPassIdx - (m_renderPasses[deviceIdx].size() - 1)); ++i)
+            m_renderPasses[deviceIdx].push_back(nullptr);
+        m_renderPasses[deviceIdx][renderPassIdx] = renderPass;
+
+        for (int i = 0; i < (deviceIdx - (m_renderPassCreatedPtrs.size() - 1)); ++i)
+            m_renderPassCreatedPtrs.push_back(std::vector<const bool *>{});
+        for (int i = 0; i < (renderPassIdx - (m_renderPassCreatedPtrs[deviceIdx].size() - 1)); ++i)
+            m_renderPassCreatedPtrs[deviceIdx].push_back(nullptr);
+        m_renderPassCreatedPtrs[deviceIdx][renderPassIdx] = renderPassCreated;
+    }
+
     VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
-        uint32_t pipelineIdx,
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
         std::vector<VkPipelineShaderStageCreateInfo *> &stages,
-        VkPipelineLayout *layout, VkRenderPass *renderPass, uint32_t subpass,
+        VkPipelineLayout *layout,
         VkPipeline basePipelineHandle, int32_t basePipelineIndex,
         VkPipelineCreateFlags flags,
         VkPipelineVertexInputStateCreateInfo *pVertexInputState,
@@ -27,13 +57,14 @@ namespace vkn
         VkPipelineColorBlendStateCreateInfo *pColorBlendState,
         VkPipelineDynamicStateCreateInfo *pDynamicState)
     {
+        VkRenderPass *renderPass = m_renderPasses[deviceIdx][renderPassIdx];
         m_gfxPipelineCreateInfos.push_back(VkGraphicsPipelineCreateInfo{});
         VkGraphicsPipelineCreateInfo &info = m_gfxPipelineCreateInfos.back();
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags;
-        info.stageCount = m_shaderStageCreateInfos[pipelineIdx].size(); // Need fill
-        info.pStages = m_shaderStageCreateInfos[pipelineIdx].data();    // Need fill
+        info.stageCount = m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx].size(); // Need fill
+        info.pStages = m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx].data();    // Need fill
         if (m_filledVertexInputStateInfo)
             info.pVertexInputState = pVertexInputState; // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
                                                         // set in pDynamicState below. Ignored if mesh shader stage
@@ -98,7 +129,7 @@ namespace vkn
             info.pDynamicState = pDynamicState;       // Could be null if no state in the pipeline needs to be dynamic.
         info.layout = *layout;                        // Need fill
         info.renderPass = *renderPass;                // Need fill
-        info.subpass = subpass;                       // Need fill
+        info.subpass = subpassIdx;                    // Need fill
         info.basePipelineHandle = basePipelineHandle; // Need fill
         info.basePipelineIndex = basePipelineIndex;   // Need fill
 
@@ -148,13 +179,12 @@ namespace vkn
     }
 
     VkPipelineShaderStageCreateInfo *VknInfos::fillShaderStageCreateInfo(
-        uint32_t pipelineIdx, VkShaderModule module, VkShaderStageFlagBits stage,
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule module, VkShaderStageFlagBits stage,
         VkPipelineShaderStageCreateFlags flags, VkSpecializationInfo *pSpecializationInfo)
     {
-        for (int i = 0; i < (pipelineIdx - (m_shaderStageCreateInfos.size() - 1)); ++i)
-            m_shaderStageCreateInfos.push_back(std::vector<VkPipelineShaderStageCreateInfo>{});
-        m_shaderStageCreateInfos[pipelineIdx].push_back(VkPipelineShaderStageCreateInfo{});
-        VkPipelineShaderStageCreateInfo *info = &(m_shaderStageCreateInfos[pipelineIdx].back());
+        this->initVectors<VkPipelineShaderStageCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_shaderStageCreateInfos);
+        m_shaderStageCreateInfos.back().back().back().push_back(VkPipelineShaderStageCreateInfo{});
+        VkPipelineShaderStageCreateInfo *info = &(m_shaderStageCreateInfos.back().back().back().back());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags; // need fill
@@ -460,29 +490,43 @@ namespace vkn
         m_filledEngineName = true;
     }
 
-    void VknInfos::fillInstanceExtensionNames(std::vector<std::string> names)
+    void VknInfos::fillInstanceExtensionNames(std::vector<const char *> names)
     {
         m_enabledInstanceExtensionNames = new std::vector<char[100]>(names.size());
         for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
         {
+            bool nullFound{false};
             for (int charIdx = 0; charIdx < 100; ++charIdx)
-                if (charIdx < names[nameIdx].size())
+            {
+                if (!nullFound)
+                {
+                    if (names[nameIdx][charIdx] == '\0')
+                        nullFound = true;
                     m_enabledInstanceExtensionNames->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
+                }
                 else
                     m_enabledInstanceExtensionNames->at(nameIdx)[charIdx] = char("\0");
+            }
         }
     }
 
-    void VknInfos::fillDeviceExtensionNames(std::vector<std::string> names)
+    void VknInfos::fillDeviceExtensionNames(std::vector<const char *> names)
     {
         m_enabledDeviceExtensionNames.push_back(new std::vector<char[100]>(names.size()));
         for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
         {
+            bool nullFound{false};
             for (int charIdx = 0; charIdx < 100; ++charIdx)
-                if (charIdx < names[nameIdx].size(); ++nameIdx)
+            {
+                if (!nullFound)
+                {
+                    if (names[nameIdx][charIdx] == '\0')
+                        nullFound = true;
                     m_enabledDeviceExtensionNames.back()->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
+                }
                 else
                     m_enabledDeviceExtensionNames.back()->at(nameIdx)[charIdx] = char("\0");
+            }
         }
     }
 
@@ -651,7 +695,8 @@ namespace vkn
     {
         if (m_queueCreateInfos.size() == 0)
             throw std::runtime_error("Queues not selected before filling device create info.");
-        VkDeviceCreateInfo &info = m_deviceCreateInfo;
+        m_deviceCreateInfos.push_back(VkDeviceCreateInfo{});
+        VkDeviceCreateInfo &info = m_deviceCreateInfos.back();
         // default
         info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
@@ -662,26 +707,27 @@ namespace vkn
         info.enabledLayerCount = 0; // ignored, value doesn't matter
         // ppEnabledLayerNames is deprecated and should not be used
         info.ppEnabledLayerNames = VK_NULL_HANDLE; // ignored, value doesn't matter
-        m_deviceCreateInfo.enabledExtensionCount = m_enabledDeviceExtensionNames[deviceIdx]->size();
+        info.enabledExtensionCount = m_enabledDeviceExtensionNames[deviceIdx]->size();
         if (m_enabledDeviceExtensionNames[deviceIdx]->size() == 0)
-            m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
+            info.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledExtensionNames = this->getNamesPointer(m_enabledDeviceExtensionNames[deviceIdx]);
-        m_deviceCreateInfo.pEnabledFeatures = &(m_enabledFeatures[deviceIdx]);
+            info.ppEnabledExtensionNames = this->getNamesPointer(m_enabledDeviceExtensionNames[deviceIdx]);
+        info.pEnabledFeatures = &(m_enabledFeatures[deviceIdx]);
 
         m_filledDeviceCreateInfo = true;
-        return &m_deviceCreateInfo;
+        return &info;
     }
 
     VkSwapchainCreateInfoKHR *VknInfos::fillSwapChainCreateInfo(
+        uint32_t pipelineIdx,
         VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
         VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
         VkSharingMode sharingMode, VkSurfaceTransformFlagBitsKHR preTransform,
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
         VkSwapchainKHR oldSwapchain)
     {
-        m_swapChainCreateInfos.push_back(VkSwapchainCreateInfoKHR{});
-        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapChainCreateInfos.back();
+        m_swapChainCreateInfos[pipelineIdx].push_back(VkSwapchainCreateInfoKHR{});
+        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapChainCreateInfos[pipelineIdx].back();
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainInfo.surface = surface;                  // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain

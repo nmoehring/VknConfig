@@ -1,6 +1,6 @@
-#include "VknResult.hpp"
 #include <string>
-#include <vulkan/vulkan.h>
+
+#include "VknResult.hpp"
 
 namespace vkn
 {

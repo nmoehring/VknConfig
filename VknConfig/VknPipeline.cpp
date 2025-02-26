@@ -1,20 +1,22 @@
 #include <filesystem>
 
 #include "VknPipeline.hpp"
-#include "VknInfos.hpp"
 #include "../Utilities/Utilities.hpp"
 
 namespace vkn
 {
 
-    VknPipeline::VknPipeline(VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,
-                             VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index)
+    VknPipeline::VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+                             VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,
+                             VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated)
         : m_subpass{subpass}, m_pipeline{pipeline}, m_device{dev},
-          m_infos{infos}, m_archive{archive}, m_index{index}
+          m_infos{infos}, m_archive{archive}, m_renderPass{renderPass},
+          m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+          m_deviceCreated{deviceCreated}
     {
         m_renderPass = renderPass;
-        m_attachmentReferences = m_infos->getAttachmentReferences(m_index);
-        m_preserveAttachments = m_infos->getPreserveAttachments(m_index);
+        m_attachmentReferences = m_infos->getAttachmentReferences(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_preserveAttachments = m_infos->getPreserveAttachments(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
     }
 
     VknPipeline::~VknPipeline()
@@ -28,13 +30,13 @@ namespace vkn
         if (!m_destroyed)
         {
             if (m_pipelineCreated)
-                vkDestroyPipeline(*(m_device->getVkDevice()), *m_pipeline, nullptr);
+                vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
             if (m_pipelineLayoutCreated)
-                vkDestroyPipelineLayout(*(m_device->getVkDevice()), m_layout, nullptr);
+                vkDestroyPipelineLayout(*m_device, m_layout, nullptr);
             for (auto descriptorSetLayout : m_descriptorSetLayouts)
-                vkDestroyDescriptorSetLayout(*(m_device->getVkDevice()), descriptorSetLayout, nullptr);
+                vkDestroyDescriptorSetLayout(*m_device, descriptorSetLayout, nullptr);
             for (auto module : m_shaderModules)
-                vkDestroyShaderModule(*(m_device->getVkDevice()), module, nullptr);
+                vkDestroyShaderModule(*m_device, module, nullptr);
             m_destroyed = true;
         }
     }
@@ -51,10 +53,11 @@ namespace vkn
         VkPipelineColorBlendStateCreateInfo *pColorBlendState,
         VkPipelineDynamicStateCreateInfo *pDynamicState)
     {
-        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_shaderStageInfos, &m_layout, m_renderPass, m_index,
+        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderStageInfos, &m_layout,
                                                           basePipelineHandle, basePipelineIndex, flags, pVertexInputState,
                                                           pInputAssemblyState, pTessellationState, pViewportState,
-                                                          pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState, pDynamicState);
+                                                          pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState,
+                                                          pDynamicState);
     }
 
     VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(
@@ -77,10 +80,12 @@ namespace vkn
 
     void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo)
     {
+        if (!m_deviceCreated)
+            throw std::runtime_error("Logical device not created before attempting to create descriptor set layout.");
         m_descriptorSetLayouts.push_back(VkDescriptorSetLayout{});
         VknResult res{
             vkCreateDescriptorSetLayout(
-                *(m_device->getVkDevice()), descriptorSetLayoutCreateInfo,
+                *m_device, descriptorSetLayoutCreateInfo,
                 nullptr, &(m_descriptorSetLayouts.back())),
             "Create descriptor set layout."};
         if (!res.isSuccess())
@@ -99,12 +104,13 @@ namespace vkn
 
     void VknPipeline::fillPipelineLayoutCreateInfo(VkPipelineLayoutCreateFlags flags)
     {
-        m_layoutCreateInfo = m_infos->fillPipelineLayoutCreateInfo(m_descriptorSetLayouts, m_pushConstantRanges, flags);
+        m_layoutCreateInfo = m_infos->fillPipelineLayoutCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                                                   m_descriptorSetLayouts, m_pushConstantRanges, flags);
     }
 
     void VknPipeline::createLayout()
     {
-        vkCreatePipelineLayout(*(m_device->getVkDevice()), m_layoutCreateInfo, nullptr, &m_layout);
+        vkCreatePipelineLayout(*m_device, m_layoutCreateInfo, nullptr, &m_layout);
         m_pipelineLayoutCreated = true;
     }
 
@@ -112,9 +118,9 @@ namespace vkn
     {
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
         std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / filename)};
-        auto createInfo{m_infos->fillShaderModuleCreateInfo(code)};
+        auto createInfo{m_infos->fillShaderModuleCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, code)};
         VkShaderModule shaderModule;
-        if (vkCreateShaderModule(*(m_device->getVkDevice()), createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        if (vkCreateShaderModule(*m_device, createInfo, nullptr, &shaderModule) != VK_SUCCESS)
         {
             throw std::runtime_error("Failed to create shader module!");
         }
@@ -138,21 +144,23 @@ namespace vkn
             throw std::runtime_error("Shader stage not recognized.");
         }
         m_shaderStageInfos.push_back(
-            m_infos->fillShaderStageCreateInfo(m_shaderModules[module_idx], shaderStageFlagBits));
+            m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                               m_shaderModules[module_idx], shaderStageFlagBits));
         return m_shaderStageInfos.size() - 1;
     }
 
     void VknPipeline::setVertexInput()
     {
-        m_infos->fillVertexInputStateCreateInfo(m_index);
+        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
     }
 
     void VknPipeline::fillVertexBindingDescription(uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
     {
-        m_vertexBindingDescriptions.push_back(m_infos->fillVertexInputBindingDescription(m_index, binding, stride, inputRate));
+        m_vertexBindingDescriptions.push_back(m_infos->fillVertexInputBindingDescription(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, stride, inputRate));
     }
     void VknPipeline::fillVertexAttributeDescription(uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
     {
-        m_infos->fillVertexInputAttributeDescription(m_index, binding, location, format, offset);
+        m_infos->fillVertexInputAttributeDescription(m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, location, format, offset);
     }
 }

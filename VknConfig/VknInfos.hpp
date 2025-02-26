@@ -30,6 +30,10 @@ namespace vkn
         VknInfos();
         //~VknInfos();
 
+        template <typename T>
+        void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3,
+                         std::vector<std::vector<std::vector<std::vector<T>>>> &vectors);
+
         // getters
         VkApplicationInfo *getAppInfo()
         {
@@ -47,14 +51,19 @@ namespace vkn
             else
                 return nullptr;
         };
-        VkDeviceCreateInfo *getDeviceCreateInfo()
+        VkDeviceCreateInfo *getDeviceCreateInfo(uint32_t index = 0)
         {
             if (this->checkFill(DEVICE_CREATE_INFO))
-                return &m_deviceCreateInfo;
+                return &m_deviceCreateInfos[index];
             else
                 return nullptr;
         };
         std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos() { return &m_gfxPipelineCreateInfos; }
+        void fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated);
+        bool getRenderPassCreated(uint32_t deviceIdx, uint32_t renderPassIdx)
+        {
+            return *(m_renderPassCreatedPtrs[deviceIdx][renderPassIdx]);
+        }
 
         int getNumDeviceQueues() { return m_queueCreateInfos.size(); };
 
@@ -63,11 +72,11 @@ namespace vkn
 
         void fillAppName(std::string name);
         void fillEngineName(std::string name);
-        void fillInstanceExtensionNames(std::vector<std::string> names);
+        void fillInstanceExtensionNames(std::vector<const char *> names);
         void fillEnabledLayerNames(std::vector<std::string> names);
         void fillAppInfo(uint32_t apiVersion = VK_VERSION_1_1, uint32_t applicationVersion = 0, uint32_t engineVersion = 0);
         void fillInstanceCreateInfo(VkInstanceCreateFlags flags = 0);
-        void fillDeviceExtensionNames(std::vector<std::string> names);
+        void fillDeviceExtensionNames(std::vector<const char *> names);
         void fillDeviceFeatures(
             bool robustBufferAccess = false, bool fullDrawIndexUint32 = false, bool imageCubeArray = false,
             bool independentBlend = false, bool geometryShader = false, bool tessellationShader = false,
@@ -96,7 +105,7 @@ namespace vkn
         VkDeviceCreateInfo *fillDeviceCreateInfo(uint32_t deviceIdx);
 
         VkSwapchainCreateInfoKHR *fillSwapChainCreateInfo(
-            VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
+            uint32_t deviceIdx, VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
             VkSurfaceFormatKHR surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
             uint32_t numImageArrayLayers = 1, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -109,8 +118,8 @@ namespace vkn
         VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
             uint32_t pipelineIdx, std::vector<char> &code, VkShaderModuleCreateFlags flags = 0);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
-            uint32_t pipelineIdx, VkShaderModule module, VkShaderStageFlagBits stage,
-            VkPipelineShaderStageCreateFlags flags = 0,
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule module,
+            VkShaderStageFlagBits stage, VkPipelineShaderStageCreateFlags flags = 0,
             VkSpecializationInfo *pSpecializationInfo = nullptr);
         VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(uint32_t pipelineIdx);
         VkPipelineInputAssemblyStateCreateInfo *fillInputAssemblyStateCreateInfo(
@@ -143,10 +152,9 @@ namespace vkn
             VkPipelineColorBlendStateCreateFlags flags = 0);
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(uint32_t pipelineIdx, std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
-            uint32_t pipelineIdx,
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
             std::vector<VkPipelineShaderStageCreateInfo *> &stages,
             VkPipelineLayout *layout = nullptr,
-            VkRenderPass *renderPass = nullptr, uint32_t subpass = uint32_t{},
             VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
             VkPipelineCreateFlags flags = 0,
             VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
@@ -223,12 +231,12 @@ namespace vkn
         VkApplicationInfo m_appInfo{};
         VkInstanceCreateInfo m_instanceCreateInfo{};
         std::vector<VkDeviceQueueCreateInfo> m_queueCreateInfos;
-        VkDeviceCreateInfo m_deviceCreateInfo{};
+        std::vector<VkDeviceCreateInfo> m_deviceCreateInfos{};
 
         std::vector<std::vector<VkPipelineLayoutCreateInfo>> m_layoutCreateInfos;
         std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
         std::vector<std::vector<VkShaderModuleCreateInfo>> m_shaderModuleCreateInfos;
-        std::vector<std::vector<VkPipelineShaderStageCreateInfo>> m_shaderStageCreateInfos;
+        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos;
         std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>> m_vertexInputStateCreateInfos;
         std::vector<std::vector<VkPipelineInputAssemblyStateCreateInfo>> m_inputAssemblyStateCreateInfos;
         std::vector<std::vector<VkPipelineTessellationStateCreateInfo>> m_tessellationStateCreateInfos;
@@ -251,6 +259,9 @@ namespace vkn
 
         std::vector<std::vector<VkVertexInputBindingDescription>> m_vertexInputBindings;
         std::vector<std::vector<VkVertexInputAttributeDescription>> m_vertexInputAttributes;
+
+        std::vector<std::vector<VkRenderPass *>> m_renderPasses;
+        std::vector<std::vector<const bool *>> m_renderPassCreatedPtrs;
 
         const char m_mainEntry[5] = "main";
 

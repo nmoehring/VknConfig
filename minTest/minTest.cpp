@@ -32,27 +32,28 @@ int main()
         instanceExtensions.push_back(glfwExtensions[i]);
         std::cout << glfwExtensions[i] << std::endl;
     }
+    std::vector<std::string> layers;
     instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-    vknConfig.fillInstanceCreateInfo(noNames, instanceExtensions);
+    vknConfig.fillInstanceCreateInfo(layers, instanceExtensions);
     vknConfig.createInstance();
-    vknConfig.selectPhysicalDevice();
-    vknConfig.getDevice()->requestQueueFamilyProperties();
-    auto limits{vknConfig.getDevice()->getPhysicalDevice()->getLimits()};
+    vknConfig.selectPhysicalDevice(0);
+    vknConfig.getDevice(0)->requestQueueFamilyProperties();
+    auto limits{vknConfig.getDevice(0)->getPhysicalDevice()->getLimits()};
     std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
     std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
     std::vector<const char *>
         deviceExtensions;
     deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    vknConfig.getDevice()->addExtensions(deviceExtensions);
+    vknConfig.getDevice(0)->addExtensions(deviceExtensions);
 
     // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
     // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-    vknConfig.createDevice();
+    vknConfig.createDevice(0);
     auto infos = vknConfig.getInfos();
 
     int idx = 0;
-    for (auto queue : vknConfig.getDevice()->getQueues())
+    for (auto queue : vknConfig.getDevice(0)->getQueues())
     {
         std::cout << "Queue " << idx << ": " << std::endl;
         std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;
@@ -67,7 +68,7 @@ int main()
     // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
-    vkn::VknRenderPass *renderPass = vknConfig.getRenderPass();
+    vkn::VknRenderPass *renderPass = vknConfig.getRenderPass(0, 0);
     std::vector<VkAttachmentReference *> attach;
     renderPass->createAttachment();
     renderPass->createSubpass();

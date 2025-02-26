@@ -3,27 +3,27 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <vector>
 #include <memory>
 
-#include "vknInfos.hpp"
-#include "VknResult.hpp"
-#include "VknPhysicalDevice.hpp"
+#include "VknRenderPass.hpp"
 #include "VknQueueFamily.hpp"
+#include "VknPhysicalDevice.hpp"
 
 namespace vkn
 {
     class VknDevice
     {
     public:
-        VknDevice() {}
-        VknDevice(VknInfos *infos, VknResultArchive *archive);
+        VknDevice() = default;
+        VknDevice(VknInfos *infos, VknResultArchive *archive, const VkInstance *instance, const bool *instanceCreated);
         ~VknDevice();
+        void destroy();
         void addInstance(VkInstance *instance);
         VknResult createDevice();
         void fillDeviceCreateInfo();
-        bool vkDeviceCreated() { return m_vkDeviceCreated; }
+        bool getVkDeviceCreated() { return m_vkDeviceCreated; }
+        VknRenderPass *getRenderPass(uint32_t renderPassIdx) { return &(m_renderPasses[renderPassIdx]); }
         void requestQueueFamilyProperties();
 
         void fillSwapChainCreateInfo(
@@ -38,7 +38,7 @@ namespace vkn
         void addExtensions(std::vector<const char *> ext);
         void createSwapChains();
 
-        VkPhysicalDeviceProperties getPhysicalDeviceProperties()
+        VkPhysicalDeviceProperties *getPhysicalDeviceProperties()
         {
             return m_physicalDevice.getProperties();
         }
@@ -46,15 +46,20 @@ namespace vkn
         VknQueueFamily getQueue(int idx);
         VkDevice *getVkDevice();
         VknPhysicalDevice *getPhysicalDevice();
-        void destroy();
+        uint32_t addRenderPass();
 
     private:
+        static int s_numDevices;
         VkDevice m_logicalDevice{};
         VknPhysicalDevice m_physicalDevice;
+        std::vector<VknRenderPass> m_renderPasses;
         std::vector<VknQueueFamily> m_queues{};
-        VkInstance *m_instance{nullptr};
         VknResultArchive *m_resultArchive{nullptr};
         VknInfos *m_infos{nullptr};
+        const VkInstance *m_instance{nullptr};
+        const bool *m_instanceCreated{nullptr};
+        bool m_queuesSelected{false};
+        uint32_t m_deviceIdx;
 
         std::vector<const char *> m_extensions{};
         VkPhysicalDeviceFeatures *m_features{nullptr};
@@ -62,7 +67,6 @@ namespace vkn
         std::vector<VkSwapchainKHR> m_swapChains{};
 
         bool m_destroyed{false};
-        bool m_instanceAdded{false};
         bool m_vkDeviceCreated{false};
 
         // Other utilities

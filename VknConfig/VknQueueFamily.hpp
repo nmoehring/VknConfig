@@ -1,7 +1,4 @@
 #pragma once
-#include <stdexcept>
-
-#include <vulkan/vulkan.h>
 
 namespace vkn
 {

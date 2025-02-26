@@ -2,7 +2,10 @@
 
 #include <unordered_map>
 
-#include "VknDevice.hpp"
+#include <vulkan/vulkan.h>
+
+#include "VknResult.hpp"
+#include "VknInfos.hpp"
 
 namespace vkn
 {
@@ -15,9 +18,9 @@ namespace vkn
     class VknPipeline
     {
     public:
-        VknPipeline() {}
-        VknPipeline(VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,
-                    VknDevice *dev, VknInfos *infos, VknResultArchive *archive, uint32_t index);
+        VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkRenderPass *renderPass,
+                    VkSubpassDescription *subpass, VkPipeline *pipeline,
+                    VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated);
         ~VknPipeline();
         void destroy();
 
@@ -37,15 +40,15 @@ namespace vkn
         void fillPipelineCreateInfo(
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0,
-            VkPipelineVertexInputStateCreateInfo *pVertexInputState = nullptr,
-            VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = nullptr,
-            VkPipelineTessellationStateCreateInfo *pTessellationState = nullptr,
-            VkPipelineViewportStateCreateInfo *pViewportState = nullptr,
-            VkPipelineRasterizationStateCreateInfo *pRasterizationState = nullptr,
-            VkPipelineMultisampleStateCreateInfo *pMultisampleState = nullptr,
-            VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = nullptr,
-            VkPipelineColorBlendStateCreateInfo *pColorBlendState = nullptr,
-            VkPipelineDynamicStateCreateInfo *pDynamicState = nullptr);
+            VkPipelineVertexInputStateCreateInfo *pVertexInputState = VK_NULL_HANDLE,
+            VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = VK_NULL_HANDLE,
+            VkPipelineTessellationStateCreateInfo *pTessellationState = VK_NULL_HANDLE,
+            VkPipelineViewportStateCreateInfo *pViewportState = VK_NULL_HANDLE,
+            VkPipelineRasterizationStateCreateInfo *pRasterizationState = VK_NULL_HANDLE,
+            VkPipelineMultisampleStateCreateInfo *pMultisampleState = VK_NULL_HANDLE,
+            VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = VK_NULL_HANDLE,
+            VkPipelineColorBlendStateCreateInfo *pColorBlendState = VK_NULL_HANDLE,
+            VkPipelineDynamicStateCreateInfo *pDynamicState = VK_NULL_HANDLE);
 
         void setVertexInput();
         void setInputAssembly();
@@ -67,7 +70,7 @@ namespace vkn
         void setPipelineCreated() { m_pipelineCreated = true; }
 
     private:
-        VknDevice *m_device{nullptr};
+        VkDevice *m_device{nullptr};
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
         VkPipeline *m_pipeline{nullptr}; // 1 Subpass per pipeline
@@ -78,6 +81,10 @@ namespace vkn
         std::vector<uint32_t> *m_preserveAttachments{nullptr};
         std::vector<VkVertexInputBindingDescription *> m_vertexBindingDescriptions{};
         std::vector<VkVertexInputAttributeDescription *> m_vertexAttributeDescriptions{};
+        uint32_t m_deviceIdx;
+        uint32_t m_renderPassIdx;
+        uint32_t m_subpassIdx;
+        const bool *m_deviceCreated{nullptr};
 
         std::vector<VkShaderModule> m_shaderModules{};
         std::vector<VkPipelineShaderStageCreateInfo *> m_shaderStageInfos{};
@@ -91,7 +98,6 @@ namespace vkn
         bool m_destroyed{false};
         bool m_pipelineCreated{false};
         bool m_pipelineLayoutCreated{false};
-        uint32_t m_index;
 
         int createShaderModule(const std::string filename);
     };

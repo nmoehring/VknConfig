@@ -1,24 +1,19 @@
-#include "VknPhysicalDevice.hpp"
-#include "VknResult.hpp"
 #include <iostream>
+
+#include "VknPhysicalDevice.hpp"
 
 namespace vkn
 {
-    VknPhysicalDevice::VknPhysicalDevice(VknResultArchive *archive, VknInfos *infos)
-        : m_archive{archive}, m_infos{infos}
+    VknPhysicalDevice::VknPhysicalDevice(VknResultArchive *archive, VknInfos *infos,
+                                         const VkInstance *instance, const bool *instanceCreated)
+        : m_archive{archive}, m_infos{infos}, m_instance{instance}, m_instanceCreated{instanceCreated}
     {
-    }
-
-    void VknPhysicalDevice::addInstance(VkInstance *instance)
-    {
-        m_instance = instance;
-        m_instanceAdded = true;
     }
 
     VknResult VknPhysicalDevice::selectPhysicalDevice()
     {
-        if (!m_instanceAdded)
-            throw std::runtime_error("Instance not added to device before selecting physical device.");
+        if (!m_instanceCreated)
+            throw std::runtime_error("Instance not created before selecting physical device.");
 
         uint32_t deviceCount{0};
         std::vector<VkPhysicalDevice> devices;
@@ -42,8 +37,6 @@ namespace vkn
 
     bool VknPhysicalDevice::getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx)
     {
-        if (!m_instanceAdded)
-            throw std::runtime_error("Instance not added to device before getting surface support.");
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before getting surface support.");
 
@@ -63,8 +56,6 @@ namespace vkn
     VkPhysicalDeviceLimits *VknPhysicalDevice::getLimits()
     {
         {
-            if (!m_instanceAdded)
-                throw std::runtime_error("Instance not added to VknPhysicalDevice before getting device limits.");
             if (!m_selectedPhysicalDevice)
                 throw std::runtime_error("Physical device not selected before getting device limits.");
             return &(m_properties.limits);

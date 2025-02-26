@@ -3,15 +3,14 @@
 #include <vector>
 
 #include "VknPipeline.hpp"
-#include "VknDevice.hpp"
 
 namespace vkn
 {
     class VknRenderPass
     {
     public:
-        VknRenderPass() {}
-        VknRenderPass(VknInfos *infos, VknResultArchive *archive);
+        VknRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx, VknInfos *infos, VknResultArchive *archive,
+                      VkDevice *device, const bool *deviceCreated);
         ~VknRenderPass();
         void destroy();
 
@@ -37,19 +36,21 @@ namespace vkn
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         void createRenderPass();
-        void addDevice(VknDevice *dev);
         void createPipelines();
-        bool deviceAdded() { return m_deviceAdded; }
         VkRenderPass *getVkRenderPass() { return &m_renderPass; }
         VknPipeline *getPipeline(int idx) { return &(m_pipelines[idx]); }
+        bool getVkRenderPassCreated() { return m_renderPassCreated; }
 
     private:
-        VknDevice *m_device{nullptr};
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
         VkRenderPassCreateInfo *m_createInfo{nullptr};
         VkRenderPass m_renderPass{};
         static int m_subpassCount;
+        uint32_t m_deviceIdx;
+        uint32_t m_renderPassIdx;
+        VkDevice *m_device;
+        const bool *m_deviceCreated{nullptr};
 
         std::vector<VkAttachmentDescription *> m_attachments{};
         std::vector<VkSubpassDependency *> m_dependencies{};
@@ -63,7 +64,7 @@ namespace vkn
         std::vector<VknPipeline> m_pipelines;
 
         bool m_destroyed{false};
-        bool m_deviceAdded{false};
+        bool m_devicesAdded{false};
         bool m_renderPassCreated{false};
 
         void addPipeline();

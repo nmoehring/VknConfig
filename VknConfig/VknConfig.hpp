@@ -5,23 +5,22 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <vector>
 #include <memory>
 #include <functional>
+#include <stdexcept>
+#include <vulkan/vulkan.h>
 
-#include "VknDevice.hpp"
-#include "VknRenderPass.hpp"
-#include "VknQueueFamily.hpp"
-#include "vknInfos.hpp"
 #include "VknResult.hpp"
+#include "VknInfos.hpp"
+#include "VknDevice.hpp"
 
 namespace vkn
 {
     class VknConfig
     {
     public:
-        void deviceInfo(); // Create a simple program with just this call to get some device info
+        void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
 
         VknConfig();
         ~VknConfig();
@@ -31,27 +30,28 @@ namespace vkn
                          VkApplicationInfo *pNext = nullptr,
                          uint32_t applicationVersion = 0,
                          uint32_t engineVersion = 0);
-        void fillInstanceCreateInfo(std::vector<const char *> &enabledLayerNames,
+        void fillInstanceCreateInfo(std::vector<std::string> &enabledLayerNames,
                                     std::vector<const char *> &enabledExtensionNames,
-                                    VkInstanceCreateInfo *pNext = nullptr,
                                     VkInstanceCreateFlags flags = 0);
         VknResult createInstance();
-        void selectPhysicalDevice();
-        void requestQueueFamilies();
-        VknResult createDevice(bool chooseAllAvailable = false);
+        void selectPhysicalDevice(uint32_t deviceIndex);
+        void requestQueueFamilies(uint32_t deviceIndex);
+        VknResult createDevice(uint32_t deviceIndex, bool chooseAllAvailable = false);
         VknResult createRenderPass();
         std::vector<vkn::VknQueueFamily> getQueueData();
-        VknDevice *getDevice() { return &m_device; }
+        VknDevice *getDevice(uint32_t index) { return &(m_devices[index]); }
         VknInfos *getInfos() { return &m_infos; }
-        VknRenderPass *getRenderPass();
+        VkInstance *getInstance() { return &m_instance; }
+        VknRenderPass *getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);
         void enableExtensions(std::vector<std::string> extensions);
+        bool getInstanceCreated() { return m_instanceCreated; }
 
     private:
         VknResultArchive m_resultArchive;
         VknInfos m_infos;
         VkInstance m_instance;
-        VknDevice m_device;
-        VknRenderPass m_renderPass;
+        std::vector<VknDevice> m_devices;
+
         std::vector<std::string> m_instanceExtensions;
 
         bool m_instanceCreated{false};
