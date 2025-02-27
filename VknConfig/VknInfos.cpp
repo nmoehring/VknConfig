@@ -11,19 +11,39 @@ namespace vkn
     }
 
     template <typename T>
+    void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3, uint32_t idx4,
+                     std::vector<std::vector<std::vector<std::vector<std::vector<T>>>>> &vectors)
+    {
+        if ((vectors.size() - 1) < idx1)
+            vectors.resize(idx1 + 1);
+
+        this->initVectors<T>(idx2, idx3, idx4, vectors[idx1]);
+    }
+
+    template <typename T>
     void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3,
                      std::vector<std::vector<std::vector<std::vector<T>>>> &vectors)
     {
-        for (int i = 0; i < (idx1 - (vectors.size() - 1)); ++i)
-        {
-            vectors.push_back(std::vector<std::vector<std::vector<T>>>{});
-            for (int j = 0; j < (idx2 - (vectors.back().size() - 1)); ++j)
-            {
-                vectors.back().push_back(std::vector<std::vector<T>>{});
-                for (int k = 0; k < (idx3 - (vectors.back().back().size() - 1)); ++k)
-                    vectors.back().back().push_back(std::vector<T>{});
-            }
-        }
+        if ((vectors.size() - 1) < idx1)
+            vectors.resize(idx1 + 1);
+
+        this->initVectors<T>(idx2, idx3, vectors[idx1]);
+    }
+
+    template <typename T>
+    void initVectors(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors)
+    {
+        if ((vectors.size() - 1) < idx1)
+            vectors.resize(idx1 + 1);
+
+        this->initVectors<T>(idx2, vectors[idx1]);
+    }
+
+    template <typename T>
+    void initVectors(uint32_t idx1, std::vector<std::vector<T>> &vectors)
+    {
+        if ((vectors.size() - 1) < idx1)
+            vectors.resize(idx1 + 1);
     }
 
     void VknInfos::fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated)
@@ -136,40 +156,45 @@ namespace vkn
         return &info;
     }
 
-    VkRenderPassCreateInfo *VknInfos::fillRenderPassCreateInfo(VkRenderPassCreateFlags flags)
+    VkRenderPassCreateInfo *VknInfos::fillRenderPassCreateInfo(uint32_t deviceIdx, VkRenderPassCreateFlags flags)
     {
-        m_renderPassCreateInfos.push_back(VkRenderPassCreateInfo{});
-        VkRenderPassCreateInfo &renderPassInfo = m_renderPassCreateInfos.back();
+        this->initVectors<VkRenderPassCreateInfo>(deviceIdx, m_renderPassCreateInfos);
+        m_renderPassCreateInfos[deviceIdx].push_back(VkRenderPassCreateInfo{});
+        VkRenderPassCreateInfo &renderPassInfo = m_renderPassCreateInfos[deviceIdx].back();
+        uint32_t renderPassIdx{static_cast<uint32_t>(m_renderPassCreateInfos[deviceIdx].size() - 1)};
+        std::vector<VkAttachmentDescription> &attachmentDescriptions = m_attachmentDescriptions[deviceIdx][renderPassIdx];
+        std::vector<VkSubpassDescription> &subpassDescriptions = m_subpassDescriptions[deviceIdx][renderPassIdx];
+        std::vector<VkSubpassDependency> &subpassDependencies = m_subpassDependencies[deviceIdx][renderPassIdx];
 
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.pNext = VK_NULL_HANDLE;
         renderPassInfo.flags = flags;
-        renderPassInfo.attachmentCount = m_attachmentDescriptions.size();
-        if (m_attachmentDescriptions.size() == 0)
+        renderPassInfo.attachmentCount = attachmentDescriptions.size();
+        if (attachmentDescriptions.size() == 0)
             renderPassInfo.pAttachments = VK_NULL_HANDLE;
         else
-            renderPassInfo.pAttachments = m_attachmentDescriptions.data();
-        renderPassInfo.subpassCount = m_subpassDescriptions.size();
-        if (m_subpassDescriptions.size() == 0)
+            renderPassInfo.pAttachments = attachmentDescriptions.data();
+        renderPassInfo.subpassCount = subpassDescriptions.size();
+        if (subpassDescriptions.size() == 0)
             renderPassInfo.pSubpasses = VK_NULL_HANDLE;
         else
-            renderPassInfo.pSubpasses = m_subpassDescriptions.data();
-        renderPassInfo.dependencyCount = m_subpassDependencies.size();
-        if (m_subpassDependencies.size() == 0)
+            renderPassInfo.pSubpasses = subpassDescriptions.data();
+        renderPassInfo.dependencyCount = subpassDependencies.size();
+        if (subpassDependencies.size() == 0)
             renderPassInfo.pDependencies = VK_NULL_HANDLE;
         else
-            renderPassInfo.pDependencies = m_subpassDependencies.data();
+            renderPassInfo.pDependencies = subpassDependencies.data();
 
         return &renderPassInfo;
     }
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
-        uint32_t pipelineIdx, std::vector<char> &code, VkShaderModuleCreateFlags flags)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        std::vector<char> &code, VkShaderModuleCreateFlags flags)
     {
-        for (int i = 0; i < (pipelineIdx - (m_shaderModuleCreateInfos.size() - 1)); ++i)
-            m_shaderModuleCreateInfos.push_back(std::vector<VkShaderModuleCreateInfo>{});
-        m_shaderModuleCreateInfos[pipelineIdx].push_back(VkShaderModuleCreateInfo{});
-        VkShaderModuleCreateInfo *info = &(m_shaderModuleCreateInfos[pipelineIdx].back());
+        this->initVectors<VkShaderModuleCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_shaderModuleCreateInfos);
+        m_shaderModuleCreateInfos[deviceIdx][renderPassIdx][subpassIdx].push_back(VkShaderModuleCreateInfo{});
+        VkShaderModuleCreateInfo *info = &(m_shaderModuleCreateInfos[deviceIdx][renderPassIdx][subpassIdx].back());
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags;
@@ -195,20 +220,18 @@ namespace vkn
         return info;
     }
 
-    VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(uint32_t pipelineIdx)
+    VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
-        for (int i = 0; i < (pipelineIdx - (m_vertexInputStateCreateInfos.size() - 1)); ++i)
-            m_vertexInputStateCreateInfos.push_back(std::vector<VkPipelineVertexInputStateCreateInfo>{});
-        if ((m_vertexInputBindings.size() - 1) < pipelineIdx || m_vertexInputBindings[pipelineIdx].size() == 0)
-            throw std::runtime_error("Vertex input bindings not filled before filling vertex input state create info.");
-        if ((m_vertexInputAttributes.size() - 1) < pipelineIdx || m_vertexInputAttributes[pipelineIdx].size() == 0)
-            throw std::runtime_error("Vertex input attributes not filled before filling vertex input state create info.");
+        this->initVectors<VkPipelineVertexInputStateCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_vertexInputStateCreateInfos);
 
-        std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions = &(m_vertexInputBindings[pipelineIdx]);
-        std::vector<VkVertexInputAttributeDescription> *vertexAttributeDescriptions = &(m_vertexInputAttributes[pipelineIdx]);
+        std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions =
+            &(m_vertexInputBindings[deviceIdx][renderPassIdx][subpassIdx]);
+        std::vector<VkVertexInputAttributeDescription> *vertexAttributeDescriptions =
+            &(m_vertexInputAttributes[deviceIdx][renderPassIdx][subpassIdx]);
 
-        m_vertexInputStateCreateInfos[pipelineIdx].push_back(VkPipelineVertexInputStateCreateInfo{});
-        VkPipelineVertexInputStateCreateInfo *info = &(m_vertexInputStateCreateInfos[pipelineIdx].back());
+        m_vertexInputStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx].push_back(VkPipelineVertexInputStateCreateInfo{});
+        VkPipelineVertexInputStateCreateInfo *info = &(m_vertexInputStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx].back());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = 0; // reserved for future use
@@ -408,17 +431,16 @@ namespace vkn
     }
 
     VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
-        uint32_t pipelineIdx,
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
         std::vector<VkDescriptorSetLayout> setLayouts,
         std::vector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {
-        for (int i = 0; i < (pipelineIdx - (m_layoutCreateInfos.size() - 1)); ++i)
-            m_layoutCreateInfos.push_back(std::vector<VkPipelineLayoutCreateInfo>{});
-        m_layoutCreateInfos[pipelineIdx].push_back(VkPipelineLayoutCreateInfo{});
-        VkPipelineLayoutCreateInfo *info = &(m_layoutCreateInfos[pipelineIdx].back());
+        this->initVectors(deviceIdx, renderPassIdx, subpassIdx, m_layoutCreateInfos);
+        m_layoutCreateInfos[deviceIdx][renderPassIdx][subpassIdx].push_back(VkPipelineLayoutCreateInfo{});
+        VkPipelineLayoutCreateInfo *info = &(m_layoutCreateInfos[deviceIdx][renderPassIdx][subpassIdx].back());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        info->pNext = nullptr;
+        info->pNext = VK_NULL_HANDLE;
         info->flags = flags;
         info->setLayoutCount = setLayouts.size();
         if (setLayouts.size() == 0)
@@ -476,71 +498,30 @@ namespace vkn
 
     void VknInfos::fillAppName(std::string name)
     {
-        m_appName = new std::vector<char>(name.size());
-        for (int i = 0; i <= name.size(); ++i)
-            m_appName->at(i) = name.c_str()[i];
-        m_filledAppName = true;
+        m_appName = name;
     }
 
     void VknInfos::fillEngineName(std::string name)
     {
-        m_engineName = new std::vector<char>(name.size());
-        for (int i = 0; i <= name.size(); ++i)
-            m_engineName->at(i) = name.c_str()[i];
-        m_filledEngineName = true;
+        m_engineName = name;
     }
 
-    void VknInfos::fillInstanceExtensionNames(std::vector<const char *> names)
+    void VknInfos::fillInstanceExtensionNames(std::vector<std::string> names)
     {
-        m_enabledInstanceExtensionNames = new std::vector<char[100]>(names.size());
-        for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
-        {
-            bool nullFound{false};
-            for (int charIdx = 0; charIdx < 100; ++charIdx)
-            {
-                if (!nullFound)
-                {
-                    if (names[nameIdx][charIdx] == '\0')
-                        nullFound = true;
-                    m_enabledInstanceExtensionNames->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
-                }
-                else
-                    m_enabledInstanceExtensionNames->at(nameIdx)[charIdx] = char("\0");
-            }
-        }
+        for (auto name : names)
+            m_enabledInstanceExtensionNames += (name + "\0");
     }
 
-    void VknInfos::fillDeviceExtensionNames(std::vector<const char *> names)
+    void VknInfos::fillDeviceExtensionNames(std::vector<std::string> names)
     {
-        m_enabledDeviceExtensionNames.push_back(new std::vector<char[100]>(names.size()));
-        for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
-        {
-            bool nullFound{false};
-            for (int charIdx = 0; charIdx < 100; ++charIdx)
-            {
-                if (!nullFound)
-                {
-                    if (names[nameIdx][charIdx] == '\0')
-                        nullFound = true;
-                    m_enabledDeviceExtensionNames.back()->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
-                }
-                else
-                    m_enabledDeviceExtensionNames.back()->at(nameIdx)[charIdx] = char("\0");
-            }
-        }
+        for (auto name : names)
+            m_enabledDeviceExtensionNames += (name + "\0");
     }
 
     void VknInfos::fillEnabledLayerNames(std::vector<std::string> names)
     {
-        m_enabledLayerNames = new std::vector<char[100]>(names.size());
-        for (int nameIdx = 0; nameIdx < names.size(); ++nameIdx)
-        {
-            for (int charIdx = 0; charIdx < 100; ++charIdx)
-                if (charIdx < names[nameIdx].size())
-                    m_enabledLayerNames->at(nameIdx)[charIdx] = names[nameIdx][charIdx];
-                else
-                    m_enabledLayerNames->at(nameIdx)[charIdx] = char("\0");
-        }
+        for (auto name : names)
+            m_enabledLayerNames += (name + "\0");
     }
 
     void VknInfos::fillDeviceFeatures(bool robustBufferAccess, bool fullDrawIndexUint32, bool imageCubeArray,
@@ -632,18 +613,13 @@ namespace vkn
             throw std::runtime_error("Engine name not filled before filling app info.");
         m_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         m_appInfo.pNext = VK_NULL_HANDLE;
-        m_appInfo.pApplicationName = m_appName->data();
+        m_appInfo.pApplicationName = m_appName.c_str();
         m_appInfo.applicationVersion = applicationVersion;
-        m_appInfo.pEngineName = m_engineName->data();
+        m_appInfo.pEngineName = m_engineName.c_str();
         m_appInfo.engineVersion = engineVersion;
         m_appInfo.apiVersion = apiVersion;
 
         m_filledAppInfo = true;
-    }
-
-    const char *const *VknInfos::getNamesPointer(std::vector<char[100]> *names)
-    {
-        return reinterpret_cast<const char *const *>(names->data());
     }
 
     void VknInfos::fillInstanceCreateInfo(VkInstanceCreateFlags flags)
@@ -658,16 +634,16 @@ namespace vkn
         m_instanceCreateInfo.pNext = VK_NULL_HANDLE;
         m_instanceCreateInfo.flags = flags;
         m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
-        m_instanceCreateInfo.enabledLayerCount = m_enabledLayerNames->size();
-        if (m_enabledLayerNames->size() == 0)
+        m_instanceCreateInfo.enabledLayerCount = m_enabledLayerNames.size();
+        if (m_enabledLayerNames.size() == 0)
             m_instanceCreateInfo.ppEnabledLayerNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledLayerNames = this->getNamesPointer(m_enabledLayerNames);
-        m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNames->size();
-        if (m_enabledInstanceExtensionNames->size() == 0)
+            m_instanceCreateInfo.ppEnabledLayerNames = reinterpret_cast<const char *const *>(m_enabledLayerNames.c_str());
+        m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNames.size();
+        if (m_enabledInstanceExtensionNames.size() == 0)
             m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledExtensionNames = this->getNamesPointer(m_enabledInstanceExtensionNames);
+            m_instanceCreateInfo.ppEnabledExtensionNames = m_enabledInstanceExtensionNames.c_str();
         m_filledDeviceQueueCreateInfo = true;
     }
 
@@ -747,13 +723,15 @@ namespace vkn
     }
 
     VkAttachmentDescription *VknInfos::fillAttachmentDescription(
+        uint32_t deviceIdx, uint32_t renderPassIdx,
         VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
         VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
         VkImageLayout finalLayout, VkAttachmentDescriptionFlags flags)
     {
-        m_attachmentDescriptions.push_back(VkAttachmentDescription{});
-        VkAttachmentDescription &description = m_attachmentDescriptions.back();
+        this->initVectors<VkAttachmentDescription>(deviceIdx, renderPassIdx, m_attachmentDescriptions);
+        m_attachmentDescriptions[deviceIdx][renderPassIdx].push_back(VkAttachmentDescription{});
+        VkAttachmentDescription &description = m_attachmentDescriptions[deviceIdx][renderPassIdx].back();
         description.format = format; // Set to your swapchain image format
         description.samples = samples;
         description.loadOp = loadOp;
@@ -768,62 +746,61 @@ namespace vkn
     }
 
     void VknInfos::fillAttachmentReference(
-        uint32_t subpassIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx, VkImageLayout layout)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VknAttachmentType attachmentType,
+        uint32_t attachmentIdx, VkImageLayout layout)
     {
-        for (int i = 0; i < (subpassIdx - (m_attachmentReferences.size() - 1)); ++i)
-        {
-            m_attachmentReferences.push_back(std::vector<std::vector<VkAttachmentReference>>{});
-            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // color
-            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // depth-stencil
-            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // resolve
-            m_attachmentReferences.back().push_back(std::vector<VkAttachmentReference>{}); // input
-            m_preserveAttachments.push_back(std::vector<uint32_t>{});
-        }
+        this->initVectors<VkAttachmentReference>(deviceIdx, renderPassIdx, subpassIdx, 3, m_attachmentReferences);
+        this->initVectors<uint32_t>(deviceIdx, renderPassIdx, subpassIdx, m_preserveAttachments);
         if (attachmentType == PRESERVE_ATTACHMENT)
-            m_preserveAttachments.back().push_back(attachmentIdx);
+            m_preserveAttachments[deviceIdx][renderPassIdx][subpassIdx].push_back(attachmentIdx);
         else
         {
-            m_attachmentReferences.back()[attachmentType].push_back(VkAttachmentReference{});
-            VkAttachmentReference &ref = m_attachmentReferences[subpassIdx][attachmentType].back();
+            m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx][attachmentType].push_back(VkAttachmentReference{});
+            VkAttachmentReference &ref = m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx][attachmentType].back();
             ref.attachment = attachmentIdx;
             ref.layout = layout;
         }
     }
 
-    std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getAllAttachmentReferences()
+    std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getRenderPassAttachmentReferences(
+        uint32_t deviceIdx, uint32_t renderPassIdx)
     {
-        return &m_attachmentReferences;
+        return &(m_attachmentReferences[deviceIdx][renderPassIdx]);
     }
 
-    std::vector<std::vector<VkAttachmentReference>> *VknInfos::getAttachmentReferences(uint32_t subpassIdx)
+    std::vector<std::vector<VkAttachmentReference>> *VknInfos::getSubpassAttachmentReferences(
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
-        return &(m_attachmentReferences[subpassIdx]);
+        return &(m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx]);
     }
 
-    std::vector<uint32_t> *VknInfos::getPreserveAttachments(uint32_t subpassIdx)
+    std::vector<uint32_t> *VknInfos::getSubpassPreserveAttachments(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
-        return &(m_preserveAttachments[subpassIdx]);
+        return &(m_preserveAttachments[deviceIdx][renderPassIdx][subpassIdx]);
     }
 
-    std::vector<std::vector<uint32_t>> *VknInfos::getAllPreserveAttachments()
+    std::vector<std::vector<uint32_t>> *VknInfos::getRenderPassPreserveAttachments(
+        uint32_t deviceIdx, uint32_t renderPassIdx)
     {
-        return &m_preserveAttachments;
+        return &(m_preserveAttachments[deviceIdx][renderPassIdx]);
     }
 
     VkSubpassDescription *VknInfos::fillSubpassDescription(
-        uint32_t subpassIdx,
-        VkPipelineBindPoint pipelineBindPoint,
+        uint32_t deviceIdx, uint32_t renderPassIdx, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
-        m_subpassDescriptions.push_back(VkSubpassDescription{});
-        VkSubpassDescription &description = m_subpassDescriptions.back();
+        this->initVectors<VkSubpassDescription>(deviceIdx, renderPassIdx, m_subpassDescriptions);
+        m_subpassDescriptions[deviceIdx][renderPassIdx].push_back(VkSubpassDescription{});
+        VkSubpassDescription &description = m_subpassDescriptions[deviceIdx][renderPassIdx].back();
+        uint32_t subpassIdx{static_cast<uint32_t>(m_subpassDescriptions[deviceIdx][renderPassIdx].size() - 1)};
+
         description.flags = flags;
         description.pipelineBindPoint = pipelineBindPoint;
-        std::vector<VkAttachmentReference> &inputAttachments = m_attachmentReferences[subpassIdx][INPUT_ATTACHMENT];
-        std::vector<VkAttachmentReference> &colorAttachments = m_attachmentReferences[subpassIdx][COLOR_ATTACHMENT];
-        std::vector<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[subpassIdx][RESOLVE_ATTACHMENT];
-        std::vector<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[subpassIdx][DEPTH_STENCIL_ATTACHMENT];
-        std::vector<uint32_t> &preserveAttachments = m_preserveAttachments[subpassIdx];
+        std::vector<VkAttachmentReference> &inputAttachments = m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx][INPUT_ATTACHMENT];
+        std::vector<VkAttachmentReference> &colorAttachments = m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx][COLOR_ATTACHMENT];
+        std::vector<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx][RESOLVE_ATTACHMENT];
+        std::vector<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx][DEPTH_STENCIL_ATTACHMENT];
+        std::vector<uint32_t> &preserveAttachments = m_preserveAttachments[deviceIdx][renderPassIdx][subpassIdx];
 
         if (inputAttachments.size() == 0)
         {
@@ -872,11 +849,13 @@ namespace vkn
     }
 
     VkSubpassDependency *VknInfos::fillSubpassDependency(
+        uint32_t deviceIdx, uint32_t renderPassIdx,
         uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
         VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
-        m_subpassDependencies.push_back(VkSubpassDependency{});
-        VkSubpassDependency &dependency = m_subpassDependencies.back();
+        this->initVectors<VkSubpassDependency>(deviceIdx, renderPassIdx, m_subpassDependencies);
+        m_subpassDependencies[deviceIdx][renderPassIdx].push_back(VkSubpassDependency{});
+        VkSubpassDependency &dependency = m_subpassDependencies[deviceIdx][renderPassIdx].back();
         dependency.srcSubpass = srcSubpass;
         dependency.dstSubpass = dstSubpass;
         dependency.srcStageMask = srcStageMask;
@@ -888,12 +867,12 @@ namespace vkn
     }
 
     VkVertexInputBindingDescription *VknInfos::fillVertexInputBindingDescription(
-        uint32_t idx, uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, uint32_t binding,
+        uint32_t stride, VkVertexInputRate inputRate)
     {
-        for (int i = 0; i < (idx - (m_vertexInputBindings.size() - 1)); ++i)
-            m_vertexInputBindings.push_back(std::vector<VkVertexInputBindingDescription>{});
-        m_vertexInputBindings[idx].push_back(VkVertexInputBindingDescription{});
-        VkVertexInputBindingDescription *description = &(m_vertexInputBindings[idx].back());
+        this->initVectors<VkVertexInputBindingDescription>(deviceIdx, renderPassIdx, subpassIdx, m_vertexInputBindings);
+        m_vertexInputBindings[deviceIdx][renderPassIdx][subpassIdx].push_back(VkVertexInputBindingDescription{});
+        VkVertexInputBindingDescription *description = &(m_vertexInputBindings[deviceIdx][renderPassIdx][subpassIdx].back());
         description->binding = binding;
         description->stride = stride;
         description->inputRate = inputRate;
@@ -901,12 +880,12 @@ namespace vkn
     }
 
     VkVertexInputAttributeDescription *VknInfos::fillVertexInputAttributeDescription(
-        uint32_t idx, uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, uint32_t binding,
+        uint32_t location, VkFormat format, uint32_t offset)
     {
-        for (int i = 0; i < (idx - (m_vertexInputAttributes.size() - 1)); ++i)
-            m_vertexInputAttributes.push_back(std::vector<VkVertexInputAttributeDescription>{});
-        m_vertexInputAttributes[idx].push_back(VkVertexInputAttributeDescription{});
-        VkVertexInputAttributeDescription *description = &(m_vertexInputAttributes[idx].back());
+        this->initVectors<VkVertexInputAttributeDescription>(deviceIdx, renderPassIdx, subpassIdx, m_vertexInputAttributes);
+        m_vertexInputAttributes[deviceIdx][renderPassIdx][subpassIdx].push_back(VkVertexInputAttributeDescription{});
+        VkVertexInputAttributeDescription *description = &(m_vertexInputAttributes[deviceIdx][renderPassIdx][subpassIdx].back());
         description->binding = binding;
         description->location = location;
         description->format = format;
@@ -914,13 +893,15 @@ namespace vkn
         return description;
     }
 
-    std::vector<VkVertexInputBindingDescription> *VknInfos::getVertexInputBindings(uint32_t index)
+    std::vector<VkVertexInputBindingDescription> *VknInfos::getVertexInputBindings(
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
-        return &(m_vertexInputBindings[index]);
+        return &(m_vertexInputBindings[deviceIdx][renderPassIdx][subpassIdx]);
     }
 
-    std::vector<VkVertexInputAttributeDescription> *VknInfos::getVertexInputAttributes(uint32_t index)
+    std::vector<VkVertexInputAttributeDescription> *VknInfos::getVertexInputAttributes(
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
-        return &(m_vertexInputAttributes[index]);
+        return &(m_vertexInputAttributes[deviceIdx][renderPassIdx][subpassIdx]);
     }
 }

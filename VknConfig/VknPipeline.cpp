@@ -15,8 +15,8 @@ namespace vkn
           m_deviceCreated{deviceCreated}
     {
         m_renderPass = renderPass;
-        m_attachmentReferences = m_infos->getAttachmentReferences(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
-        m_preserveAttachments = m_infos->getPreserveAttachments(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_attachmentReferences = m_infos->getSubpassAttachmentReferences(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_preserveAttachments = m_infos->getSubpassPreserveAttachments(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
     }
 
     VknPipeline::~VknPipeline()

@@ -9,8 +9,8 @@ namespace vkn
         : m_infos{infos}, m_archive{archive}, m_device{device}, m_deviceIdx{deviceIdx},
           m_renderPassIdx{renderPassIdx}, m_deviceCreated{deviceCreated}
     {
-        m_attachmentRefs = infos->getAllAttachmentReferences();
-        m_preserveAttachments = infos->getAllPreserveAttachments();
+        m_attachmentRefs = infos->getRenderPassAttachmentReferences(m_deviceIdx, m_renderPassIdx);
+        m_preserveAttachments = infos->getRenderPassPreserveAttachments(m_deviceIdx, m_renderPassIdx);
         m_pipelineCreateInfos = infos->getPipelineCreateInfos();
     }
 
@@ -86,9 +86,10 @@ namespace vkn
         uint32_t attachIdx = m_attachments.size();
 
         m_attachments.push_back(m_infos->fillAttachmentDescription(
-            format, samples, loadOp, storeOp, stencilLoadOp, stencilStoreOp, initialLayout, finalLayout, flags));
+            m_deviceIdx, m_renderPassIdx, format, samples, loadOp, storeOp, stencilLoadOp,
+            stencilStoreOp, initialLayout, finalLayout, flags));
 
-        m_infos->fillAttachmentReference(subpassIdx, attachmentType, attachIdx, attachmentRefLayout);
+        m_infos->fillAttachmentReference(m_deviceIdx, m_renderPassIdx, subpassIdx, attachmentType, attachIdx, attachmentRefLayout);
     }
 
     void VknRenderPass::createPipelines()
@@ -115,7 +116,7 @@ namespace vkn
         VkSubpassDescriptionFlags flags)
     {
         uint32_t subpassIdx = m_subpasses.size();
-        m_subpasses.push_back(m_infos->fillSubpassDescription(subpassIdx, pipelineBindPoint, flags));
+        m_subpasses.push_back(m_infos->fillSubpassDescription(m_deviceIdx, m_renderPassIdx, pipelineBindPoint, flags));
         this->addPipeline();
     }
 }
