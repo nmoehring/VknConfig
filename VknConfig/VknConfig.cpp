@@ -49,7 +49,7 @@ namespace vkn
     }
 
     void VknConfig::fillInstanceCreateInfo(std::vector<std::string> &enabledLayerNames,
-                                           std::vector<const char *> &enabledExtensionNames,
+                                           const char *const *enabledExtensionNames,
                                            VkInstanceCreateFlags flags)
     {
         m_infos.fillEnabledLayerNames(enabledLayerNames);
@@ -64,8 +64,6 @@ namespace vkn
         if (!(res.isSuccess()))
             throw std::runtime_error(res.toErr("Error creating instance."));
         m_resultArchive.store(res);
-        for (auto device : m_devices)
-            device.addInstance(&m_instance);
 
         m_instanceCreated = true;
         return res;
@@ -113,7 +111,7 @@ namespace vkn
             int numSelected = 1;
             if (chooseAllAvailableQueues)
                 numSelected = m_devices[deviceIndex].getQueue(i).getNumAvailable();
-            m_infos.fillDeviceQueueCreateInfo(i, numSelected);
+            m_infos.fillDeviceQueueCreateInfo(deviceIndex, i, numSelected);
             m_devices[deviceIndex].getQueue(i).setNumSelected(numSelected);
         }
 

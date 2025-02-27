@@ -19,7 +19,6 @@ namespace vkn
         VknDevice(VknInfos *infos, VknResultArchive *archive, const VkInstance *instance, const bool *instanceCreated);
         ~VknDevice();
         void destroy();
-        void addInstance(VkInstance *instance);
         VknResult createDevice();
         void fillDeviceCreateInfo();
         bool getVkDeviceCreated() { return m_vkDeviceCreated; }
@@ -35,7 +34,7 @@ namespace vkn
             VkCompositeAlphaFlagBitsKHR compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
             VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR, VkBool32 clipped = VK_TRUE,
             VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
-        void addExtensions(std::vector<const char *> ext);
+        void addExtensions(const char *ext[], uint32_t size);
         void createSwapChains();
 
         VkPhysicalDeviceProperties *getPhysicalDeviceProperties()
@@ -61,10 +60,11 @@ namespace vkn
         bool m_queuesSelected{false};
         uint32_t m_deviceIdx;
 
-        std::vector<const char *> m_extensions{};
+        const char *const *m_extensions{nullptr};
+        uint32_t m_extensionsSize{0};
         VkPhysicalDeviceFeatures *m_features{nullptr};
-        std::vector<VkSwapchainCreateInfoKHR *> m_swapChainCreateInfos{};
-        std::vector<VkSwapchainKHR> m_swapChains{};
+        std::vector<VkSwapchainCreateInfoKHR *> m_swapChainCreateInfos;
+        std::vector<VkSwapchainKHR> m_swapChains;
 
         bool m_destroyed{false};
         bool m_vkDeviceCreated{false};

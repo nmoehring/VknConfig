@@ -10,40 +10,11 @@ namespace vkn
     {
     }
 
-    template <typename T>
-    void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3, uint32_t idx4,
-                     std::vector<std::vector<std::vector<std::vector<std::vector<T>>>>> &vectors)
+    void VknInfos::fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities)
     {
-        if ((vectors.size() - 1) < idx1)
-            vectors.resize(idx1 + 1);
-
-        this->initVectors<T>(idx2, idx3, idx4, vectors[idx1]);
-    }
-
-    template <typename T>
-    void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3,
-                     std::vector<std::vector<std::vector<std::vector<T>>>> &vectors)
-    {
-        if ((vectors.size() - 1) < idx1)
-            vectors.resize(idx1 + 1);
-
-        this->initVectors<T>(idx2, idx3, vectors[idx1]);
-    }
-
-    template <typename T>
-    void initVectors(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors)
-    {
-        if ((vectors.size() - 1) < idx1)
-            vectors.resize(idx1 + 1);
-
-        this->initVectors<T>(idx2, vectors[idx1]);
-    }
-
-    template <typename T>
-    void initVectors(uint32_t idx1, std::vector<std::vector<T>> &vectors)
-    {
-        if ((vectors.size() - 1) < idx1)
-            vectors.resize(idx1 + 1);
+        this->initVectors<float>(deviceIdx, queueFamilyIdx, m_queuePriorities);
+        for (auto priority : priorities)
+            m_queuePriorities[deviceIdx][queueFamilyIdx].push_back(priority);
     }
 
     void VknInfos::fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated)
@@ -506,16 +477,15 @@ namespace vkn
         m_engineName = name;
     }
 
-    void VknInfos::fillInstanceExtensionNames(std::vector<std::string> names)
+    void VknInfos::fillInstanceExtensionNames(const char *const *names)
     {
-        for (auto name : names)
-            m_enabledInstanceExtensionNames += (name + "\0");
+        m_enabledInstanceExtensionNames = names;
     }
 
-    void VknInfos::fillDeviceExtensionNames(std::vector<std::string> names)
+    void VknInfos::fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size)
     {
-        for (auto name : names)
-            m_enabledDeviceExtensionNames += (name + "\0");
+        m_enabledDeviceExtensionNames[deviceIdx] = names;
+        m_enabledDeviceExtensionNamesSize = size;
     }
 
     void VknInfos::fillEnabledLayerNames(std::vector<std::string> names)
@@ -639,37 +609,38 @@ namespace vkn
             m_instanceCreateInfo.ppEnabledLayerNames = VK_NULL_HANDLE;
         else
             m_instanceCreateInfo.ppEnabledLayerNames = reinterpret_cast<const char *const *>(m_enabledLayerNames.c_str());
-        m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNames.size();
-        if (m_enabledInstanceExtensionNames.size() == 0)
+        m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNamesSize;
+        if (m_enabledInstanceExtensionNamesSize == 0)
             m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledExtensionNames = m_enabledInstanceExtensionNames.c_str();
+            m_instanceCreateInfo.ppEnabledExtensionNames = m_enabledInstanceExtensionNames;
         m_filledDeviceQueueCreateInfo = true;
     }
 
-    void VknInfos::fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
+    void VknInfos::fillDeviceQueueCreateInfo(uint32_t deviceIdx, uint32_t queueFamilyIdx, uint32_t queueCount,
                                              VkApplicationInfo *pNext,
                                              VkDeviceQueueCreateFlags flags)
     {
-        m_queueCreateInfos.push_back(VkDeviceQueueCreateInfo{});
-        VkDeviceQueueCreateInfo &info = m_queueCreateInfos.back();
+        m_queueCreateInfos[deviceIdx].push_back(VkDeviceQueueCreateInfo{});
+        VkDeviceQueueCreateInfo &info = m_queueCreateInfos[deviceIdx].back();
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         info.queueFamilyIndex = queueFamilyIdx;
         info.queueCount = queueCount;
         info.pNext = pNext;
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        m_queuePriorities.push_back(std::vector<float>{});
-        for (int i = 0; i < queueCount; ++i)
-            m_queuePriorities.back().push_back(1.0f);
-        if (m_queuePriorities.size() == 0)
-            throw std::runtime_error("No queue priorities set for device queue create info.");
-        info.pQueuePriorities = m_queuePriorities.back().data();
+        bool areFilled = this->areVectorsFilled(deviceIdx, queueFamilyIdx, m_queuePriorities, queueCount);
+        if (!areFilled)
+            throw std::runtime_error("Queue priorities not filled properly before filling device queue create info."
+                                     " Either the number of queue priorities does not match the queue count or the priorities were not filled"
+                                     " before trying to fill the device queue create info.");
+        info.pQueuePriorities = m_queuePriorities[deviceIdx][queueFamilyIdx].data();
         m_filledDeviceQueueCreateInfo = true;
     }
 
     VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(uint32_t deviceIdx)
     {
-        if (m_queueCreateInfos.size() == 0)
+        deviceIdx = m_deviceCreateInfos.size();
+        if (m_queueCreateInfos[deviceIdx].size() == 0)
             throw std::runtime_error("Queues not selected before filling device create info.");
         m_deviceCreateInfos.push_back(VkDeviceCreateInfo{});
         VkDeviceCreateInfo &info = m_deviceCreateInfos.back();
@@ -677,17 +648,17 @@ namespace vkn
         info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = 0; // flags reserved, must = 0
-        info.queueCreateInfoCount = m_queueCreateInfos.size();
-        info.pQueueCreateInfos = m_queueCreateInfos.data();
+        info.queueCreateInfoCount = m_queueCreateInfos[deviceIdx].size();
+        info.pQueueCreateInfos = m_queueCreateInfos[deviceIdx].data();
         // enabledLayerCount is deprecated and should not be used
         info.enabledLayerCount = 0; // ignored, value doesn't matter
         // ppEnabledLayerNames is deprecated and should not be used
         info.ppEnabledLayerNames = VK_NULL_HANDLE; // ignored, value doesn't matter
-        info.enabledExtensionCount = m_enabledDeviceExtensionNames[deviceIdx]->size();
-        if (m_enabledDeviceExtensionNames[deviceIdx]->size() == 0)
+        info.enabledExtensionCount = m_enabledDeviceExtensionNamesSize;
+        if (m_enabledDeviceExtensionNamesSize == 0)
             info.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            info.ppEnabledExtensionNames = this->getNamesPointer(m_enabledDeviceExtensionNames[deviceIdx]);
+            info.ppEnabledExtensionNames = m_enabledDeviceExtensionNames[deviceIdx];
         info.pEnabledFeatures = &(m_enabledFeatures[deviceIdx]);
 
         m_filledDeviceCreateInfo = true;

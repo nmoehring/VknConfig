@@ -26,14 +26,16 @@ int main()
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    std::vector<const char *> instanceExtensions;
-    for (int i = 0; i < glfwExtensionCount; ++i)
+    const char *instanceExtensions[] = {
+        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+        VK_KHR_SURFACE_EXTENSION_NAME};
+    /*for (int i = 0; i < glfwExtensionCount; ++i)
     {
         instanceExtensions.push_back(glfwExtensions[i]);
         std::cout << glfwExtensions[i] << std::endl;
-    }
+    }*/
     std::vector<std::string> layers;
-    instanceExtensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
     vknConfig.fillInstanceCreateInfo(layers, instanceExtensions);
     vknConfig.createInstance();
     vknConfig.selectPhysicalDevice(0);
@@ -41,10 +43,10 @@ int main()
     auto limits{vknConfig.getDevice(0)->getPhysicalDevice()->getLimits()};
     std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
     std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
-    std::vector<const char *>
-        deviceExtensions;
-    deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    vknConfig.getDevice(0)->addExtensions(deviceExtensions);
+    const uint32_t numExtensions{1};
+    const char *deviceExtensions[numExtensions] = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    vknConfig.getDevice(0)->addExtensions(deviceExtensions, numExtensions);
 
     // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,

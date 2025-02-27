@@ -32,17 +32,66 @@ namespace vkn
 
         template <typename T>
         void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3, uint32_t idx4,
-                         std::vector<std::vector<std::vector<std::vector<std::vector<T>>>>> &vectors);
+                         std::vector<std::vector<std::vector<std::vector<std::vector<T>>>>> &vectors)
+        {
+            if ((vectors.size() - 1) < idx1)
+                vectors.resize(idx1 + 1);
+
+            this->initVectors<T>(idx2, idx3, idx4, vectors[idx1]);
+        }
 
         template <typename T>
         void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3,
-                         std::vector<std::vector<std::vector<std::vector<T>>>> &vectors);
+                         std::vector<std::vector<std::vector<std::vector<T>>>> &vectors)
+        {
+            if ((vectors.size() - 1) < idx1)
+                vectors.resize(idx1 + 1);
+
+            this->initVectors<T>(idx2, idx3, vectors[idx1]);
+        }
 
         template <typename T>
-        void initVectors(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors);
+        void initVectors(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors)
+        {
+            if ((vectors.size() - 1) < idx1)
+                vectors.resize(idx1 + 1);
+
+            this->initVectors<T>(idx2, vectors[idx1]);
+        }
 
         template <typename T>
-        void initVectors(uint32_t idx1, std::vector<std::vector<T>> &vectors);
+        void initVectors(uint32_t idx1, std::vector<std::vector<T>> &vectors)
+        {
+            if ((vectors.size() - 1) < idx1)
+                vectors.resize(idx1 + 1);
+        }
+
+        template <typename T>
+        bool areVectorsFilled(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors, int32_t expected = -1)
+        {
+            if (vectors.size() == 0)
+                return false;
+            return areVectorsFilled(idx2, vectors[idx1], expected);
+        }
+
+        template <typename T>
+        bool areVectorsFilled(uint32_t idx1, std::vector<std::vector<T>> &vectors, int32_t expected = -1)
+        {
+            if (vectors.size() == 0)
+                return false;
+            return areVectorsFilled(vectors[idx1], expected);
+        }
+
+        template <typename T>
+        bool areVectorsFilled(std::vector<T> &vectors, int32_t expected = -1)
+        {
+            if (vectors.size() == 0)
+                return false;
+            if (expected != -1)
+                return vectors.size() == expected;
+            else
+                return true;
+        }
 
         // getters
         VkApplicationInfo *getAppInfo()
@@ -53,19 +102,18 @@ namespace vkn
                 return nullptr;
         };
         VkInstanceCreateInfo *getInstanceCreateInfo() { return &m_instanceCreateInfo; };
-        VkDeviceQueueCreateInfo *getDeviceQueueCreateInfo(int index)
+        VkDeviceQueueCreateInfo *getDeviceQueueCreateInfo(uint32_t deviceIdx, uint32_t queueFamilyIdx)
         {
-            if (this->checkFill(DEVICE_QUEUE_CREATE_INFO))
-                return &(m_queueCreateInfos[index]);
-            else
-                return nullptr;
+            if (!(this->checkFill(DEVICE_QUEUE_CREATE_INFO)))
+                throw std::runtime_error("DeviceQueueCreateInfo not filled before get.");
+            return &(m_queueCreateInfos[deviceIdx][queueFamilyIdx]);
         };
-        VkDeviceCreateInfo *getDeviceCreateInfo(uint32_t index = 0)
+
+        VkDeviceCreateInfo *getDeviceCreateInfo(uint32_t deviceIdx)
         {
-            if (this->checkFill(DEVICE_CREATE_INFO))
-                return &m_deviceCreateInfos[index];
-            else
-                return nullptr;
+            if (!(this->checkFill(DEVICE_CREATE_INFO)))
+                throw std::runtime_error("DeviceCreateInfo not filled before get.");
+            return &m_deviceCreateInfos[deviceIdx];
         };
         std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos() { return &m_gfxPipelineCreateInfos; }
         void fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated);
@@ -75,17 +123,18 @@ namespace vkn
         }
 
         int getNumDeviceQueues() { return m_queueCreateInfos.size(); };
+        void fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities);
 
         // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
 
         void fillAppName(std::string name);
         void fillEngineName(std::string name);
-        void fillInstanceExtensionNames(std::vector<std::string> names);
+        void fillInstanceExtensionNames(const char *const *names);
         void fillEnabledLayerNames(std::vector<std::string> names);
         void fillAppInfo(uint32_t apiVersion = VK_VERSION_1_1, uint32_t applicationVersion = 0, uint32_t engineVersion = 0);
         void fillInstanceCreateInfo(VkInstanceCreateFlags flags = 0);
-        void fillDeviceExtensionNames(std::vector<std::string> names);
+        void fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size);
         void fillDeviceFeatures(
             bool robustBufferAccess = false, bool fullDrawIndexUint32 = false, bool imageCubeArray = false,
             bool independentBlend = false, bool geometryShader = false, bool tessellationShader = false,
@@ -108,7 +157,7 @@ namespace vkn
             bool sparseResidencyImage3D = false, bool sparseResidency2Samples = false,
             bool sparseResidency4Samples = false, bool sparseResidency8Samples = false, bool sparseResidency16Samples = false,
             bool sparseResidencyAliased = false, bool variableMultisampleRate = false, bool inheritedQueries = false);
-        void fillDeviceQueueCreateInfo(uint32_t queueFamilyIdx, uint32_t queueCount,
+        void fillDeviceQueueCreateInfo(uint32_t deviceIdx, uint32_t queueFamilyIdx, uint32_t queueCount,
                                        VkApplicationInfo *pNext = nullptr,
                                        VkDeviceQueueCreateFlags flags = 0);
         VkDeviceCreateInfo *fillDeviceCreateInfo(uint32_t deviceIdx);
@@ -242,23 +291,25 @@ namespace vkn
     private:
         std::string m_appName{nullptr};
         std::string m_engineName{nullptr};
-        std::string m_enabledInstanceExtensionNames;
+        const char *const *m_enabledInstanceExtensionNames;
+        uint32_t m_enabledInstanceExtensionNamesSize;
         std::string m_enabledLayerNames;
         std::vector<VkPhysicalDeviceFeatures> m_enabledFeatures;
-        std::string m_enabledDeviceExtensionNames;
-        std::vector<std::vector<float>> m_queuePriorities;
+        std::vector<const char *const *> m_enabledDeviceExtensionNames; // Device>char_arr
+        uint32_t m_enabledDeviceExtensionNamesSize;
+        std::vector<std::vector<std::vector<float>>> m_queuePriorities; // Device>QueueFamily>QueuePriority
 
         // Info's
         VkApplicationInfo m_appInfo{};
         VkInstanceCreateInfo m_instanceCreateInfo{};
-        std::vector<VkDeviceQueueCreateInfo> m_queueCreateInfos;
-        std::vector<VkDeviceCreateInfo> m_deviceCreateInfos{};
+        std::vector<std::vector<VkDeviceQueueCreateInfo>> m_queueCreateInfos; // Device>Infos
+        std::vector<VkDeviceCreateInfo> m_deviceCreateInfos{};                //>Infos
 
-        std::vector<std::vector<std::vector<std::vector<VkPipelineLayoutCreateInfo>>>> m_layoutCreateInfos;
+        std::vector<std::vector<std::vector<std::vector<VkPipelineLayoutCreateInfo>>>> m_layoutCreateInfos; // Device>RenderPass>Subpass>infos
         std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
-        std::vector<std::vector<std::vector<std::vector<VkShaderModuleCreateInfo>>>> m_shaderModuleCreateInfos;
-        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos;
-        std::vector<std::vector<std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>>>> m_vertexInputStateCreateInfos;
+        std::vector<std::vector<std::vector<std::vector<VkShaderModuleCreateInfo>>>> m_shaderModuleCreateInfos;                 // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos;           // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>>>> m_vertexInputStateCreateInfos; // Device>RenderPass>Subpass>infos
         std::vector<std::vector<VkPipelineInputAssemblyStateCreateInfo>> m_inputAssemblyStateCreateInfos;
         std::vector<std::vector<VkPipelineTessellationStateCreateInfo>> m_tessellationStateCreateInfos;
         std::vector<std::vector<VkPipelineViewportStateCreateInfo>> m_viewportStateCreateInfos;
@@ -270,19 +321,19 @@ namespace vkn
         std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
         std::vector<std::vector<VkSwapchainCreateInfoKHR>> m_swapChainCreateInfos;
 
-        std::vector<std::vector<VkRenderPassCreateInfo>> m_renderPassCreateInfos;
-        std::vector<std::vector<std::vector<VkAttachmentDescription>>> m_attachmentDescriptions;
-        std::vector<std::vector<std::vector<std::vector<std::vector<VkAttachmentReference>>>>> m_attachmentReferences{};
-        std::vector<std::vector<std::vector<std::vector<uint32_t>>>> m_preserveAttachments;
-        std::vector<std::vector<std::vector<VkSubpassDescription>>> m_subpassDescriptions;
-        std::vector<std::vector<std::vector<VkSubpassDependency>>> m_subpassDependencies;
+        std::vector<std::vector<VkRenderPassCreateInfo>> m_renderPassCreateInfos;                                        // Device>infos
+        std::vector<std::vector<std::vector<VkAttachmentDescription>>> m_attachmentDescriptions;                         // Device>RenderPass>infos
+        std::vector<std::vector<std::vector<std::vector<std::vector<VkAttachmentReference>>>>> m_attachmentReferences{}; // Device>RenderPass>Subpass>AttachmentType>RefInfos
+        std::vector<std::vector<std::vector<std::vector<uint32_t>>>> m_preserveAttachments;                              // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<VkSubpassDescription>>> m_subpassDescriptions;                               // Device>RenderPass>infos
+        std::vector<std::vector<std::vector<VkSubpassDependency>>> m_subpassDependencies;                                // Device>RenderPass>infos
         std::vector<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos;
 
-        std::vector<std::vector<std::vector<std::vector<VkVertexInputBindingDescription>>>> m_vertexInputBindings;
-        std::vector<std::vector<std::vector<std::vector<VkVertexInputAttributeDescription>>>> m_vertexInputAttributes;
+        std::vector<std::vector<std::vector<std::vector<VkVertexInputBindingDescription>>>> m_vertexInputBindings;     // Device>RenderPass>Subpass>Infos
+        std::vector<std::vector<std::vector<std::vector<VkVertexInputAttributeDescription>>>> m_vertexInputAttributes; // Device>RenderPass>Subpass>Infos
 
-        std::vector<std::vector<VkRenderPass *>> m_renderPasses;
-        std::vector<std::vector<const bool *>> m_renderPassCreatedPtrs;
+        std::vector<std::vector<VkRenderPass *>> m_renderPasses;        // Device>Ptrs
+        std::vector<std::vector<const bool *>> m_renderPassCreatedPtrs; // Device>Ptrs
 
         const char m_mainEntry[5] = "main";
 

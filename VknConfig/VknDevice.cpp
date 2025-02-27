@@ -58,15 +58,15 @@ namespace vkn
 
     void VknDevice::fillDeviceCreateInfo()
     {
-        m_infos->fillDeviceExtensionNames(m_extensions);
+        m_infos->fillDeviceExtensionNames(m_deviceIdx, m_extensions, m_extensionsSize);
         m_infos->fillDeviceFeatures(m_features);
         m_infos->fillDeviceCreateInfo(m_deviceIdx);
     }
 
-    void VknDevice::addExtensions(std::vector<const char *> ext)
+    void VknDevice::addExtensions(const char *ext[], uint32_t size)
     {
-        for (auto extension : ext)
-            m_extensions.push_back(extension);
+        m_extensions = ext;
+        m_extensionsSize = size;
     }
 
     void VknDevice::requestQueueFamilyProperties()
@@ -98,7 +98,7 @@ namespace vkn
         VknResult res{
             vkCreateDevice(
                 *(m_physicalDevice.getVkPhysicalDevice()),
-                m_infos->getDeviceCreateInfo(),
+                m_infos->getDeviceCreateInfo(m_deviceIdx),
                 nullptr,
                 &m_logicalDevice),
             "Create device"};

@@ -31,7 +31,7 @@ namespace vkn
                          uint32_t applicationVersion = 0,
                          uint32_t engineVersion = 0);
         void fillInstanceCreateInfo(std::vector<std::string> &enabledLayerNames,
-                                    std::vector<const char *> &enabledExtensionNames,
+                                    const char *const *enabledExtensionNames,
                                     VkInstanceCreateFlags flags = 0);
         VknResult createInstance();
         void selectPhysicalDevice(uint32_t deviceIndex);
