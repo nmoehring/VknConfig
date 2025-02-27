@@ -22,11 +22,14 @@ bool initWindow(GLFWwindow **outWindow);
 int main()
 {
     vkn::VknConfig vknConfig{};
-    vknConfig.fillAppInfo(VK_API_VERSION_1_1, "MinTest", "MinVknEngine");
+    std::string appName{"MinTest"};
+    std::string engineName{"MinVknConfig"};
+    vknConfig.fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    const char *instanceExtensions[] = {
+    const uint32_t instanceExtensionsSize{3};
+    const char *instanceExtensions[instanceExtensionsSize] = {
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
         VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
         VK_KHR_SURFACE_EXTENSION_NAME};
@@ -35,8 +38,10 @@ int main()
         instanceExtensions.push_back(glfwExtensions[i]);
         std::cout << glfwExtensions[i] << std::endl;
     }*/
-    std::vector<std::string> layers;
-    vknConfig.fillInstanceCreateInfo(layers, instanceExtensions);
+    const uint32_t layersSize{0};
+    const char *layers[]{nullptr};
+    vknConfig.fillInstanceCreateInfo(
+        layers, layersSize, instanceExtensions, instanceExtensionsSize);
     vknConfig.createInstance();
     vknConfig.selectPhysicalDevice(0);
     vknConfig.getDevice(0)->requestQueueFamilyProperties();
@@ -51,6 +56,9 @@ int main()
     // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
     // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
+    vknConfig.requestQueueFamilies(0);
+    vknConfig.getInfos()->fillDeviceQueuePrioritiesDefault(0);
+    vknConfig.selectQueues(0);
     vknConfig.createDevice(0);
     auto infos = vknConfig.getInfos();
 

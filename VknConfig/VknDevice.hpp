@@ -24,6 +24,7 @@ namespace vkn
         bool getVkDeviceCreated() { return m_vkDeviceCreated; }
         VknRenderPass *getRenderPass(uint32_t renderPassIdx) { return &(m_renderPasses[renderPassIdx]); }
         void requestQueueFamilyProperties();
+        int getNumQueueFamilies() { return m_queues.size(); }
 
         void fillSwapChainCreateInfo(
             VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,

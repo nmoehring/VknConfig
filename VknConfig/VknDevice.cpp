@@ -32,8 +32,6 @@ namespace vkn
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
     {
-        if (!(m_physicalDevice.getPhysicalDeviceSelected()))
-            throw std::runtime_error("Physical device not selected before getting physical device.");
         return &m_physicalDevice;
     }
 

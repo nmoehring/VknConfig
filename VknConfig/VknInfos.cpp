@@ -12,9 +12,27 @@ namespace vkn
 
     void VknInfos::fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities)
     {
+        if (!m_filledDeviceQueueCreateInfo)
+            throw std::runtime_error("DeviceQueueCreateInfo not filled before filling queue priorities.");
         this->initVectors<float>(deviceIdx, queueFamilyIdx, m_queuePriorities);
         for (auto priority : priorities)
             m_queuePriorities[deviceIdx][queueFamilyIdx].push_back(priority);
+    }
+
+    void VknInfos::fillDeviceQueuePrioritiesDefault(uint32_t deviceIdx, uint32_t numFamilies)
+    {
+        if (!m_filledDeviceQueueCreateInfo)
+            throw std::runtime_error("DeviceQueueCreateInfo not filled before filling queue priorities.");
+        this->initVectors<float>(deviceIdx, 0, m_queuePriorities);
+        for (int i = 0; i < numFamilies; ++i)
+            this->fillDeviceQueuePriorities(0, i, std::vector<float>(m_queueCreateInfos[deviceIdx][i].queueCount, 1.0f));
+    }
+
+    void VknInfos::setNumDeviceQueueFamilies(int num, uint32_t deviceIdx)
+    {
+        if (m_numQueueFamilies.size() < deviceIdx + 1)
+            m_numQueueFamilies.resize(deviceIdx + 1);
+        m_numQueueFamilies[deviceIdx] = num;
     }
 
     void VknInfos::fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated)
@@ -470,16 +488,20 @@ namespace vkn
     void VknInfos::fillAppName(std::string name)
     {
         m_appName = name;
+        m_filledAppName = true;
     }
 
     void VknInfos::fillEngineName(std::string name)
     {
         m_engineName = name;
+        m_filledEngineName = true;
     }
 
-    void VknInfos::fillInstanceExtensionNames(const char *const *names)
+    void VknInfos::fillInstanceExtensionNames(const char *const *names, uint32_t size)
     {
         m_enabledInstanceExtensionNames = names;
+        m_enabledInstanceExtensionNamesSize = size;
+        m_filledInstanceExtensionNames = true;
     }
 
     void VknInfos::fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size)
@@ -488,10 +510,11 @@ namespace vkn
         m_enabledDeviceExtensionNamesSize = size;
     }
 
-    void VknInfos::fillEnabledLayerNames(std::vector<std::string> names)
+    void VknInfos::fillEnabledLayerNames(const char *const *names, uint32_t size)
     {
-        for (auto name : names)
-            m_enabledLayerNames += (name + "\0");
+        m_enabledLayerNames = names;
+        m_enabledLayerNamesSize = size;
+        m_filledLayerNames = true;
     }
 
     void VknInfos::fillDeviceFeatures(bool robustBufferAccess, bool fullDrawIndexUint32, bool imageCubeArray,
@@ -604,11 +627,11 @@ namespace vkn
         m_instanceCreateInfo.pNext = VK_NULL_HANDLE;
         m_instanceCreateInfo.flags = flags;
         m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
-        m_instanceCreateInfo.enabledLayerCount = m_enabledLayerNames.size();
-        if (m_enabledLayerNames.size() == 0)
+        m_instanceCreateInfo.enabledLayerCount = m_enabledLayerNamesSize;
+        if (m_enabledLayerNamesSize == 0)
             m_instanceCreateInfo.ppEnabledLayerNames = VK_NULL_HANDLE;
         else
-            m_instanceCreateInfo.ppEnabledLayerNames = reinterpret_cast<const char *const *>(m_enabledLayerNames.c_str());
+            m_instanceCreateInfo.ppEnabledLayerNames = m_enabledLayerNames;
         m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNamesSize;
         if (m_enabledInstanceExtensionNamesSize == 0)
             m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
@@ -621,6 +644,7 @@ namespace vkn
                                              VkApplicationInfo *pNext,
                                              VkDeviceQueueCreateFlags flags)
     {
+        this->initVectors<VkDeviceQueueCreateInfo>(deviceIdx, m_queueCreateInfos);
         m_queueCreateInfos[deviceIdx].push_back(VkDeviceQueueCreateInfo{});
         VkDeviceQueueCreateInfo &info = m_queueCreateInfos[deviceIdx].back();
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -628,11 +652,8 @@ namespace vkn
         info.queueCount = queueCount;
         info.pNext = pNext;
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        bool areFilled = this->areVectorsFilled(deviceIdx, queueFamilyIdx, m_queuePriorities, queueCount);
-        if (!areFilled)
-            throw std::runtime_error("Queue priorities not filled properly before filling device queue create info."
-                                     " Either the number of queue priorities does not match the queue count or the priorities were not filled"
-                                     " before trying to fill the device queue create info.");
+        if (!m_filledDeviceQueueCreateInfo)
+            throw std::runtime_error("Queue priorities not filled before filling device queue create info.");
         info.pQueuePriorities = m_queuePriorities[deviceIdx][queueFamilyIdx].data();
         m_filledDeviceQueueCreateInfo = true;
     }

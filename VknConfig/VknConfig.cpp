@@ -48,18 +48,20 @@ namespace vkn
         m_infos.fillAppInfo(apiVersion, appVersion, engineVersion);
     }
 
-    void VknConfig::fillInstanceCreateInfo(std::vector<std::string> &enabledLayerNames,
+    void VknConfig::fillInstanceCreateInfo(const char *const *enabledLayerNames,
+                                           uint32_t enabledLayerNamesSize,
                                            const char *const *enabledExtensionNames,
+                                           uint32_t enabledExtensionNamesSize,
                                            VkInstanceCreateFlags flags)
     {
-        m_infos.fillEnabledLayerNames(enabledLayerNames);
-        m_infos.fillInstanceExtensionNames(enabledExtensionNames);
+        m_infos.fillEnabledLayerNames(enabledLayerNames, enabledLayerNamesSize);
+        m_infos.fillInstanceExtensionNames(enabledExtensionNames, enabledExtensionNamesSize);
         m_infos.fillInstanceCreateInfo(flags);
     }
 
     VknResult VknConfig::createInstance()
     {
-        VknResult res{vkCreateInstance(m_infos.getInstanceCreateInfo(), nullptr, &m_instance),
+        VknResult res{vkCreateInstance(m_infos.getInstanceCreateInfo(), VK_NULL_HANDLE, &m_instance),
                       "Create instance."};
         if (!(res.isSuccess()))
             throw std::runtime_error(res.toErr("Error creating instance."));
@@ -102,18 +104,36 @@ namespace vkn
         return renderPass;
     }
 
+    void VknConfig::selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues)
+    {
+        if (!m_instanceCreated)
+            throw std::runtime_error("Instance not created before trying to select queues.");
+        else if (!m_physicalDeviceSelected)
+            throw std::runtime_error("Physical device not selected before trying to select queues.");
+        else if (!m_queueFamiliesRequested)
+            throw std::runtime_error("Queue families not requested before trying to select queues.");
+
+        for (int i = 0; i < m_devices[deviceIdx].getQueues().size(); ++i)
+        {
+            int numSelected = 1;
+            if (chooseAllAvailableQueues)
+                numSelected = m_devices[deviceIdx].getQueue(i).getNumAvailable();
+            m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, numSelected);
+            m_devices[deviceIdx].getQueue(i).setNumSelected(numSelected);
+        }
+        m_queuesSelected = true;
+    }
+
     VknResult VknConfig::createDevice(uint32_t deviceIndex, bool chooseAllAvailableQueues)
     {
         if (!m_instanceCreated)
             throw std::runtime_error("Instance not created before trying to create device.");
-        for (int i = 0; i < m_devices[deviceIndex].getQueues().size(); ++i)
-        {
-            int numSelected = 1;
-            if (chooseAllAvailableQueues)
-                numSelected = m_devices[deviceIndex].getQueue(i).getNumAvailable();
-            m_infos.fillDeviceQueueCreateInfo(deviceIndex, i, numSelected);
-            m_devices[deviceIndex].getQueue(i).setNumSelected(numSelected);
-        }
+        else if (!m_physicalDeviceSelected)
+            throw std::runtime_error("Physical device not selected before trying to create device.");
+        else if (!m_queueFamiliesRequested)
+            throw std::runtime_error("Queue families not requested before trying to create device.");
+        else if (!m_queuesSelected)
+            throw std::runtime_error("Queues not selected before trying to create device.");
 
         m_devices[deviceIndex].fillDeviceCreateInfo();
         VknResult res;

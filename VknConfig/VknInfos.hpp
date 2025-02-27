@@ -34,7 +34,7 @@ namespace vkn
         void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3, uint32_t idx4,
                          std::vector<std::vector<std::vector<std::vector<std::vector<T>>>>> &vectors)
         {
-            if ((vectors.size() - 1) < idx1)
+            if (vectors.size() < idx1 + 1)
                 vectors.resize(idx1 + 1);
 
             this->initVectors<T>(idx2, idx3, idx4, vectors[idx1]);
@@ -44,7 +44,7 @@ namespace vkn
         void initVectors(uint32_t idx1, uint32_t idx2, uint32_t idx3,
                          std::vector<std::vector<std::vector<std::vector<T>>>> &vectors)
         {
-            if ((vectors.size() - 1) < idx1)
+            if (vectors.size() < idx1 + 1)
                 vectors.resize(idx1 + 1);
 
             this->initVectors<T>(idx2, idx3, vectors[idx1]);
@@ -53,7 +53,7 @@ namespace vkn
         template <typename T>
         void initVectors(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors)
         {
-            if ((vectors.size() - 1) < idx1)
+            if (vectors.size() < idx1 + 1)
                 vectors.resize(idx1 + 1);
 
             this->initVectors<T>(idx2, vectors[idx1]);
@@ -62,7 +62,7 @@ namespace vkn
         template <typename T>
         void initVectors(uint32_t idx1, std::vector<std::vector<T>> &vectors)
         {
-            if ((vectors.size() - 1) < idx1)
+            if (vectors.size() < idx1 + 1)
                 vectors.resize(idx1 + 1);
         }
 
@@ -122,16 +122,18 @@ namespace vkn
             return *(m_renderPassCreatedPtrs[deviceIdx][renderPassIdx]);
         }
 
-        int getNumDeviceQueues() { return m_queueCreateInfos.size(); };
+        uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx) { return m_numQueueFamilies[deviceIdx]; }
+        void setNumDeviceQueueFamilies(int num, uint32_t deviceIdx);
         void fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities);
+        void fillDeviceQueuePrioritiesDefault(uint32_t deviceIdx, uint32_t numFamilies);
 
         // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
 
         void fillAppName(std::string name);
         void fillEngineName(std::string name);
-        void fillInstanceExtensionNames(const char *const *names);
-        void fillEnabledLayerNames(std::vector<std::string> names);
+        void fillInstanceExtensionNames(const char *const *names, uint32_t size);
+        void fillEnabledLayerNames(const char *const *names, uint32_t size);
         void fillAppInfo(uint32_t apiVersion = VK_VERSION_1_1, uint32_t applicationVersion = 0, uint32_t engineVersion = 0);
         void fillInstanceCreateInfo(VkInstanceCreateFlags flags = 0);
         void fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size);
@@ -289,20 +291,22 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx);
 
     private:
-        std::string m_appName{nullptr};
-        std::string m_engineName{nullptr};
+        std::string m_appName{};
+        std::string m_engineName{};
         const char *const *m_enabledInstanceExtensionNames;
-        uint32_t m_enabledInstanceExtensionNamesSize;
-        std::string m_enabledLayerNames;
+        uint32_t m_enabledInstanceExtensionNamesSize{0};
+        const char *const *m_enabledLayerNames;
+        uint32_t m_enabledLayerNamesSize{0};
         std::vector<VkPhysicalDeviceFeatures> m_enabledFeatures;
         std::vector<const char *const *> m_enabledDeviceExtensionNames; // Device>char_arr
-        uint32_t m_enabledDeviceExtensionNamesSize;
+        uint32_t m_enabledDeviceExtensionNamesSize{0};
         std::vector<std::vector<std::vector<float>>> m_queuePriorities; // Device>QueueFamily>QueuePriority
+        std::vector<uint32_t> m_numQueueFamilies;                       // Device>NumFamilies
 
         // Info's
         VkApplicationInfo m_appInfo{};
         VkInstanceCreateInfo m_instanceCreateInfo{};
-        std::vector<std::vector<VkDeviceQueueCreateInfo>> m_queueCreateInfos; // Device>Infos
+        std::vector<std::vector<VkDeviceQueueCreateInfo>> m_queueCreateInfos; // Device>QueueFamilyInfos
         std::vector<VkDeviceCreateInfo> m_deviceCreateInfos{};                //>Infos
 
         std::vector<std::vector<std::vector<std::vector<VkPipelineLayoutCreateInfo>>>> m_layoutCreateInfos; // Device>RenderPass>Subpass>infos

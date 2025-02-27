@@ -30,8 +30,10 @@ namespace vkn
                          VkApplicationInfo *pNext = nullptr,
                          uint32_t applicationVersion = 0,
                          uint32_t engineVersion = 0);
-        void fillInstanceCreateInfo(std::vector<std::string> &enabledLayerNames,
+        void fillInstanceCreateInfo(const char *const *enabledLayerNames,
+                                    uint32_t enabledLayerNamesSize,
                                     const char *const *enabledExtensionNames,
+                                    uint32_t enabledExtensionNamesSize,
                                     VkInstanceCreateFlags flags = 0);
         VknResult createInstance();
         void selectPhysicalDevice(uint32_t deviceIndex);
@@ -45,6 +47,7 @@ namespace vkn
         VknRenderPass *getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);
         void enableExtensions(std::vector<std::string> extensions);
         bool getInstanceCreated() { return m_instanceCreated; }
+        void selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues = false);
 
     private:
         VknResultArchive m_resultArchive;
@@ -57,6 +60,7 @@ namespace vkn
         bool m_instanceCreated{false};
         bool m_physicalDeviceSelected{false};
         bool m_queueFamiliesRequested{false};
+        bool m_queuesSelected{false};
         bool m_destroyed{false};
 
         void archiveResult(VknResult res);
