@@ -56,7 +56,7 @@ int main()
     // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
     config.requestQueueFamilies(0);
     config.selectQueues(0);
-    infos->fillDeviceQueuePrioritiesDefault(0, device->getNumQueueFamilies());
+    device->fillDeviceQueuePrioritiesDefault();
     config.createDevice(0);
 
     int idx = 0;

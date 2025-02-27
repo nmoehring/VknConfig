@@ -19,15 +19,6 @@ namespace vkn
             m_queuePriorities[deviceIdx][queueFamilyIdx].push_back(priority);
     }
 
-    void VknInfos::fillDeviceQueuePrioritiesDefault(uint32_t deviceIdx, uint32_t numFamilies)
-    {
-        if (!m_filledDeviceQueueCreateInfo)
-            throw std::runtime_error("DeviceQueueCreateInfo not filled before filling queue priorities.");
-        this->initVectors<float>(deviceIdx, 0, m_queuePriorities);
-        for (int i = 0; i < numFamilies; ++i)
-            this->fillDeviceQueuePriorities(0, i, std::vector<float>(m_queueCreateInfos[deviceIdx][i].queueCount, 1.0f));
-    }
-
     void VknInfos::setNumDeviceQueueFamilies(int num, uint32_t deviceIdx)
     {
         if (m_numQueueFamilies.size() < deviceIdx + 1)
@@ -506,6 +497,8 @@ namespace vkn
 
     void VknInfos::fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size)
     {
+        if (m_enabledDeviceExtensionNames.size() < deviceIdx + 1)
+            m_enabledDeviceExtensionNames.resize(deviceIdx + 1);
         m_enabledDeviceExtensionNames[deviceIdx] = names;
         m_enabledDeviceExtensionNamesSize = size;
     }

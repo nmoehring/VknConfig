@@ -49,6 +49,21 @@ namespace vkn
         return m_queues[idx];
     }
 
+    void VknDevice::fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities)
+    {
+        if (!m_queuesRequested)
+            throw std::runtime_error("Queue properties not requested before filling queue priorities.");
+        m_infos->fillDeviceQueuePriorities(m_deviceIdx, queueFamilyIdx, priorities);
+    }
+
+    void VknDevice::fillDeviceQueuePrioritiesDefault()
+    {
+        if (!m_queuesRequested)
+            throw std::runtime_error("Queue properties not requested before filling queue priorities.");
+        for (int i = 0; i < m_queues.size(); ++i)
+            m_infos->fillDeviceQueuePriorities(m_deviceIdx, i, std::vector<float>(m_queues[i].getNumSelected(), 1.0f));
+    }
+
     void VknDevice::archiveResult(VknResult res)
     {
         m_resultArchive->store(res);

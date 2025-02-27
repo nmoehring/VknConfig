@@ -37,6 +37,8 @@ namespace vkn
             VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
         void addExtensions(const char *ext[], uint32_t size);
         void createSwapChains();
+        void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities);
+        void fillDeviceQueuePrioritiesDefault();
 
         VkPhysicalDeviceProperties *getPhysicalDeviceProperties()
         {

@@ -125,7 +125,6 @@ namespace vkn
         uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx) { return m_numQueueFamilies[deviceIdx]; }
         void setNumDeviceQueueFamilies(int num, uint32_t deviceIdx);
         void fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities);
-        void fillDeviceQueuePrioritiesDefault(uint32_t deviceIdx, uint32_t numFamilies);
 
         // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
@@ -297,47 +296,47 @@ namespace vkn
         uint32_t m_enabledInstanceExtensionNamesSize{0};
         const char *const *m_enabledLayerNames;
         uint32_t m_enabledLayerNamesSize{0};
-        std::vector<VkPhysicalDeviceFeatures> m_enabledFeatures;
-        std::vector<const char *const *> m_enabledDeviceExtensionNames; // Device>char_arr
+        std::vector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
+        std::vector<const char *const *> m_enabledDeviceExtensionNames{}; // Device>char_arr
         uint32_t m_enabledDeviceExtensionNamesSize{0};
-        std::vector<std::vector<std::vector<float>>> m_queuePriorities; // Device>QueueFamily>QueuePriority
-        std::vector<uint32_t> m_numQueueFamilies;                       // Device>NumFamilies
+        std::vector<std::vector<std::vector<float>>> m_queuePriorities{}; // Device>QueueFamily>QueuePriority
+        std::vector<uint32_t> m_numQueueFamilies{};                       // Device>NumFamilies
 
         // Info's
         VkApplicationInfo m_appInfo{};
         VkInstanceCreateInfo m_instanceCreateInfo{};
-        std::vector<std::vector<VkDeviceQueueCreateInfo>> m_queueCreateInfos; // Device>QueueFamilyInfos
-        std::vector<VkDeviceCreateInfo> m_deviceCreateInfos{};                //>Infos
+        std::vector<std::vector<VkDeviceQueueCreateInfo>> m_queueCreateInfos{}; // Device>QueueFamilyInfos
+        std::vector<VkDeviceCreateInfo> m_deviceCreateInfos{};                  //>Infos
 
-        std::vector<std::vector<std::vector<std::vector<VkPipelineLayoutCreateInfo>>>> m_layoutCreateInfos; // Device>RenderPass>Subpass>infos
-        std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos;
-        std::vector<std::vector<std::vector<std::vector<VkShaderModuleCreateInfo>>>> m_shaderModuleCreateInfos;                 // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos;           // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>>>> m_vertexInputStateCreateInfos; // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<VkPipelineInputAssemblyStateCreateInfo>> m_inputAssemblyStateCreateInfos;
-        std::vector<std::vector<VkPipelineTessellationStateCreateInfo>> m_tessellationStateCreateInfos;
-        std::vector<std::vector<VkPipelineViewportStateCreateInfo>> m_viewportStateCreateInfos;
-        std::vector<std::vector<VkPipelineRasterizationStateCreateInfo>> m_rasterizationStateCreateInfos;
-        std::vector<std::vector<VkPipelineMultisampleStateCreateInfo>> m_multisampleStateCreateInfos;
-        std::vector<std::vector<VkPipelineDepthStencilStateCreateInfo>> m_depthStencilStateCreateInfos;
-        std::vector<std::vector<VkPipelineColorBlendStateCreateInfo>> m_colorBlendStateCreateInfos;
-        std::vector<std::vector<VkPipelineDynamicStateCreateInfo>> m_dynamicStateCreateInfos;
-        std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos;
-        std::vector<std::vector<VkSwapchainCreateInfoKHR>> m_swapChainCreateInfos;
+        std::vector<std::vector<std::vector<std::vector<VkPipelineLayoutCreateInfo>>>> m_layoutCreateInfos{}; // Device>RenderPass>Subpass>infos
+        std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos{};
+        std::vector<std::vector<std::vector<std::vector<VkShaderModuleCreateInfo>>>> m_shaderModuleCreateInfos{};                 // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos{};           // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>>>> m_vertexInputStateCreateInfos{}; // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<VkPipelineInputAssemblyStateCreateInfo>> m_inputAssemblyStateCreateInfos{};
+        std::vector<std::vector<VkPipelineTessellationStateCreateInfo>> m_tessellationStateCreateInfos{};
+        std::vector<std::vector<VkPipelineViewportStateCreateInfo>> m_viewportStateCreateInfos{};
+        std::vector<std::vector<VkPipelineRasterizationStateCreateInfo>> m_rasterizationStateCreateInfos{};
+        std::vector<std::vector<VkPipelineMultisampleStateCreateInfo>> m_multisampleStateCreateInfos{};
+        std::vector<std::vector<VkPipelineDepthStencilStateCreateInfo>> m_depthStencilStateCreateInfos{};
+        std::vector<std::vector<VkPipelineColorBlendStateCreateInfo>> m_colorBlendStateCreateInfos{};
+        std::vector<std::vector<VkPipelineDynamicStateCreateInfo>> m_dynamicStateCreateInfos{};
+        std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos{};
+        std::vector<std::vector<VkSwapchainCreateInfoKHR>> m_swapChainCreateInfos{};
 
-        std::vector<std::vector<VkRenderPassCreateInfo>> m_renderPassCreateInfos;                                        // Device>infos
-        std::vector<std::vector<std::vector<VkAttachmentDescription>>> m_attachmentDescriptions;                         // Device>RenderPass>infos
+        std::vector<std::vector<VkRenderPassCreateInfo>> m_renderPassCreateInfos{};                                      // Device>infos
+        std::vector<std::vector<std::vector<VkAttachmentDescription>>> m_attachmentDescriptions{};                       // Device>RenderPass>infos
         std::vector<std::vector<std::vector<std::vector<std::vector<VkAttachmentReference>>>>> m_attachmentReferences{}; // Device>RenderPass>Subpass>AttachmentType>RefInfos
-        std::vector<std::vector<std::vector<std::vector<uint32_t>>>> m_preserveAttachments;                              // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<std::vector<VkSubpassDescription>>> m_subpassDescriptions;                               // Device>RenderPass>infos
-        std::vector<std::vector<std::vector<VkSubpassDependency>>> m_subpassDependencies;                                // Device>RenderPass>infos
-        std::vector<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos;
+        std::vector<std::vector<std::vector<std::vector<uint32_t>>>> m_preserveAttachments{};                            // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<VkSubpassDescription>>> m_subpassDescriptions{};                             // Device>RenderPass>infos
+        std::vector<std::vector<std::vector<VkSubpassDependency>>> m_subpassDependencies{};                              // Device>RenderPass>infos
+        std::vector<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos{};
 
-        std::vector<std::vector<std::vector<std::vector<VkVertexInputBindingDescription>>>> m_vertexInputBindings;     // Device>RenderPass>Subpass>Infos
-        std::vector<std::vector<std::vector<std::vector<VkVertexInputAttributeDescription>>>> m_vertexInputAttributes; // Device>RenderPass>Subpass>Infos
+        std::vector<std::vector<std::vector<std::vector<VkVertexInputBindingDescription>>>> m_vertexInputBindings{};     // Device>RenderPass>Subpass>Infos
+        std::vector<std::vector<std::vector<std::vector<VkVertexInputAttributeDescription>>>> m_vertexInputAttributes{}; // Device>RenderPass>Subpass>Infos
 
-        std::vector<std::vector<VkRenderPass *>> m_renderPasses;        // Device>Ptrs
-        std::vector<std::vector<const bool *>> m_renderPassCreatedPtrs; // Device>Ptrs
+        std::vector<std::vector<VkRenderPass *>> m_renderPasses{};        // Device>Ptrs
+        std::vector<std::vector<const bool *>> m_renderPassCreatedPtrs{}; // Device>Ptrs
 
         const char m_mainEntry[5] = "main";
 
