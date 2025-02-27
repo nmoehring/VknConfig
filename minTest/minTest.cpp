@@ -21,49 +21,46 @@ bool initWindow(GLFWwindow **outWindow);
 
 int main()
 {
-    vkn::VknConfig vknConfig{};
+    vkn::VknConfig config{};
+    vkn::VknDevice *device = config.getDevice(0);
+    vkn::VknInfos *infos = config.getInfos();
+
     std::string appName{"MinTest"};
     std::string engineName{"MinVknConfig"};
-    vknConfig.fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
-    uint32_t glfwExtensionCount = 0;
-    const char **glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    config.fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
+
     const uint32_t instanceExtensionsSize{3};
     const char *instanceExtensions[instanceExtensionsSize] = {
         VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
         VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
         VK_KHR_SURFACE_EXTENSION_NAME};
-    /*for (int i = 0; i < glfwExtensionCount; ++i)
-    {
-        instanceExtensions.push_back(glfwExtensions[i]);
-        std::cout << glfwExtensions[i] << std::endl;
-    }*/
     const uint32_t layersSize{0};
     const char *layers[]{nullptr};
-    vknConfig.fillInstanceCreateInfo(
+
+    config.fillInstanceCreateInfo(
         layers, layersSize, instanceExtensions, instanceExtensionsSize);
-    vknConfig.createInstance();
-    vknConfig.selectPhysicalDevice(0);
-    vknConfig.getDevice(0)->requestQueueFamilyProperties();
-    auto limits{vknConfig.getDevice(0)->getPhysicalDevice()->getLimits()};
+    config.createInstance();
+
+    config.selectPhysicalDevice(0);
+    device->requestQueueFamilyProperties();
+    auto limits{device->getPhysicalDevice()->getLimits()};
     std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
     std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
     const uint32_t numExtensions{1};
     const char *deviceExtensions[numExtensions] = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    vknConfig.getDevice(0)->addExtensions(deviceExtensions, numExtensions);
+    device->addExtensions(deviceExtensions, numExtensions);
 
     // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
     // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-    vknConfig.requestQueueFamilies(0);
-    vknConfig.getInfos()->fillDeviceQueuePrioritiesDefault(0);
-    vknConfig.selectQueues(0);
-    vknConfig.createDevice(0);
-    auto infos = vknConfig.getInfos();
+    config.requestQueueFamilies(0);
+    config.selectQueues(0);
+    infos->fillDeviceQueuePrioritiesDefault(0, device->getNumQueueFamilies());
+    config.createDevice(0);
 
     int idx = 0;
-    for (auto queue : vknConfig.getDevice(0)->getQueues())
+    for (auto queue : device->getQueues())
     {
         std::cout << "Queue " << idx << ": " << std::endl;
         std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;
@@ -78,7 +75,7 @@ int main()
     // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
-    vkn::VknRenderPass *renderPass = vknConfig.getRenderPass(0, 0);
+    vkn::VknRenderPass *renderPass = config.getRenderPass(0, 0);
     std::vector<VkAttachmentReference *> attach;
     renderPass->createAttachment();
     renderPass->createSubpass();

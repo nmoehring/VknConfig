@@ -42,7 +42,7 @@ namespace vkn
         {
             return m_physicalDevice.getProperties();
         }
-        std::vector<VknQueueFamily> getQueues() { return m_queues; }
+        std::vector<VknQueueFamily> &getQueues() { return m_queues; }
         VknQueueFamily getQueue(int idx);
         VkDevice *getVkDevice();
         VknPhysicalDevice *getPhysicalDevice();
@@ -59,6 +59,7 @@ namespace vkn
         const VkInstance *m_instance{nullptr};
         const bool *m_instanceCreated{nullptr};
         bool m_queuesSelected{false};
+        bool m_queuesRequested{false};
         uint32_t m_deviceIdx;
 
         const char *const *m_extensions{nullptr};

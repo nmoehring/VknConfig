@@ -118,13 +118,13 @@ namespace vkn
             int numSelected = 1;
             if (chooseAllAvailableQueues)
                 numSelected = m_devices[deviceIdx].getQueue(i).getNumAvailable();
-            m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, numSelected);
+            // m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, numSelected);
             m_devices[deviceIdx].getQueue(i).setNumSelected(numSelected);
         }
         m_queuesSelected = true;
     }
 
-    VknResult VknConfig::createDevice(uint32_t deviceIndex, bool chooseAllAvailableQueues)
+    VknResult VknConfig::createDevice(uint32_t deviceIdx, bool chooseAllAvailableQueues)
     {
         if (!m_instanceCreated)
             throw std::runtime_error("Instance not created before trying to create device.");
@@ -135,9 +135,13 @@ namespace vkn
         else if (!m_queuesSelected)
             throw std::runtime_error("Queues not selected before trying to create device.");
 
-        m_devices[deviceIndex].fillDeviceCreateInfo();
+        std::vector<VknQueueFamily> queues = m_devices[deviceIdx].getQueues();
+        VknDevice &device = m_devices[deviceIdx];
+        for (int i = 0; i < queues.size(); ++i)
+            m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, queues[i].getNumSelected());
+        device.fillDeviceCreateInfo();
         VknResult res;
-        if (!(res = m_devices[deviceIndex].createDevice()).isSuccess())
+        if (!(res = device.createDevice()).isSuccess())
             throw std::runtime_error(res.toErr("Error creating device."));
         m_resultArchive.store(res);
         return res;

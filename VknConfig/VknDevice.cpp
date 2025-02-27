@@ -44,8 +44,8 @@ namespace vkn
 
     VknQueueFamily VknDevice::getQueue(int idx)
     {
-        if (!m_queuesSelected)
-            throw std::runtime_error("Queues not selected before retrieving queue.");
+        if (!m_queuesRequested)
+            throw std::runtime_error("Queue properties not requested before retrieving queue properties.");
         return m_queues[idx];
     }
 
@@ -87,6 +87,7 @@ namespace vkn
             throw std::runtime_error("Error getting queue family properties.");
         for (auto props : queues)
             m_queues.push_back(VknQueueFamily(props));
+        m_queuesRequested = true;
     }
 
     VknResult VknDevice::createDevice()
