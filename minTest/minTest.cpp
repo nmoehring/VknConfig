@@ -29,10 +29,10 @@ int main()
     std::string engineName{"MinVknConfig"};
     config.fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
 
-    const uint32_t instanceExtensionsSize{3};
+    const uint32_t instanceExtensionsSize{1};
     const char *instanceExtensions[instanceExtensionsSize] = {
-        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+        // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
         VK_KHR_SURFACE_EXTENSION_NAME};
     const uint32_t layersSize{0};
     const char *layers[]{nullptr};
@@ -42,7 +42,7 @@ int main()
     config.createInstance();
 
     config.selectPhysicalDevice(0);
-    device->requestQueueFamilyProperties();
+    config.requestQueueFamilies(0);
     auto limits{device->getPhysicalDevice()->getLimits()};
     std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
     std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
@@ -54,7 +54,6 @@ int main()
     // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
     // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-    config.requestQueueFamilies(0);
     config.selectQueues(0);
     device->fillDeviceQueuePrioritiesDefault();
     config.createDevice(0);
@@ -91,9 +90,10 @@ int main()
     for (auto stage : stages)
         int idx = pipeline->createShaderStage(stage.first, stage.second);
 
-    pipeline->fillVertexAttributeDescription();
-    pipeline->fillVertexBindingDescription();
-    pipeline->setVertexInput();
+    auto vertexInputState = pipeline->getVertexInputState();
+    // vertexInputState->fillVertexAttributeDescription();
+    // vertexInputState->fillVertexBindingDescription();
+    vertexInputState->fillVertexInputStateCreateInfo();
     /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
     auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};

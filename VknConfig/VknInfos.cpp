@@ -12,11 +12,10 @@ namespace vkn
 
     void VknInfos::fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities)
     {
-        if (!m_filledDeviceQueueCreateInfo)
-            throw std::runtime_error("DeviceQueueCreateInfo not filled before filling queue priorities.");
         this->initVectors<float>(deviceIdx, queueFamilyIdx, m_queuePriorities);
         for (auto priority : priorities)
             m_queuePriorities[deviceIdx][queueFamilyIdx].push_back(priority);
+        m_deviceQueuePrioritiesFilled = true;
     }
 
     void VknInfos::setNumDeviceQueueFamilies(int num, uint32_t deviceIdx)
@@ -213,6 +212,10 @@ namespace vkn
     {
         this->initVectors<VkPipelineVertexInputStateCreateInfo>(
             deviceIdx, renderPassIdx, subpassIdx, m_vertexInputStateCreateInfos);
+        this->initVectors<VkVertexInputBindingDescription>(
+            deviceIdx, renderPassIdx, subpassIdx, m_vertexInputBindings);
+        this->initVectors<VkVertexInputAttributeDescription>(
+            deviceIdx, renderPassIdx, subpassIdx, m_vertexInputAttributes);
 
         std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions =
             &(m_vertexInputBindings[deviceIdx][renderPassIdx][subpassIdx]);
@@ -234,6 +237,7 @@ namespace vkn
             info->pVertexAttributeDescriptions = VK_NULL_HANDLE;
         else
             info->pVertexAttributeDescriptions = vertexAttributeDescriptions->data();
+        m_filledVertexInputStateInfo = true;
         return info;
     }
 
@@ -626,6 +630,7 @@ namespace vkn
         if (!m_filledAppInfo)
             throw std::runtime_error("AppInfo not filled before InstanceCreateInfo.");
 
+        m_instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         m_instanceCreateInfo.pNext = VK_NULL_HANDLE;
         m_instanceCreateInfo.flags = flags;
         m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
@@ -639,7 +644,7 @@ namespace vkn
             m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
             m_instanceCreateInfo.ppEnabledExtensionNames = m_enabledInstanceExtensionNames;
-        m_filledDeviceQueueCreateInfo = true;
+        m_filledInstanceCreateInfo = true;
     }
 
     void VknInfos::fillDeviceQueueCreateInfo(uint32_t deviceIdx, uint32_t queueFamilyIdx, uint32_t queueCount,
@@ -654,7 +659,7 @@ namespace vkn
         info.queueCount = queueCount;
         info.pNext = pNext;
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        if (!m_filledDeviceQueueCreateInfo)
+        if (!m_deviceQueuePrioritiesFilled)
             throw std::runtime_error("Queue priorities not filled before filling device queue create info.");
         info.pQueuePriorities = m_queuePriorities[deviceIdx][queueFamilyIdx].data();
         m_filledDeviceQueueCreateInfo = true;

@@ -68,11 +68,21 @@ namespace vkn
         }
 
         template <typename T>
+        bool areVectorsFilled(
+            uint32_t idx1, uint32_t idx2, uint32_t idx3,
+            std::vector<std::vector<std::vector<std::vector<T>>>> &vectors, int32_t expected = -1)
+        {
+            if (vectors.size() == 0)
+                return false;
+            return this->areVectorsFilled(idx2, idx3, vectors[idx1], expected);
+        }
+
+        template <typename T>
         bool areVectorsFilled(uint32_t idx1, uint32_t idx2, std::vector<std::vector<std::vector<T>>> &vectors, int32_t expected = -1)
         {
             if (vectors.size() == 0)
                 return false;
-            return areVectorsFilled(idx2, vectors[idx1], expected);
+            return this->areVectorsFilled(idx2, vectors[idx1], expected);
         }
 
         template <typename T>
@@ -80,12 +90,14 @@ namespace vkn
         {
             if (vectors.size() == 0)
                 return false;
-            return areVectorsFilled(vectors[idx1], expected);
+            return this->areVectorsFilled(vectors[idx1], expected);
         }
 
         template <typename T>
         bool areVectorsFilled(std::vector<T> &vectors, int32_t expected = -1)
         {
+            if (expected < -1)
+                throw std::runtime_error("Incorrect expected size parameter in areVectorsFilled().");
             if (vectors.size() == 0)
                 return false;
             if (expected != -1)
@@ -364,5 +376,6 @@ namespace vkn
         bool m_filledDepthStencilStateInfo{false};
         bool m_filledColorBlendStateInfo{false};
         bool m_filledDynamicStateInfo{false};
+        bool m_deviceQueuePrioritiesFilled{false};
     };
 }

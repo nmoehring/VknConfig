@@ -6,6 +6,7 @@
 
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
+#include "VknVertexInputState.hpp"
 
 namespace vkn
 {
@@ -40,7 +41,6 @@ namespace vkn
         void fillPipelineCreateInfo(
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0,
-            VkPipelineVertexInputStateCreateInfo *pVertexInputState = VK_NULL_HANDLE,
             VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = VK_NULL_HANDLE,
             VkPipelineTessellationStateCreateInfo *pTessellationState = VK_NULL_HANDLE,
             VkPipelineViewportStateCreateInfo *pViewportState = VK_NULL_HANDLE,
@@ -59,15 +59,11 @@ namespace vkn
         void setDepthStencil();
         void setColorBlend();
 
-        void fillVertexBindingDescription(uint32_t binding = 0, uint32_t stride = 0,
-                                          VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
-        void fillVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
-                                            VkFormat format = VK_FORMAT_UNDEFINED, uint32_t offset = 0);
-
         VkGraphicsPipelineCreateInfo *getCreateInfo() { return m_createInfo; }
         VkPipeline *getVkPipeline() { return m_pipeline; }
         VkSubpassDescription *getSubpassDescription() { return m_subpass; }
         void setPipelineCreated() { m_pipelineCreated = true; }
+        VknVertexInputState *getVertexInputState() { return &m_vertexInputState; }
 
     private:
         VkDevice *m_device{nullptr};
@@ -79,12 +75,12 @@ namespace vkn
         VkGraphicsPipelineCreateInfo *m_createInfo{nullptr};
         std::vector<std::vector<VkAttachmentReference>> *m_attachmentReferences{nullptr};
         std::vector<uint32_t> *m_preserveAttachments{nullptr};
-        std::vector<VkVertexInputBindingDescription *> m_vertexBindingDescriptions{};
-        std::vector<VkVertexInputAttributeDescription *> m_vertexAttributeDescriptions{};
         uint32_t m_deviceIdx;
         uint32_t m_renderPassIdx;
         uint32_t m_subpassIdx;
         const bool *m_deviceCreated{nullptr};
+
+        VknVertexInputState m_vertexInputState{};
 
         std::vector<VkShaderModule> m_shaderModules{};
         std::vector<VkPipelineShaderStageCreateInfo *> m_shaderStageInfos{};

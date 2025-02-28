@@ -42,7 +42,7 @@ namespace vkn
         return &m_logicalDevice;
     }
 
-    VknQueueFamily VknDevice::getQueue(int idx)
+    VknQueueFamily &VknDevice::getQueue(int idx)
     {
         if (!m_queuesRequested)
             throw std::runtime_error("Queue properties not requested before retrieving queue properties.");
@@ -100,13 +100,13 @@ namespace vkn
             throw std::runtime_error("No available queue families found.");
         std::vector<VkQueueFamilyProperties> queues;
         queues.resize(propertyCount);
+        if (m_queues.size() > 0)
+            throw std::runtime_error("m_queues already filled before requesting queue properties.");
 
         vkGetPhysicalDeviceQueueFamilyProperties(
             *(m_physicalDevice.getVkPhysicalDevice()),
             &propertyCount,
             queues.data());
-        if (queues.size() == 0)
-            throw std::runtime_error("Error getting queue family properties.");
         for (auto props : queues)
             m_queues.push_back(VknQueueFamily(props));
         m_queuesRequested = true;

@@ -17,6 +17,8 @@ namespace vkn
         m_renderPass = renderPass;
         m_attachmentReferences = m_infos->getSubpassAttachmentReferences(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
         m_preserveAttachments = m_infos->getSubpassPreserveAttachments(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+
+        m_vertexInputState = VknVertexInputState{deviceIdx, renderPassIdx, subpassIdx, infos};
     }
 
     VknPipeline::~VknPipeline()
@@ -43,7 +45,6 @@ namespace vkn
 
     void VknPipeline::fillPipelineCreateInfo(
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags,
-        VkPipelineVertexInputStateCreateInfo *pVertexInputState,
         VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState,
         VkPipelineTessellationStateCreateInfo *pTessellationState,
         VkPipelineViewportStateCreateInfo *pViewportState,
@@ -54,7 +55,7 @@ namespace vkn
         VkPipelineDynamicStateCreateInfo *pDynamicState)
     {
         m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderStageInfos, &m_layout,
-                                                          basePipelineHandle, basePipelineIndex, flags, pVertexInputState,
+                                                          basePipelineHandle, basePipelineIndex, flags, m_vertexInputState(),
                                                           pInputAssemblyState, pTessellationState, pViewportState,
                                                           pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState,
                                                           pDynamicState);
@@ -147,20 +148,5 @@ namespace vkn
             m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
                                                m_shaderModules[module_idx], shaderStageFlagBits));
         return m_shaderStageInfos.size() - 1;
-    }
-
-    void VknPipeline::setVertexInput()
-    {
-        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
-    }
-
-    void VknPipeline::fillVertexBindingDescription(uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
-    {
-        m_vertexBindingDescriptions.push_back(m_infos->fillVertexInputBindingDescription(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, stride, inputRate));
-    }
-    void VknPipeline::fillVertexAttributeDescription(uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
-    {
-        m_infos->fillVertexInputAttributeDescription(m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, location, format, offset);
     }
 }

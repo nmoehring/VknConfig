@@ -31,6 +31,7 @@ namespace vkn
                        "Enum physical devices and store."};
         m_physicalDevice = devices[0];
         m_selectedPhysicalDevice = true;
+        this->queryProperties();
 
         return res2;
     }
@@ -60,5 +61,12 @@ namespace vkn
                 throw std::runtime_error("Physical device not selected before getting device limits.");
             return &(m_properties.limits);
         }
+    }
+
+    void VknPhysicalDevice::queryProperties()
+    {
+        if (!m_selectedPhysicalDevice)
+            throw std::runtime_error("Physical device not selected before getting physical device properties.");
+        vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties);
     }
 }

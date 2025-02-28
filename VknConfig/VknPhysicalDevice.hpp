@@ -29,7 +29,7 @@ namespace vkn
         VkPhysicalDevice m_physicalDevice{};
 
         bool m_selectedPhysicalDevice{false};
-        void queryProperties() { vkGetPhysicalDeviceProperties(m_physicalDevice, &m_properties); }
+        void queryProperties();
     };
 
 }
