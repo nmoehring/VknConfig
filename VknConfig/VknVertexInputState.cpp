@@ -18,7 +18,7 @@ namespace vkn
 
     void VknVertexInputState::fillVertexInputStateCreateInfo()
     {
-        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_createInfo = m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
         m_filled = true;
     }
 
@@ -26,8 +26,8 @@ namespace vkn
     {
         if (!(m_vertexBindingDescriptions.size() == m_vertexAttributeDescriptions.size() + 1))
             throw std::runtime_error("Vertex attribute description must be filled after binding description.");
-        m_infos->fillVertexInputAttributeDescription(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, location, format, offset);
+        m_vertexAttributeDescriptions.push_back(m_infos->fillVertexInputAttributeDescription(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, location, format, offset));
     }
 
     void VknVertexInputState::fillVertexBindingDescription(
