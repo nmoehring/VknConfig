@@ -28,16 +28,14 @@ namespace vkn
 
     void VknInfos::fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated)
     {
-        for (int i = 0; i < (deviceIdx - (m_renderPasses.size() - 1)); ++i)
-            m_renderPasses.push_back(std::vector<VkRenderPass *>{});
-        for (int i = 0; i < (renderPassIdx - (m_renderPasses[deviceIdx].size() - 1)); ++i)
-            m_renderPasses[deviceIdx].push_back(nullptr);
+        this->initVectors<VkRenderPass *>(deviceIdx, m_renderPasses);
+        if (m_renderPasses[deviceIdx].size() < renderPassIdx + 1)
+            m_renderPasses[deviceIdx].resize(renderPassIdx + 1);
         m_renderPasses[deviceIdx][renderPassIdx] = renderPass;
 
-        for (int i = 0; i < (deviceIdx - (m_renderPassCreatedPtrs.size() - 1)); ++i)
-            m_renderPassCreatedPtrs.push_back(std::vector<const bool *>{});
-        for (int i = 0; i < (renderPassIdx - (m_renderPassCreatedPtrs[deviceIdx].size() - 1)); ++i)
-            m_renderPassCreatedPtrs[deviceIdx].push_back(nullptr);
+        this->initVectors<const bool *>(deviceIdx, m_renderPassCreatedPtrs);
+        if (m_renderPassCreatedPtrs[deviceIdx].size() < deviceIdx + 1)
+            m_renderPassCreatedPtrs[deviceIdx].resize(deviceIdx + 1);
         m_renderPassCreatedPtrs[deviceIdx][renderPassIdx] = renderPassCreated;
     }
 
@@ -136,6 +134,16 @@ namespace vkn
         return &info;
     }
 
+    void VknInfos::initRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx)
+    {
+        this->initVectors<VkRenderPassCreateInfo>(deviceIdx, m_renderPassCreateInfos);
+        this->initVectors<VkAttachmentDescription>(deviceIdx, renderPassIdx, m_attachmentDescriptions);
+        this->initVectors<VkSubpassDescription>(deviceIdx, renderPassIdx, m_subpassDescriptions);
+        this->initVectors<VkSubpassDependency>(deviceIdx, renderPassIdx, m_subpassDependencies);
+        this->initVectors<VkAttachmentReference>(
+            deviceIdx, renderPassIdx, 0, NUM_ATTACHMENT_TYPES, m_attachmentReferences);
+    }
+
     VkRenderPassCreateInfo *VknInfos::fillRenderPassCreateInfo(uint32_t deviceIdx, VkRenderPassCreateFlags flags)
     {
         this->initVectors<VkRenderPassCreateInfo>(deviceIdx, m_renderPassCreateInfos);
@@ -203,7 +211,8 @@ namespace vkn
     VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
-        this->initVectors<VkPipelineVertexInputStateCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_vertexInputStateCreateInfos);
+        this->initVectors<VkPipelineVertexInputStateCreateInfo>(
+            deviceIdx, renderPassIdx, subpassIdx, m_vertexInputStateCreateInfos);
 
         std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions =
             &(m_vertexInputBindings[deviceIdx][renderPassIdx][subpassIdx]);
@@ -734,7 +743,8 @@ namespace vkn
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VknAttachmentType attachmentType,
         uint32_t attachmentIdx, VkImageLayout layout)
     {
-        this->initVectors<VkAttachmentReference>(deviceIdx, renderPassIdx, subpassIdx, 3, m_attachmentReferences);
+        this->initVectors<VkAttachmentReference>(
+            deviceIdx, renderPassIdx, subpassIdx, NUM_ATTACHMENT_TYPES, m_attachmentReferences);
         this->initVectors<uint32_t>(deviceIdx, renderPassIdx, subpassIdx, m_preserveAttachments);
         if (attachmentType == PRESERVE_ATTACHMENT)
             m_preserveAttachments[deviceIdx][renderPassIdx][subpassIdx].push_back(attachmentIdx);
@@ -750,23 +760,29 @@ namespace vkn
     std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getRenderPassAttachmentReferences(
         uint32_t deviceIdx, uint32_t renderPassIdx)
     {
+        this->initVectors<VkAttachmentReference>(
+            deviceIdx, renderPassIdx, 0, NUM_ATTACHMENT_TYPES - 1, m_attachmentReferences);
         return &(m_attachmentReferences[deviceIdx][renderPassIdx]);
     }
 
     std::vector<std::vector<VkAttachmentReference>> *VknInfos::getSubpassAttachmentReferences(
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
+        this->initVectors<VkAttachmentReference>(
+            deviceIdx, renderPassIdx, 0, NUM_ATTACHMENT_TYPES - 1, m_attachmentReferences);
         return &(m_attachmentReferences[deviceIdx][renderPassIdx][subpassIdx]);
     }
 
     std::vector<uint32_t> *VknInfos::getSubpassPreserveAttachments(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
+        this->initVectors<uint32_t>(deviceIdx, renderPassIdx, 0, m_preserveAttachments);
         return &(m_preserveAttachments[deviceIdx][renderPassIdx][subpassIdx]);
     }
 
     std::vector<std::vector<uint32_t>> *VknInfos::getRenderPassPreserveAttachments(
         uint32_t deviceIdx, uint32_t renderPassIdx)
     {
+        this->initVectors<uint32_t>(deviceIdx, renderPassIdx, 0, m_preserveAttachments);
         return &(m_preserveAttachments[deviceIdx][renderPassIdx]);
     }
 

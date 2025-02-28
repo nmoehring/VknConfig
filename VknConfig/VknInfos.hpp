@@ -13,7 +13,8 @@ namespace vkn
         DEPTH_STENCIL_ATTACHMENT = 1,
         RESOLVE_ATTACHMENT = 2,
         INPUT_ATTACHMENT = 3,
-        PRESERVE_ATTACHMENT = 4
+        NUM_ATTACHMENT_TYPES,
+        PRESERVE_ATTACHMENT
     };
 
     class VknInfos
@@ -121,8 +122,12 @@ namespace vkn
         {
             return *(m_renderPassCreatedPtrs[deviceIdx][renderPassIdx]);
         }
+        void initRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);
 
-        uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx) { return m_numQueueFamilies[deviceIdx]; }
+        uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx)
+        {
+            return m_numQueueFamilies[deviceIdx];
+        }
         void setNumDeviceQueueFamilies(int num, uint32_t deviceIdx);
         void fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities);
 

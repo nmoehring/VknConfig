@@ -75,7 +75,8 @@ int main()
     // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
-    vkn::VknRenderPass *renderPass = config.getRenderPass(0, 0);
+    device->addRenderPass();
+    vkn::VknRenderPass *renderPass = device->getRenderPass(0);
     std::vector<VkAttachmentReference *> attach;
     renderPass->createAttachment();
     renderPass->createSubpass();

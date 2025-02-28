@@ -9,9 +9,11 @@ namespace vkn
         : m_infos{infos}, m_archive{archive}, m_device{device}, m_deviceIdx{deviceIdx},
           m_renderPassIdx{renderPassIdx}, m_deviceCreated{deviceCreated}
     {
+        m_infos->initRenderPass(deviceIdx, renderPassIdx);
         m_attachmentRefs = infos->getRenderPassAttachmentReferences(m_deviceIdx, m_renderPassIdx);
         m_preserveAttachments = infos->getRenderPassPreserveAttachments(m_deviceIdx, m_renderPassIdx);
         m_pipelineCreateInfos = infos->getPipelineCreateInfos();
+        m_infos->fillRenderPassPtrs(deviceIdx, renderPassIdx, &m_renderPass, deviceCreated);
     }
 
     VknRenderPass::~VknRenderPass()

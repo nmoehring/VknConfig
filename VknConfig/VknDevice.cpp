@@ -76,6 +76,13 @@ namespace vkn
         m_infos->fillDeviceCreateInfo(m_deviceIdx);
     }
 
+    VknRenderPass *VknDevice::getRenderPass(uint32_t renderPassIdx)
+    {
+        if (renderPassIdx >= m_renderPasses.size())
+            throw std::runtime_error("This renderpass not added before attempting to get() it.");
+        return &(m_renderPasses[renderPassIdx]);
+    }
+
     void VknDevice::addExtensions(const char *ext[], uint32_t size)
     {
         m_extensions = ext;

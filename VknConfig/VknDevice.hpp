@@ -22,7 +22,7 @@ namespace vkn
         VknResult createDevice();
         void fillDeviceCreateInfo();
         bool getVkDeviceCreated() { return m_vkDeviceCreated; }
-        VknRenderPass *getRenderPass(uint32_t renderPassIdx) { return &(m_renderPasses[renderPassIdx]); }
+        VknRenderPass *getRenderPass(uint32_t renderPassIdx);
         void requestQueueFamilyProperties();
         int getNumQueueFamilies() { return m_queues.size(); }
 
