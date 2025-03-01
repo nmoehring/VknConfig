@@ -19,6 +19,8 @@ namespace vkn
                        uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
                        VkDevice *device, VknShaderStageType shaderStageType, std::string filename,
                        VkPipelineShaderStageCreateFlags flags = 0);
+        ~VknShaderStage();
+        void destroy();
 
     private:
         uint32_t m_deviceIdx;
@@ -34,6 +36,9 @@ namespace vkn
         VkShaderModuleCreateInfo *m_shaderModuleCreateInfo{nullptr};
         VkPipelineShaderStageCreateInfo *m_createInfo{nullptr};
         VkShaderModule m_shaderModule{};
+
+        bool m_destroyed{false};
+        bool m_shaderModuleCreated{false};
 
         void createShaderStage(VknShaderStageType shaderStageType, std::string filename,
                                VkPipelineShaderStageCreateFlags flags);

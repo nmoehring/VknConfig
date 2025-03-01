@@ -15,6 +15,22 @@ namespace vkn
         this->createShaderStage(shaderStageType, filename, shaderStageCreateFlags);
     }
 
+    VknShaderStage::~VknShaderStage()
+    {
+        if (!m_destroyed)
+            this->destroy();
+    }
+
+    void VknShaderStage::destroy()
+    {
+        if (m_shaderModuleCreated && !m_destroyed)
+        {
+            if (m_shaderModule != VK_NULL_HANDLE)
+                vkDestroyShaderModule(*m_vkDevice, m_shaderModule, nullptr);
+            m_destroyed = true;
+        }
+    }
+
     void VknShaderStage::createShaderStage(VknShaderStageType shaderStageType, std::string filename,
                                            VkPipelineShaderStageCreateFlags createFlags)
     {
@@ -49,5 +65,6 @@ namespace vkn
         if (!res.isSuccess())
             throw std::runtime_error("Failed to create shader module!");
         m_archive->store(res);
+        m_shaderModuleCreated = true;
     }
 }
