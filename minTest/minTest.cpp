@@ -9,7 +9,6 @@
 #include <stb_image.h>
 
 #include "VknConfig/VknConfig.hpp"
-#include "VknConfig/VknRenderPass.hpp"
 
 // GLFWwindow *window_ = nullptr;
 
@@ -96,6 +95,8 @@ int main()
     vertexInputState->fillVertexInputStateCreateInfo();
     vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
     inputAssemblyState->fillInputAssemblyStateCreateInfo();
+    vkn::VknMultisampleState *multisampleState = pipeline->getMultisampleState();
+    multisampleState->fillMultisampleStateCreateInfo();
     /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
     auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};

@@ -8,6 +8,7 @@
 #include "VknInfos.hpp"
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
+#include "VknMultisampleState.hpp"
 
 namespace vkn
 {
@@ -49,6 +50,7 @@ namespace vkn
         void setPipelineCreated() { m_pipelineCreated = true; }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState; }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState; }
+        VknMultisampleState *getMultisampleState() { return &m_multisampleState; }
 
     private:
         VkDevice *m_device{nullptr};
@@ -70,7 +72,7 @@ namespace vkn
         // VknTessellationState m_tessellationState{};
         // VknViewportState m_viewportState{};
         // VknRasterizationState m_rasterizationState{};
-        // VknMultisampleState m_multisampleState{};
+        VknMultisampleState m_multisampleState{};
         // VknDepthStencilState m_depthStencilState{};
         // VknColorBlendState m_colorBlendState{};
         // VknDynamicState m_dynamicState{};

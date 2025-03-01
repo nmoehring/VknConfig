@@ -20,6 +20,7 @@ namespace vkn
 
         m_vertexInputState = VknVertexInputState{deviceIdx, renderPassIdx, subpassIdx, infos};
         m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderPassIdx, subpassIdx, infos};
+        m_multisampleState = VknMultisampleState{deviceIdx, renderPassIdx, subpassIdx, infos};
     }
 
     VknPipeline::~VknPipeline()
@@ -47,13 +48,9 @@ namespace vkn
     void VknPipeline::fillPipelineCreateInfo(
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
-        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderStageInfos, &m_layout,
-                                                          basePipelineHandle, basePipelineIndex, flags, m_vertexInputState(),
-                                                          m_inputAssemblyState()
-                                                          /*m_tessellationState, m_viewportState,
-                                    m_rasterizationState, m_multisampleState, m_depthStencilState,
-                                    m_colorBlendState, m_dynamicState*/
-        );
+        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                                          m_shaderStageInfos, &m_layout, basePipelineHandle,
+                                                          basePipelineIndex, flags);
     }
 
     VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(
