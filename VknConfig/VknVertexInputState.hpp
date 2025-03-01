@@ -20,7 +20,6 @@ namespace vkn
         void fillVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
                                             VkFormat format = VK_FORMAT_UNDEFINED, uint32_t offset = 0);
         void fillVertexInputStateCreateInfo();
-        void setVertexInput();
 
         bool isFilled() { return m_filled; }
         VkPipelineVertexInputStateCreateInfo *operator()();

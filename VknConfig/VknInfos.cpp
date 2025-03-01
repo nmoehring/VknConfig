@@ -242,17 +242,21 @@ namespace vkn
     }
 
     VkPipelineInputAssemblyStateCreateInfo *VknInfos::fillInputAssemblyStateCreateInfo(
-        uint32_t pipelineIdx, VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
     {
-        for (int i = 0; i < (pipelineIdx - (m_inputAssemblyStateCreateInfos.size() - 1)); ++i)
-            m_inputAssemblyStateCreateInfos.push_back(std::vector<VkPipelineInputAssemblyStateCreateInfo>{});
-        m_inputAssemblyStateCreateInfos[pipelineIdx].push_back(VkPipelineInputAssemblyStateCreateInfo{});
-        VkPipelineInputAssemblyStateCreateInfo *info = &(m_inputAssemblyStateCreateInfos[pipelineIdx].back());
+        this->initVectors<VkPipelineInputAssemblyStateCreateInfo>(
+            deviceIdx, renderPassIdx, subpassIdx, m_inputAssemblyStateCreateInfos);
+        m_inputAssemblyStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx]
+            .push_back(VkPipelineInputAssemblyStateCreateInfo{});
+        VkPipelineInputAssemblyStateCreateInfo *info =
+            &(m_inputAssemblyStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx].back());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
         info->topology = topology;
         info->primitiveRestartEnable = primitiveRestartEnable;
+        m_filledInputAssemblyStateInfo = true;
         return info;
     }
 

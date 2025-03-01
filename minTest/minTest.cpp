@@ -90,10 +90,12 @@ int main()
     for (auto stage : stages)
         int idx = pipeline->createShaderStage(stage.first, stage.second);
 
-    auto vertexInputState = pipeline->getVertexInputState();
+    vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
     // vertexInputState->fillVertexAttributeDescription();
     // vertexInputState->fillVertexBindingDescription();
     vertexInputState->fillVertexInputStateCreateInfo();
+    vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
+    inputAssemblyState->fillInputAssemblyStateCreateInfo();
     /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
     auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};

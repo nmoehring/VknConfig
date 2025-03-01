@@ -19,6 +19,7 @@ namespace vkn
         m_preserveAttachments = m_infos->getSubpassPreserveAttachments(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
 
         m_vertexInputState = VknVertexInputState{deviceIdx, renderPassIdx, subpassIdx, infos};
+        m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderPassIdx, subpassIdx, infos};
     }
 
     VknPipeline::~VknPipeline()
@@ -44,21 +45,15 @@ namespace vkn
     }
 
     void VknPipeline::fillPipelineCreateInfo(
-        VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags,
-        VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState,
-        VkPipelineTessellationStateCreateInfo *pTessellationState,
-        VkPipelineViewportStateCreateInfo *pViewportState,
-        VkPipelineRasterizationStateCreateInfo *pRasterizationState,
-        VkPipelineMultisampleStateCreateInfo *pMultisampleState,
-        VkPipelineDepthStencilStateCreateInfo *pDepthStencilState,
-        VkPipelineColorBlendStateCreateInfo *pColorBlendState,
-        VkPipelineDynamicStateCreateInfo *pDynamicState)
+        VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
         m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderStageInfos, &m_layout,
                                                           basePipelineHandle, basePipelineIndex, flags, m_vertexInputState(),
-                                                          pInputAssemblyState, pTessellationState, pViewportState,
-                                                          pRasterizationState, pMultisampleState, pDepthStencilState, pColorBlendState,
-                                                          pDynamicState);
+                                                          m_inputAssemblyState()
+                                                          /*m_tessellationState, m_viewportState,
+                                    m_rasterizationState, m_multisampleState, m_depthStencilState,
+                                    m_colorBlendState, m_dynamicState*/
+        );
     }
 
     VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(

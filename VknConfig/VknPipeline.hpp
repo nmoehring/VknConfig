@@ -7,6 +7,7 @@
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
 #include "VknVertexInputState.hpp"
+#include "VknInputAssemblyState.hpp"
 
 namespace vkn
 {
@@ -40,30 +41,14 @@ namespace vkn
 
         void fillPipelineCreateInfo(
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
-            VkPipelineCreateFlags flags = 0,
-            VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState = VK_NULL_HANDLE,
-            VkPipelineTessellationStateCreateInfo *pTessellationState = VK_NULL_HANDLE,
-            VkPipelineViewportStateCreateInfo *pViewportState = VK_NULL_HANDLE,
-            VkPipelineRasterizationStateCreateInfo *pRasterizationState = VK_NULL_HANDLE,
-            VkPipelineMultisampleStateCreateInfo *pMultisampleState = VK_NULL_HANDLE,
-            VkPipelineDepthStencilStateCreateInfo *pDepthStencilState = VK_NULL_HANDLE,
-            VkPipelineColorBlendStateCreateInfo *pColorBlendState = VK_NULL_HANDLE,
-            VkPipelineDynamicStateCreateInfo *pDynamicState = VK_NULL_HANDLE);
-
-        void setVertexInput();
-        void setInputAssembly();
-        void setTessellation();
-        void setViewport();
-        void setRasterization();
-        void setMultisampling();
-        void setDepthStencil();
-        void setColorBlend();
+            VkPipelineCreateFlags flags = 0);
 
         VkGraphicsPipelineCreateInfo *getCreateInfo() { return m_createInfo; }
         VkPipeline *getVkPipeline() { return m_pipeline; }
         VkSubpassDescription *getSubpassDescription() { return m_subpass; }
         void setPipelineCreated() { m_pipelineCreated = true; }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState; }
+        VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState; }
 
     private:
         VkDevice *m_device{nullptr};
@@ -81,6 +66,14 @@ namespace vkn
         const bool *m_deviceCreated{nullptr};
 
         VknVertexInputState m_vertexInputState{};
+        VknInputAssemblyState m_inputAssemblyState{};
+        // VknTessellationState m_tessellationState{};
+        // VknViewportState m_viewportState{};
+        // VknRasterizationState m_rasterizationState{};
+        // VknMultisampleState m_multisampleState{};
+        // VknDepthStencilState m_depthStencilState{};
+        // VknColorBlendState m_colorBlendState{};
+        // VknDynamicState m_dynamicState{};
 
         std::vector<VkShaderModule> m_shaderModules{};
         std::vector<VkPipelineShaderStageCreateInfo *> m_shaderStageInfos{};

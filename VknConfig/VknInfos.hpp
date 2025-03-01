@@ -201,7 +201,7 @@ namespace vkn
         VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx);
         VkPipelineInputAssemblyStateCreateInfo *fillInputAssemblyStateCreateInfo(
-            uint32_t pipelineIdx,
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
             VkPrimitiveTopology topology = VkPrimitiveTopology{},
             VkBool32 primitiveRestartEnable = VK_FALSE);
         VkPipelineTessellationStateCreateInfo *fillTessellationStateCreateInfo(uint32_t pipelineIdx, uint32_t patchControlPoints = 0);
@@ -327,10 +327,10 @@ namespace vkn
 
         std::vector<std::vector<std::vector<std::vector<VkPipelineLayoutCreateInfo>>>> m_layoutCreateInfos{}; // Device>RenderPass>Subpass>infos
         std::vector<VkPipelineCacheCreateInfo> m_cacheCreateInfos{};
-        std::vector<std::vector<std::vector<std::vector<VkShaderModuleCreateInfo>>>> m_shaderModuleCreateInfos{};                 // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos{};           // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>>>> m_vertexInputStateCreateInfos{}; // Device>RenderPass>Subpass>infos
-        std::vector<std::vector<VkPipelineInputAssemblyStateCreateInfo>> m_inputAssemblyStateCreateInfos{};
+        std::vector<std::vector<std::vector<std::vector<VkShaderModuleCreateInfo>>>> m_shaderModuleCreateInfos{};                     // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineShaderStageCreateInfo>>>> m_shaderStageCreateInfos{};               // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineVertexInputStateCreateInfo>>>> m_vertexInputStateCreateInfos{};     // Device>RenderPass>Subpass>infos
+        std::vector<std::vector<std::vector<std::vector<VkPipelineInputAssemblyStateCreateInfo>>>> m_inputAssemblyStateCreateInfos{}; // Device>RenderPass>Subpass>infos
         std::vector<std::vector<VkPipelineTessellationStateCreateInfo>> m_tessellationStateCreateInfos{};
         std::vector<std::vector<VkPipelineViewportStateCreateInfo>> m_viewportStateCreateInfos{};
         std::vector<std::vector<VkPipelineRasterizationStateCreateInfo>> m_rasterizationStateCreateInfos{};
