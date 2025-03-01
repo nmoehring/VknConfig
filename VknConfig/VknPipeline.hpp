@@ -9,15 +9,9 @@
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
 #include "VknMultisampleState.hpp"
-
+#include "VknShaderStage.hpp"
 namespace vkn
 {
-    enum ShaderStage
-    {
-        VKN_VERTEX_STAGE = VK_SHADER_STAGE_VERTEX_BIT,
-        VKN_FRAGMENT_STAGE = VK_SHADER_STAGE_FRAGMENT_BIT
-    };
-
     class VknPipeline
     {
     public:
@@ -27,7 +21,6 @@ namespace vkn
         ~VknPipeline();
         void destroy();
 
-        int createShaderStage(ShaderStage, std::string);
         void createDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
@@ -44,6 +37,10 @@ namespace vkn
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0);
 
+        uint32_t addShaderStage(
+            VknShaderStageType stageType, std::string filename,
+            VkPipelineShaderStageCreateFlags flags = 0);
+
         VkGraphicsPipelineCreateInfo *getCreateInfo() { return m_createInfo; }
         VkPipeline *getVkPipeline() { return m_pipeline; }
         VkSubpassDescription *getSubpassDescription() { return m_subpass; }
@@ -54,6 +51,7 @@ namespace vkn
 
     private:
         VkDevice *m_device{nullptr};
+        const bool *m_deviceCreated{nullptr};
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
         VkPipeline *m_pipeline{nullptr}; // 1 Subpass per pipeline
@@ -62,10 +60,10 @@ namespace vkn
         VkGraphicsPipelineCreateInfo *m_createInfo{nullptr};
         std::vector<std::vector<VkAttachmentReference>> *m_attachmentReferences{nullptr};
         std::vector<uint32_t> *m_preserveAttachments{nullptr};
+
         uint32_t m_deviceIdx;
         uint32_t m_renderPassIdx;
         uint32_t m_subpassIdx;
-        const bool *m_deviceCreated{nullptr};
 
         VknVertexInputState m_vertexInputState{};
         VknInputAssemblyState m_inputAssemblyState{};
@@ -76,6 +74,7 @@ namespace vkn
         // VknDepthStencilState m_depthStencilState{};
         // VknColorBlendState m_colorBlendState{};
         // VknDynamicState m_dynamicState{};
+        std::vector<VknShaderStage> m_shaderStages{};
 
         std::vector<VkShaderModule> m_shaderModules{};
         std::vector<VkPipelineShaderStageCreateInfo *> m_shaderStageInfos{};
@@ -89,7 +88,5 @@ namespace vkn
         bool m_destroyed{false};
         bool m_pipelineCreated{false};
         bool m_pipelineLayoutCreated{false};
-
-        int createShaderModule(const std::string filename);
     };
 }

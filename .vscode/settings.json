@@ -4,6 +4,7 @@
         "blds",
         "buildsystems",
         "Calibrateable",
+        "ccutilities",
         "cmakelists",
         "DFONT",
         "DTARGET",

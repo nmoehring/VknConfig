@@ -9,6 +9,11 @@ namespace vkn
         : m_infos{infos}, m_archive{archive}, m_device{device}, m_deviceIdx{deviceIdx},
           m_renderPassIdx{renderPassIdx}, m_deviceCreated{deviceCreated}
     {
+
+        if (m_device == VK_NULL_HANDLE)
+            throw std::runtime_error("m_device pointer is null.");
+        if (m_deviceCreated == nullptr)
+            throw std::runtime_error("m_deviceCreated pointer is null.");
         m_infos->initRenderPass(deviceIdx, renderPassIdx);
         m_attachmentRefs = infos->getRenderPassAttachmentReferences(m_deviceIdx, m_renderPassIdx);
         m_preserveAttachments = infos->getRenderPassPreserveAttachments(m_deviceIdx, m_renderPassIdx);

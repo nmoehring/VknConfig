@@ -194,10 +194,10 @@ namespace vkn
         VkPipelineShaderStageCreateFlags flags, VkSpecializationInfo *pSpecializationInfo)
     {
         this->initVectors<VkPipelineShaderStageCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_shaderStageCreateInfos);
-        m_shaderStageCreateInfos.back().back().back().push_back(VkPipelineShaderStageCreateInfo{});
-        VkPipelineShaderStageCreateInfo *info = &(m_shaderStageCreateInfos.back().back().back().back());
+        m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx].push_back(VkPipelineShaderStageCreateInfo{});
+        VkPipelineShaderStageCreateInfo *info = &(m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx].back());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        info->pNext = nullptr;
+        info->pNext = VK_NULL_HANDLE;
         info->flags = flags; // need fill
         info->stage = stage; // need fill
         info->module = module;

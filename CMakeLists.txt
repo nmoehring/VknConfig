@@ -9,10 +9,47 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(VknConfig VERSION 0.3 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
+# ########### UTILITY FUNCTIONS ##############
+# Copy directories to build folders keeping in mind debug configs
+function(createBuildDir)
+    if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR})
+        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+endfunction()
+
+function(copyResources)
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/Debug)
+            file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Debug)
+        endif()
+
+        file(COPY resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
+    else()
+        file(COPY resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+endfunction()
+
+function(buildSubDir subdir)
+    if(NOT TARGET_SUBDIR OR TARGET_SUBDIR MATCHES ALL OR TARGET_SUBDIR MATCHES ${subdir})
+        message(" BUILDING ${TARGET_SUBDIR} ")
+        add_subdirectory(${subdir})
+    endif()
+endfunction()
+
+createBuildDir()
+
 # ##### FIND, CONFIGURE, AND BUILD DEPENDENCIES #####(What's left anyway after vcpkg ran)
 include(FetchContent)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+
+FetchContent_Declare(
+    CCUtilities
+    GIT_REPOSITORY https://github.com/nmoehring/CCUtilities
+    GIT_TAG main
+)
+
+FetchContent_MakeAvailable(CCUtilities)
 
 # IF imgui installed and backends not copied yet THEN copy them
 if(((CMAKE_BUILD_TYPE MATCHES Debug AND TARGET imguid) OR TARGET imgui) AND NOT EXISTS imguiBackends)
@@ -38,6 +75,7 @@ include_directories(
     ${Vulkan_INCLUDE_DIRS}
     ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
     ${glfw3_DIR}/include
+    ${CMAKE_BINARY_DIR}/_deps/ccutilities-src
 )
 
 # Optimizations (referenced in bs::thread-pool)
@@ -75,26 +113,6 @@ endif()
 add_library(vma INTERFACE)
 target_sources(vma INTERFACE single-headers/vma.cpp)
 
-# ########### UTILITY FUNCTIONS ##############
-# Copy directories to build folders keeping in mind debug configs
-function(copyResources)
-    if(CMAKE_BUILD_TYPE MATCHES Debug)
-        if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-            file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-        endif()
-
-        file(COPY resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-    else()
-        file(COPY resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-    endif()
-endfunction()
-
-function(buildSubDir subdir)
-    if(NOT TARGET_SUBDIR OR TARGET_SUBDIR MATCHES ALL OR TARGET_SUBDIR MATCHES ${subdir})
-        message(" BUILDING ${TARGET_SUBDIR} ")
-        add_subdirectory(${subdir})
-    endif()
-endfunction()
 
 # ############ PROCESS SUBDIRECTORIES #################
 add_subdirectory(imguiBackends)

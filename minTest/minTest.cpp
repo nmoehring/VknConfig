@@ -81,14 +81,8 @@ int main()
     renderPass->createRenderPass();
 
     vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
-    std::unordered_map<vkn::ShaderStage, std::string>
-        stages{
-            {vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv"},
-            {vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv"}};
-    std::vector<int> idxs;
-    for (auto stage : stages)
-        int idx = pipeline->createShaderStage(stage.first, stage.second);
-
+    pipeline->addShaderStage(vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
+    pipeline->addShaderStage(vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
     vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
     // vertexInputState->fillVertexAttributeDescription();
     // vertexInputState->fillVertexBindingDescription();

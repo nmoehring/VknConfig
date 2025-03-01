@@ -1,7 +1,6 @@
 #include <filesystem>
 
 #include "VknPipeline.hpp"
-#include "../Utilities/Utilities.hpp"
 
 namespace vkn
 {
@@ -43,6 +42,17 @@ namespace vkn
                 vkDestroyShaderModule(*m_device, module, nullptr);
             m_destroyed = true;
         }
+    }
+
+    uint32_t VknPipeline::addShaderStage(
+        VknShaderStageType stageType, std::string filename, VkPipelineShaderStageCreateFlags flags)
+    {
+        if (!m_deviceCreated)
+            throw std::runtime_error("Logical device not created before attempting to create shader stage.");
+        uint32_t shaderIdx = m_shaderStages.size() - 1;
+        m_shaderStages.push_back(VknShaderStage{m_deviceIdx, m_renderPassIdx, m_subpassIdx, shaderIdx, m_infos,
+                                                m_archive, m_device, stageType, filename, flags});
+        return shaderIdx;
     }
 
     void VknPipeline::fillPipelineCreateInfo(
@@ -107,38 +117,4 @@ namespace vkn
         m_pipelineLayoutCreated = true;
     }
 
-    int VknPipeline::createShaderModule(const std::string filename)
-    {
-        std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
-        std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / filename)};
-        auto createInfo{m_infos->fillShaderModuleCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, code)};
-        VkShaderModule shaderModule;
-        if (vkCreateShaderModule(*m_device, createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to create shader module!");
-        }
-        m_shaderModules.push_back(shaderModule);
-        return m_shaderModules.size() - 1;
-    }
-
-    int VknPipeline::createShaderStage(ShaderStage shaderStage, std::string filename)
-    {
-        int module_idx{this->createShaderModule(filename)};
-        VkShaderStageFlagBits shaderStageFlagBits{};
-        switch (shaderStage)
-        {
-        case VKN_VERTEX_STAGE:
-            shaderStageFlagBits = VK_SHADER_STAGE_VERTEX_BIT;
-            break;
-        case VKN_FRAGMENT_STAGE:
-            shaderStageFlagBits = VK_SHADER_STAGE_FRAGMENT_BIT;
-            break;
-        default:
-            throw std::runtime_error("Shader stage not recognized.");
-        }
-        m_shaderStageInfos.push_back(
-            m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
-                                               m_shaderModules[module_idx], shaderStageFlagBits));
-        return m_shaderStageInfos.size() - 1;
-    }
 }
