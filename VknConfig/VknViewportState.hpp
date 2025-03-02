@@ -34,6 +34,11 @@ namespace vkn
         bool m_filled{false};
         VkPipelineViewportStateCreateInfo *m_createInfo;
 
+        VkOffset2D m_defaultOffset{};
+        VkExtent2D m_defaultExtent{};
+        VkViewport m_defaultViewport{};
+        VkRect2D m_defaultScissor{};
+
         std::vector<VkViewport> m_viewports;
         std::vector<VkRect2D> m_scissors;
     };

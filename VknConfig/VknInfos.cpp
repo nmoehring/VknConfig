@@ -176,7 +176,7 @@ namespace vkn
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-        std::vector<char> &code, VkShaderModuleCreateFlags flags)
+        std::vector<char> *code, VkShaderModuleCreateFlags flags)
     {
         this->initVectors<VkShaderModuleCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_shaderModuleCreateInfos);
         m_shaderModuleCreateInfos[deviceIdx][renderPassIdx][subpassIdx].push_back(VkShaderModuleCreateInfo{});
@@ -184,8 +184,8 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags;
-        info->codeSize = code.size();
-        info->pCode = reinterpret_cast<const uint32_t *>(code.data());
+        info->codeSize = code->size();
+        info->pCode = reinterpret_cast<const uint32_t *>(code->data());
         return info;
     }
 
@@ -275,7 +275,7 @@ namespace vkn
 
     VkPipelineViewportStateCreateInfo *VknInfos::fillViewportStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-        std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors)
+        std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors)
     {
         this->initVectors<VkPipelineViewportStateCreateInfo>(
             deviceIdx, renderPassIdx, subpassIdx, m_viewportStateCreateInfos);
@@ -284,16 +284,16 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
-        info->viewportCount = viewports.size();
-        if (viewports.size() == 0)
+        info->viewportCount = viewports->size();
+        if (viewports->size() == 0)
             info->pViewports = VK_NULL_HANDLE;
         else
-            info->pViewports = viewports.data();
-        info->scissorCount = scissors.size();
-        if (scissors.size() == 0)
+            info->pViewports = viewports->data();
+        info->scissorCount = scissors->size();
+        if (scissors->size() == 0)
             info->pScissors = VK_NULL_HANDLE;
         else
-            info->pScissors = scissors.data();
+            info->pScissors = scissors->data();
         m_filledViewportStateInfo = true;
         return info;
     }

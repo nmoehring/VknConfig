@@ -194,7 +194,7 @@ namespace vkn
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-            std::vector<char> &code, VkShaderModuleCreateFlags flags = 0);
+            std::vector<char> *code, VkShaderModuleCreateFlags flags = 0);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule module,
             VkShaderStageFlagBits stage, VkPipelineShaderStageCreateFlags flags = 0,
@@ -209,7 +209,7 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, uint32_t patchControlPoints = 0);
         VkPipelineViewportStateCreateInfo *fillViewportStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-            std::vector<VkViewport> viewports, std::vector<VkRect2D> scissors);
+            std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors);
         VkPipelineRasterizationStateCreateInfo *fillRasterizationStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
             VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,

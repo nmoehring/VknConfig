@@ -31,7 +31,7 @@ namespace vkn
         if (m_filled)
             throw std::runtime_error("ViewportStateCreateInfo already filled.");
         m_createInfo = m_infos->fillViewportStateCreateInfo(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_viewports, m_scissors);
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_viewports, &m_scissors);
         m_filled = true;
     }
 
@@ -43,12 +43,12 @@ namespace vkn
             throw std::runtime_error("Attempting to add a viewport to a viewport state with swapchain values without a swapchain.");
         m_viewports.push_back(VkViewport{});
         VkViewport &viewport = m_viewports.back();
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
+        viewport.x = x;
+        viewport.y = y;
         viewport.width = static_cast<float>(m_swapchainExtent->width);
         viewport.height = static_cast<float>(m_swapchainExtent->height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        viewport.minDepth = minDepth;
+        viewport.maxDepth = maxDepth;
     }
 
     void VknViewportState::addViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
@@ -57,12 +57,12 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder VknViewportState.");
         m_viewports.push_back(VkViewport{});
         VkViewport &viewport = m_viewports.back();
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
+        viewport.x = x;
+        viewport.y = y;
         viewport.width = static_cast<float>(width);
         viewport.height = static_cast<float>(height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        viewport.minDepth = minDepth;
+        viewport.maxDepth = maxDepth;
     }
 
     void VknViewportState::addScissorWithSwapchain(VkOffset2D offset)

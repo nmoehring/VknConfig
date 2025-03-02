@@ -106,13 +106,13 @@ int main()
     auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
     pipeline->fillPipelineLayoutCreateInfo();
     pipeline->createLayout();
-    pipeline->fillPipelineCreateInfo();
     /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
         basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
         tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
         multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
     */
 
+    pipeline->fillPipelineCreateInfo();
     renderPass->createPipelines();
 
     GLFWwindow *window_ = nullptr;
