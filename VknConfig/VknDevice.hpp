@@ -15,7 +15,7 @@ namespace vkn
     class VknDevice
     {
     public:
-        VknDevice() = default;
+        VknDevice();
         VknDevice(VknInfos *infos, VknResultArchive *archive, const VkInstance *instance, const bool *instanceCreated);
         ~VknDevice();
         void destroy();

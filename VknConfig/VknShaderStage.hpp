@@ -14,7 +14,7 @@ namespace vkn
     class VknShaderStage
     {
     public:
-        VknShaderStage() = default;
+        VknShaderStage();
         VknShaderStage(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                        uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
                        VkDevice *device, VknShaderStageType shaderStageType, std::string filename,

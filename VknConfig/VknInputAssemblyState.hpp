@@ -10,14 +10,13 @@ namespace vkn
     class VknInputAssemblyState
     {
     public:
-        VknInputAssemblyState() = default;
+        VknInputAssemblyState();
         VknInputAssemblyState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                               VknInfos *infos);
         //~VknInputAssemblyState();
 
         void setDetails(VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable);
         void fillInputAssemblyStateCreateInfo();
-        bool isFilled() { return m_filled; }
         VkPipelineInputAssemblyStateCreateInfo *operator()();
 
     private:

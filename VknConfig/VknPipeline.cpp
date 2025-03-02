@@ -4,6 +4,14 @@
 
 namespace vkn
 {
+    VknPipeline::VknPipeline()
+        : m_device{nullptr}, m_infos{nullptr}, m_archive{nullptr}, m_pipeline{nullptr},
+          m_renderPass{nullptr}, m_subpass{nullptr}, m_createInfo{nullptr},
+          m_attachmentReferences{nullptr}, m_preserveAttachments{nullptr},
+          m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0},
+          m_deviceCreated{nullptr}
+    {
+    }
 
     VknPipeline::VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                              VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,

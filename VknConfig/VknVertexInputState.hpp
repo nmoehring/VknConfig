@@ -10,7 +10,7 @@ namespace vkn
     class VknVertexInputState
     {
     public:
-        VknVertexInputState() = default;
+        VknVertexInputState();
         VknVertexInputState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                             VknInfos *infos);
         //~VknVertexInputState();
@@ -20,9 +20,6 @@ namespace vkn
         void fillVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
                                             VkFormat format = VK_FORMAT_UNDEFINED, uint32_t offset = 0);
         void fillVertexInputStateCreateInfo();
-
-        bool isFilled() { return m_filled; }
-        VkPipelineVertexInputStateCreateInfo *operator()();
 
     private:
         uint32_t m_deviceIdx{};

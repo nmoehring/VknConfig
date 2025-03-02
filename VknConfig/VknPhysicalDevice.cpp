@@ -4,6 +4,11 @@
 
 namespace vkn
 {
+    VknPhysicalDevice::VknPhysicalDevice()
+        : m_archive{nullptr}, m_infos{nullptr}, m_instance{nullptr}, m_instanceCreated{nullptr}
+    {
+    }
+
     VknPhysicalDevice::VknPhysicalDevice(VknResultArchive *archive, VknInfos *infos,
                                          const VkInstance *instance, const bool *instanceCreated)
         : m_archive{archive}, m_infos{infos}, m_instance{instance}, m_instanceCreated{instanceCreated}

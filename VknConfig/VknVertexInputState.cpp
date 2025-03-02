@@ -2,6 +2,11 @@
 
 namespace vkn
 {
+    VknVertexInputState::VknVertexInputState()
+        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}
+    {
+    }
+
     VknVertexInputState::VknVertexInputState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                                              VknInfos *infos)
         : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
@@ -9,15 +14,10 @@ namespace vkn
     {
     }
 
-    VkPipelineVertexInputStateCreateInfo *VknVertexInputState::operator()()
-    {
-        if (!m_filled)
-            throw std::runtime_error("Vertex input state not filled before attempting to retrieve.");
-        return m_createInfo;
-    }
-
     void VknVertexInputState::fillVertexInputStateCreateInfo()
     {
+        if (m_filled)
+            throw std::runtime_error("Vertex input state already filled.");
         m_createInfo = m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
         m_filled = true;
     }

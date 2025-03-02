@@ -9,7 +9,7 @@ namespace vkn
     class VknPhysicalDevice
     {
     public:
-        VknPhysicalDevice() {}
+        VknPhysicalDevice();
         VknPhysicalDevice(VknResultArchive *archive, VknInfos *infos, const VkInstance *instance, const bool *instanceCreated);
         VkPhysicalDevice *getVkPhysicalDevice() { return &m_physicalDevice; };
         VkPhysicalDeviceProperties *getProperties() { return &m_properties; };

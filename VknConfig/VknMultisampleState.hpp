@@ -8,15 +8,18 @@ namespace vkn
     class VknMultisampleState
     {
     public:
-        VknMultisampleState() = default;
+        VknMultisampleState();
         VknMultisampleState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VknInfos *infos);
         //~VknMultisampleState();
 
-        void setDetails(VkSampleCountFlagBits rasterizationSamples, VkBool32 sampleShadingEnable,
-                        float minSampleShading, VkSampleMask pSampleMask,
-                        VkBool32 alphaToCoverageEnable, VkBool32 alphaToOneEnable);
+        void setRasterizationSamples(VkSampleCountFlagBits rasterizationSamples);
+        void setSampleShadingEnable(VkBool32 sampleShadingEnable);
+        void setMinSampleShading(float minSampleShading);
+        void setSampleMask(VkSampleMask sampleMask);
+        void setAlphaToCoverageEnable(VkBool32 alphaToCoverageEnable);
+        void setAlphaToOneEnable(VkBool32 alphaToOneEnable);
+
         void fillMultisampleStateCreateInfo();
-        bool isFilled() { return m_filled; }
 
     private:
         uint32_t m_deviceIdx{};

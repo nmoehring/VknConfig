@@ -9,12 +9,15 @@
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
 #include "VknMultisampleState.hpp"
+#include "VknRasterizationState.hpp"
 #include "VknShaderStage.hpp"
+
 namespace vkn
 {
     class VknPipeline
     {
     public:
+        VknPipeline();
         VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkRenderPass *renderPass,
                     VkSubpassDescription *subpass, VkPipeline *pipeline,
                     VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated);
@@ -48,6 +51,7 @@ namespace vkn
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState; }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState; }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState; }
+        VknRasterizationState *getRasterizationState() { return &m_rasterizationState; }
 
     private:
         VkDevice *m_device{nullptr};
@@ -69,7 +73,7 @@ namespace vkn
         VknInputAssemblyState m_inputAssemblyState{};
         // VknTessellationState m_tessellationState{};
         // VknViewportState m_viewportState{};
-        // VknRasterizationState m_rasterizationState{};
+        VknRasterizationState m_rasterizationState{};
         VknMultisampleState m_multisampleState{};
         // VknDepthStencilState m_depthStencilState{};
         // VknColorBlendState m_colorBlendState{};

@@ -4,6 +4,13 @@ namespace vkn
 {
     int VknDevice::s_numDevices{0};
 
+    VknDevice::VknDevice()
+        : m_infos{nullptr}, m_resultArchive{nullptr}, m_instance{nullptr}, m_instanceCreated{nullptr}
+    {
+        m_physicalDevice = VknPhysicalDevice{m_resultArchive, m_infos, m_instance, m_instanceCreated};
+        m_deviceIdx = s_numDevices;
+    }
+
     VknDevice::VknDevice(VknInfos *infos, VknResultArchive *archive, const VkInstance *instance, const bool *instanceCreated)
         : m_infos{infos}, m_resultArchive{archive}, m_instance{instance}, m_instanceCreated{instanceCreated}
     {

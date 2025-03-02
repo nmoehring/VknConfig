@@ -5,6 +5,16 @@
 
 namespace vkn
 {
+    VknShaderStage::VknShaderStage()
+        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_shaderIdx{0}
+    {
+        m_infos = nullptr;
+        m_vkDevice = nullptr;
+        m_archive = nullptr;
+        m_shaderModuleCreateInfo = nullptr;
+        m_createInfo = nullptr;
+        m_shaderModule = VK_NULL_HANDLE;
+    }
     VknShaderStage::VknShaderStage(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                                    uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
                                    VkDevice *device, VknShaderStageType shaderStageType, std::string filename,
