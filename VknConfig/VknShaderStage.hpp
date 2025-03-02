@@ -17,10 +17,14 @@ namespace vkn
         VknShaderStage();
         VknShaderStage(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
                        uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
-                       VkDevice *device, VknShaderStageType shaderStageType, std::string filename,
-                       VkPipelineShaderStageCreateFlags flags = 0);
+                       VkDevice *device);
         ~VknShaderStage();
         void destroy();
+
+        void setShaderStageType(VknShaderStageType);
+        void setFilename(std::string filename);
+        void setFlags(VkPipelineShaderStageCreateFlags createFlags);
+        void setSpecialization(VkSpecializationInfo m_specializationInfo);
 
     private:
         uint32_t m_deviceIdx;
@@ -33,15 +37,22 @@ namespace vkn
         VknResultArchive *m_archive;
         VkDevice *m_vkDevice;
 
+        VkShaderStageFlagBits m_shaderStageFlagBit{};
+        std::string m_filename{};
+        VkPipelineShaderStageCreateFlags m_createFlags{0};
+
         VkShaderModuleCreateInfo *m_shaderModuleCreateInfo{nullptr};
-        VkPipelineShaderStageCreateInfo *m_createInfo{nullptr};
+        VkPipelineShaderStageCreateInfo *m_shaderStageCreateInfo{nullptr};
         VkShaderModule m_shaderModule{};
+        VkSpecializationInfo m_specializationInfo{};
 
         bool m_destroyed{false};
         bool m_shaderModuleCreated{false};
+        bool m_shaderStageTypeFilled{false};
+        bool m_filenameFilled{false};
+        bool m_specializationInfoSet{false};
 
-        void createShaderStage(VknShaderStageType shaderStageType, std::string filename,
-                               VkPipelineShaderStageCreateFlags flags);
-        void createShaderModule(const std::string filename);
+        void createShaderStage();
+        void createShaderModule();
     };
 }

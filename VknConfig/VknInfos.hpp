@@ -196,8 +196,8 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
             std::vector<char> *code, VkShaderModuleCreateFlags flags = 0);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
-            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule module,
-            VkShaderStageFlagBits stage, VkPipelineShaderStageCreateFlags flags = 0,
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule *module,
+            VkShaderStageFlagBits *stage, VkPipelineShaderStageCreateFlags *flags = 0,
             VkSpecializationInfo *pSpecializationInfo = nullptr);
         VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx);

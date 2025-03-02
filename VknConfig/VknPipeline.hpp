@@ -45,6 +45,8 @@ namespace vkn
             VknShaderStageType stageType, std::string filename,
             VkPipelineShaderStageCreateFlags flags = 0);
 
+        VknShaderStage *getShaderStage(uint32_t shaderIdx);
+
         VkGraphicsPipelineCreateInfo *getCreateInfo() { return m_createInfo; }
         VkPipeline *getVkPipeline() { return m_pipeline; }
         VkSubpassDescription *getSubpassDescription() { return m_subpass; }

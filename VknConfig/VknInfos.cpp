@@ -190,17 +190,17 @@ namespace vkn
     }
 
     VkPipelineShaderStageCreateInfo *VknInfos::fillShaderStageCreateInfo(
-        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule module, VkShaderStageFlagBits stage,
-        VkPipelineShaderStageCreateFlags flags, VkSpecializationInfo *pSpecializationInfo)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkShaderModule *module,
+        VkShaderStageFlagBits *stage, VkPipelineShaderStageCreateFlags *flags, VkSpecializationInfo *pSpecializationInfo)
     {
         this->initVectors<VkPipelineShaderStageCreateInfo>(deviceIdx, renderPassIdx, subpassIdx, m_shaderStageCreateInfos);
         m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx].push_back(VkPipelineShaderStageCreateInfo{});
         VkPipelineShaderStageCreateInfo *info = &(m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx].back());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
-        info->flags = flags; // need fill
-        info->stage = stage; // need fill
-        info->module = module;
+        info->flags = *flags; // need fill
+        info->stage = *stage; // need fill
+        info->module = *module;
         info->pName = m_mainEntry;
         info->pSpecializationInfo = pSpecializationInfo; // need fill
         return info;

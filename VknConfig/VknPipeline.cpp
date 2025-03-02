@@ -61,8 +61,16 @@ namespace vkn
             throw std::runtime_error("Logical device not created before attempting to create shader stage.");
         uint32_t shaderIdx = m_shaderStages.size() - 1;
         m_shaderStages.push_back(VknShaderStage{m_deviceIdx, m_renderPassIdx, m_subpassIdx, shaderIdx, m_infos,
-                                                m_archive, m_device, stageType, filename, flags});
+                                                m_archive, m_device});
+        m_shaderStages.back().setFilename(filename);
+        m_shaderStages.back().setShaderStageType(stageType);
+        m_shaderStages.back().setFlags(flags);
         return shaderIdx;
+    }
+
+    VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
+    {
+        return &(m_shaderStages[shaderIdx]);
     }
 
     void VknPipeline::fillPipelineCreateInfo(
