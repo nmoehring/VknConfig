@@ -93,6 +93,10 @@ int main()
     multisampleState->fillMultisampleStateCreateInfo();
     vkn::VknRasterizationState *rasterizationState = pipeline->getRasterizationState();
     rasterizationState->fillRasterizationStateCreateInfo();
+    vkn::VknViewportState *viewportState = pipeline->getViewportState();
+    viewportState->addViewport();
+    viewportState->addScissor();
+    viewportState->fillViewportStateCreateInfo();
     /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
     auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
     auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};

@@ -17,7 +17,6 @@ namespace vkn
 
         void setDetails(VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable);
         void fillInputAssemblyStateCreateInfo();
-        VkPipelineInputAssemblyStateCreateInfo *operator()();
 
     private:
         uint32_t m_deviceIdx{};
@@ -31,5 +30,6 @@ namespace vkn
         VkBool32 m_primitiveRestartEnable{VK_FALSE};
 
         bool m_filled{false};
+        bool m_placeholder;
     };
 } // namespace vkn

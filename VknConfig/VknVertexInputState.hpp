@@ -22,11 +22,11 @@ namespace vkn
         void fillVertexInputStateCreateInfo();
 
     private:
-        uint32_t m_deviceIdx{};
-        uint32_t m_renderPassIdx{};
-        uint32_t m_subpassIdx{};
-
-        VknInfos *m_infos{nullptr};
+        uint32_t m_deviceIdx;
+        uint32_t m_renderPassIdx;
+        uint32_t m_subpassIdx;
+        VknInfos *m_infos;
+        bool m_placeholder;
 
         VkPipelineVertexInputStateCreateInfo *m_createInfo{VK_NULL_HANDLE};
         std::vector<VkVertexInputBindingDescription *> m_vertexBindingDescriptions{};

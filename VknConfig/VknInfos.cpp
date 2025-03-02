@@ -294,6 +294,7 @@ namespace vkn
             info->pScissors = VK_NULL_HANDLE;
         else
             info->pScissors = scissors.data();
+        m_filledViewportStateInfo = true;
         return info;
     }
 
@@ -321,6 +322,7 @@ namespace vkn
         info->depthBiasClamp = depthBiasClamp;
         info->depthBiasSlopeFactor = depthBiasSlopeFactor;
         info->lineWidth = lineWidth;
+        m_filledRasterizationStateInfo = true;
         return info;
     }
 

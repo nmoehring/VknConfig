@@ -36,7 +36,7 @@ namespace vkn
         VkPolygonMode m_polygonMode{VK_POLYGON_MODE_FILL};
         VkCullModeFlags m_cullMode{VK_CULL_MODE_BACK_BIT};
         VkFrontFace m_frontFace{VK_FRONT_FACE_CLOCKWISE};
-        float m_lineWidth{0};
+        float m_lineWidth{1.0};
         VkBool32 m_depthClampEnable{VK_FALSE};
         VkBool32 m_rasterizerDiscardEnable{VK_FALSE};
         VkBool32 m_depthBiasEnable{VK_FALSE};

@@ -9,6 +9,7 @@
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
 #include "VknMultisampleState.hpp"
+#include "VknViewportState.hpp"
 #include "VknRasterizationState.hpp"
 #include "VknShaderStage.hpp"
 
@@ -52,6 +53,7 @@ namespace vkn
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState; }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState; }
         VknRasterizationState *getRasterizationState() { return &m_rasterizationState; }
+        VknViewportState *getViewportState() { return &m_viewportState; }
 
     private:
         VkDevice *m_device{nullptr};
@@ -72,7 +74,7 @@ namespace vkn
         VknVertexInputState m_vertexInputState{};
         VknInputAssemblyState m_inputAssemblyState{};
         // VknTessellationState m_tessellationState{};
-        // VknViewportState m_viewportState{};
+        VknViewportState m_viewportState{};
         VknRasterizationState m_rasterizationState{};
         VknMultisampleState m_multisampleState{};
         // VknDepthStencilState m_depthStencilState{};

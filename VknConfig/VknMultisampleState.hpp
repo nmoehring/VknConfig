@@ -37,5 +37,6 @@ namespace vkn
         VkBool32 m_alphaToOneEnable{VK_FALSE};
 
         bool m_filled{false};
+        bool m_placeholder;
     };
 }

@@ -28,6 +28,8 @@ namespace vkn
         m_vertexInputState = VknVertexInputState{deviceIdx, renderPassIdx, subpassIdx, infos};
         m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderPassIdx, subpassIdx, infos};
         m_multisampleState = VknMultisampleState{deviceIdx, renderPassIdx, subpassIdx, infos};
+        m_rasterizationState = VknRasterizationState{deviceIdx, renderPassIdx, subpassIdx, infos};
+        m_viewportState = VknViewportState{deviceIdx, renderPassIdx, subpassIdx, infos};
     }
 
     VknPipeline::~VknPipeline()
