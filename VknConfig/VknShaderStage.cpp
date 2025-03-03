@@ -79,7 +79,7 @@ namespace vkn
         VkSpecializationInfo *specialization = nullptr;
         if (m_specializationInfoSet)
             specialization = &m_specializationInfo;
-        m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+        m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderIdx,
                                            &m_shaderModule, &m_shaderStageFlagBit, &m_createFlags,
                                            specialization);
     }
@@ -91,7 +91,8 @@ namespace vkn
         for (auto c : code)
             m_code.push_back(c);
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
-            m_infos->fillShaderModuleCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_code);
+            m_infos->fillShaderModuleCreateInfo(
+                m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderIdx, &m_code);
         VknResult res{
             vkCreateShaderModule(*m_vkDevice, shaderModuleCreateInfo, VK_NULL_HANDLE, &m_shaderModule),
             "Create shader module."};

@@ -62,16 +62,18 @@ namespace vkn
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
     {
-        return &(m_shaderStages[shaderIdx]);
+        return &m_shaderStages[shaderIdx];
     }
 
     void VknPipeline::fillPipelineCreateInfo(
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
-        std::vector<VkPipelineShaderStageCreateInfo> *shaderStageInfos = m_infos->getShaderStageCreateInfos(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx);
-        m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_layout, basePipelineHandle,
-                                           basePipelineIndex, flags);
+        if (m_createInfoFilled)
+            throw std::runtime_error("Pipeline create info already filled.");
+        m_infos->fillGfxPipelineCreateInfo(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_layout, basePipelineHandle,
+            basePipelineIndex, flags);
+        m_createInfoFilled = true;
     }
 
     VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(
@@ -100,7 +102,7 @@ namespace vkn
         VknResult res{
             vkCreateDescriptorSetLayout(
                 *m_device, descriptorSetLayoutCreateInfo,
-                nullptr, &(m_descriptorSetLayouts.back())),
+                nullptr, &m_descriptorSetLayouts.back()),
             "Create descriptor set layout."};
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating descriptor set layout."));

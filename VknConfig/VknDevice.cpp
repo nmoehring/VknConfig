@@ -87,7 +87,7 @@ namespace vkn
     {
         if (renderPassIdx >= m_renderPasses.size())
             throw std::runtime_error("This renderpass not added before attempting to get() it.");
-        return &(m_renderPasses[renderPassIdx]);
+        return &m_renderPasses[renderPassIdx];
     }
 
     void VknDevice::addExtensions(const char *ext[], uint32_t size)
@@ -159,7 +159,7 @@ namespace vkn
         {
             m_swapChains.push_back(VkSwapchainKHR{});
             VknResult res{
-                vkCreateSwapchainKHR(m_logicalDevice, swapchainInfo, nullptr, &(m_swapChains.back())),
+                vkCreateSwapchainKHR(m_logicalDevice, swapchainInfo, nullptr, &m_swapChains.back()),
                 "Create swapchain"};
             if (!res.isSuccess())
                 throw std::runtime_error(res.toErr("Error creating swapchain."));

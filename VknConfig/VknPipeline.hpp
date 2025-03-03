@@ -85,6 +85,7 @@ namespace vkn
 
         // State
         bool m_destroyed{false};
+        bool m_createInfoFilled{false};
         bool m_pipelineCreated{false};
         bool m_pipelineLayoutCreated{false};
     };

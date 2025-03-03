@@ -64,7 +64,7 @@ namespace vkn
         {
             if (!m_selectedPhysicalDevice)
                 throw std::runtime_error("Physical device not selected before getting device limits.");
-            return &(m_properties.limits);
+            return &m_properties.limits;
         }
     }
 

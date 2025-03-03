@@ -77,8 +77,8 @@ int main()
     device->addRenderPass();
     vkn::VknRenderPass *renderPass = device->getRenderPass(0);
     std::vector<VkAttachmentReference *> attach;
-    renderPass->createAttachment();
-    renderPass->createSubpass();
+    renderPass->createAttachment(0);
+    renderPass->createSubpass(0);
     renderPass->createRenderPass();
 
     vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
@@ -115,7 +115,6 @@ int main()
         multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
     */
 
-    pipeline->fillPipelineCreateInfo();
     renderPass->createPipelines();
 
     GLFWwindow *window_ = nullptr;

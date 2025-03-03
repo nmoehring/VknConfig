@@ -28,9 +28,8 @@ namespace vkn
         VknInfos *m_infos;
         bool m_placeholder;
 
-        std::vector<VkVertexInputBindingDescription *> m_vertexBindingDescriptions{};
-        std::vector<VkVertexInputAttributeDescription *> m_vertexAttributeDescriptions{};
-
         bool m_filled{false};
+        uint32_t m_numBindings{0};
+        uint32_t m_numAttributes{0};
     };
 } // namespace vkn

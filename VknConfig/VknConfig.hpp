@@ -41,7 +41,7 @@ namespace vkn
         VknResult createDevice(uint32_t deviceIndex, bool chooseAllAvailable = false);
         VknResult createRenderPass();
         std::vector<vkn::VknQueueFamily> getQueueData();
-        VknDevice *getDevice(uint32_t index) { return &(m_devices[index]); }
+        VknDevice *getDevice(uint32_t index) { return &m_devices[index]; }
         VknInfos *getInfos() { return &m_infos; }
         VkInstance *getInstance() { return &m_instance; }
         VknRenderPass *getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);

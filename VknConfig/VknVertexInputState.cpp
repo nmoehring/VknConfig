@@ -28,10 +28,13 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Attempting to configure a placeholder Vertex Input State.");
-        if (!(m_vertexBindingDescriptions.size() == m_vertexAttributeDescriptions.size() + 1))
-            throw std::runtime_error("Vertex attribute description must be filled after binding description.");
-        m_vertexAttributeDescriptions.push_back(m_infos->fillVertexInputAttributeDescription(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, location, format, offset));
+        if (m_numBindings == 0)
+            throw std::runtime_error("Must have a binding description if there are any attribute descriptions.");
+        uint32_t attributeIdx = m_numAttributes;
+        m_infos->fillVertexInputAttributeDescription(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, attributeIdx, binding,
+            location, format, offset);
+        ++m_numAttributes;
     }
 
     void VknVertexInputState::fillVertexBindingDescription(
@@ -39,7 +42,9 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Attempting to configure a placeholder Vertex Input State.");
-        m_vertexBindingDescriptions.push_back(m_infos->fillVertexInputBindingDescription(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, binding, stride, inputRate));
+        uint32_t bindIdx = m_numBindings;
+        m_infos->fillVertexInputBindingDescription(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, bindIdx, binding, stride, inputRate);
+        ++m_numBindings;
     }
 }

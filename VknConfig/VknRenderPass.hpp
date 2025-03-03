@@ -15,6 +15,7 @@ namespace vkn
         void destroy();
 
         void createAttachment(
+            uint32_t subpassIdx,
             VknAttachmentType attachmentType = COLOR_ATTACHMENT,
             VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
             VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
@@ -33,29 +34,32 @@ namespace vkn
             VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
         void createSubpass(
+            uint32_t subpassIdx,
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         void createRenderPass();
         void createPipelines();
         VkRenderPass *getVkRenderPass() { return &m_renderPass; }
-        VknPipeline *getPipeline(int idx) { return &(m_pipelines[idx]); }
+        VknPipeline *getPipeline(int idx) { return &m_pipelines[idx]; }
         bool getVkRenderPassCreated() { return m_renderPassCreated; }
 
     private:
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
-        VkRenderPassCreateInfo *m_createInfo{nullptr};
         VkRenderPass m_renderPass{};
-        static int m_subpassCount;
         uint32_t m_deviceIdx;
         uint32_t m_renderPassIdx;
         VkDevice *m_device;
         const bool *m_deviceCreated{nullptr};
 
-        uint32_t m_numAttachments{0};
-
         std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
         std::deque<VknPipeline> m_pipelines;
+        std::vector<std::vector<uint32_t>> m_numAttachRefs{};
+        std::vector<uint32_t> m_numPreserveRefs{};
+
+        uint32_t m_numSubpassDeps{0};
+        uint32_t m_numAttachments{0};
+        uint32_t m_numSubpasses{0};
 
         bool m_destroyed{false};
         bool m_devicesAdded{false};
