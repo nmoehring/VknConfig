@@ -6,25 +6,17 @@ namespace vkn
 {
     VknPipeline::VknPipeline()
         : m_device{nullptr}, m_infos{nullptr}, m_archive{nullptr}, m_pipeline{nullptr},
-          m_renderPass{nullptr}, m_subpass{nullptr}, m_createInfo{nullptr},
-          m_attachmentReferences{nullptr}, m_preserveAttachments{nullptr},
-          m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0},
-          m_deviceCreated{nullptr}
+          m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_deviceCreated{nullptr}
     {
     }
 
     VknPipeline::VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-                             VkRenderPass *renderPass, VkSubpassDescription *subpass, VkPipeline *pipeline,
+                             VkRenderPass *renderPass, VkPipeline *pipeline,
                              VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated)
-        : m_subpass{subpass}, m_pipeline{pipeline}, m_device{dev},
-          m_infos{infos}, m_archive{archive}, m_renderPass{renderPass},
+        : m_pipeline{pipeline}, m_device{dev}, m_infos{infos}, m_archive{archive},
           m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
           m_deviceCreated{deviceCreated}
     {
-        m_renderPass = renderPass;
-        m_attachmentReferences = m_infos->getSubpassAttachmentReferences(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
-        m_preserveAttachments = m_infos->getSubpassPreserveAttachments(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
-
         m_vertexInputState = VknVertexInputState{deviceIdx, renderPassIdx, subpassIdx, infos};
         m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderPassIdx, subpassIdx, infos};
         m_multisampleState = VknMultisampleState{deviceIdx, renderPassIdx, subpassIdx, infos};
@@ -54,18 +46,18 @@ namespace vkn
         }
     }
 
-    uint32_t VknPipeline::addShaderStage(
+    VknShaderStage &VknPipeline::addShaderStage(
         VknShaderStageType stageType, std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
         if (!m_deviceCreated)
             throw std::runtime_error("Logical device not created before attempting to create shader stage.");
-        uint32_t shaderIdx = m_shaderStages.size() - 1;
+        uint32_t shaderIdx = m_shaderStages.size();
         m_shaderStages.push_back(VknShaderStage{m_deviceIdx, m_renderPassIdx, m_subpassIdx, shaderIdx, m_infos,
                                                 m_archive, m_device});
         m_shaderStages.back().setFilename(filename);
         m_shaderStages.back().setShaderStageType(stageType);
         m_shaderStages.back().setFlags(flags);
-        return shaderIdx;
+        return m_shaderStages[shaderIdx];
     }
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
@@ -76,9 +68,10 @@ namespace vkn
     void VknPipeline::fillPipelineCreateInfo(
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
-        m_createInfo = m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
-                                                          m_shaderStageInfos, &m_layout, basePipelineHandle,
-                                                          basePipelineIndex, flags);
+        std::vector<VkPipelineShaderStageCreateInfo> *shaderStageInfos = m_infos->getShaderStageCreateInfos(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_infos->fillGfxPipelineCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_layout, basePipelineHandle,
+                                           basePipelineIndex, flags);
     }
 
     VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(
@@ -125,13 +118,15 @@ namespace vkn
 
     void VknPipeline::fillPipelineLayoutCreateInfo(VkPipelineLayoutCreateFlags flags)
     {
-        m_layoutCreateInfo = m_infos->fillPipelineLayoutCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
-                                                                   m_descriptorSetLayouts, m_pushConstantRanges, flags);
+        m_infos->fillPipelineLayoutCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                              m_descriptorSetLayouts, m_pushConstantRanges, flags);
     }
 
     void VknPipeline::createLayout()
     {
-        vkCreatePipelineLayout(*m_device, m_layoutCreateInfo, nullptr, &m_layout);
+        VkPipelineLayoutCreateInfo *layoutCreateInfo = m_infos->getPipelineLayoutCreateInfo(
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        vkCreatePipelineLayout(*m_device, layoutCreateInfo, nullptr, &m_layout);
         m_pipelineLayoutCreated = true;
     }
 

@@ -28,8 +28,8 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder InputAssemblyState.");
         if (m_filled)
             throw std::runtime_error("Input assembly state create info already filled.");
-        m_createInfo = m_infos->fillInputAssemblyStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
-                                                                 m_topology, m_primitiveRestartEnable);
+        m_infos->fillInputAssemblyStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                                  m_topology, m_primitiveRestartEnable);
         m_filled = true;
     }
 }

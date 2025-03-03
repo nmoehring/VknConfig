@@ -30,7 +30,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder VknViewportState.");
         if (m_filled)
             throw std::runtime_error("ViewportStateCreateInfo already filled.");
-        m_createInfo = m_infos->fillViewportStateCreateInfo(
+        m_infos->fillViewportStateCreateInfo(
             m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_viewports, &m_scissors);
         m_filled = true;
     }

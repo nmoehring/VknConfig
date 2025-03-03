@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <memory>
+#include <deque>
 
 #include "VknRenderPass.hpp"
 #include "VknQueueFamily.hpp"
@@ -54,28 +55,26 @@ namespace vkn
         static int s_numDevices;
         VkDevice m_logicalDevice{};
         VknPhysicalDevice m_physicalDevice;
-        std::vector<VknRenderPass> m_renderPasses;
-        std::vector<VknQueueFamily> m_queues{};
+        std::deque<VknRenderPass> m_renderPasses; // Deque, because elements don't need to be together, refs could be invalidated
+        std::vector<VknQueueFamily> m_queues{};   // Vector fine, this shouldn't change.
         VknResultArchive *m_resultArchive{nullptr};
         VknInfos *m_infos{nullptr};
         const VkInstance *m_instance{nullptr};
         const bool *m_instanceCreated{nullptr};
-        bool m_queuesSelected{false};
         bool m_queuesRequested{false};
         uint32_t m_deviceIdx;
 
         const char *const *m_extensions{nullptr};
         uint32_t m_extensionsSize{0};
         VkPhysicalDeviceFeatures *m_features{nullptr};
-        std::vector<VkSwapchainCreateInfoKHR *> m_swapChainCreateInfos;
-        std::vector<VkSwapchainKHR> m_swapChains;
+        // Possibility for multiple swapchains > multiple screens, VR
+        std::vector<VkSwapchainCreateInfoKHR *> m_swapChainCreateInfos; // Vector should be fine, it shouldn't change
+        std::vector<VkSwapchainKHR> m_swapChains;                       // Doesn't need to change after creation
 
         bool m_destroyed{false};
         bool m_vkDeviceCreated{false};
 
         // Other utilities
         void archiveResult(VknResult res);
-
-        // Init
     };
 }

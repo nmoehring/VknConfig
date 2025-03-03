@@ -9,6 +9,7 @@
 #include <stb_image.h>
 
 #include "VknConfig/VknConfig.hpp"
+// #include "VknShaderStage.hpp"
 
 // GLFWwindow *window_ = nullptr;
 
@@ -81,8 +82,10 @@ int main()
     renderPass->createRenderPass();
 
     vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
-    pipeline->addShaderStage(vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
-    pipeline->addShaderStage(vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+    vkn::VknShaderStage &vertShader = pipeline->addShaderStage(vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
+    vkn::VknShaderStage &fragShader = pipeline->addShaderStage(vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+    vertShader.createShaderStage();
+    fragShader.createShaderStage();
     vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
     // vertexInputState->fillVertexAttributeDescription();
     // vertexInputState->fillVertexBindingDescription();

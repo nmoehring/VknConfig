@@ -22,13 +22,12 @@ namespace vkn
         void fillMultisampleStateCreateInfo();
 
     private:
-        uint32_t m_deviceIdx{};
-        uint32_t m_renderPassIdx{};
-        uint32_t m_subpassIdx{};
+        uint32_t m_deviceIdx;
+        uint32_t m_renderPassIdx;
+        uint32_t m_subpassIdx;
+        bool m_placeholder;
+        VknInfos *m_infos;
 
-        VknInfos *m_infos{nullptr};
-
-        VkPipelineMultisampleStateCreateInfo *m_createInfo{VK_NULL_HANDLE};
         VkSampleCountFlagBits m_rasterizationSamples{VK_SAMPLE_COUNT_1_BIT};
         VkBool32 m_sampleShadingEnable{VK_FALSE};
         float m_minSampleShading{0.0f};
@@ -37,6 +36,5 @@ namespace vkn
         VkBool32 m_alphaToOneEnable{VK_FALSE};
 
         bool m_filled{false};
-        bool m_placeholder;
-    };
+        };
 }

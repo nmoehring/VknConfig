@@ -11,9 +11,6 @@ namespace vkn
         m_infos = nullptr;
         m_vkDevice = nullptr;
         m_archive = nullptr;
-        m_shaderModuleCreateInfo = nullptr;
-        m_shaderStageCreateInfo = nullptr;
-        m_shaderModule = VK_NULL_HANDLE;
     }
 
     VknShaderStage::VknShaderStage(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
@@ -82,9 +79,9 @@ namespace vkn
         VkSpecializationInfo *specialization = nullptr;
         if (m_specializationInfoSet)
             specialization = &m_specializationInfo;
-        m_shaderStageCreateInfo = m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
-                                                                     &m_shaderModule, &m_shaderStageFlagBit, &m_createFlags,
-                                                                     specialization);
+        m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                           &m_shaderModule, &m_shaderStageFlagBit, &m_createFlags,
+                                           specialization);
     }
 
     void VknShaderStage::createShaderModule()
@@ -93,10 +90,10 @@ namespace vkn
         std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / m_filename)};
         for (auto c : code)
             m_code.push_back(c);
-        m_shaderModuleCreateInfo =
+        VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_code);
         VknResult res{
-            vkCreateShaderModule(*m_vkDevice, m_shaderModuleCreateInfo, VK_NULL_HANDLE, &m_shaderModule),
+            vkCreateShaderModule(*m_vkDevice, shaderModuleCreateInfo, VK_NULL_HANDLE, &m_shaderModule),
             "Create shader module."};
         if (!res.isSuccess())
             throw std::runtime_error("Failed to create shader module!");

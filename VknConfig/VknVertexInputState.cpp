@@ -20,7 +20,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder Vertex Input State.");
         if (m_filled)
             throw std::runtime_error("Vertex input state already filled.");
-        m_createInfo = m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
         m_filled = true;
     }
 

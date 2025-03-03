@@ -99,6 +99,8 @@ namespace vkn
 
     void VknConfig::selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues)
     {
+        if (m_queuesSelected)
+            throw std::runtime_error("Queues already selected.");
         if (!m_queueFamiliesRequested)
             throw std::runtime_error("Queue families not requested before trying to select queues.");
 

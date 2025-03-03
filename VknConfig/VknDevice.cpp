@@ -98,6 +98,8 @@ namespace vkn
 
     void VknDevice::requestQueueFamilyProperties()
     {
+        if (m_queuesRequested)
+            throw std::runtime_error("Queue properties already requested.");
         if (!(m_physicalDevice.getPhysicalDeviceSelected()))
             throw std::runtime_error("Physical device not selected before requesting queue properties.");
         uint32_t propertyCount{0};

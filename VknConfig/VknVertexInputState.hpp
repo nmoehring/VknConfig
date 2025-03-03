@@ -28,7 +28,6 @@ namespace vkn
         VknInfos *m_infos;
         bool m_placeholder;
 
-        VkPipelineVertexInputStateCreateInfo *m_createInfo{VK_NULL_HANDLE};
         std::vector<VkVertexInputBindingDescription *> m_vertexBindingDescriptions{};
         std::vector<VkVertexInputAttributeDescription *> m_vertexAttributeDescriptions{};
 

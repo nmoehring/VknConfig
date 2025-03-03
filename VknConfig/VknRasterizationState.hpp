@@ -28,10 +28,9 @@ namespace vkn
         uint32_t m_deviceIdx;
         uint32_t m_renderPassIdx;
         uint32_t m_subpassIdx;
-
+        bool m_placeholder;
         VknInfos *m_infos;
         bool m_filled{false};
-        VkPipelineRasterizationStateCreateInfo *m_createInfo;
 
         VkPolygonMode m_polygonMode{VK_POLYGON_MODE_FILL};
         VkCullModeFlags m_cullMode{VK_CULL_MODE_BACK_BIT};

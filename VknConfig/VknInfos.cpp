@@ -40,13 +40,12 @@ namespace vkn
 
     VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-        std::vector<VkPipelineShaderStageCreateInfo *> &stages,
         VkPipelineLayout *layout, VkPipeline basePipelineHandle,
         int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
         VkRenderPass *renderPass = m_renderPasses[deviceIdx][renderPassIdx];
-        m_gfxPipelineCreateInfos.push_back(VkGraphicsPipelineCreateInfo{});
-        VkGraphicsPipelineCreateInfo &info = m_gfxPipelineCreateInfos.back();
+        m_gfxPipelineCreateInfos[deviceIdx][renderPassIdx].push_back(VkGraphicsPipelineCreateInfo{});
+        VkGraphicsPipelineCreateInfo &info = m_gfxPipelineCreateInfos[deviceIdx][renderPassIdx][subpassIdx];
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags;

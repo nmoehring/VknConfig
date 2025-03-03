@@ -19,13 +19,12 @@ namespace vkn
         void fillInputAssemblyStateCreateInfo();
 
     private:
-        uint32_t m_deviceIdx{};
-        uint32_t m_renderPassIdx{};
-        uint32_t m_subpassIdx{};
+        uint32_t m_deviceIdx;
+        uint32_t m_renderPassIdx;
+        uint32_t m_subpassIdx;
 
-        VknInfos *m_infos{nullptr};
+        VknInfos *m_infos;
 
-        VkPipelineInputAssemblyStateCreateInfo *m_createInfo{VK_NULL_HANDLE};
         VkPrimitiveTopology m_topology{VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
         VkBool32 m_primitiveRestartEnable{VK_FALSE};
 

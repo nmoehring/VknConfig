@@ -52,16 +52,10 @@ namespace vkn
         VkDevice *m_device;
         const bool *m_deviceCreated{nullptr};
 
-        std::vector<VkAttachmentDescription *> m_attachments{};
-        std::vector<VkSubpassDependency *> m_dependencies{};
-        std::vector<VkSubpassDescription *> m_subpasses{};
+        uint32_t m_numAttachments{0};
 
-        std::vector<std::vector<std::vector<VkAttachmentReference>>> *m_attachmentRefs{nullptr};
-        std::vector<std::vector<uint32_t>> *m_preserveAttachments{nullptr};
-
-        std::vector<VkGraphicsPipelineCreateInfo> *m_pipelineCreateInfos{};
         std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
-        std::vector<VknPipeline> m_pipelines;
+        std::deque<VknPipeline> m_pipelines;
 
         bool m_destroyed{false};
         bool m_devicesAdded{false};

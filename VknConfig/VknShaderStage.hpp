@@ -25,6 +25,7 @@ namespace vkn
         void setFilename(std::string filename);
         void setFlags(VkPipelineShaderStageCreateFlags createFlags);
         void setSpecialization(VkSpecializationInfo m_specializationInfo);
+        void createShaderStage();
 
     private:
         uint32_t m_deviceIdx;
@@ -41,9 +42,7 @@ namespace vkn
         std::string m_filename{};
         VkPipelineShaderStageCreateFlags m_createFlags{0};
 
-        VkShaderModuleCreateInfo *m_shaderModuleCreateInfo{nullptr};
-        VkPipelineShaderStageCreateInfo *m_shaderStageCreateInfo{nullptr};
-        VkShaderModule m_shaderModule{};
+        VkShaderModule m_shaderModule{VK_NULL_HANDLE};
         VkSpecializationInfo m_specializationInfo{};
 
         bool m_destroyed{false};
@@ -52,7 +51,6 @@ namespace vkn
         bool m_filenameFilled{false};
         bool m_specializationInfoSet{false};
 
-        void createShaderStage();
         void createShaderModule();
     };
 }

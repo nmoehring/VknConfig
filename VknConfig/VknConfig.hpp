@@ -53,9 +53,9 @@ namespace vkn
         VknResultArchive m_resultArchive;
         VknInfos m_infos;
         VkInstance m_instance;
-        std::vector<VknDevice> m_devices;
+        std::vector<VknDevice> m_devices; // A vector is fine because all the devices are inserted in one function call
 
-        std::vector<std::string> m_instanceExtensions;
+        std::vector<std::string> m_instanceExtensions; // Fine, because this list won't need to change
 
         bool m_instanceCreated{false};
         bool m_physicalDeviceSelected{false};

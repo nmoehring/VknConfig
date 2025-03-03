@@ -15,9 +15,6 @@ namespace vkn
         if (m_deviceCreated == nullptr)
             throw std::runtime_error("m_deviceCreated pointer is null.");
         m_infos->initRenderPass(deviceIdx, renderPassIdx);
-        m_attachmentRefs = infos->getRenderPassAttachmentReferences(m_deviceIdx, m_renderPassIdx);
-        m_preserveAttachments = infos->getRenderPassPreserveAttachments(m_deviceIdx, m_renderPassIdx);
-        m_pipelineCreateInfos = infos->getPipelineCreateInfos();
         m_infos->fillRenderPassPtrs(deviceIdx, renderPassIdx, &m_renderPass, deviceCreated);
     }
 
@@ -41,21 +38,16 @@ namespace vkn
 
     void VknRenderPass::addPipeline()
     {
-        if (m_subpasses.size() != m_pipelines.size() + 1)
-            throw std::runtime_error("Subpass not created before pipeline added.");
         m_rawPipelines.push_back(VkPipeline{});
         uint32_t newSubpassIdx = m_pipelines.size();
         m_pipelines.push_back(VknPipeline{m_deviceIdx, m_renderPassIdx, newSubpassIdx, &m_renderPass,
-                                          m_subpasses[newSubpassIdx], &(m_rawPipelines.back()),
-                                          m_device, m_infos, m_archive, m_deviceCreated});
+                                          &(m_rawPipelines.back()), m_device, m_infos, m_archive, m_deviceCreated});
     }
 
     void VknRenderPass::createRenderPass()
     {
         if (!m_deviceCreated)
             throw std::runtime_error("Device not created before creating renderpass.");
-        if (m_pipelines.size() != m_subpasses.size())
-            throw std::runtime_error("Number of pipelines != number of subpasses at renderpass creation.");
         this->fillRenderPassCreateInfo();
         VknResult res{vkCreateRenderPass(
                           *m_device, m_createInfo, VK_NULL_HANDLE, &m_renderPass),
@@ -76,8 +68,8 @@ namespace vkn
         uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
         VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
-        m_dependencies.push_back(m_infos->fillSubpassDependency(
-            srcSubpass, dstSubpass, srcStageMask, srcAccessMask, dstStageMask, dstAccessMask));
+        m_infos->fillSubpassDependency(
+            srcSubpass, dstSubpass, srcStageMask, srcAccessMask, dstStageMask, dstAccessMask);
     }
 
     void VknRenderPass::createAttachment(
@@ -88,28 +80,29 @@ namespace vkn
         VkImageLayout finalLayout, VkImageLayout attachmentRefLayout,
         VkAttachmentDescriptionFlags flags)
     {
+        uint32_t subpassIdx = m_pipelines.size();
+        ;
+        uint32_t attachIdx = m_numAttachments;
 
-        uint32_t subpassIdx = m_subpasses.size();
-        uint32_t attachIdx = m_attachments.size();
-
-        m_attachments.push_back(m_infos->fillAttachmentDescription(
+        m_infos->fillAttachmentDescription(
             m_deviceIdx, m_renderPassIdx, format, samples, loadOp, storeOp, stencilLoadOp,
-            stencilStoreOp, initialLayout, finalLayout, flags));
+            stencilStoreOp, initialLayout, finalLayout, flags);
 
         m_infos->fillAttachmentReference(m_deviceIdx, m_renderPassIdx, subpassIdx, attachmentType, attachIdx, attachmentRefLayout);
+        ++m_numAttachments;
     }
 
     void VknRenderPass::createPipelines()
     {
         if (!m_renderPassCreated)
             throw std::runtime_error("Renderpass not created before creating pipelines.");
-        if (m_pipelines.size() > m_pipelineCreateInfos->size())
-            throw std::runtime_error("Not all pipeline create infos filled before calling createPipelines().");
-        if (m_pipelineCreateInfos->size() > m_subpasses.size())
-            throw std::runtime_error("Not all subpass descriptions filled before calling createPipelines().");
+        for (auto pipeline : m_pipelines)
+            pipeline.fillPipelineCreateInfo();
+        std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
+            m_infos->getPipelineCreateInfos(m_deviceIdx, m_renderPassIdx)};
         VknResult res{vkCreateGraphicsPipelines(
-                          *m_device, VK_NULL_HANDLE, m_pipelineCreateInfos->size(),
-                          m_pipelineCreateInfos->data(), nullptr, m_rawPipelines.data()),
+                          *m_device, VK_NULL_HANDLE, pipelineCreateInfos->size(),
+                          pipelineCreateInfos->data(), nullptr, m_rawPipelines.data()),
                       "Create pipeline."};
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating pipeline."));
@@ -122,8 +115,8 @@ namespace vkn
         VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
-        uint32_t subpassIdx = m_subpasses.size();
-        m_subpasses.push_back(m_infos->fillSubpassDescription(m_deviceIdx, m_renderPassIdx, pipelineBindPoint, flags));
+        uint32_t subpassIdx = m_pipelines.size();
+        m_infos->fillSubpassDescription(m_deviceIdx, m_renderPassIdx, pipelineBindPoint, flags);
         this->addPipeline();
     }
 }

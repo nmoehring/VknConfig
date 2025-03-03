@@ -63,10 +63,10 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder Multisample State.");
         if (m_filled)
             throw std::runtime_error("Multisample state create info already filled.");
-        m_createInfo = m_infos->fillMultisampleStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
-                                                               m_minSampleShading, &m_sampleMask,
-                                                               m_rasterizationSamples, m_sampleShadingEnable,
-                                                               m_alphaToCoverageEnable, m_alphaToOneEnable);
+        m_infos->fillMultisampleStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+                                                m_minSampleShading, &m_sampleMask,
+                                                m_rasterizationSamples, m_sampleShadingEnable,
+                                                m_alphaToCoverageEnable, m_alphaToOneEnable);
         m_filled = true;
     }
 }

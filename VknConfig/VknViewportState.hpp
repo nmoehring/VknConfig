@@ -32,7 +32,6 @@ namespace vkn
         VkExtent2D *m_swapchainExtent;
         const bool *m_swapchainCreated;
         bool m_filled{false};
-        VkPipelineViewportStateCreateInfo *m_createInfo;
 
         VkOffset2D m_defaultOffset{};
         VkExtent2D m_defaultExtent{};

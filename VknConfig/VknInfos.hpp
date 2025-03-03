@@ -129,7 +129,41 @@ namespace vkn
                 throw std::runtime_error("DeviceCreateInfo not filled before get.");
             return &m_deviceCreateInfos[deviceIdx];
         };
-        std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos() { return &m_gfxPipelineCreateInfos; }
+        std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos(
+            uint32_t deviceIdx, uint32_t renderPassIdx)
+        {
+            return &m_gfxPipelineCreateInfos[deviceIdx][renderPassIdx];
+        }
+        std::vector<VkPipelineShaderStageCreateInfo> *getShaderStageCreateInfos(
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        {
+            return &m_shaderStageCreateInfos[deviceIdx][renderPassIdx][subpassIdx];
+        }
+        VkPipelineVertexInputStateCreateInfo *getVertexInputStateCreateInfos(
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        {
+            return &m_vertexInputStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx][0];
+        }
+        VkPipelineInputAssemblyStateCreateInfo *getInputAssemblyStateCreateInfos(
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        {
+            return &m_inputAssemblyStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx][0];
+        }
+        VkPipelineRasterizationStateCreateInfo *getRasterizationStateCreateInfos(
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        {
+            return &m_rasterizationStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx][0];
+        }
+        VkPipelineMultisampleStateCreateInfo *getMultisampleStateCreateInfos(
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        {
+            return &m_multisampleStateCreateInfos[deviceIdx][renderPassIdx][subpassIdx][0];
+        }
+        VkPipelineLayoutCreateInfo *getPipelineLayoutCreateInfo(
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        {
+            return &m_layoutCreateInfos[deviceIdx][renderPassIdx][subpassIdx][0];
+        }
         void fillRenderPassPtrs(uint32_t deviceIdx, uint32_t renderPassIdx, VkRenderPass *renderPass, const bool *renderPassCreated);
         bool getRenderPassCreated(uint32_t deviceIdx, uint32_t renderPassIdx)
         {
@@ -239,7 +273,6 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-            std::vector<VkPipelineShaderStageCreateInfo *> &stages,
             VkPipelineLayout *layout = nullptr,
             VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
             VkPipelineCreateFlags flags = 0);
@@ -337,7 +370,7 @@ namespace vkn
         std::vector<std::vector<std::vector<std::vector<VkPipelineDepthStencilStateCreateInfo>>>> m_depthStencilStateCreateInfos{};
         std::vector<std::vector<std::vector<std::vector<VkPipelineColorBlendStateCreateInfo>>>> m_colorBlendStateCreateInfos{};
         std::vector<std::vector<std::vector<std::vector<VkPipelineDynamicStateCreateInfo>>>> m_dynamicStateCreateInfos{};
-        std::vector<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos{};
+        std::vector<std::vector<std::vector<VkGraphicsPipelineCreateInfo>>> m_gfxPipelineCreateInfos{}; // Device>RenderPass>Subpass,Pipeline
         std::vector<std::vector<VkSwapchainCreateInfoKHR>> m_swapChainCreateInfos{};
 
         std::vector<std::vector<VkRenderPassCreateInfo>> m_renderPassCreateInfos{};                                      // Device>infos
