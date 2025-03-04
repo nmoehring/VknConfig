@@ -35,14 +35,15 @@ namespace vkn
     {
         if (!m_destroyed)
         {
-            if (m_pipelineCreated)
-                vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
+            if (!m_destroyed)
+                for (auto &shaderStage : m_shaderStages)
+                    shaderStage.destroy();
             if (m_pipelineLayoutCreated)
                 vkDestroyPipelineLayout(*m_device, m_layout, nullptr);
             for (auto &descriptorSetLayout : m_descriptorSetLayouts)
                 vkDestroyDescriptorSetLayout(*m_device, descriptorSetLayout, nullptr);
-            for (auto &module : m_shaderModules)
-                vkDestroyShaderModule(*m_device, module, nullptr);
+            if (m_pipelineCreated)
+                vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
             m_destroyed = true;
             std::cout << "VknPipeline DESTROYED." << std::endl;
         }

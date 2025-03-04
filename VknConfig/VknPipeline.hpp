@@ -77,7 +77,6 @@ namespace vkn
         // VknColorBlendState m_colorBlendState{};
         // VknDynamicState m_dynamicState{};
         std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
-        std::vector<VkShaderModule> m_shaderModules{};
 
         std::vector<VkDescriptorSetLayoutBinding> m_bindings{};      //+
         std::vector<VkPushConstantRange> m_pushConstantRanges{};     //=

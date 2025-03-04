@@ -33,6 +33,9 @@ namespace vkn
                 renderPass.destroy();
             if (m_vkDeviceCreated)
                 vkDestroyDevice(m_logicalDevice, nullptr);
+            if (m_swapChains.size() > 0)
+                for (auto &swapchain : m_swapChains)
+                    vkDestroySwapchainKHR(m_logicalDevice, swapchain, VK_NULL_HANDLE);
             m_destroyed = true;
             std::cout << "VknDevice DESTROYED." << std::endl;
         }
