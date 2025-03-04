@@ -39,9 +39,9 @@ namespace vkn
                 vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
             if (m_pipelineLayoutCreated)
                 vkDestroyPipelineLayout(*m_device, m_layout, nullptr);
-            for (auto descriptorSetLayout : m_descriptorSetLayouts)
+            for (auto &descriptorSetLayout : m_descriptorSetLayouts)
                 vkDestroyDescriptorSetLayout(*m_device, descriptorSetLayout, nullptr);
-            for (auto module : m_shaderModules)
+            for (auto &module : m_shaderModules)
                 vkDestroyShaderModule(*m_device, module, nullptr);
             m_destroyed = true;
             std::cout << "VknPipeline DESTROYED." << std::endl;

@@ -29,7 +29,7 @@ namespace vkn
     {
         if (!m_destroyed)
         {
-            for (auto renderPass : m_renderPasses)
+            for (auto &renderPass : m_renderPasses)
                 renderPass.destroy();
             if (m_vkDeviceCreated)
                 vkDestroyDevice(m_logicalDevice, nullptr);
@@ -119,7 +119,7 @@ namespace vkn
             *(m_physicalDevice.getVkPhysicalDevice()),
             &propertyCount,
             queues.data());
-        for (auto props : queues)
+        for (auto &props : queues)
             m_queues.push_back(VknQueueFamily(props));
         m_queuesRequested = true;
     }
@@ -158,7 +158,7 @@ namespace vkn
     {
         if (!m_vkDeviceCreated)
             throw std::runtime_error("VkDevice not created before creating swapchains.");
-        for (auto swapchainInfo : m_swapChainCreateInfos)
+        for (auto &swapchainInfo : m_swapChainCreateInfos)
         {
             m_swapChains.push_back(VkSwapchainKHR{});
             VknResult res{

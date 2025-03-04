@@ -14,7 +14,7 @@ namespace vkn
                                              std::vector<float> priorities)
     {
         this->initVectors<float>(deviceIdx, queueFamilyIdx, priorities.size() - 1, m_queuePriorities);
-        for (auto priority : priorities)
+        for (auto &priority : priorities)
             m_queuePriorities[deviceIdx][queueFamilyIdx].push_back(priority);
         m_deviceQueuePrioritiesFilled = true;
     }

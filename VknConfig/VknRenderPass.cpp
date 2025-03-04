@@ -28,7 +28,7 @@ namespace vkn
         {
             if (m_renderPassCreated)
                 vkDestroyRenderPass(*m_device, m_renderPass, nullptr);
-            for (auto pipeline : m_pipelines)
+            for (auto &pipeline : m_pipelines)
                 pipeline.destroy();
             m_destroyed = true;
             std::cout << "VknRenderPass DESTROYED." << std::endl;
@@ -113,7 +113,7 @@ namespace vkn
     {
         if (!m_renderPassCreated)
             throw std::runtime_error("Renderpass not created before creating pipelines.");
-        for (auto pipeline : m_pipelines)
+        for (auto &pipeline : m_pipelines)
             pipeline.fillPipelineCreateInfo();
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_deviceIdx, m_renderPassIdx)};
@@ -124,7 +124,7 @@ namespace vkn
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating pipeline."));
         m_archive->store(res);
-        for (auto pipeline : m_pipelines)
+        for (auto &pipeline : m_pipelines)
             pipeline.setPipelineCreated();
     }
 

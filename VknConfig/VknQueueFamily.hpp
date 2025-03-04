@@ -20,5 +20,6 @@ namespace vkn
     private:
         int m_numSelected{0};
         VkQueueFamilyProperties m_properties{};
+        bool m_placeholder;
     };
 }

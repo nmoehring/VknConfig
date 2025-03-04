@@ -18,7 +18,7 @@ namespace vkn
     {
         if (!m_destroyed)
         {
-            for (auto device : m_devices)
+            for (auto &device : m_devices)
                 device.destroy();
             if (m_instanceCreated)
                 vkDestroyInstance(m_instance, nullptr);
@@ -36,7 +36,7 @@ namespace vkn
 
     void VknConfig::enableExtensions(std::vector<std::string> extensions)
     {
-        for (auto name : extensions)
+        for (auto &name : extensions)
             m_instanceExtensions.push_back(name);
     }
 

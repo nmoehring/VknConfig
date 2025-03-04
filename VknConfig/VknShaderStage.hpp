@@ -33,6 +33,7 @@ namespace vkn
         uint32_t m_subpassIdx;
         uint32_t m_shaderIdx;
         std::vector<char> m_code;
+        bool m_placeholder;
 
         VknInfos *m_infos;
         VknResultArchive *m_archive;

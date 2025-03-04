@@ -59,7 +59,7 @@ int main()
     config.createDevice(0);
 
     int idx = 0;
-    for (auto queue : device->getQueues())
+    for (auto &queue : device->getQueues())
     {
         std::cout << "Queue " << idx << ": " << std::endl;
         std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;

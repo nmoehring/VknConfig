@@ -6,7 +6,7 @@
 namespace vkn
 {
     VknShaderStage::VknShaderStage()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_shaderIdx{0}
+        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_shaderIdx{0}, m_placeholder{true}
     {
         m_infos = nullptr;
         m_vkDevice = nullptr;
@@ -17,7 +17,8 @@ namespace vkn
                                    uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
                                    VkDevice *device)
         : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
-          m_shaderIdx{shaderIdx}, m_infos{infos}, m_vkDevice{device}, m_archive{archive}
+          m_shaderIdx{shaderIdx}, m_infos{infos}, m_vkDevice{device}, m_archive{archive},
+          m_placeholder{false}
     {
     }
 
@@ -29,6 +30,8 @@ namespace vkn
 
     void VknShaderStage::destroy()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to destroy a placeholder object.");
         if (m_shaderModuleCreated && !m_destroyed)
         {
             if (m_shaderModule != VK_NULL_HANDLE)
@@ -40,6 +43,8 @@ namespace vkn
 
     void VknShaderStage::setShaderStageType(VknShaderStageType shaderStageType)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         switch (shaderStageType)
         {
         case VKN_VERTEX_STAGE:
@@ -56,6 +61,8 @@ namespace vkn
 
     void VknShaderStage::setFilename(std::string filename)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_filename = filename;
         this->createShaderModule();
         m_filenameFilled = true;
@@ -63,17 +70,23 @@ namespace vkn
 
     void VknShaderStage::setFlags(VkPipelineShaderStageCreateFlags createFlags)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_createFlags = createFlags;
     }
 
     void VknShaderStage::setSpecialization(VkSpecializationInfo specializationInfo)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_specializationInfo = specializationInfo;
         m_specializationInfoFilled = true;
     }
 
     void VknShaderStage::createShaderStage()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_filenameFilled || !m_shaderStageTypeFilled)
             throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");
 
@@ -89,9 +102,11 @@ namespace vkn
 
     void VknShaderStage::createShaderModule()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
         std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / m_filename)};
-        for (auto c : code)
+        for (auto &c : code)
             m_code.push_back(c);
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(
