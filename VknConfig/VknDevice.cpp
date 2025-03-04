@@ -11,12 +11,12 @@ namespace vkn
         m_deviceIdx = s_numDevices;
     }
 
-    VknDevice::VknDevice(VknInfos *infos, VknResultArchive *archive, const VkInstance *instance, const bool *instanceCreated)
-        : m_infos{infos}, m_resultArchive{archive}, m_instance{instance}, m_instanceCreated{instanceCreated}
+    VknDevice::VknDevice(uint32_t deviceIdx, VknInfos *infos, VknResultArchive *archive,
+                         const VkInstance *instance, const bool *instanceCreated)
+        : m_infos{infos}, m_resultArchive{archive}, m_instance{instance}, m_instanceCreated{instanceCreated},
+          m_deviceIdx{deviceIdx}
     {
         m_physicalDevice = VknPhysicalDevice{m_resultArchive, m_infos, m_instance, m_instanceCreated};
-        m_deviceIdx = s_numDevices;
-        s_numDevices += 1;
     }
 
     VknDevice::~VknDevice()
@@ -34,6 +34,7 @@ namespace vkn
             if (m_vkDeviceCreated)
                 vkDestroyDevice(m_logicalDevice, nullptr);
             m_destroyed = true;
+            std::cout << "VknDevice DESTROYED." << std::endl;
         }
     }
 
@@ -85,9 +86,11 @@ namespace vkn
 
     VknRenderPass *VknDevice::getRenderPass(uint32_t renderPassIdx)
     {
-        if (renderPassIdx >= m_renderPasses.size())
-            throw std::runtime_error("This renderpass not added before attempting to get() it.");
-        return &m_renderPasses[renderPassIdx];
+        if (renderPassIdx >= m_numRenderPasses)
+            throw std::runtime_error("Render pass index out of range.");
+        std::list<VknRenderPass>::iterator it = m_renderPasses.begin();
+        std::advance(it, renderPassIdx);
+        return &(*it);
     }
 
     void VknDevice::addExtensions(const char *ext[], uint32_t size)
@@ -167,10 +170,11 @@ namespace vkn
         }
     }
 
-    uint32_t VknDevice::addRenderPass()
+    void VknDevice::addRenderPass(uint32_t renderPassIdx)
     {
-        m_renderPasses.push_back(VknRenderPass(m_deviceIdx, m_renderPasses.size(), m_infos, m_resultArchive,
+        if (renderPassIdx != m_numRenderPasses)
+            throw std::runtime_error("RenderPassIdx passed to addRenderPass is invalid. Should be next idx.");
+        m_renderPasses.push_back(VknRenderPass(m_deviceIdx, m_numRenderPasses++, m_infos, m_resultArchive,
                                                &m_logicalDevice, &m_vkDeviceCreated));
-        return m_renderPasses.size();
     }
 } // namespace vkn

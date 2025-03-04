@@ -20,7 +20,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder Vertex Input State.");
         if (m_filled)
             throw std::runtime_error("Vertex input state already filled.");
-        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_numBindings, m_numAttributes);
         m_filled = true;
     }
 
@@ -35,6 +35,7 @@ namespace vkn
             m_deviceIdx, m_renderPassIdx, m_subpassIdx, attributeIdx, binding,
             location, format, offset);
         ++m_numAttributes;
+        m_attributesFilled = true;
     }
 
     void VknVertexInputState::fillVertexBindingDescription(
@@ -46,5 +47,6 @@ namespace vkn
         m_infos->fillVertexInputBindingDescription(
             m_deviceIdx, m_renderPassIdx, m_subpassIdx, bindIdx, binding, stride, inputRate);
         ++m_numBindings;
+        m_bindingsFilled = true;
     }
 }

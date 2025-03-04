@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <memory>
-#include <deque>
 
 #include "VknRenderPass.hpp"
 #include "VknQueueFamily.hpp"
@@ -17,7 +16,8 @@ namespace vkn
     {
     public:
         VknDevice();
-        VknDevice(VknInfos *infos, VknResultArchive *archive, const VkInstance *instance, const bool *instanceCreated);
+        VknDevice(uint32_t deviceIdx, VknInfos *infos, VknResultArchive *archive, const VkInstance *instance,
+                  const bool *instanceCreated);
         ~VknDevice();
         void destroy();
         VknResult createDevice();
@@ -49,14 +49,14 @@ namespace vkn
         VknQueueFamily &getQueue(int idx);
         VkDevice *getVkDevice();
         VknPhysicalDevice *getPhysicalDevice();
-        uint32_t addRenderPass();
+        void addRenderPass(uint32_t newRenderPassIdx);
 
     private:
         static int s_numDevices;
         VkDevice m_logicalDevice{};
         VknPhysicalDevice m_physicalDevice;
-        std::deque<VknRenderPass> m_renderPasses; // Deque, because elements don't need to be together, refs could be invalidated
-        std::vector<VknQueueFamily> m_queues{};   // Vector fine, this shouldn't change.
+        std::list<VknRenderPass> m_renderPasses; // List, because elements don't need to be together, refs could be invalidated
+        std::vector<VknQueueFamily> m_queues{};  // Vector fine, this shouldn't change.
         VknResultArchive *m_resultArchive{nullptr};
         VknInfos *m_infos{nullptr};
         const VkInstance *m_instance{nullptr};
@@ -73,6 +73,7 @@ namespace vkn
 
         bool m_destroyed{false};
         bool m_vkDeviceCreated{false};
+        uint32_t m_numRenderPasses{0};
 
         // Other utilities
         void archiveResult(VknResult res);

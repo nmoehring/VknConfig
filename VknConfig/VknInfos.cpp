@@ -232,7 +232,7 @@ namespace vkn
     }
 
     VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
+        uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, uint32_t numBindings, uint32_t numAttributes)
     {
         this->initVectors<VkPipelineVertexInputStateCreateInfo>(
             deviceIdx, renderPassIdx, subpassIdx, m_vertexInputStateCreateInfos);
@@ -253,13 +253,13 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = 0; // reserved for future use
-        info->vertexBindingDescriptionCount = vertexBindingDescriptions->size();
-        if (vertexBindingDescriptions->size() == 0)
+        info->vertexBindingDescriptionCount = numBindings;
+        if (numBindings == 0)
             info->pVertexBindingDescriptions = VK_NULL_HANDLE;
         else
             info->pVertexBindingDescriptions = vertexBindingDescriptions->data();
-        info->vertexAttributeDescriptionCount = vertexAttributeDescriptions->size();
-        if (vertexAttributeDescriptions->size() == 0)
+        info->vertexAttributeDescriptionCount = numAttributes;
+        if (numAttributes == 0)
             info->pVertexAttributeDescriptions = VK_NULL_HANDLE;
         else
             info->pVertexAttributeDescriptions = vertexAttributeDescriptions->data();

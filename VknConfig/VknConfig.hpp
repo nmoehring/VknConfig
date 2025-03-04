@@ -35,33 +35,34 @@ namespace vkn
                                     const char *const *enabledExtensionNames,
                                     uint32_t enabledExtensionNamesSize,
                                     VkInstanceCreateFlags flags = 0);
+        void addDevice(uint32_t deviceIdx);
         VknResult createInstance();
         void selectPhysicalDevice(uint32_t deviceIndex);
         void requestQueueFamilies(uint32_t deviceIndex);
         VknResult createDevice(uint32_t deviceIndex, bool chooseAllAvailable = false);
         VknResult createRenderPass();
         std::vector<vkn::VknQueueFamily> getQueueData();
-        VknDevice *getDevice(uint32_t index) { return &m_devices[index]; }
         VknInfos *getInfos() { return &m_infos; }
         VkInstance *getInstance() { return &m_instance; }
         VknRenderPass *getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);
         void enableExtensions(std::vector<std::string> extensions);
         bool getInstanceCreated() { return m_instanceCreated; }
         void selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues = false);
+        VknDevice *getDevice(uint32_t deviceIdx);
 
     private:
         VknResultArchive m_resultArchive;
         VknInfos m_infos;
         VkInstance m_instance;
-        std::vector<VknDevice> m_devices; // A vector is fine because all the devices are inserted in one function call
-
-        std::vector<std::string> m_instanceExtensions; // Fine, because this list won't need to change
+        std::list<VknDevice> m_devices{};                // A vector is fine because all the devices are inserted in one function call
+        std::vector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
 
         bool m_instanceCreated{false};
         bool m_physicalDeviceSelected{false};
         bool m_queueFamiliesRequested{false};
         bool m_queuesSelected{false};
         bool m_destroyed{false};
+        uint32_t m_numDevices{0};
 
         void archiveResult(VknResult res);
     };

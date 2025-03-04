@@ -74,7 +74,7 @@ int main()
     // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
     // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
-    device->addRenderPass();
+    device->addRenderPass(0);
     vkn::VknRenderPass *renderPass = device->getRenderPass(0);
     std::vector<VkAttachmentReference *> attach;
     renderPass->createAttachment(0);
@@ -82,10 +82,10 @@ int main()
     renderPass->createRenderPass();
 
     vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
-    vkn::VknShaderStage &vertShader = pipeline->addShaderStage(vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
-    vkn::VknShaderStage &fragShader = pipeline->addShaderStage(vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
-    vertShader.createShaderStage();
-    fragShader.createShaderStage();
+    pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
+    pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+    pipeline->getShaderStage(0)->createShaderStage();
+    pipeline->getShaderStage(1)->createShaderStage();
     vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
     // vertexInputState->fillVertexAttributeDescription();
     // vertexInputState->fillVertexBindingDescription();

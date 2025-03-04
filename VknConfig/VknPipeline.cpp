@@ -1,6 +1,7 @@
 #include <filesystem>
 
 #include "VknPipeline.hpp"
+#include <iterator>
 
 namespace vkn
 {
@@ -43,26 +44,32 @@ namespace vkn
             for (auto module : m_shaderModules)
                 vkDestroyShaderModule(*m_device, module, nullptr);
             m_destroyed = true;
+            std::cout << "VknPipeline DESTROYED." << std::endl;
         }
     }
 
-    VknShaderStage &VknPipeline::addShaderStage(
-        VknShaderStageType stageType, std::string filename, VkPipelineShaderStageCreateFlags flags)
+    void VknPipeline::addShaderStage(uint32_t shaderIdx,
+                                     VknShaderStageType stageType, std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
         if (!m_deviceCreated)
             throw std::runtime_error("Logical device not created before attempting to create shader stage.");
-        uint32_t shaderIdx = m_shaderStages.size();
-        m_shaderStages.push_back(VknShaderStage{m_deviceIdx, m_renderPassIdx, m_subpassIdx, shaderIdx, m_infos,
-                                                m_archive, m_device});
+        if (shaderIdx != m_numShaderStages)
+            throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
+        m_shaderStages.push_back(VknShaderStage{
+            m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_numShaderStages++, m_infos,
+            m_archive, m_device});
         m_shaderStages.back().setFilename(filename);
         m_shaderStages.back().setShaderStageType(stageType);
         m_shaderStages.back().setFlags(flags);
-        return m_shaderStages[shaderIdx];
     }
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
     {
-        return &m_shaderStages[shaderIdx];
+        if (shaderIdx >= m_numShaderStages)
+            throw std::runtime_error("Shader index out of range.");
+        std::list<VknShaderStage>::iterator it = m_shaderStages.begin();
+        std::advance(it, shaderIdx);
+        return &(*it);
     }
 
     void VknPipeline::fillPipelineCreateInfo(
@@ -76,10 +83,10 @@ namespace vkn
         m_createInfoFilled = true;
     }
 
-    VkDescriptorSetLayoutCreateInfo *VknPipeline::fillDescriptorSetLayoutCreateInfo(
+    void VknPipeline::fillDescriptorSetLayoutCreateInfo(
         VkDescriptorSetLayoutCreateFlags flags)
     {
-        return m_infos->fillDescriptorSetLayoutCreateInfo(m_bindings, flags);
+        m_infos->fillDescriptorSetLayoutCreateInfo(m_bindings, flags);
     }
 
     void VknPipeline::createDescriptorSetLayoutBinding(

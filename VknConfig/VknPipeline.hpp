@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include <vulkan/vulkan.h>
+#include <list>
 
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
@@ -28,7 +29,7 @@ namespace vkn
         void createDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
-        VkDescriptorSetLayoutCreateInfo *fillDescriptorSetLayoutCreateInfo(
+        void fillDescriptorSetLayoutCreateInfo(
             VkDescriptorSetLayoutCreateFlags flags = 0);
         void createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo);
         void createPushConstantRange(VkShaderStageFlags stageFlags = 0, uint32_t offset = 0,
@@ -41,9 +42,9 @@ namespace vkn
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0);
 
-        VknShaderStage &addShaderStage(
-            VknShaderStageType stageType, std::string filename,
-            VkPipelineShaderStageCreateFlags flags = 0);
+        void addShaderStage(uint32_t newShaderStageIdx,
+                            VknShaderStageType stageType, std::string filename,
+                            VkPipelineShaderStageCreateFlags flags = 0);
 
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         VkPipeline *getVkPipeline() { return m_pipeline; }
@@ -75,7 +76,7 @@ namespace vkn
         // VknDepthStencilState m_depthStencilState{};
         // VknColorBlendState m_colorBlendState{};
         // VknDynamicState m_dynamicState{};
-        std::deque<VknShaderStage> m_shaderStages{}; // Deque will make it  a lot easier if there are more than 2 shaders
+        std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
         std::vector<VkShaderModule> m_shaderModules{};
 
         std::vector<VkDescriptorSetLayoutBinding> m_bindings{};      //+
@@ -88,5 +89,6 @@ namespace vkn
         bool m_createInfoFilled{false};
         bool m_pipelineCreated{false};
         bool m_pipelineLayoutCreated{false};
+        uint32_t m_numShaderStages{0};
     };
 }

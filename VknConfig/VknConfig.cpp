@@ -6,7 +6,7 @@ namespace vkn
         : m_resultArchive(VknResultArchive{}),
           m_infos(VknInfos{})
     {
-        m_devices.push_back(VknDevice(&m_infos, &m_resultArchive, &m_instance, &m_instanceCreated));
+        m_devices.push_back(VknDevice{m_numDevices++, &m_infos, &m_resultArchive, &m_instance, &m_instanceCreated});
     }
 
     VknConfig::~VknConfig()
@@ -24,6 +24,14 @@ namespace vkn
                 vkDestroyInstance(m_instance, nullptr);
             m_destroyed = true;
         }
+        std::cout << "VknConfig DESTROYED." << std::endl;
+    }
+
+    void VknConfig::addDevice(uint32_t deviceIdx)
+    {
+        if (deviceIdx != m_numDevices)
+            throw std::runtime_error("Device index should equal the current numDevices.");
+        m_devices.push_back(VknDevice{m_numDevices++, &m_infos, &m_resultArchive, &m_instance, &m_instanceCreated});
     }
 
     void VknConfig::enableExtensions(std::vector<std::string> extensions)
@@ -71,26 +79,26 @@ namespace vkn
         return res;
     }
 
-    void VknConfig::selectPhysicalDevice(uint32_t index)
+    void VknConfig::selectPhysicalDevice(uint32_t deviceIdx)
     {
         if (!m_instanceCreated)
             throw std::runtime_error("Instance not created before trying to select a physical device.");
         else
         {
-            m_devices[index].getPhysicalDevice()->selectPhysicalDevice();
+            this->getDevice(deviceIdx)->getPhysicalDevice()->selectPhysicalDevice();
             m_physicalDeviceSelected = true;
         }
     }
 
-    void VknConfig::requestQueueFamilies(uint32_t index)
+    void VknConfig::requestQueueFamilies(uint32_t deviceIdx)
     {
-        m_devices[index].requestQueueFamilyProperties();
+        this->getDevice(deviceIdx)->requestQueueFamilyProperties();
         m_queueFamiliesRequested = true;
     }
 
     VknRenderPass *VknConfig::getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx)
     {
-        VknRenderPass *renderPass{m_devices[deviceIdx].getRenderPass(renderPassIdx)};
+        VknRenderPass *renderPass{this->getDevice(deviceIdx)->getRenderPass(renderPassIdx)};
         if (!(renderPass->getVkRenderPassCreated()))
             throw std::runtime_error("RenderPass not created before getting renderpass.");
 
@@ -104,13 +112,13 @@ namespace vkn
         if (!m_queueFamiliesRequested)
             throw std::runtime_error("Queue families not requested before trying to select queues.");
 
-        for (int i = 0; i < m_devices[deviceIdx].getNumQueueFamilies(); ++i)
+        for (int i = 0; i < this->getDevice(deviceIdx)->getNumQueueFamilies(); ++i)
         {
             int numSelected = 1;
             if (chooseAllAvailableQueues)
-                numSelected = m_devices[deviceIdx].getQueue(i).getNumAvailable();
+                numSelected = this->getDevice(deviceIdx)->getQueue(i).getNumAvailable();
             // m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, numSelected);
-            m_devices[deviceIdx].getQueue(i).setNumSelected(numSelected);
+            this->getDevice(deviceIdx)->getQueue(i).setNumSelected(numSelected);
         }
         m_queuesSelected = true;
     }
@@ -121,13 +129,13 @@ namespace vkn
         if (!m_queuesSelected)
             throw std::runtime_error("Queues not selected before trying to create device.");
 
-        std::vector<VknQueueFamily> queues = m_devices[deviceIdx].getQueues();
-        VknDevice &device = m_devices[deviceIdx];
+        std::vector<VknQueueFamily> queues = this->getDevice(deviceIdx)->getQueues();
+        VknDevice *device = this->getDevice(deviceIdx);
         for (int i = 0; i < queues.size(); ++i)
             m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, queues[i].getNumSelected());
-        device.fillDeviceCreateInfo();
+        device->fillDeviceCreateInfo();
         VknResult res;
-        if (!(res = device.createDevice()).isSuccess())
+        if (!(res = device->createDevice()).isSuccess())
             throw std::runtime_error(res.toErr("Error creating device."));
         m_resultArchive.store(res);
         return res;
@@ -136,5 +144,14 @@ namespace vkn
     void VknConfig::archiveResult(VknResult res)
     {
         m_resultArchive.store(res);
+    }
+
+    VknDevice *VknConfig::getDevice(uint32_t deviceIdx)
+    {
+        if (deviceIdx >= m_numDevices)
+            throw std::runtime_error("Device index out of range.");
+        std::list<VknDevice>::iterator it = m_devices.begin();
+        std::advance(it, deviceIdx);
+        return &(*it);
     }
 }

@@ -40,7 +40,7 @@ namespace vkn
         void createRenderPass();
         void createPipelines();
         VkRenderPass *getVkRenderPass() { return &m_renderPass; }
-        VknPipeline *getPipeline(int idx) { return &m_pipelines[idx]; }
+        VknPipeline *getPipeline(uint32_t idx);
         bool getVkRenderPassCreated() { return m_renderPassCreated; }
 
     private:
@@ -53,13 +53,14 @@ namespace vkn
         const bool *m_deviceCreated{nullptr};
 
         std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
-        std::deque<VknPipeline> m_pipelines;
+        std::list<VknPipeline> m_pipelines;
         std::vector<std::vector<uint32_t>> m_numAttachRefs{};
         std::vector<uint32_t> m_numPreserveRefs{};
 
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
+        uint32_t m_numPipelines{0};
 
         bool m_destroyed{false};
         bool m_devicesAdded{false};

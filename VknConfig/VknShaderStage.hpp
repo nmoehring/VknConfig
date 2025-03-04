@@ -49,7 +49,7 @@ namespace vkn
         bool m_shaderModuleCreated{false};
         bool m_shaderStageTypeFilled{false};
         bool m_filenameFilled{false};
-        bool m_specializationInfoSet{false};
+        bool m_specializationInfoFilled{false};
 
         void createShaderModule();
     };

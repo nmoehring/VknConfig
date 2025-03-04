@@ -34,6 +34,7 @@ namespace vkn
             if (m_shaderModule != VK_NULL_HANDLE)
                 vkDestroyShaderModule(*m_vkDevice, m_shaderModule, nullptr);
             m_destroyed = true;
+            std::cout << "VknShaderStage DESTROYED." << std::endl;
         }
     }
 
@@ -68,7 +69,7 @@ namespace vkn
     void VknShaderStage::setSpecialization(VkSpecializationInfo specializationInfo)
     {
         m_specializationInfo = specializationInfo;
-        m_specializationInfoSet = true;
+        m_specializationInfoFilled = true;
     }
 
     void VknShaderStage::createShaderStage()
@@ -77,8 +78,10 @@ namespace vkn
             throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");
 
         VkSpecializationInfo *specialization = nullptr;
-        if (m_specializationInfoSet)
+        if (m_specializationInfoFilled)
             specialization = &m_specializationInfo;
+        else
+            specialization = VK_NULL_HANDLE;
         m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderIdx,
                                            &m_shaderModule, &m_shaderStageFlagBit, &m_createFlags,
                                            specialization);

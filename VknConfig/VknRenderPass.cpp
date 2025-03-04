@@ -31,6 +31,7 @@ namespace vkn
             for (auto pipeline : m_pipelines)
                 pipeline.destroy();
             m_destroyed = true;
+            std::cout << "VknRenderPass DESTROYED." << std::endl;
         }
     }
 
@@ -55,6 +56,15 @@ namespace vkn
             throw std::runtime_error(res.toErr("Error creating renderpass."));
         m_archive->store(res);
         m_renderPassCreated = true;
+    }
+
+    VknPipeline *VknRenderPass::getPipeline(uint32_t pipelineIdx)
+    {
+        if (pipelineIdx != m_numPipelines)
+            throw std::runtime_error("Pipeline index out of range.");
+        std::list<VknPipeline>::iterator it = m_pipelines.begin();
+        std::advance(it, pipelineIdx);
+        return &(*it);
     }
 
     void VknRenderPass::fillRenderPassCreateInfo(VkRenderPassCreateFlags flags)
@@ -108,7 +118,7 @@ namespace vkn
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_deviceIdx, m_renderPassIdx)};
         VknResult res{vkCreateGraphicsPipelines(
-                          *m_device, VK_NULL_HANDLE, pipelineCreateInfos->size(),
+                          *m_device, VK_NULL_HANDLE, m_numSubpasses,
                           pipelineCreateInfos->data(), nullptr, m_rawPipelines.data()),
                       "Create pipeline."};
         if (!res.isSuccess())

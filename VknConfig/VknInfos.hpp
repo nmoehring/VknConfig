@@ -253,7 +253,7 @@ namespace vkn
             VkPipelineShaderStageCreateFlags *flags = 0,
             VkSpecializationInfo *pSpecializationInfo = nullptr);
         VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx);
+            uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, uint32_t numBindings, uint32_t numAttributes);
         VkPipelineInputAssemblyStateCreateInfo *fillInputAssemblyStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
             VkPrimitiveTopology topology = VkPrimitiveTopology{},
