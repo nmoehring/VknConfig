@@ -21,6 +21,7 @@ namespace vkn
     {
     public:
         void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
+        void testNoInputs();
 
         VknConfig();
         ~VknConfig();
@@ -37,9 +38,7 @@ namespace vkn
                                     VkInstanceCreateFlags flags = 0);
         void addDevice(uint32_t deviceIdx);
         VknResult createInstance();
-        void selectPhysicalDevice(uint32_t deviceIndex);
         void requestQueueFamilies(uint32_t deviceIndex);
-        VknResult createDevice(uint32_t deviceIndex, bool chooseAllAvailable = false);
         VknResult createRenderPass();
         std::vector<vkn::VknQueueFamily> getQueueData();
         VknInfos *getInfos() { return &m_infos; }
@@ -62,6 +61,7 @@ namespace vkn
         bool m_queueFamiliesRequested{false};
         bool m_queuesSelected{false};
         bool m_destroyed{false};
+        bool m_filledInstanceCreateInfo{false};
         uint32_t m_numDevices{0};
 
         void archiveResult(VknResult res);

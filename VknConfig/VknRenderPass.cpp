@@ -124,6 +124,9 @@ namespace vkn
         else
             refIdx = m_numPreserveRefs[subpassIdx]++;
 
+        if (attachmentType == COLOR_ATTACHMENT)
+            m_filledColorAttachment = true;
+
         m_infos->fillAttachmentReference(m_deviceIdx, m_renderPassIdx, subpassIdx, refIdx,
                                          attachmentType, attachIdx, attachmentRefLayout);
     }
@@ -150,21 +153,22 @@ namespace vkn
     }
 
     void VknRenderPass::createSubpass(
-        uint32_t subpassIdx, VkPipelineBindPoint pipelineBindPoint,
+        uint32_t subpassIdx, bool isCompute, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
+        if (subpassIdx != m_numSubpasses)
+            throw std::runtime_error("SubpassIdx is invalid.");
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (m_numAttachRefs.size() < subpassIdx + 1)
+        if (!isCompute && !m_filledColorAttachment)
             throw std::runtime_error("No attachment created before creating subpass.");
-        ++m_numSubpasses;
         m_infos->fillSubpassDescription(
             m_numAttachRefs[subpassIdx][COLOR_ATTACHMENT],
             m_numAttachRefs[subpassIdx][INPUT_ATTACHMENT],
             m_numAttachRefs[subpassIdx][RESOLVE_ATTACHMENT],
             m_numAttachRefs[subpassIdx][DEPTH_STENCIL_ATTACHMENT],
             m_numPreserveRefs[subpassIdx], m_deviceIdx, m_renderPassIdx,
-            subpassIdx, pipelineBindPoint, flags);
+            m_numSubpasses++, pipelineBindPoint, flags);
         this->addPipeline();
     }
 }

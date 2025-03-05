@@ -35,7 +35,7 @@ namespace vkn
             VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
         void createSubpass(
-            uint32_t subpassIdx,
+            uint32_t subpassIdx, bool isCompute = false,
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         void createRenderPass();
@@ -66,6 +66,7 @@ namespace vkn
         bool m_destroyed{false};
         bool m_devicesAdded{false};
         bool m_renderPassCreated{false};
+        bool m_filledColorAttachment{false};
         bool m_placeholder;
 
         void addPipeline();

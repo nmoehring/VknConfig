@@ -21,7 +21,6 @@ namespace vkn
         ~VknDevice();
         void destroy();
         VknResult createDevice();
-        void fillDeviceCreateInfo();
         bool getVkDeviceCreated() { return m_vkDeviceCreated; }
         VknRenderPass *getRenderPass(uint32_t renderPassIdx);
         void requestQueueFamilyProperties();
@@ -50,6 +49,8 @@ namespace vkn
         VkDevice *getVkDevice();
         VknPhysicalDevice *getPhysicalDevice();
         void addRenderPass(uint32_t newRenderPassIdx);
+        void selectQueues(bool chooseAllAvailableQueues = false);
+        void fillQueueCreateInfos();
 
     private:
         static int s_numDevices;
@@ -62,6 +63,7 @@ namespace vkn
         const VkInstance *m_instance{nullptr};
         const bool *m_instanceCreated{nullptr};
         bool m_queuesRequested{false};
+        bool m_queuesSelected{false};
         uint32_t m_deviceIdx;
 
         const char *const *m_extensions{nullptr};
@@ -74,6 +76,7 @@ namespace vkn
         bool m_destroyed{false};
         bool m_vkDeviceCreated{false};
         bool m_placeholder;
+        bool m_filledQueueCreateInfos{false};
         uint32_t m_numRenderPasses{0};
 
         // Other utilities

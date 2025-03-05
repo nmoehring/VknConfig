@@ -150,7 +150,7 @@ namespace vkn
         this->initVectors<VkSubpassDependency>(deviceIdx, renderPassIdx,
                                                0, m_subpassDependencies);
         this->initVectors<VkAttachmentReference>(
-            deviceIdx, renderPassIdx, 0, NUM_ATTACHMENT_TYPES, 0, m_attachmentReferences);
+            deviceIdx, renderPassIdx, 0, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
     }
 
     VkRenderPassCreateInfo *VknInfos::fillRenderPassCreateInfo(uint32_t deviceIdx,
@@ -722,7 +722,7 @@ namespace vkn
     VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(uint32_t deviceIdx)
     {
         this->initVectors<VkDeviceCreateInfo>(deviceIdx, m_deviceCreateInfos);
-        if (m_queueCreateInfos[deviceIdx].size() == 0)
+        if (m_queueCreateInfos[deviceIdx].size() == 0) // filled function?
             throw std::runtime_error("Queues not selected before filling device create info.");
         m_deviceCreateInfos[deviceIdx] = VkDeviceCreateInfo{};
         VkDeviceCreateInfo &info = m_deviceCreateInfos[deviceIdx];

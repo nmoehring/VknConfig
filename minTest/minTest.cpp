@@ -22,41 +22,14 @@ bool initWindow(GLFWwindow **outWindow);
 int main()
 {
     vkn::VknConfig config{};
-    vkn::VknDevice *device = config.getDevice(0);
-    vkn::VknInfos *infos = config.getInfos();
+    config.testNoInputs();
+    auto device = config.getDevice(0);
+    auto renderPass = device->getRenderPass(0);
+    auto pipeline = renderPass->getPipeline(0);
 
-    std::string appName{"MinTest"};
-    std::string engineName{"MinVknConfig"};
-    config.fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
-
-    const uint32_t instanceExtensionsSize{1};
-    const char *instanceExtensions[instanceExtensionsSize] = {
-        // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-        // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-        VK_KHR_SURFACE_EXTENSION_NAME};
-    const uint32_t layersSize{0};
-    const char *layers[]{nullptr};
-
-    config.fillInstanceCreateInfo(
-        layers, layersSize, instanceExtensions, instanceExtensionsSize);
-    config.createInstance();
-
-    config.selectPhysicalDevice(0);
-    config.requestQueueFamilies(0);
-    auto limits{device->getPhysicalDevice()->getLimits()};
+    auto limits = device->getPhysicalDevice()->getLimits();
     std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
     std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
-    const uint32_t numExtensions{1};
-    const char *deviceExtensions[numExtensions] = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    device->addExtensions(deviceExtensions, numExtensions);
-
-    // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-    // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-    // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-    config.selectQueues(0);
-    device->fillDeviceQueuePrioritiesDefault();
-    config.createDevice(0);
 
     int idx = 0;
     for (auto &queue : device->getQueues())
@@ -69,53 +42,6 @@ int main()
         std::cout << "Mem Protection: " << queue.supportsMemoryProtection() << std::endl;
         ++idx;
     }
-
-    // RenderPass experiments
-    // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
-    // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
-
-    device->addRenderPass(0);
-    vkn::VknRenderPass *renderPass = device->getRenderPass(0);
-    std::vector<VkAttachmentReference *> attach;
-    renderPass->createAttachment(0);
-    renderPass->createSubpass(0);
-    renderPass->createRenderPass();
-
-    vkn::VknPipeline *pipeline = renderPass->getPipeline(0);
-    pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
-    pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
-    pipeline->getShaderStage(0)->createShaderStage();
-    pipeline->getShaderStage(1)->createShaderStage();
-    vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
-    // vertexInputState->fillVertexAttributeDescription();
-    // vertexInputState->fillVertexBindingDescription();
-    vertexInputState->fillVertexInputStateCreateInfo();
-    vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
-    inputAssemblyState->fillInputAssemblyStateCreateInfo();
-    vkn::VknMultisampleState *multisampleState = pipeline->getMultisampleState();
-    multisampleState->fillMultisampleStateCreateInfo();
-    vkn::VknRasterizationState *rasterizationState = pipeline->getRasterizationState();
-    rasterizationState->fillRasterizationStateCreateInfo();
-    vkn::VknViewportState *viewportState = pipeline->getViewportState();
-    viewportState->addViewport();
-    viewportState->addScissor();
-    viewportState->fillViewportStateCreateInfo();
-    /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
-    auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
-    auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};
-    auto rasterizationStateCreateInfos{infos->fillRasterizationStateCreateInfo()};
-    auto multisampleStateCreateInfos{infos->fillMultisampleStateCreateInfo()};
-    auto depthStencilStateCreateInfos{infos->fillDepthStencilStateCreateInfo()};
-    auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
-    pipeline->fillPipelineLayoutCreateInfo();
-    pipeline->createLayout();
-    /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
-        basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
-        tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
-        multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
-    */
-
-    renderPass->createPipelines();
 
     GLFWwindow *window_ = nullptr;
     initWindow(&window_);

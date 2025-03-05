@@ -45,7 +45,87 @@ namespace vkn
     {
         this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
         this->createInstance();
-        this->createDevice(deviceIdx);
+        this->getDevice(deviceIdx)->createDevice();
+    }
+
+    void VknConfig::testNoInputs()
+    {
+        std::string appName{"NoInputsTest"};
+        std::string engineName{"MinVknConfig"};
+        this->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
+        const uint32_t instanceExtensionsSize{1};
+        const char *instanceExtensions[instanceExtensionsSize] = {
+            // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+            // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+            VK_KHR_SURFACE_EXTENSION_NAME};
+        const uint32_t layersSize{0};
+        const char *layers[]{nullptr};
+        this->fillInstanceCreateInfo(
+            layers, layersSize, instanceExtensions, instanceExtensionsSize);
+        this->createInstance();
+
+        // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+        // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
+
+        auto device = this->getDevice(0);
+        auto physDev = device->getPhysicalDevice();
+        const uint32_t numExtensions{1};
+        const char *deviceExtensions[numExtensions] = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        device->addExtensions(deviceExtensions, numExtensions);
+        physDev->selectPhysicalDevice();
+        device->requestQueueFamilyProperties();
+        device->selectQueues(false);
+        device->fillDeviceQueuePrioritiesDefault();
+        device->createDevice();
+        device->addRenderPass(0);
+
+        auto renderPass = device->getRenderPass(0);
+        renderPass->createAttachment(0);
+        renderPass->createSubpass(0);
+        renderPass->createRenderPass();
+
+        auto pipeline = renderPass->getPipeline(0);
+        pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
+        pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+        auto vertShader = pipeline->getShaderStage(0);
+        auto fragShader = pipeline->getShaderStage(1);
+        vertShader->createShaderStage();
+        fragShader->createShaderStage();
+        vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
+        // vertexInputState->fillVertexAttributeDescription();
+        // vertexInputState->fillVertexBindingDescription();
+        vertexInputState->fillVertexInputStateCreateInfo();
+        vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
+        inputAssemblyState->fillInputAssemblyStateCreateInfo();
+        vkn::VknMultisampleState *multisampleState = pipeline->getMultisampleState();
+        multisampleState->fillMultisampleStateCreateInfo();
+        vkn::VknRasterizationState *rasterizationState = pipeline->getRasterizationState();
+        rasterizationState->fillRasterizationStateCreateInfo();
+        vkn::VknViewportState *viewportState = pipeline->getViewportState();
+        viewportState->addViewport();
+        viewportState->addScissor();
+        viewportState->fillViewportStateCreateInfo();
+        /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
+        auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
+        auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};
+        auto rasterizationStateCreateInfos{infos->fillRasterizationStateCreateInfo()};
+        auto multisampleStateCreateInfos{infos->fillMultisampleStateCreateInfo()};
+        auto depthStencilStateCreateInfos{infos->fillDepthStencilStateCreateInfo()};
+        auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
+        pipeline->fillPipelineLayoutCreateInfo();
+        pipeline->createLayout();
+        /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
+            basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
+            tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
+            multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
+        */
+
+        // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
+        // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
+
+        renderPass->createPipelines();
     }
 
     void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
@@ -63,13 +143,20 @@ namespace vkn
                                            uint32_t enabledExtensionNamesSize,
                                            VkInstanceCreateFlags flags)
     {
+        if (m_filledInstanceCreateInfo)
+            throw std::runtime_error("Instance create info already filled.");
         m_infos.fillEnabledLayerNames(enabledLayerNames, enabledLayerNamesSize);
         m_infos.fillInstanceExtensionNames(enabledExtensionNames, enabledExtensionNamesSize);
         m_infos.fillInstanceCreateInfo(flags);
+        m_filledInstanceCreateInfo = true;
     }
 
     VknResult VknConfig::createInstance()
     {
+        if (m_instanceCreated)
+            throw std::runtime_error("Instance already created.");
+        if (!m_filledInstanceCreateInfo)
+            throw std::runtime_error("Creating instance without filling instance create info.");
         VknResult res{vkCreateInstance(m_infos.getInstanceCreateInfo(), VK_NULL_HANDLE, &m_instance),
                       "Create instance."};
         if (!(res.isSuccess()))
@@ -80,23 +167,6 @@ namespace vkn
         return res;
     }
 
-    void VknConfig::selectPhysicalDevice(uint32_t deviceIdx)
-    {
-        if (!m_instanceCreated)
-            throw std::runtime_error("Instance not created before trying to select a physical device.");
-        else
-        {
-            this->getDevice(deviceIdx)->getPhysicalDevice()->selectPhysicalDevice();
-            m_physicalDeviceSelected = true;
-        }
-    }
-
-    void VknConfig::requestQueueFamilies(uint32_t deviceIdx)
-    {
-        this->getDevice(deviceIdx)->requestQueueFamilyProperties();
-        m_queueFamiliesRequested = true;
-    }
-
     VknRenderPass *VknConfig::getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx)
     {
         VknRenderPass *renderPass{this->getDevice(deviceIdx)->getRenderPass(renderPassIdx)};
@@ -104,42 +174,6 @@ namespace vkn
             throw std::runtime_error("RenderPass not created before getting renderpass.");
 
         return renderPass;
-    }
-
-    void VknConfig::selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues)
-    {
-        if (m_queuesSelected)
-            throw std::runtime_error("Queues already selected.");
-        if (!m_queueFamiliesRequested)
-            throw std::runtime_error("Queue families not requested before trying to select queues.");
-
-        for (int i = 0; i < this->getDevice(deviceIdx)->getNumQueueFamilies(); ++i)
-        {
-            int numSelected = 1;
-            if (chooseAllAvailableQueues)
-                numSelected = this->getDevice(deviceIdx)->getQueue(i).getNumAvailable();
-            // m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, numSelected);
-            this->getDevice(deviceIdx)->getQueue(i).setNumSelected(numSelected);
-        }
-        m_queuesSelected = true;
-    }
-
-    // TODO: move more of setup for this to VknDevice, including the top half of this function
-    VknResult VknConfig::createDevice(uint32_t deviceIdx, bool chooseAllAvailableQueues)
-    {
-        if (!m_queuesSelected)
-            throw std::runtime_error("Queues not selected before trying to create device.");
-
-        std::vector<VknQueueFamily> queues = this->getDevice(deviceIdx)->getQueues();
-        VknDevice *device = this->getDevice(deviceIdx);
-        for (int i = 0; i < queues.size(); ++i)
-            m_infos.fillDeviceQueueCreateInfo(deviceIdx, i, queues[i].getNumSelected());
-        device->fillDeviceCreateInfo();
-        VknResult res;
-        if (!(res = device->createDevice()).isSuccess())
-            throw std::runtime_error(res.toErr("Error creating device."));
-        m_resultArchive.store(res);
-        return res;
     }
 
     void VknConfig::archiveResult(VknResult res)

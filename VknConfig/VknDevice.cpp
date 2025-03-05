@@ -96,15 +96,6 @@ namespace vkn
         m_resultArchive->store(res);
     }
 
-    void VknDevice::fillDeviceCreateInfo()
-    {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        m_infos->fillDeviceExtensionNames(m_deviceIdx, m_extensions, m_extensionsSize);
-        m_infos->fillDeviceFeatures(m_features);
-        m_infos->fillDeviceCreateInfo(m_deviceIdx);
-    }
-
     VknRenderPass *VknDevice::getRenderPass(uint32_t renderPassIdx)
     {
         if (m_placeholder)
@@ -151,12 +142,33 @@ namespace vkn
         m_queuesRequested = true;
     }
 
+    void VknDevice::selectQueues(bool chooseAllAvailableQueues)
+    {
+        if (m_queuesSelected)
+            throw std::runtime_error("Queues already selected.");
+        if (!m_queuesRequested)
+            throw std::runtime_error("Queue families not requested before trying to select queues.");
+
+        for (int i = 0; i < this->getNumQueueFamilies(); ++i)
+        {
+            int numSelected = 1;
+            if (chooseAllAvailableQueues)
+                numSelected = this->getQueue(i).getNumAvailable();
+            this->getQueue(i).setNumSelected(numSelected);
+        }
+        m_queuesSelected = true;
+    }
+
     VknResult VknDevice::createDevice()
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!(m_physicalDevice.getPhysicalDeviceSelected()))
-            throw std::runtime_error("Physical device not selected before creating logical device.");
+        if (!m_queuesSelected)
+            throw std::runtime_error("Queues not selected before trying to create device.");
+        m_infos->fillDeviceExtensionNames(m_deviceIdx, m_extensions, m_extensionsSize);
+        m_infos->fillDeviceFeatures(m_features);
+        this->fillQueueCreateInfos();
+        m_infos->fillDeviceCreateInfo(m_deviceIdx);
         VknResult res{
             vkCreateDevice(
                 *(m_physicalDevice.getVkPhysicalDevice()),
@@ -169,6 +181,15 @@ namespace vkn
         m_resultArchive->store(res);
         m_vkDeviceCreated = true;
         return res;
+    }
+
+    void VknDevice::fillQueueCreateInfos()
+    {
+        if (m_filledQueueCreateInfos)
+            throw std::runtime_error("Already filled queue create infos.");
+        for (int i = 0; i < m_queues.size(); ++i)
+            m_infos->fillDeviceQueueCreateInfo(m_deviceIdx, i, m_queues[i].getNumSelected());
+        m_filledQueueCreateInfos = true;
     }
 
     void VknDevice::fillSwapChainCreateInfo(
