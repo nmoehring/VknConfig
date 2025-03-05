@@ -52,18 +52,18 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(CCUtilities)
 
 # IF imgui installed and backends not copied yet THEN copy them
-if(((CMAKE_BUILD_TYPE MATCHES Debug AND TARGET imguid) OR TARGET imgui) AND NOT EXISTS imguiBackends)
-    file(
-        COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends
-        DESTINATION ${CMAKE_SOURCE_DIR}
-    )
-    file(RENAME backends imguiBackends)
-    file(COPY_FILE cmakelists.txt.imguiBackends imguiBackends/CMakeLists.txt)
-
-# ELSE IF imgui target hasn't been created THEN tell the user
-elseif(NOT TARGET imgui)
-    message("failed to install imgui (vcpkg), imgui backends not copied to source dir.")
-endif()
+# if(((CMAKE_BUILD_TYPE MATCHES Debug AND TARGET imguid) OR TARGET imgui) AND NOT EXISTS imguiBackends)
+# file(
+# COPY ${VCPKG_INSTALLED_DIR}/vcpkg/blds/imgui/src/v1.91.0-51846a2755.clean/backends
+# DESTINATION ${CMAKE_SOURCE_DIR}
+# )
+# file(RENAME backends imguiBackends)
+# file(COPY_FILE cmakelists.txt.imguiBackends imguiBackends/CMakeLists.txt)
+#
+# # ELSE IF imgui target hasn't been created THEN tell the user
+# elseif(NOT TARGET imgui)
+# message("failed to install imgui (vcpkg), imgui backends not copied to source dir.")
+# endif()
 
 # ########## LIB AND INCLUDE ############
 message("Vulkan header version: ${VulkanHeaderVersion}")
@@ -94,7 +94,8 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     message("Adding debug library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
-        ${CMAKE_BINARY_DIR}/imguiBackends/Debug
+
+        # ${CMAKE_BINARY_DIR}/imguiBackends/Debug
         ${Vulkan_INCLUDE_DIR}/../lib
     )
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
@@ -102,7 +103,8 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
     message("Adding release library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
-        ${CMAKE_BINARY_DIR}/imguiBackends
+
+        # ${CMAKE_BINARY_DIR}/imguiBackends
         ${Vulkan_INCLUDE_DIR}/../lib
     )
 else()
@@ -113,9 +115,7 @@ endif()
 add_library(vma INTERFACE)
 target_sources(vma INTERFACE single-headers/vma.cpp)
 
-
 # ############ PROCESS SUBDIRECTORIES #################
-add_subdirectory(imguiBackends)
 add_subdirectory(VknConfig)
 
 # add_subdirectory(VkCore)

@@ -5,7 +5,8 @@ namespace vkn
     int VknDevice::s_numDevices{0};
 
     VknDevice::VknDevice()
-        : m_infos{nullptr}, m_resultArchive{nullptr}, m_instance{nullptr}, m_instanceCreated{nullptr}
+        : m_infos{nullptr}, m_resultArchive{nullptr}, m_instance{nullptr}, m_instanceCreated{nullptr},
+          m_placeholder{true}
     {
         m_physicalDevice = VknPhysicalDevice{m_resultArchive, m_infos, m_instance, m_instanceCreated};
         m_deviceIdx = s_numDevices;
@@ -14,20 +15,23 @@ namespace vkn
     VknDevice::VknDevice(uint32_t deviceIdx, VknInfos *infos, VknResultArchive *archive,
                          const VkInstance *instance, const bool *instanceCreated)
         : m_infos{infos}, m_resultArchive{archive}, m_instance{instance}, m_instanceCreated{instanceCreated},
-          m_deviceIdx{deviceIdx}
+          m_deviceIdx{deviceIdx}, m_placeholder{false}
     {
         m_physicalDevice = VknPhysicalDevice{m_resultArchive, m_infos, m_instance, m_instanceCreated};
     }
 
     VknDevice::~VknDevice()
     {
-        if (!m_destroyed)
+        if (!m_destroyed && !m_placeholder)
             this->destroy();
     }
 
     void VknDevice::destroy()
     {
-        if (!m_destroyed)
+        if (m_placeholder)
+            throw std::runtime_error("Trying to destroy a placeholder object.");
+
+        if (!m_destroyed && !m_placeholder)
         {
             for (auto &renderPass : m_renderPasses)
                 renderPass.destroy();
@@ -43,11 +47,15 @@ namespace vkn
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         return &m_physicalDevice;
     }
 
     VkDevice *VknDevice::getVkDevice()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_vkDeviceCreated)
             throw std::runtime_error("Logical device not created before retrieving it.");
         return &m_logicalDevice;
@@ -55,6 +63,8 @@ namespace vkn
 
     VknQueueFamily &VknDevice::getQueue(int idx)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_queuesRequested)
             throw std::runtime_error("Queue properties not requested before retrieving queue properties.");
         return m_queues[idx];
@@ -62,6 +72,8 @@ namespace vkn
 
     void VknDevice::fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_queuesRequested)
             throw std::runtime_error("Queue properties not requested before filling queue priorities.");
         m_infos->fillDeviceQueuePriorities(m_deviceIdx, queueFamilyIdx, priorities);
@@ -69,6 +81,8 @@ namespace vkn
 
     void VknDevice::fillDeviceQueuePrioritiesDefault()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_queuesRequested)
             throw std::runtime_error("Queue properties not requested before filling queue priorities.");
         for (int i = 0; i < m_queues.size(); ++i)
@@ -77,11 +91,15 @@ namespace vkn
 
     void VknDevice::archiveResult(VknResult res)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_resultArchive->store(res);
     }
 
     void VknDevice::fillDeviceCreateInfo()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_infos->fillDeviceExtensionNames(m_deviceIdx, m_extensions, m_extensionsSize);
         m_infos->fillDeviceFeatures(m_features);
         m_infos->fillDeviceCreateInfo(m_deviceIdx);
@@ -89,6 +107,8 @@ namespace vkn
 
     VknRenderPass *VknDevice::getRenderPass(uint32_t renderPassIdx)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (renderPassIdx >= m_numRenderPasses)
             throw std::runtime_error("Render pass index out of range.");
         std::list<VknRenderPass>::iterator it = m_renderPasses.begin();
@@ -98,12 +118,16 @@ namespace vkn
 
     void VknDevice::addExtensions(const char *ext[], uint32_t size)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_extensions = ext;
         m_extensionsSize = size;
     }
 
     void VknDevice::requestQueueFamilyProperties()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (m_queuesRequested)
             throw std::runtime_error("Queue properties already requested.");
         if (!(m_physicalDevice.getPhysicalDeviceSelected()))
@@ -129,6 +153,8 @@ namespace vkn
 
     VknResult VknDevice::createDevice()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!(m_physicalDevice.getPhysicalDeviceSelected()))
             throw std::runtime_error("Physical device not selected before creating logical device.");
         VknResult res{
@@ -152,6 +178,8 @@ namespace vkn
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
         VkSwapchainKHR oldSwapchain)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         m_swapChainCreateInfos.push_back(m_infos->fillSwapChainCreateInfo(m_deviceIdx, surface, imageCount, dimensions, surfaceFormat,
                                                                           numImageArrayLayers, usage, sharingMode, preTransform,
                                                                           compositeAlpha, presentMode, clipped, oldSwapchain));
@@ -159,6 +187,8 @@ namespace vkn
 
     void VknDevice::createSwapChains()
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_vkDeviceCreated)
             throw std::runtime_error("VkDevice not created before creating swapchains.");
         for (auto &swapchainInfo : m_swapChainCreateInfos)
@@ -175,6 +205,8 @@ namespace vkn
 
     void VknDevice::addRenderPass(uint32_t renderPassIdx)
     {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
         if (renderPassIdx != m_numRenderPasses)
             throw std::runtime_error("RenderPassIdx passed to addRenderPass is invalid. Should be next idx.");
         m_renderPasses.push_back(VknRenderPass(m_deviceIdx, m_numRenderPasses++, m_infos, m_resultArchive,

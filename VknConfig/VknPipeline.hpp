@@ -88,6 +88,7 @@ namespace vkn
         bool m_createInfoFilled{false};
         bool m_pipelineCreated{false};
         bool m_pipelineLayoutCreated{false};
+        bool m_placeholder;
         uint32_t m_numShaderStages{0};
     };
 }

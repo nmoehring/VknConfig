@@ -11,7 +11,8 @@ namespace vkn
 
     VknConfig::~VknConfig()
     {
-        this->destroy();
+        if (!m_destroyed)
+            this->destroy();
     }
 
     void VknConfig::destroy()

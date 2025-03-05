@@ -9,6 +9,7 @@ namespace vkn
     class VknRenderPass
     {
     public:
+        VknRenderPass();
         VknRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx, VknInfos *infos, VknResultArchive *archive,
                       VkDevice *device, const bool *deviceCreated);
         ~VknRenderPass();
@@ -65,6 +66,7 @@ namespace vkn
         bool m_destroyed{false};
         bool m_devicesAdded{false};
         bool m_renderPassCreated{false};
+        bool m_placeholder;
 
         void addPipeline();
         void fillRenderPassCreateInfo(

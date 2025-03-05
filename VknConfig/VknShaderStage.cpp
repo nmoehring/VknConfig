@@ -24,7 +24,7 @@ namespace vkn
 
     VknShaderStage::~VknShaderStage()
     {
-        if (!m_destroyed)
+        if (!m_destroyed && !m_placeholder)
             this->destroy();
     }
 

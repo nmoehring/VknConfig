@@ -73,6 +73,7 @@ namespace vkn
 
         bool m_destroyed{false};
         bool m_vkDeviceCreated{false};
+        bool m_placeholder;
         uint32_t m_numRenderPasses{0};
 
         // Other utilities
