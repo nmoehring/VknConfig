@@ -61,9 +61,9 @@ namespace vkn
             throw std::runtime_error("Logical device not created before attempting to create shader stage.");
         if (shaderIdx != m_numShaderStages)
             throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
-        m_shaderStages.push_back(VknShaderStage{
+        m_shaderStages.emplace_back(
             m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_numShaderStages++, m_infos,
-            m_archive, m_device});
+            m_archive, m_device);
         m_shaderStages.back().setFilename(filename);
         m_shaderStages.back().setShaderStageType(stageType);
         m_shaderStages.back().setFlags(flags);

@@ -48,8 +48,8 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         m_rawPipelines.push_back(VkPipeline{});
         uint32_t newSubpassIdx = m_pipelines.size();
-        m_pipelines.push_back(VknPipeline{m_deviceIdx, m_renderPassIdx, newSubpassIdx, &m_renderPass,
-                                          &m_rawPipelines.back(), m_device, m_infos, m_archive, m_deviceCreated});
+        m_pipelines.emplace_back(m_deviceIdx, m_renderPassIdx, newSubpassIdx, &m_renderPass,
+                                 &m_rawPipelines.back(), m_device, m_infos, m_archive, m_deviceCreated);
     }
 
     void VknRenderPass::createRenderPass()

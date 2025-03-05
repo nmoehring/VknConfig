@@ -147,7 +147,7 @@ namespace vkn
             &propertyCount,
             queues.data());
         for (auto &props : queues)
-            m_queues.push_back(VknQueueFamily(props));
+            m_queues.emplace_back(props);
         m_queuesRequested = true;
     }
 
@@ -209,7 +209,7 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         if (renderPassIdx != m_numRenderPasses)
             throw std::runtime_error("RenderPassIdx passed to addRenderPass is invalid. Should be next idx.");
-        m_renderPasses.push_back(VknRenderPass(m_deviceIdx, m_numRenderPasses++, m_infos, m_resultArchive,
-                                               &m_logicalDevice, &m_vkDeviceCreated));
+        m_renderPasses.emplace_back(m_deviceIdx, m_numRenderPasses++, m_infos, m_resultArchive,
+                                    &m_logicalDevice, &m_vkDeviceCreated);
     }
 } // namespace vkn

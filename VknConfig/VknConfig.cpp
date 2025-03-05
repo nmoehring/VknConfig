@@ -6,7 +6,7 @@ namespace vkn
         : m_resultArchive(VknResultArchive{}),
           m_infos(VknInfos{})
     {
-        m_devices.push_back(VknDevice{m_numDevices++, &m_infos, &m_resultArchive, &m_instance, &m_instanceCreated});
+        this->addDevice(0);
     }
 
     VknConfig::~VknConfig()
@@ -32,7 +32,7 @@ namespace vkn
     {
         if (deviceIdx != m_numDevices)
             throw std::runtime_error("Device index should equal the current numDevices.");
-        m_devices.push_back(VknDevice{m_numDevices++, &m_infos, &m_resultArchive, &m_instance, &m_instanceCreated});
+        m_devices.emplace_back(m_numDevices++, &m_infos, &m_resultArchive, &m_instance, &m_instanceCreated);
     }
 
     void VknConfig::enableExtensions(std::vector<std::string> extensions)
