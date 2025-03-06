@@ -39,8 +39,21 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled frame buffer create info.");
-        m_infos->fillFramebufferCreateInfo(
-            *m_renderpass, m_attachments, m_width, m_height, m_numLayers, m_createFlags);
+        m_infos->fillFramebufferCreateInfo(m_deviceIdx, m_renderpassIdx, m_framebufferIdx,
+                                           *m_renderpass, m_attachments, m_width, m_height, m_numLayers, m_createFlags);
         m_filledCreateInfo = true;
+    }
+
+    void VknFramebuffer::createFramebuffer()
+    {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
+
+        if (!m_filledCreateInfo)
+            throw std::runtime_error("Trying to create framebuffer before filling create info.");
+        if (m_createdFramebuffer)
+            throw std::runtime_error("Framebuffer already created.");
+        if (!(*m_deviceCreated))
+            throw std::runtime_error("Device not created before trying to create framebuffer.");
     }
 }

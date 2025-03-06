@@ -68,6 +68,7 @@ namespace vkn
         bool m_destroyed{false};
         bool m_devicesAdded{false};
         bool m_renderpassCreated{false};
+        bool m_pipelinesCreated{false};
         bool m_filledColorAttachment{false};
         bool m_placeholder;
 

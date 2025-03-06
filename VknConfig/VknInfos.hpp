@@ -358,14 +358,17 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
         std::vector<VkVertexInputAttributeDescription> *getVertexInputAttributes(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
+        VkImageViewCreateInfo *getImageViewCreateInfo(
+            uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx);
 
-        void fillFramebufferCreateInfo(
-            VkRenderPass renderpass, std::vector<VkImageView> attachments,
-            uint32_t m_width, uint32_t m_height, uint32_t m_numLayers,
-            VkFramebufferCreateFlags flags);
-        void fillImageViewCreateInfo(VkImage image, VkImageViewType viewType, VkFormat format,
-                                     VkComponentMapping components, VkImageSubresourceRange subresourceRange,
-                                     VkImageViewCreateFlags flags);
+        void fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
+                                       uint32_t framebufferIdx, VkRenderPass &renderpass,
+                                       std::vector<VkImageView> &attachments, uint32_t width,
+                                       uint32_t height, uint32_t numLayers, VkFramebufferCreateFlags &flags);
+        void fillImageViewCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
+                                     uint32_t imageViewIdx, VkImage &image, VkImageViewType &viewType,
+                                     VkFormat &format, VkComponentMapping &components,
+                                     VkImageSubresourceRange &subresourceRange, VkImageViewCreateFlags &flags);
 
     private:
         std::string m_appName{};
@@ -416,8 +419,8 @@ namespace vkn
         std::vector<std::vector<VkRenderPass *>> m_renderpasses{};        // Device>Ptrs
         std::vector<std::vector<const bool *>> m_renderpassCreatedPtrs{}; // Device>Ptrs
 
-        std::vector<std::vector<std::vector<VknFramebuffer>>> m_framebuffers{}; // Device>Renderpass>Framebuffers
-        std::vector<std::vector<std::vector<VknImageView>>> m_swapchains{};     // Device>Swapchain>ImageViews
+        std::vector<std::vector<std::vector<VkFramebufferCreateInfo>>> m_framebufferCreateInfos{}; // Device>Renderpass>Framebuffers
+        std::vector<std::vector<std::vector<VkImageViewCreateInfo>>> m_imageViewCreateInfos{};     // Device>Swapchain>ImageViews
 
         const char m_mainEntry[5] = "main";
 

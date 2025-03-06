@@ -11,24 +11,40 @@ namespace vkn
     {
     public:
         VknImageView();
-        VknImageView(VknResultArchive *archive, VknInfos *infos);
+        VknImageView(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx,
+                     VkDevice *device, const bool *deviceCreated,
+                     VknResultArchive *archive, VknInfos *infos);
 
+        void fillCreateFlags(VkImageViewCreateFlags);
+        void setImage(VkImage image);
+        void setViewType(VkImageViewType viewType);
+        void setFormat(VkFormat format);
+        void setComponents(VkComponentMapping components);
+        void setSubresourceRange(VkImageSubresourceRange subresourceRange);
         void fillImageViewCreateInfo();
 
+        void createImageView();
+
     private:
+        uint32_t m_deviceIdx;
+        uint32_t m_swapchainIdx;
+        uint32_t m_imageViewIdx;
         bool m_placeholder;
         VknInfos *m_infos;
+        VkDevice *m_vkDevice;
+        const bool *m_vkDeviceCreated;
         VknResultArchive *m_archive;
 
         VkImageView m_imageView{};
 
-        VkImageViewCreateFlags flags{0};
-        VkImage image{};
-        VkImageViewType viewType{};
-        VkFormat format{};
-        VkComponentMapping components{};
-        VkImageSubresourceRange subresourceRange{};
+        VkImageViewCreateFlags m_createFlags{0};
+        VkImage m_image{};
+        VkImageViewType m_viewType{};
+        VkFormat m_format{};
+        VkComponentMapping m_components{};
+        VkImageSubresourceRange m_subresourceRange{};
 
-        bool filledCreateInfo{false};
+        bool m_filledCreateInfo{false};
+        bool m_createdImageView{false};
     };
 }

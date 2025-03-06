@@ -104,6 +104,8 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_shaderModuleCreated)
+            throw std::runtime_error("Shader module already created.");
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
         std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / m_filename)};
         for (auto &c : code)

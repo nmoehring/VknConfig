@@ -119,6 +119,7 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        m_clipped = clipped;
     }
 
     void VknSwapchain::setOldSwapchain(VkSwapchainKHR oldSwapchain)
@@ -127,6 +128,7 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        m_oldSwapchain = oldSwapchain;
     }
 
     VkSwapchainKHR *VknSwapchain::getVkSwapchain()

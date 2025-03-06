@@ -17,9 +17,15 @@ namespace vkn
         void fillNumLayers(uint32_t numLayers);
         void setCreateFlags(VkFramebufferCreateFlags createFlags);
         void fillFramebufferCreateInfo();
+        void createFramebuffer();
 
     private:
         // Filled in ctor
+        uint32_t deviceIdx;
+        uint32_t renderPassIdx;
+        uint32_t framebufferIdx;
+        VkDevice *m_vkDevice;
+        const bool *m_vkDeviceCreated;
         bool m_placeholder;
         VknInfos *m_infos;
         VknResultArchive *m_archive;
@@ -35,5 +41,6 @@ namespace vkn
         VkFramebufferCreateFlags m_createFlags{0};
 
         bool m_filledCreateInfo{false};
+        bool m_createdFramebuffer{false};
     };
 }

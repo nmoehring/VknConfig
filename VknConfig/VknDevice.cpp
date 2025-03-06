@@ -185,6 +185,8 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_queuesSelected)
             throw std::runtime_error("Queues not selected before trying to create device.");
+        if (m_vkDeviceCreated)
+            throw std::runtime_error("Device already created.");
         m_infos->fillDeviceExtensionNames(m_deviceIdx, m_extensions, m_extensionsSize);
         m_infos->fillDeviceFeatures(m_features);
         this->fillQueueCreateInfos();

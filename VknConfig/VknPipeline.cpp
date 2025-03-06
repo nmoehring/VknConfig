@@ -56,7 +56,7 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!m_deviceCreated)
+        if (!(*m_deviceCreated))
             throw std::runtime_error("Logical device not created before attempting to create shader stage.");
         if (shaderIdx != m_numShaderStages)
             throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
@@ -118,8 +118,10 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!m_deviceCreated)
+        if (!(*m_deviceCreated))
             throw std::runtime_error("Logical device not created before attempting to create descriptor set layout.");
+        if (m_pipelineLayoutCreated)
+            throw std::runtime_error("Pipeline layout already created, no need to create the descriptor set layout.");
         m_descriptorSetLayouts.push_back(VkDescriptorSetLayout{});
         VknResult res{
             vkCreateDescriptorSetLayout(
@@ -154,6 +156,8 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_pipelineLayoutCreated)
+            throw std::runtime_error("Already created the pipeline layout.");
         VkPipelineLayoutCreateInfo *layoutCreateInfo = m_infos->getPipelineLayoutCreateInfo(
             m_deviceIdx, m_renderpassIdx, m_subpassIdx);
         vkCreatePipelineLayout(*m_device, layoutCreateInfo, nullptr, &m_layout);

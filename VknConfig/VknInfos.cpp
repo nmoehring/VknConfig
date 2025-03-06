@@ -131,7 +131,7 @@ namespace vkn
             info.pDynamicState =
                 &m_dynamicStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Could be null if no state in the pipeline needs to be dynamic.
         info.layout = *layout;                                                    // Need fill
-        info.renderpass = *renderpass;                                            // Need fill
+        info.renderPass = *renderpass;                                            // Need fill
         info.subpass = subpassIdx;                                                // Need fill
         info.basePipelineHandle = basePipelineHandle;                             // Need fill
         info.basePipelineIndex = basePipelineIndex;                               // Need fill
@@ -980,23 +980,54 @@ namespace vkn
         return &m_vertexInputAttributes[deviceIdx][renderpassIdx][subpassIdx];
     }
 
+    VkImageViewCreateInfo *VknInfos::getImageViewCreateInfo(
+        uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx)
+    {
+        return &m_imageViewCreateInfos[deviceIdx][swapchainIdx][imageViewIdx];
+    }
+
     VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx)
     {
         return &m_swapchainCreateInfos[deviceIdx][swapchainIdx];
     }
 
-    void fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t framebufferIdx,
-                                   VkRenderPass renderpass, std::vector<VkImageView> attachments,
-                                   uint32_t m_width, uint32_t m_height, uint32_t m_numLayers,
-                                   VkFramebufferCreateFlags flags)
+    void VknInfos::fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t framebufferIdx,
+                                             VkRenderPass &renderpass, std::vector<VkImageView> &attachments,
+                                             uint32_t width, uint32_t height, uint32_t numLayers,
+                                             VkFramebufferCreateFlags &flags)
     {
-        this->initVectors()
+        this->initVectors(deviceIdx, renderpassIdx, framebufferIdx, m_framebufferCreateInfos);
+        m_framebufferCreateInfos[deviceIdx][renderpassIdx][framebufferIdx] = VkFramebufferCreateInfo{};
+        VkFramebufferCreateInfo &info = m_framebufferCreateInfos[deviceIdx][renderpassIdx][framebufferIdx];
+        info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        info.pNext = VK_NULL_HANDLE;
+        info.renderPass = renderpass;
+        info.attachmentCount = attachments.size();
+        if (info.attachmentCount == 0)
+            info.pAttachments = VK_NULL_HANDLE;
+        else
+            info.pAttachments = attachments.data();
+        info.width = width;
+        info.height = height;
+        info.layers = numLayers;
+        info.flags = flags;
     }
 
-    void fillImageViewCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx,
-                                 VkImage image, VkImageViewType viewType, VkFormat format,
-                                 VkComponentMapping components, VkImageSubresourceRange subresourceRange,
-                                 VkImageViewCreateFlags flags)
+    void VknInfos::fillImageViewCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx,
+                                           VkImage &image, VkImageViewType &viewType, VkFormat &format,
+                                           VkComponentMapping &components, VkImageSubresourceRange &subresourceRange,
+                                           VkImageViewCreateFlags &flags)
     {
+        this->initVectors(deviceIdx, swapchainIdx, imageViewIdx, m_imageViewCreateInfos);
+        m_imageViewCreateInfos[deviceIdx][swapchainIdx][imageViewIdx] = VkImageViewCreateInfo{};
+        VkImageViewCreateInfo &info = m_imageViewCreateInfos[deviceIdx][swapchainIdx][imageViewIdx];
+        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        info.pNext = VK_NULL_HANDLE;
+        info.image = image;
+        info.viewType = viewType;
+        info.format = format;
+        info.components = components;
+        info.subresourceRange = subresourceRange;
+        info.flags = flags;
     }
 }

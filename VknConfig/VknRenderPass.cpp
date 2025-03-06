@@ -35,7 +35,7 @@ namespace vkn
             throw std::runtime_error("Renderpass object already destroyed.");
 
         if (m_renderpassCreated)
-            vkDestroyRenderpass(*m_device, m_renderpass, nullptr);
+            vkDestroyRenderPass(*m_device, m_renderpass, nullptr);
         for (auto &pipeline : m_pipelines)
             pipeline.destroy();
         m_destroyed = true;
@@ -56,11 +56,13 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!m_deviceCreated)
+        if (!(*m_deviceCreated))
             throw std::runtime_error("Device not created before creating renderpass.");
+        if (m_renderpassCreated)
+            throw std::runtime_error("Renderpass already created.");
         this->fillRenderpassCreateInfo();
         VkRenderPassCreateInfo *createInfo{m_infos->getRenderpassCreateInfo(m_deviceIdx, m_renderpassIdx)};
-        VknResult res{vkCreateRenderpass(
+        VknResult res{vkCreateRenderPass(
                           *m_device, createInfo, VK_NULL_HANDLE, &m_renderpass),
                       "Create renderpass."};
         if (!res.isSuccess())
@@ -137,6 +139,8 @@ namespace vkn
             throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_renderpassCreated)
             throw std::runtime_error("Renderpass not created before creating pipelines.");
+        if (m_pipelinesCreated)
+            throw std::runtime_error("Pipelines already created.");
         for (auto &pipeline : m_pipelines)
             pipeline.fillPipelineCreateInfo();
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
@@ -150,6 +154,7 @@ namespace vkn
         m_archive->store(res);
         for (auto &pipeline : m_pipelines)
             pipeline.setPipelineCreated();
+        m_pipelinesCreated = true;
     }
 
     void VknRenderpass::createSubpass(
