@@ -8,7 +8,7 @@ namespace vkn
     {
     public:
         VknRasterizationState();
-        VknRasterizationState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VknRasterizationState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                               VknInfos *infos);
 
         void fillRasterizationStateCreateInfo();
@@ -26,7 +26,7 @@ namespace vkn
 
     private:
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
         bool m_placeholder;
         VknInfos *m_infos;

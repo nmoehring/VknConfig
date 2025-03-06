@@ -26,8 +26,8 @@ int main()
     vkn::VknConfig config{window};
     config.testNoInputs();
     auto device = config.getDevice(0);
-    auto renderPass = device->getRenderPass(0);
-    auto pipeline = renderPass->getPipeline(0);
+    auto renderpass = device->getRenderpass(0);
+    auto pipeline = renderpass->getPipeline(0);
 
     auto limits = device->getPhysicalDevice()->getLimits();
     std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;

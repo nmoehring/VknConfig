@@ -4,13 +4,13 @@
 namespace vkn
 {
     VknMultisampleState::VknMultisampleState()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_placeholder{true}
+        : m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_placeholder{true}
     {
     }
 
-    VknMultisampleState::VknMultisampleState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknMultisampleState::VknMultisampleState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                              VknInfos *infos)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_infos{infos}, m_placeholder{false}
     {
     }
@@ -63,7 +63,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder Multisample State.");
         if (m_filled)
             throw std::runtime_error("Multisample state create info already filled.");
-        m_infos->fillMultisampleStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+        m_infos->fillMultisampleStateCreateInfo(m_deviceIdx, m_renderpassIdx, m_subpassIdx,
                                                 m_minSampleShading, &m_sampleMask,
                                                 m_rasterizationSamples, m_sampleShadingEnable,
                                                 m_alphaToCoverageEnable, m_alphaToOneEnable);

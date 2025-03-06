@@ -6,17 +6,17 @@
 namespace vkn
 {
     VknShaderStage::VknShaderStage()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_shaderIdx{0}, m_placeholder{true}
+        : m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_shaderIdx{0}, m_placeholder{true}
     {
         m_infos = nullptr;
         m_vkDevice = nullptr;
         m_archive = nullptr;
     }
 
-    VknShaderStage::VknShaderStage(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknShaderStage::VknShaderStage(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                    uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
                                    VkDevice *device)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_shaderIdx{shaderIdx}, m_infos{infos}, m_vkDevice{device}, m_archive{archive},
           m_placeholder{false}
     {
@@ -32,13 +32,13 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to destroy a placeholder object.");
-        if (m_shaderModuleCreated && !m_destroyed)
-        {
-            if (m_shaderModule != VK_NULL_HANDLE)
-                vkDestroyShaderModule(*m_vkDevice, m_shaderModule, nullptr);
-            m_destroyed = true;
-            std::cout << "VknShaderStage DESTROYED." << std::endl;
-        }
+        if (m_destroyed)
+            throw std::runtime_error("ShaderStage object already destroyed.");
+
+        if (m_shaderModule != VK_NULL_HANDLE)
+            vkDestroyShaderModule(*m_vkDevice, m_shaderModule, nullptr);
+        m_destroyed = true;
+        std::cout << "VknShaderStage DESTROYED." << std::endl;
     }
 
     void VknShaderStage::setShaderStageType(VknShaderStageType shaderStageType)
@@ -95,7 +95,7 @@ namespace vkn
             specialization = &m_specializationInfo;
         else
             specialization = VK_NULL_HANDLE;
-        m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderIdx,
+        m_infos->fillShaderStageCreateInfo(m_deviceIdx, m_renderpassIdx, m_subpassIdx, m_shaderIdx,
                                            &m_shaderModule, &m_shaderStageFlagBit, &m_createFlags,
                                            specialization);
     }
@@ -110,7 +110,7 @@ namespace vkn
             m_code.push_back(c);
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(
-                m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_shaderIdx, &m_code);
+                m_deviceIdx, m_renderpassIdx, m_subpassIdx, m_shaderIdx, &m_code);
         VknResult res{
             vkCreateShaderModule(*m_vkDevice, shaderModuleCreateInfo, VK_NULL_HANDLE, &m_shaderModule),
             "Create shader module."};

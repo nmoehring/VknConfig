@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 
-#include "VknRenderPass.hpp"
+#include "VknRenderpass.hpp"
 #include "VknQueueFamily.hpp"
 #include "VknPhysicalDevice.hpp"
 #include "VknSwapchain.hpp"
@@ -23,7 +23,7 @@ namespace vkn
         void destroy();
         VknResult createDevice();
         bool getVkDeviceCreated() { return m_vkDeviceCreated; }
-        VknRenderPass *getRenderPass(uint32_t renderPassIdx);
+        VknRenderpass *getRenderpass(uint32_t renderpassIdx);
         void requestQueueFamilyProperties();
         int getNumQueueFamilies() { return m_queues.size(); }
         void setSwapchainDimensions();
@@ -42,7 +42,7 @@ namespace vkn
         VknQueueFamily &getQueue(int idx);
         VkDevice *getVkDevice();
         VknPhysicalDevice *getPhysicalDevice();
-        void addRenderPass(uint32_t newRenderPassIdx);
+        void addRenderpass(uint32_t newRenderpassIdx);
         void selectQueues(bool chooseAllAvailableQueues = false);
         void fillQueueCreateInfos();
 
@@ -50,7 +50,7 @@ namespace vkn
         static int s_numDevices;
         VkDevice m_logicalDevice{};
         VknPhysicalDevice m_physicalDevice;
-        std::list<VknRenderPass> m_renderPasses; // List, because elements don't need to be together, refs could be invalidated
+        std::list<VknRenderpass> m_renderpasses; // List, because elements don't need to be together, refs could be invalidated
         std::vector<VknQueueFamily> m_queues{};  // Vector fine, this shouldn't change.
         VknResultArchive *m_resultArchive{nullptr};
         VknInfos *m_infos{nullptr};
@@ -71,7 +71,7 @@ namespace vkn
         bool m_vkDeviceCreated{false};
         bool m_placeholder;
         bool m_filledQueueCreateInfos{false};
-        uint32_t m_numRenderPasses{0};
+        uint32_t m_numRenderpasses{0};
 
         // Other utilities
         void archiveResult(VknResult res);

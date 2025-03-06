@@ -3,13 +3,13 @@
 namespace vkn
 {
     VknInputAssemblyState::VknInputAssemblyState()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_placeholder{true}, m_infos{nullptr}
+        : m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_placeholder{true}, m_infos{nullptr}
     {
     }
 
-    VknInputAssemblyState::VknInputAssemblyState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknInputAssemblyState::VknInputAssemblyState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                                  VknInfos *infos)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_infos{infos}, m_placeholder{false}
     {
     }
@@ -28,7 +28,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder InputAssemblyState.");
         if (m_filled)
             throw std::runtime_error("Input assembly state create info already filled.");
-        m_infos->fillInputAssemblyStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+        m_infos->fillInputAssemblyStateCreateInfo(m_deviceIdx, m_renderpassIdx, m_subpassIdx,
                                                   m_topology, m_primitiveRestartEnable);
         m_filled = true;
     }

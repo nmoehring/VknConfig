@@ -24,14 +24,13 @@ namespace vkn
 
     void VknConfig::destroy()
     {
-        if (!m_destroyed)
-        {
-            for (auto &device : m_devices)
-                device.destroy();
-            if (m_instanceCreated)
-                vkDestroyInstance(m_instance, nullptr);
-            m_destroyed = true;
-        }
+        if (m_destroyed)
+            throw std::runtime_error("Config object already destroyed.");
+        for (auto &device : m_devices)
+            device.destroy();
+        if (m_instanceCreated)
+            vkDestroyInstance(m_instance, nullptr);
+        m_destroyed = true;
         std::cout << "VknConfig DESTROYED." << std::endl;
     }
 
@@ -87,14 +86,14 @@ namespace vkn
         device->selectQueues(false);
         device->fillDeviceQueuePrioritiesDefault();
         device->createDevice();
-        device->addRenderPass(0);
+        device->addRenderpass(0);
 
-        auto renderPass = device->getRenderPass(0);
-        renderPass->createAttachment(0);
-        renderPass->createSubpass(0);
-        renderPass->createRenderPass();
+        auto renderpass = device->getRenderpass(0);
+        renderpass->createAttachment(0);
+        renderpass->createSubpass(0);
+        renderpass->createRenderpass();
 
-        auto pipeline = renderPass->getPipeline(0);
+        auto pipeline = renderpass->getPipeline(0);
         pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
         pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
         auto vertShader = pipeline->getShaderStage(0);
@@ -139,7 +138,7 @@ namespace vkn
         // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
         // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
 
-        renderPass->createPipelines();
+        renderpass->createPipelines();
     }
 
     void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
@@ -181,13 +180,13 @@ namespace vkn
         return res;
     }
 
-    VknRenderPass *VknConfig::getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx)
+    VknRenderpass *VknConfig::getRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx)
     {
-        VknRenderPass *renderPass{this->getDevice(deviceIdx)->getRenderPass(renderPassIdx)};
-        if (!(renderPass->getVkRenderPassCreated()))
-            throw std::runtime_error("RenderPass not created before getting renderpass.");
+        VknRenderpass *renderpass{this->getDevice(deviceIdx)->getRenderpass(renderpassIdx)};
+        if (!(renderpass->getVkRenderPassCreated()))
+            throw std::runtime_error("Renderpass not created before getting renderpass.");
 
-        return renderPass;
+        return renderpass;
     }
 
     void VknConfig::archiveResult(VknResult res)

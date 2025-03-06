@@ -9,7 +9,7 @@ namespace vkn
     {
     public:
         VknMultisampleState();
-        VknMultisampleState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VknInfos *infos);
+        VknMultisampleState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VknInfos *infos);
         //~VknMultisampleState();
 
         void setRasterizationSamples(VkSampleCountFlagBits rasterizationSamples);
@@ -23,7 +23,7 @@ namespace vkn
 
     private:
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
         bool m_placeholder;
         VknInfos *m_infos;
@@ -36,5 +36,5 @@ namespace vkn
         VkBool32 m_alphaToOneEnable{VK_FALSE};
 
         bool m_filled{false};
-        };
+    };
 }

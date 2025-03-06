@@ -3,13 +3,13 @@
 namespace vkn
 {
     VknVertexInputState::VknVertexInputState()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_placeholder{true}
+        : m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_placeholder{true}
     {
     }
 
-    VknVertexInputState::VknVertexInputState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknVertexInputState::VknVertexInputState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                              VknInfos *infos)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_infos{infos}, m_placeholder{false}
     {
     }
@@ -20,7 +20,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder Vertex Input State.");
         if (m_filled)
             throw std::runtime_error("Vertex input state already filled.");
-        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_numBindings, m_numAttributes);
+        m_infos->fillVertexInputStateCreateInfo(m_deviceIdx, m_renderpassIdx, m_subpassIdx, m_numBindings, m_numAttributes);
         m_filled = true;
     }
 
@@ -32,7 +32,7 @@ namespace vkn
             throw std::runtime_error("Must have a binding description if there are any attribute descriptions.");
         uint32_t attributeIdx = m_numAttributes;
         m_infos->fillVertexInputAttributeDescription(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, attributeIdx, binding,
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx, attributeIdx, binding,
             location, format, offset);
         ++m_numAttributes;
         m_attributesFilled = true;
@@ -45,7 +45,7 @@ namespace vkn
             throw std::runtime_error("Attempting to configure a placeholder Vertex Input State.");
         uint32_t bindIdx = m_numBindings;
         m_infos->fillVertexInputBindingDescription(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, bindIdx, binding, stride, inputRate);
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx, bindIdx, binding, stride, inputRate);
         ++m_numBindings;
         m_bindingsFilled = true;
     }

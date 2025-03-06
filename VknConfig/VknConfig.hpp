@@ -46,11 +46,11 @@ namespace vkn
         void addDevice(uint32_t deviceIdx);
         VknResult createInstance();
         void requestQueueFamilies(uint32_t deviceIndex);
-        VknResult createRenderPass();
+        VknResult createRenderpass();
         std::vector<vkn::VknQueueFamily> getQueueData();
         VknInfos *getInfos() { return &m_infos; }
         VkInstance *getInstance() { return &m_instance; }
-        VknRenderPass *getRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);
+        VknRenderpass *getRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx);
         void enableExtensions(std::vector<std::string> extensions);
         bool getInstanceCreated() { return m_instanceCreated; }
         void selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues = false);

@@ -3,16 +3,17 @@
 #include <vector>
 
 #include "VknPipeline.hpp"
+#include "VknFramebuffer.hpp"
 
 namespace vkn
 {
-    class VknRenderPass
+    class VknRenderpass
     {
     public:
-        VknRenderPass();
-        VknRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx, VknInfos *infos, VknResultArchive *archive,
+        VknRenderpass();
+        VknRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx, VknInfos *infos, VknResultArchive *archive,
                       VkDevice *device, const bool *deviceCreated);
-        ~VknRenderPass();
+        ~VknRenderpass();
         void destroy();
 
         void createAttachment(
@@ -38,23 +39,24 @@ namespace vkn
             uint32_t subpassIdx, bool isCompute = false,
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
-        void createRenderPass();
+        void createRenderpass();
         void createPipelines();
-        VkRenderPass *getVkRenderPass() { return &m_renderPass; }
+        VkRenderPass *getVkRenderPass() { return &m_renderpass; }
         VknPipeline *getPipeline(uint32_t idx);
-        bool getVkRenderPassCreated() { return m_renderPassCreated; }
+        bool getVkRenderPassCreated() { return m_renderpassCreated; }
 
     private:
         VknInfos *m_infos{nullptr};
         VknResultArchive *m_archive{nullptr};
-        VkRenderPass m_renderPass{};
+        VkRenderPass m_renderpass{};
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         VkDevice *m_device;
         const bool *m_deviceCreated{nullptr};
 
         std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
         std::list<VknPipeline> m_pipelines;
+        std::vector<VknFramebuffer> m_framebuffers{};
         std::vector<std::vector<uint32_t>> m_numAttachRefs{};
         std::vector<uint32_t> m_numPreserveRefs{};
 
@@ -65,12 +67,12 @@ namespace vkn
 
         bool m_destroyed{false};
         bool m_devicesAdded{false};
-        bool m_renderPassCreated{false};
+        bool m_renderpassCreated{false};
         bool m_filledColorAttachment{false};
         bool m_placeholder;
 
         void addPipeline();
-        void fillRenderPassCreateInfo(
+        void fillRenderpassCreateInfo(
             VkRenderPassCreateFlags flags = 0); // No flags currently available, no need to fill.
     };
 }

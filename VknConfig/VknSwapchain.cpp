@@ -9,12 +9,11 @@ namespace vkn
 
     VknSwapchain::VknSwapchain(uint32_t deviceIdx, uint32_t swapchainIdx, VkDevice *vkDevice,
                                const bool *createdVkDevice, VknInfos *infos, VknResultArchive *archive,
-                               uint32_t imageCount, VkSurfaceKHR surface, uint32_t imageWidth,
-                               uint32_t imageHeight)
+                               VkSurfaceKHR surface)
         : m_deviceIdx{deviceIdx}, m_swapchainIdx{swapchainIdx}, m_infos{infos}, m_archive{archive},
-          m_imageCount{imageCount}, m_surface{surface}, m_dimensions{imageWidth, imageHeight},
-          m_placeholder{false}, m_vkDevice{vkDevice}
+          m_surface{surface}, m_placeholder{false}, m_vkDevice{vkDevice}, m_createdVkDevice{createdVkDevice}
     {
+        this->setImageCount(m_imageCount);
     }
 
     VknSwapchain::~VknSwapchain()
@@ -31,67 +30,109 @@ namespace vkn
         if (m_destroyed)
             throw std::runtime_error("Swapchain already destroyed.");
 
-        vkDestroySwapchainKHR(*m_vkDevice, m_vkSwapchain, VK_NULL_HANDLE);
+        if (m_createdSwapchain)
+            vkDestroySwapchainKHR(*m_vkDevice, m_vkSwapchain, VK_NULL_HANDLE);
 
         m_destroyed = true;
+    }
+
+    void VknSwapchain::setImageCount(uint32_t imageCount)
+    {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+
+        m_images.resize(imageCount);
+        m_imageViews.resize(imageCount);
+        m_imageCount = imageCount;
+    }
+
+    void VknSwapchain::setImageDimensions(uint32_t imageWidth, uint32_t imageHeight)
+    {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        m_dimensions = {imageWidth, imageHeight};
     }
 
     void VknSwapchain::setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setNumImageLayers(uint32_t numImageLayers)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setUsage(VkImageUsageFlags usage)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setSharingMode(VkSharingMode sharingMode)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setPreTransform(VkSurfaceTransformFlagBitsKHR preTransform)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setCompositeAlpha(VkCompositeAlphaFlagBitsKHR compositeAlpha)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setPresentMode(VkPresentModeKHR presentMode)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setClipped(bool clipped)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     void VknSwapchain::setOldSwapchain(VkSwapchainKHR oldSwapchain)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
     }
 
     VkSwapchainKHR *VknSwapchain::getVkSwapchain()
     {
+        if (!m_createdSwapchain)
+            throw std::runtime_error("Trying to get swapchain before it's created.");
         return &m_vkSwapchain;
     }
 
@@ -116,6 +157,8 @@ namespace vkn
             throw std::runtime_error("Didn't fill create info before trying to create swapchain.");
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before trying to create swapchain.");
+        if (m_createdSwapchain)
+            throw std::runtime_error("Already created swapchain.");
 
         VkSwapchainCreateInfoKHR *createInfo{m_infos->getSwapchainCreateInfo(m_deviceIdx, m_swapchainIdx)};
         VknResult res{
@@ -124,5 +167,30 @@ namespace vkn
         if (!res.isSuccess())
             throw std::runtime_error(res.toErr("Error creating swapchain."));
         m_archive->store(res);
+
+        m_createdSwapchain = true;
+    }
+
+    void VknSwapchain::getImages()
+    {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+
+        uint32_t imageCount{0};
+        vkGetSwapchainImagesKHR(*m_vkDevice, m_vkSwapchain, &imageCount, VK_NULL_HANDLE);
+        std::vector<VkImage> swapChainImages(imageCount);
+        vkGetSwapchainImagesKHR(*m_vkDevice, m_vkSwapchain, &imageCount, m_images.data());
+    }
+
+    void VknSwapchain::createImageViews()
+    {
+        if (m_placeholder)
+            throw std::runtime_error("Trying to configure a placeholder object.");
+        if (!m_createdSwapchain)
+            throw std::runtime_error("Can't create image views before creating the swapchain.");
+        for (int i = 0; i < m_images.size(); ++i)
+            m_imageViews[i] = VknImageView{m_archive, m_infos};
     }
 }

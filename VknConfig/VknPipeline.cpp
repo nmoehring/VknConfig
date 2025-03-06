@@ -7,23 +7,23 @@ namespace vkn
 {
     VknPipeline::VknPipeline()
         : m_device{nullptr}, m_infos{nullptr}, m_archive{nullptr}, m_pipeline{nullptr},
-          m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_deviceCreated{nullptr},
+          m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_deviceCreated{nullptr},
           m_placeholder{true}
     {
     }
 
-    VknPipeline::VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
-                             VkRenderPass *renderPass, VkPipeline *pipeline,
+    VknPipeline::VknPipeline(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+                             VkRenderPass *renderpass, VkPipeline *pipeline,
                              VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated)
         : m_pipeline{pipeline}, m_device{dev}, m_infos{infos}, m_archive{archive},
-          m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+          m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_deviceCreated{deviceCreated}, m_placeholder{false}
     {
-        m_vertexInputState = VknVertexInputState{deviceIdx, renderPassIdx, subpassIdx, infos};
-        m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderPassIdx, subpassIdx, infos};
-        m_multisampleState = VknMultisampleState{deviceIdx, renderPassIdx, subpassIdx, infos};
-        m_rasterizationState = VknRasterizationState{deviceIdx, renderPassIdx, subpassIdx, infos};
-        m_viewportState = VknViewportState{deviceIdx, renderPassIdx, subpassIdx, infos};
+        m_vertexInputState = VknVertexInputState{deviceIdx, renderpassIdx, subpassIdx, infos};
+        m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderpassIdx, subpassIdx, infos};
+        m_multisampleState = VknMultisampleState{deviceIdx, renderpassIdx, subpassIdx, infos};
+        m_rasterizationState = VknRasterizationState{deviceIdx, renderpassIdx, subpassIdx, infos};
+        m_viewportState = VknViewportState{deviceIdx, renderpassIdx, subpassIdx, infos};
     }
 
     VknPipeline::~VknPipeline()
@@ -36,20 +36,19 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to destroy a placeholder object.");
-        if (!m_destroyed)
-        {
-            if (!m_destroyed)
-                for (auto &shaderStage : m_shaderStages)
-                    shaderStage.destroy();
-            if (m_pipelineLayoutCreated)
-                vkDestroyPipelineLayout(*m_device, m_layout, nullptr);
-            for (auto &descriptorSetLayout : m_descriptorSetLayouts)
-                vkDestroyDescriptorSetLayout(*m_device, descriptorSetLayout, nullptr);
-            if (m_pipelineCreated)
-                vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
-            m_destroyed = true;
-            std::cout << "VknPipeline DESTROYED." << std::endl;
-        }
+        if (m_destroyed)
+            throw std::runtime_error("Pipeline object already destroyed.");
+
+        for (auto &shaderStage : m_shaderStages)
+            shaderStage.destroy();
+        if (m_pipelineLayoutCreated)
+            vkDestroyPipelineLayout(*m_device, m_layout, nullptr);
+        for (auto &descriptorSetLayout : m_descriptorSetLayouts)
+            vkDestroyDescriptorSetLayout(*m_device, descriptorSetLayout, nullptr);
+        if (m_pipelineCreated)
+            vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
+        m_destroyed = true;
+        std::cout << "VknPipeline DESTROYED." << std::endl;
     }
 
     void VknPipeline::addShaderStage(uint32_t shaderIdx,
@@ -62,7 +61,7 @@ namespace vkn
         if (shaderIdx != m_numShaderStages)
             throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
         m_shaderStages.emplace_back(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_numShaderStages++, m_infos,
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx, m_numShaderStages++, m_infos,
             m_archive, m_device);
         m_shaderStages.back().setFilename(filename);
         m_shaderStages.back().setShaderStageType(stageType);
@@ -88,7 +87,7 @@ namespace vkn
         if (m_createInfoFilled)
             throw std::runtime_error("Pipeline create info already filled.");
         m_infos->fillGfxPipelineCreateInfo(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_layout, basePipelineHandle,
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx, &m_layout, basePipelineHandle,
             basePipelineIndex, flags);
         m_createInfoFilled = true;
     }
@@ -147,7 +146,7 @@ namespace vkn
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        m_infos->fillPipelineLayoutCreateInfo(m_deviceIdx, m_renderPassIdx, m_subpassIdx,
+        m_infos->fillPipelineLayoutCreateInfo(m_deviceIdx, m_renderpassIdx, m_subpassIdx,
                                               m_descriptorSetLayouts, m_pushConstantRanges, flags);
     }
 
@@ -156,7 +155,7 @@ namespace vkn
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
         VkPipelineLayoutCreateInfo *layoutCreateInfo = m_infos->getPipelineLayoutCreateInfo(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx);
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx);
         vkCreatePipelineLayout(*m_device, layoutCreateInfo, nullptr, &m_layout);
         m_pipelineLayoutCreated = true;
     }

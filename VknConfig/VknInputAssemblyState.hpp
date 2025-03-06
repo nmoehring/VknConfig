@@ -11,7 +11,7 @@ namespace vkn
     {
     public:
         VknInputAssemblyState();
-        VknInputAssemblyState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VknInputAssemblyState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                               VknInfos *infos);
         //~VknInputAssemblyState();
 
@@ -20,7 +20,7 @@ namespace vkn
 
     private:
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
 
         VknInfos *m_infos;

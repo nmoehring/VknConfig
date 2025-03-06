@@ -15,7 +15,7 @@ namespace vkn
     {
     public:
         VknShaderStage();
-        VknShaderStage(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VknShaderStage(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                        uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
                        VkDevice *device);
         ~VknShaderStage();
@@ -29,7 +29,7 @@ namespace vkn
 
     private:
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
         uint32_t m_shaderIdx;
         std::vector<char> m_code;

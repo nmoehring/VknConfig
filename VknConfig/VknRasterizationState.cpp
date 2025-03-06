@@ -3,13 +3,13 @@
 namespace vkn
 {
     VknRasterizationState::VknRasterizationState()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_placeholder{true}
+        : m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_placeholder{true}
     {
     }
 
-    VknRasterizationState::VknRasterizationState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknRasterizationState::VknRasterizationState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                                  VknInfos *infos)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_infos{infos}, m_placeholder{false}
     {
     }
@@ -21,7 +21,7 @@ namespace vkn
         if (m_filled)
             throw std::runtime_error("RasterizationStateCreateInfo already filled.");
         m_infos->fillRasterizationStateCreateInfo(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, m_polygonMode, m_cullMode, m_frontFace,
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx, m_polygonMode, m_cullMode, m_frontFace,
             m_depthClampEnable, m_rasterizerDiscardEnable, m_depthBiasEnable, m_lineWidth);
 
         m_filled = true;

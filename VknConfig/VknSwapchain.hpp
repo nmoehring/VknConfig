@@ -4,6 +4,7 @@
 
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
+#include "VknImageView.hpp"
 
 namespace vkn
 {
@@ -12,11 +13,12 @@ namespace vkn
     public:
         VknSwapchain();
         VknSwapchain(uint32_t deviceIdx, uint32_t swapchainIdx, VkDevice *vkDevice, const bool *createdVkDevice,
-                     VknInfos *m_infos, VknResultArchive *archive, uint32_t imageCount, VkSurfaceKHR surface,
-                     uint32_t imageWidth, uint32_t imageHeight);
+                     VknInfos *m_infos, VknResultArchive *archive, VkSurfaceKHR surface);
         ~VknSwapchain();
         void destroy();
 
+        void setImageCount(uint32_t imageCount);
+        void setImageDimensions(uint32_t imageWidth, uint32_t imageHeight);
         void setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace);
         void setNumImageLayers(uint32_t numImageLayers);
         void setUsage(VkImageUsageFlags usage);
@@ -31,6 +33,8 @@ namespace vkn
 
         void fillSwapchainCreateInfo();
         void createSwapchain();
+        void getImages();
+        void createImageViews();
 
     private:
         uint32_t m_deviceIdx;
@@ -44,10 +48,12 @@ namespace vkn
         bool m_placeholder;
 
         VkSurfaceKHR m_surface{};
+        std::vector<VknImageView> m_imageViews{};
+        std::vector<VkImage> m_images{};
 
         bool m_filledCreateInfo{false};
         bool m_destroyed{false};
-
+        bool m_createdSwapchain{false};
         VkSurfaceFormatKHR m_surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
         uint32_t m_numImageArrayLayers = 1;
         VkImageUsageFlags m_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;

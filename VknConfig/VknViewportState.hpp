@@ -8,9 +8,9 @@ namespace vkn
     {
     public:
         VknViewportState();
-        VknViewportState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VknViewportState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                          VknInfos *infos);
-        VknViewportState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VknViewportState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                          VknInfos *infos, VkExtent2D *swapchainExtent, const bool *swapchainCreated);
 
         void fillViewportStateCreateInfo();
@@ -24,7 +24,7 @@ namespace vkn
 
     private:
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
         bool m_placeholder;
 

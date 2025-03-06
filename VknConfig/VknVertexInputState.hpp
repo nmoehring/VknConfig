@@ -11,7 +11,7 @@ namespace vkn
     {
     public:
         VknVertexInputState();
-        VknVertexInputState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+        VknVertexInputState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                             VknInfos *infos);
         //~VknVertexInputState();
 
@@ -23,7 +23,7 @@ namespace vkn
 
     private:
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
         VknInfos *m_infos;
         bool m_placeholder;

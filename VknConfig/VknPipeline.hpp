@@ -20,7 +20,7 @@ namespace vkn
     {
     public:
         VknPipeline();
-        VknPipeline(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx, VkRenderPass *renderPass,
+        VknPipeline(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VkRenderPass *renderpass,
                     VkPipeline *pipeline,
                     VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated);
         ~VknPipeline();
@@ -58,7 +58,7 @@ namespace vkn
     private:
         // Ctor init
         uint32_t m_deviceIdx;
-        uint32_t m_renderPassIdx;
+        uint32_t m_renderpassIdx;
         uint32_t m_subpassIdx;
         VkDevice *m_device;
         const bool *m_deviceCreated;

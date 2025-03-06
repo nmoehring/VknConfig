@@ -3,22 +3,22 @@
 namespace vkn
 {
     VknViewportState::VknViewportState()
-        : m_deviceIdx{0}, m_renderPassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_swapchainExtent(nullptr),
+        : m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_infos{nullptr}, m_swapchainExtent(nullptr),
           m_swapchainCreated{nullptr}, m_placeholder{true}
     {
     }
 
-    VknViewportState::VknViewportState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknViewportState::VknViewportState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                        VknInfos *infos)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_infos{infos}, m_placeholder{false}
     {
     }
 
-    VknViewportState::VknViewportState(uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx,
+    VknViewportState::VknViewportState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
                                        VknInfos *infos, VkExtent2D *swapchainExtent,
                                        const bool *swapchainCreated)
-        : m_deviceIdx{deviceIdx}, m_renderPassIdx{renderPassIdx}, m_subpassIdx{subpassIdx},
+        : m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
           m_infos{infos}, m_swapchainExtent{swapchainExtent}, m_swapchainCreated{swapchainCreated},
           m_placeholder{false}
     {
@@ -31,7 +31,7 @@ namespace vkn
         if (m_filled)
             throw std::runtime_error("ViewportStateCreateInfo already filled.");
         m_infos->fillViewportStateCreateInfo(
-            m_deviceIdx, m_renderPassIdx, m_subpassIdx, &m_viewports, &m_scissors);
+            m_deviceIdx, m_renderpassIdx, m_subpassIdx, &m_viewports, &m_scissors);
         m_filled = true;
     }
 

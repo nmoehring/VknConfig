@@ -31,18 +31,18 @@ namespace vkn
         if (m_placeholder)
             throw std::runtime_error("Trying to destroy a placeholder object.");
 
-        if (!m_destroyed && !m_placeholder)
-        {
-            for (auto &renderPass : m_renderPasses)
-                renderPass.destroy();
-            if (m_vkDeviceCreated)
-                vkDestroyDevice(m_logicalDevice, nullptr);
-            if (m_swapchains.size() > 0)
-                for (auto &swapchain : m_swapchains)
-                    swapchain.destroy();
-            m_destroyed = true;
-            std::cout << "VknDevice DESTROYED." << std::endl;
-        }
+        if (m_destroyed)
+            throw std::runtime_error("Device object already destroyed.");
+
+        for (auto &renderpass : m_renderpasses)
+            renderpass.destroy();
+        if (m_vkDeviceCreated)
+            vkDestroyDevice(m_logicalDevice, nullptr);
+        if (m_swapchains.size() > 0)
+            for (auto &swapchain : m_swapchains)
+                swapchain.destroy();
+        m_destroyed = true;
+        std::cout << "VknDevice DESTROYED." << std::endl;
     }
 
     void VknDevice::addSwapchain(
@@ -116,14 +116,14 @@ namespace vkn
         m_resultArchive->store(res);
     }
 
-    VknRenderPass *VknDevice::getRenderPass(uint32_t renderPassIdx)
+    VknRenderpass *VknDevice::getRenderpass(uint32_t renderpassIdx)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (renderPassIdx >= m_numRenderPasses)
+        if (renderpassIdx >= m_numRenderpasses)
             throw std::runtime_error("Render pass index out of range.");
-        std::list<VknRenderPass>::iterator it = m_renderPasses.begin();
-        std::advance(it, renderPassIdx);
+        std::list<VknRenderpass>::iterator it = m_renderpasses.begin();
+        std::advance(it, renderpassIdx);
         return &(*it);
     }
 
@@ -212,13 +212,13 @@ namespace vkn
         m_filledQueueCreateInfos = true;
     }
 
-    void VknDevice::addRenderPass(uint32_t renderPassIdx)
+    void VknDevice::addRenderpass(uint32_t renderpassIdx)
     {
         if (m_placeholder)
             throw std::runtime_error("Trying to configure a placeholder object.");
-        if (renderPassIdx != m_numRenderPasses)
-            throw std::runtime_error("RenderPassIdx passed to addRenderPass is invalid. Should be next idx.");
-        m_renderPasses.emplace_back(m_deviceIdx, m_numRenderPasses++, m_infos, m_resultArchive,
+        if (renderpassIdx != m_numRenderpasses)
+            throw std::runtime_error("RenderpassIdx passed to addRenderpass is invalid. Should be next idx.");
+        m_renderpasses.emplace_back(m_deviceIdx, m_numRenderpasses++, m_infos, m_resultArchive,
                                     &m_logicalDevice, &m_vkDeviceCreated);
     }
 } // namespace vkn
