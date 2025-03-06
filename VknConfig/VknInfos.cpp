@@ -747,16 +747,17 @@ namespace vkn
         return &info;
     }
 
-    VkSwapchainCreateInfoKHR *VknInfos::fillSwapChainCreateInfo(
-        uint32_t pipelineIdx,
+    VkSwapchainCreateInfoKHR *VknInfos::fillSwapchainCreateInfo(
+        uint32_t deviceIdx, uint32_t swapchainIdx,
         VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
         VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
         VkSharingMode sharingMode, VkSurfaceTransformFlagBitsKHR preTransform,
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
         VkSwapchainKHR oldSwapchain)
     {
-        m_swapChainCreateInfos[pipelineIdx].push_back(VkSwapchainCreateInfoKHR{});
-        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapChainCreateInfos[pipelineIdx].back();
+        this->initVectors<VkSwapchainCreateInfoKHR>(deviceIdx, swapchainIdx, m_swapchainCreateInfos);
+        m_swapchainCreateInfos[deviceIdx][swapchainIdx] = VkSwapchainCreateInfoKHR{};
+        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapchainCreateInfos[deviceIdx][swapchainIdx];
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainInfo.surface = surface;                  // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain
@@ -977,5 +978,10 @@ namespace vkn
         uint32_t deviceIdx, uint32_t renderPassIdx, uint32_t subpassIdx)
     {
         return &m_vertexInputAttributes[deviceIdx][renderPassIdx][subpassIdx];
+    }
+
+    VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx)
+    {
+        return &m_swapchainCreateInfos[deviceIdx][swapchainIdx];
     }
 }

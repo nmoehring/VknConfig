@@ -109,12 +109,9 @@ namespace vkn
         {
             if (expected < -1)
                 throw std::runtime_error("Incorrect expected size parameter in areVectorsFilled().");
-            if (vectors.size() == 0)
+            else if (expected > -1 && vectors.size() != expected)
                 return false;
-            if (expected != -1)
-                return vectors.size() == expected;
-            else
-                return true;
+            return true;
         }
 
         // getters
@@ -187,6 +184,7 @@ namespace vkn
             return *(m_renderPassCreatedPtrs[deviceIdx][renderPassIdx]);
         }
         void initRenderPass(uint32_t deviceIdx, uint32_t renderPassIdx);
+        VkSwapchainCreateInfoKHR *getSwapchainCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx);
 
         uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx)
         {
@@ -233,8 +231,8 @@ namespace vkn
                                        VkDeviceQueueCreateFlags flags = 0);
         VkDeviceCreateInfo *fillDeviceCreateInfo(uint32_t deviceIdx);
 
-        VkSwapchainCreateInfoKHR *fillSwapChainCreateInfo(
-            uint32_t deviceIdx, VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
+        VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo(
+            uint32_t deviceIdx, uint32_t swapchainIdx, VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
             VkSurfaceFormatKHR surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
             uint32_t numImageArrayLayers = 1, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -391,7 +389,7 @@ namespace vkn
         std::vector<std::vector<std::vector<VkPipelineColorBlendStateCreateInfo>>> m_colorBlendStateCreateInfos{};
         std::vector<std::vector<std::vector<VkPipelineDynamicStateCreateInfo>>> m_dynamicStateCreateInfos{};
         std::vector<std::vector<std::vector<VkGraphicsPipelineCreateInfo>>> m_gfxPipelineCreateInfos{}; // Device>RenderPass>Subpass,Pipeline
-        std::vector<std::vector<VkSwapchainCreateInfoKHR>> m_swapChainCreateInfos{};
+        std::vector<std::vector<VkSwapchainCreateInfoKHR>> m_swapchainCreateInfos{};
 
         std::vector<std::vector<VkRenderPassCreateInfo>> m_renderPassCreateInfos{};                                      // Device>infos
         std::vector<std::vector<std::vector<VkAttachmentDescription>>> m_attachmentDescriptions{};                       // Device>RenderPass>infos

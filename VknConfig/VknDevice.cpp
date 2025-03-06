@@ -37,12 +37,32 @@ namespace vkn
                 renderPass.destroy();
             if (m_vkDeviceCreated)
                 vkDestroyDevice(m_logicalDevice, nullptr);
-            if (m_swapChains.size() > 0)
-                for (auto &swapchain : m_swapChains)
-                    vkDestroySwapchainKHR(m_logicalDevice, swapchain, VK_NULL_HANDLE);
+            if (m_swapchains.size() > 0)
+                for (auto &swapchain : m_swapchains)
+                    swapchain.destroy();
             m_destroyed = true;
             std::cout << "VknDevice DESTROYED." << std::endl;
         }
+    }
+
+    void VknDevice::addSwapchain(
+        uint32_t swapchainIdx, VkSurfaceKHR surface, uint32_t imageCount, uint32_t imageWidth, uint32_t imageHeight)
+    {
+        m_swapchains.emplace_back(m_deviceIdx, swapchainIdx, &m_logicalDevice, &m_vkDeviceCreated, m_infos,
+                                  m_resultArchive, 1, surface, imageWidth, imageHeight);
+    }
+
+    void VknDevice::fillSwapchainCreateInfos()
+    {
+        for (auto &swapchain : m_swapchains)
+            swapchain.fillSwapchainCreateInfo();
+    }
+
+    VknSwapchain *VknDevice::getSwapchain(uint32_t swapchainIdx)
+    {
+        if (swapchainIdx + 1 > m_swapchains.size())
+            throw std::runtime_error("GetSwapchain index out of range.");
+        return &m_swapchains[swapchainIdx];
     }
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
@@ -190,38 +210,6 @@ namespace vkn
         for (int i = 0; i < m_queues.size(); ++i)
             m_infos->fillDeviceQueueCreateInfo(m_deviceIdx, i, m_queues[i].getNumSelected());
         m_filledQueueCreateInfos = true;
-    }
-
-    void VknDevice::fillSwapChainCreateInfo(
-        VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
-        VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
-        VkSharingMode sharingMode, VkSurfaceTransformFlagBitsKHR preTransform,
-        VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
-        VkSwapchainKHR oldSwapchain)
-    {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        m_swapChainCreateInfos.push_back(m_infos->fillSwapChainCreateInfo(m_deviceIdx, surface, imageCount, dimensions, surfaceFormat,
-                                                                          numImageArrayLayers, usage, sharingMode, preTransform,
-                                                                          compositeAlpha, presentMode, clipped, oldSwapchain));
-    }
-
-    void VknDevice::createSwapChains()
-    {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!m_vkDeviceCreated)
-            throw std::runtime_error("VkDevice not created before creating swapchains.");
-        for (auto &swapchainInfo : m_swapChainCreateInfos)
-        {
-            m_swapChains.push_back(VkSwapchainKHR{});
-            VknResult res{
-                vkCreateSwapchainKHR(m_logicalDevice, swapchainInfo, nullptr, &m_swapChains.back()),
-                "Create swapchain"};
-            if (!res.isSuccess())
-                throw std::runtime_error(res.toErr("Error creating swapchain."));
-            m_resultArchive->store(res);
-        }
     }
 
     void VknDevice::addRenderPass(uint32_t renderPassIdx)

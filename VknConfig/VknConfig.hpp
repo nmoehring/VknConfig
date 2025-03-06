@@ -3,13 +3,19 @@
 // Interface: need to select a physical device,
 //           need to select queue families
 
+#define VK_USE_PLATFORM_WIN32_KHR
+#define GLFW_INCLUDE_VULKAN
+
 #pragma once
 
 #include <vector>
 #include <memory>
 #include <functional>
 #include <stdexcept>
+
 #include <vulkan/vulkan.h>
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
@@ -24,6 +30,7 @@ namespace vkn
         void testNoInputs();
 
         VknConfig();
+        VknConfig(GLFWwindow *window);
         ~VknConfig();
         void destroy();
         void fillAppInfo(uint32_t apiVersion, std::string appName,
@@ -48,6 +55,7 @@ namespace vkn
         bool getInstanceCreated() { return m_instanceCreated; }
         void selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues = false);
         VknDevice *getDevice(uint32_t deviceIdx);
+        void createWindowSurface();
 
     private:
         VknResultArchive m_resultArchive;
@@ -55,6 +63,8 @@ namespace vkn
         VkInstance m_instance;
         std::list<VknDevice> m_devices{};                // A vector is fine because all the devices are inserted in one function call
         std::vector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
+        GLFWwindow *m_window;
+        VkSurfaceKHR m_surface;
 
         bool m_instanceCreated{false};
         bool m_physicalDeviceSelected{false};

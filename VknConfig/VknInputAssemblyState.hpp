@@ -25,7 +25,7 @@ namespace vkn
 
         VknInfos *m_infos;
 
-        VkPrimitiveTopology m_topology{VK_PRIMITIVE_TOPOLOGY_POINT_LIST};
+        VkPrimitiveTopology m_topology{VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
         VkBool32 m_primitiveRestartEnable{VK_FALSE};
 
         bool m_filled{false};

@@ -21,7 +21,9 @@ bool initWindow(GLFWwindow **outWindow);
 
 int main()
 {
-    vkn::VknConfig config{};
+    GLFWwindow *window = nullptr;
+    initWindow(&window);
+    vkn::VknConfig config{window};
     config.testNoInputs();
     auto device = config.getDevice(0);
     auto renderPass = device->getRenderPass(0);
@@ -43,8 +45,12 @@ int main()
         ++idx;
     }
 
-    GLFWwindow *window_ = nullptr;
-    initWindow(&window_);
+    while (!glfwWindowShouldClose(window))
+    {
+        // Poll for and process events
+        glfwPollEvents();
+    }
+    glfwDestroyWindow(window);
 }
 
 bool initWindow(GLFWwindow **outWindow)

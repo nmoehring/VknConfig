@@ -3,8 +3,15 @@
 namespace vkn
 {
     VknConfig::VknConfig()
-        : m_resultArchive(VknResultArchive{}),
-          m_infos(VknInfos{})
+        : m_resultArchive(VknResultArchive{}), m_infos(VknInfos{}),
+          m_window(nullptr)
+    {
+        this->addDevice(0);
+    }
+
+    VknConfig::VknConfig(GLFWwindow *window)
+        : m_resultArchive(VknResultArchive{}), m_infos(VknInfos{}),
+          m_window(window)
     {
         this->addDevice(0);
     }
@@ -53,11 +60,12 @@ namespace vkn
         std::string appName{"NoInputsTest"};
         std::string engineName{"MinVknConfig"};
         this->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
-        const uint32_t instanceExtensionsSize{1};
+        const uint32_t instanceExtensionsSize{2};
         const char *instanceExtensions[instanceExtensionsSize] = {
             // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
             // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-            VK_KHR_SURFACE_EXTENSION_NAME};
+            VK_KHR_SURFACE_EXTENSION_NAME,
+            VK_KHR_WIN32_SURFACE_EXTENSION_NAME};
         const uint32_t layersSize{0};
         const char *layers[]{nullptr};
         this->fillInstanceCreateInfo(
@@ -121,6 +129,12 @@ namespace vkn
             tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
             multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
         */
+
+        this->createWindowSurface();
+        device->addSwapchain(0, m_surface, 1, 800, 600);
+        device->fillSwapchainCreateInfos();
+        VknSwapchain *swapchain{device->getSwapchain(0)};
+        swapchain->createSwapchain();
 
         // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
         // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
@@ -188,5 +202,15 @@ namespace vkn
         std::list<VknDevice>::iterator it = m_devices.begin();
         std::advance(it, deviceIdx);
         return &(*it);
+    }
+
+    void VknConfig::createWindowSurface()
+    {
+        if (!m_instanceCreated)
+            throw std::runtime_error("Didn't create instance before trying to create window surface.");
+        if (m_window == nullptr)
+            throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
+        if (glfwCreateWindowSurface(m_instance, m_window, nullptr, &m_surface) != VK_SUCCESS)
+            throw std::runtime_error("Failed to create window surface!");
     }
 }
