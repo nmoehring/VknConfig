@@ -6,9 +6,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VknImageView.hpp"
-#include "VknSwapchain.hpp"
-
 namespace vkn
 {
     enum VknAttachmentType
@@ -235,7 +232,7 @@ namespace vkn
         VkDeviceCreateInfo *fillDeviceCreateInfo(uint32_t deviceIdx);
 
         VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo(
-            uint32_t deviceIdx, uint32_t swapchainIdx, VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
+            uint32_t deviceIdx, uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount, VkExtent2D dimensions,
             VkSurfaceFormatKHR surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
             uint32_t numImageArrayLayers = 1, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -360,11 +357,14 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
         VkImageViewCreateInfo *getImageViewCreateInfo(
             uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx);
+        VkFramebufferCreateInfo *getFramebufferCreateInfo(
+            uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx);
 
-        void fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
-                                       uint32_t framebufferIdx, VkRenderPass &renderpass,
-                                       std::vector<VkImageView> &attachments, uint32_t width,
-                                       uint32_t height, uint32_t numLayers, VkFramebufferCreateFlags &flags);
+        void
+        fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
+                                  uint32_t framebufferIdx, VkRenderPass *renderpass,
+                                  std::vector<VkImageView> *attachments, uint32_t width,
+                                  uint32_t height, uint32_t numLayers, VkFramebufferCreateFlags &flags);
         void fillImageViewCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
                                      uint32_t imageViewIdx, VkImage &image, VkImageViewType &viewType,
                                      VkFormat &format, VkComponentMapping &components,

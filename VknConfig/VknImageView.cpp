@@ -4,16 +4,17 @@ namespace vkn
 {
     VknImageView::VknImageView() : m_placeholder{true}, m_deviceIdx{0}, m_swapchainIdx{0},
                                    m_imageViewIdx{0}, m_vkDevice{VK_NULL_HANDLE},
-                                   m_deviceCreated{nullptr}, m_archive{nullptr}, m_infos{nullptr}
+                                   m_vkDeviceCreated{nullptr}, m_archive{nullptr}, m_infos{nullptr},
+                                   m_imageView{nullptr}
     {
     }
 
     VknImageView::VknImageView(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx,
                                VkDevice *device, const bool *deviceCreated,
-                               VknResultArchive *archive, VknInfos *infos)
+                               VknInfos *infos, VknResultArchive *archive, VkImageView *imageView)
         : m_deviceIdx{deviceIdx}, m_swapchainIdx{swapchainIdx}, m_imageViewIdx{imageViewIdx},
           m_placeholder{false}, m_archive{archive}, m_infos{infos}, m_vkDevice{device},
-          m_deviceCreated{deviceCreated}
+          m_vkDeviceCreated{deviceCreated}, m_imageView{imageView}
     {
     }
 
@@ -105,7 +106,7 @@ namespace vkn
         if (!(*m_vkDeviceCreated))
             throw std::runtime_error("Device not created before trying to create image view.");
         VkImageViewCreateInfo *createInfo{m_infos->getImageViewCreateInfo(m_deviceIdx, m_swapchainIdx, m_imageViewIdx)};
-        vkCreateImageView(*m_vkDevice, createInfo, VK_NULL_HANDLE, &m_imageView);
+        vkCreateImageView(*m_vkDevice, createInfo, VK_NULL_HANDLE, m_imageView);
         m_createdImageView = true;
     }
 }

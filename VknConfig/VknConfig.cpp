@@ -130,7 +130,7 @@ namespace vkn
         */
 
         this->createWindowSurface();
-        device->addSwapchain(0, m_surface, 1, 800, 600);
+        device->addSwapchain(0, &m_surface, 1, 800, 600);
         device->fillSwapchainCreateInfos();
         VknSwapchain *swapchain{device->getSwapchain(0)};
         swapchain->createSwapchain();

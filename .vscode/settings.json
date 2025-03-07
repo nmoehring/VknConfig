@@ -43,6 +43,7 @@
         "RAPIDJSON",
         "reflectd",
         "renderpass",
+        "renderpasses",
         "SDKLIBS",
         "SPIR",
         "SPIRV",

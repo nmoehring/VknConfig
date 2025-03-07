@@ -46,10 +46,10 @@ namespace vkn
     }
 
     void VknDevice::addSwapchain(
-        uint32_t swapchainIdx, VkSurfaceKHR surface, uint32_t imageCount, uint32_t imageWidth, uint32_t imageHeight)
+        uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount, uint32_t imageWidth, uint32_t imageHeight)
     {
         m_swapchains.emplace_back(m_deviceIdx, swapchainIdx, &m_logicalDevice, &m_vkDeviceCreated, m_infos,
-                                  m_resultArchive, 1, surface, imageWidth, imageHeight);
+                                  m_resultArchive, surface);
     }
 
     void VknDevice::fillSwapchainCreateInfos()

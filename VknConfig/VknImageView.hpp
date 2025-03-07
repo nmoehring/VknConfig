@@ -11,9 +11,7 @@ namespace vkn
     {
     public:
         VknImageView();
-        VknImageView(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx,
-                     VkDevice *device, const bool *deviceCreated,
-                     VknResultArchive *archive, VknInfos *infos);
+        VknImageView(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx, VkDevice *device, const bool *deviceCreated, VknInfos *infos, VknResultArchive *archive, VkImageView *imageView);
 
         void fillCreateFlags(VkImageViewCreateFlags);
         void setImage(VkImage image);
@@ -29,13 +27,13 @@ namespace vkn
         uint32_t m_deviceIdx;
         uint32_t m_swapchainIdx;
         uint32_t m_imageViewIdx;
-        bool m_placeholder;
         VknInfos *m_infos;
+        VknResultArchive *m_archive;
+        bool m_placeholder;
         VkDevice *m_vkDevice;
         const bool *m_vkDeviceCreated;
-        VknResultArchive *m_archive;
 
-        VkImageView m_imageView{};
+        VkImageView *m_imageView{};
 
         VkImageViewCreateFlags m_createFlags{0};
         VkImage m_image{};

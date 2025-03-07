@@ -30,7 +30,7 @@ namespace vkn
         void addExtensions(const char *ext[], uint32_t size);
         void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities);
         void fillDeviceQueuePrioritiesDefault();
-        void addSwapchain(uint32_t swapchainIdx, VkSurfaceKHR surface, uint32_t imageCount,
+        void addSwapchain(uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
                           uint32_t imageWidth, uint32_t imageHeight);
         void fillSwapchainCreateInfos();
         VknSwapchain *getSwapchain(uint32_t swapchainIdx);

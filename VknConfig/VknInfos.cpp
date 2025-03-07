@@ -749,7 +749,7 @@ namespace vkn
 
     VkSwapchainCreateInfoKHR *VknInfos::fillSwapchainCreateInfo(
         uint32_t deviceIdx, uint32_t swapchainIdx,
-        VkSurfaceKHR surface, uint32_t imageCount, VkExtent2D dimensions,
+        VkSurfaceKHR *surface, uint32_t imageCount, VkExtent2D dimensions,
         VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
         VkSharingMode sharingMode, VkSurfaceTransformFlagBitsKHR preTransform,
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
@@ -759,7 +759,7 @@ namespace vkn
         m_swapchainCreateInfos[deviceIdx][swapchainIdx] = VkSwapchainCreateInfoKHR{};
         VkSwapchainCreateInfoKHR &swapchainInfo = m_swapchainCreateInfos[deviceIdx][swapchainIdx];
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapchainInfo.surface = surface;                  // The surface you created
+        swapchainInfo.surface = *surface;                 // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain
         swapchainInfo.imageFormat = surfaceFormat.format; // Format of the images
         swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -991,8 +991,14 @@ namespace vkn
         return &m_swapchainCreateInfos[deviceIdx][swapchainIdx];
     }
 
+    VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(
+        uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx)
+    {
+        return &m_framebufferCreateInfos[deviceIdx][swapchainIdx][imageViewIdx];
+    }
+
     void VknInfos::fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t framebufferIdx,
-                                             VkRenderPass &renderpass, std::vector<VkImageView> &attachments,
+                                             VkRenderPass *renderpass, std::vector<VkImageView> *attachments,
                                              uint32_t width, uint32_t height, uint32_t numLayers,
                                              VkFramebufferCreateFlags &flags)
     {
@@ -1001,12 +1007,12 @@ namespace vkn
         VkFramebufferCreateInfo &info = m_framebufferCreateInfos[deviceIdx][renderpassIdx][framebufferIdx];
         info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
-        info.renderPass = renderpass;
-        info.attachmentCount = attachments.size();
+        info.renderPass = *renderpass;
+        info.attachmentCount = attachments->size();
         if (info.attachmentCount == 0)
             info.pAttachments = VK_NULL_HANDLE;
         else
-            info.pAttachments = attachments.data();
+            info.pAttachments = attachments->data();
         info.width = width;
         info.height = height;
         info.layers = numLayers;

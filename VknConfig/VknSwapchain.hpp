@@ -2,8 +2,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VknInfos.hpp"
-#include "VknResult.hpp"
 #include "VknImageView.hpp"
 
 namespace vkn
@@ -12,8 +10,9 @@ namespace vkn
     {
     public:
         VknSwapchain();
-        VknSwapchain(uint32_t deviceIdx, uint32_t swapchainIdx, VkDevice *vkDevice, const bool *createdVkDevice,
-                     VknInfos *m_infos, VknResultArchive *archive, VkSurfaceKHR surface);
+        VknSwapchain(uint32_t deviceIdx, uint32_t swapchainIdx, VkDevice *vkDevice,
+                     const bool *createdVkDevice, VknInfos *m_infos, VknResultArchive *archive,
+                     VkSurfaceKHR *surface);
         ~VknSwapchain();
         void destroy();
 
@@ -28,12 +27,15 @@ namespace vkn
         void setPresentMode(VkPresentModeKHR presentMode);
         void setClipped(bool clipped);
         void setOldSwapchain(VkSwapchainKHR oldSwapchain);
+        void setSurface(VkSurfaceKHR *surface);
 
         VkSwapchainKHR *getVkSwapchain();
+        std::vector<VkImageView> *getVkImageViews();
 
         void fillSwapchainCreateInfo();
         void createSwapchain();
         void getImages();
+        void addImageViews();
         void createImageViews();
 
     private:
@@ -47,13 +49,16 @@ namespace vkn
         VkExtent2D m_dimensions;
         bool m_placeholder;
 
-        VkSurfaceKHR m_surface{};
+        VkSurfaceKHR *m_surface{nullptr};
         std::vector<VknImageView> m_imageViews{};
         std::vector<VkImage> m_images{};
+        std::vector<VkImageView> m_rawImageViews{};
 
         bool m_filledCreateInfo{false};
         bool m_destroyed{false};
         bool m_createdSwapchain{false};
+        bool m_surfaceSet{false};
+
         VkSurfaceFormatKHR m_surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
         uint32_t m_numImageArrayLayers = 1;
         VkImageUsageFlags m_usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
