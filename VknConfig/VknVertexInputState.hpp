@@ -4,16 +4,16 @@
 #include <vector>
 
 #include "VknInfos.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknVertexInputState
     {
     public:
-        VknVertexInputState();
-        VknVertexInputState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                            VknInfos *infos);
-        //~VknVertexInputState();
+        VknVertexInputState() = delete;
+        VknVertexInputState(
+            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void fillVertexBindingDescription(uint32_t binding = 0, uint32_t stride = 0,
                                           VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
@@ -22,16 +22,17 @@ namespace vkn
         void fillVertexInputStateCreateInfo();
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
-        VknInfos *m_infos;
-        bool m_placeholder;
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos{nullptr};
 
-        bool m_filled{false};
+        // State
         uint32_t m_numBindings{0};
         uint32_t m_numAttributes{0};
         bool m_attributesFilled{false};
         bool m_bindingsFilled{false};
+        bool m_filled{false};
     };
 } // namespace vkn

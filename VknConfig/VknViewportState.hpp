@@ -1,17 +1,18 @@
 #pragma once
 
 #include "VknInfos.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknViewportState
     {
     public:
-        VknViewportState();
-        VknViewportState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                         VknInfos *infos);
-        VknViewportState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                         VknInfos *infos, VkExtent2D *swapchainExtent, const bool *swapchainCreated);
+        VknViewportState() = delete;
+        VknViewportState(
+            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknViewportState(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos,
+                         VkExtent2D *swapchainExtent, const bool *swapchainCreated);
 
         void fillViewportStateCreateInfo();
 
@@ -23,22 +24,23 @@ namespace vkn
         void addScissor(VkOffset2D offset = {0, 0}, VkExtent2D extent = {800, 600});
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
-        bool m_placeholder;
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
 
-        VknInfos *m_infos;
+        // Params
         VkExtent2D *m_swapchainExtent;
-        const bool *m_swapchainCreated;
-        bool m_filled{false};
-
         VkOffset2D m_defaultOffset{};
         VkExtent2D m_defaultExtent{};
         VkViewport m_defaultViewport{};
         VkRect2D m_defaultScissor{};
-
         std::vector<VkViewport> m_viewports;
         std::vector<VkRect2D> m_scissors;
+
+        // State
+        const bool *m_swapchainCreated;
+        bool m_filled{false};
     };
 }

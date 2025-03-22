@@ -2,15 +2,16 @@
 
 #include <vulkan/vulkan.h>
 #include "VknInfos.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknMultisampleState
     {
     public:
-        VknMultisampleState();
-        VknMultisampleState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VknInfos *infos);
-        //~VknMultisampleState();
+        VknMultisampleState() = delete;
+        VknMultisampleState(
+            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void setRasterizationSamples(VkSampleCountFlagBits rasterizationSamples);
         void setSampleShadingEnable(VkBool32 sampleShadingEnable);
@@ -22,12 +23,13 @@ namespace vkn
         void fillMultisampleStateCreateInfo();
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
-        bool m_placeholder;
-        VknInfos *m_infos;
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
 
+        // Params
         VkSampleCountFlagBits m_rasterizationSamples{VK_SAMPLE_COUNT_1_BIT};
         VkBool32 m_sampleShadingEnable{VK_FALSE};
         float m_minSampleShading{0.0f};
@@ -35,6 +37,7 @@ namespace vkn
         VkBool32 m_alphaToCoverageEnable{VK_FALSE};
         VkBool32 m_alphaToOneEnable{VK_FALSE};
 
+        // State
         bool m_filled{false};
     };
 }

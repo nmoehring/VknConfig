@@ -4,14 +4,15 @@
 
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknImageView
     {
     public:
-        VknImageView();
-        VknImageView(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx, VkDevice *device, const bool *deviceCreated, VknInfos *infos, VknResultArchive *archive, VkImageView *imageView);
+        VknImageView() = delete;
+        VknImageView(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void fillCreateFlags(VkImageViewCreateFlags);
         void setImage(VkImage image);
@@ -24,17 +25,16 @@ namespace vkn
         void createImageView();
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_swapchainIdx;
-        uint32_t m_imageViewIdx;
-        VknInfos *m_infos;
-        VknResultArchive *m_archive;
-        bool m_placeholder;
-        VkDevice *m_vkDevice;
-        const bool *m_vkDeviceCreated;
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
 
+        // Wrapped object
         VkImageView *m_imageView{};
 
+        // Params
         VkImageViewCreateFlags m_createFlags{0};
         VkImage m_image{};
         VkImageViewType m_viewType{};
@@ -42,6 +42,7 @@ namespace vkn
         VkComponentMapping m_components{};
         VkImageSubresourceRange m_subresourceRange{};
 
+        // State
         bool m_filledCreateInfo{false};
         bool m_createdImageView{false};
     };

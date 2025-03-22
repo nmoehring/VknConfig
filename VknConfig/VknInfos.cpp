@@ -3,19 +3,19 @@
 #include <algorithm>
 
 #include "VknInfos.hpp"
-
+#include "VknEngine.hpp"
 namespace vkn
 {
     VknInfos::VknInfos()
     {
     }
 
-    void VknInfos::fillDeviceQueuePriorities(uint32_t deviceIdx, uint32_t queueFamilyIdx,
+    void VknInfos::fillDeviceQueuePriorities(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
                                              std::vector<float> priorities)
     {
-        this->initVectors<float>(deviceIdx, queueFamilyIdx, priorities.size() - 1, m_queuePriorities);
+        this->initVectors<float>(relIdxs.deviceIdx, queueFamilyIdx, priorities.size() - 1, m_queuePriorities);
         for (auto &priority : priorities)
-            m_queuePriorities[deviceIdx][queueFamilyIdx].push_back(priority);
+            m_queuePriorities[relIdxs.deviceIdx][queueFamilyIdx].push_back(priority);
         m_deviceQueuePrioritiesFilled = true;
     }
 
@@ -26,131 +26,131 @@ namespace vkn
         m_numQueueFamilies[deviceIdx] = num;
     }
 
+    // TODO: Figure out if the renderpass ptrs are still useful
     void VknInfos::fillRenderpassPtrs(
-        uint32_t deviceIdx, uint32_t renderpassIdx, VkRenderPass *renderpass,
-        const bool *renderpassCreated)
+        VknIdxs &relIdxs, VkRenderPass *renderpass, const bool *renderpassCreated)
     {
-        this->initVectors<VkRenderPass *>(deviceIdx, renderpassIdx, m_renderpasses);
-        m_renderpasses[deviceIdx][renderpassIdx] = renderpass;
+        this->initVectors<VkRenderPass *>(relIdxs.deviceIdx, relIdxs.renderpassIdx, m_renderpasses);
+        m_renderpasses[relIdxs.deviceIdx][relIdxs.renderpassIdx] = renderpass;
 
-        this->initVectors<const bool *>(deviceIdx, renderpassIdx, m_renderpassCreatedPtrs);
-        m_renderpassCreatedPtrs[deviceIdx][renderpassIdx] = renderpassCreated;
+        this->initVectors<const bool *>(relIdxs.deviceIdx, relIdxs.renderpassIdx, m_renderpassCreatedPtrs);
+        m_renderpassCreatedPtrs[relIdxs.deviceIdx][relIdxs.renderpassIdx] = renderpassCreated;
     }
 
     VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+        VknIdxs &relIdxs,
         VkPipelineLayout *layout, VkPipeline basePipelineHandle,
         int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
-        if (deviceIdx + 1 <= m_gfxPipelineCreateInfos.size() &&
-            renderpassIdx + 1 <= m_gfxPipelineCreateInfos[deviceIdx].size() &&
-            subpassIdx + 1 <= m_gfxPipelineCreateInfos[deviceIdx][renderpassIdx].size() &&
-            m_gfxPipelineCreateInfos[deviceIdx][renderpassIdx][subpassIdx].stageCount > 0)
+        if (relIdxs.deviceIdx + 1 <= m_gfxPipelineCreateInfos.size() &&
+            relIdxs.renderpassIdx + 1 <= m_gfxPipelineCreateInfos[relIdxs.deviceIdx].size() &&
+            relIdxs.subpassIdx + 1 <= m_gfxPipelineCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx].size() &&
+            m_gfxPipelineCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx].stageCount > 0)
             throw std::runtime_error("Pipeline create info has already been filled.");
         this->initVectors<VkGraphicsPipelineCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_gfxPipelineCreateInfos);
-        VkRenderPass *renderpass = m_renderpasses[deviceIdx][renderpassIdx];
-        m_gfxPipelineCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, m_gfxPipelineCreateInfos);
+        VkRenderPass *renderpass = m_renderpasses[relIdxs.deviceIdx][relIdxs.renderpassIdx];
+        m_gfxPipelineCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkGraphicsPipelineCreateInfo{};
         VkGraphicsPipelineCreateInfo &info =
-            m_gfxPipelineCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            m_gfxPipelineCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags;
-        info.stageCount = m_shaderStageCreateInfos[deviceIdx][renderpassIdx][subpassIdx].size(); // Need fill
-        info.pStages = m_shaderStageCreateInfos[deviceIdx][renderpassIdx][subpassIdx].data();    // Need fill
+        info.stageCount = m_shaderStageCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx].size(); // Need fill
+        info.pStages = m_shaderStageCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx].data();    // Need fill
         if (m_filledVertexInputStateInfo)
             info.pVertexInputState =
-                &m_vertexInputStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
-                                                                                      // set in pDynamicState below. Ignored if mesh shader stage
-                                                                                      // included in pStages.
+                &m_vertexInputStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
+                                                                                                              // set in pDynamicState below. Ignored if mesh shader stage
+                                                                                                              // included in pStages.
         if (m_filledInputAssemblyStateInfo)
             info.pInputAssemblyState =
-                &m_inputAssemblyStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
-                                                                                        // and VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY are set in pDynamicState,
-                                                                                        // below and dynamicPrimitiveTopologyUnrestricted is VK_TRUE in the
-                                                                                        // VkPhysicalDeviceExtendedDynamicState3PropertiesEXT struct,
-                                                                                        // which requires the VK_EXT_extended_dynamic_state3 extension.
-                                                                                        // Also ignored if mesh shader stage included in pStages.
+                &m_inputAssemblyStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
+                                                                                                                // and VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY are set in pDynamicState,
+                                                                                                                // below and dynamicPrimitiveTopologyUnrestricted is VK_TRUE in the
+                                                                                                                // VkPhysicalDeviceExtendedDynamicState3PropertiesEXT struct,
+                                                                                                                // which requires the VK_EXT_extended_dynamic_state3 extension.
+                                                                                                                // Also ignored if mesh shader stage included in pStages.
         if (m_filledTessellationStateInfo)
             info.pTessellationState =
-                &m_tessellationStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
-                                                                                       // is set in the pDynamicState below.
+                &m_tessellationStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
+                                                                                                               // is set in the pDynamicState below.
         if (m_filledViewportStateInfo)
             info.pViewportState =
-                &m_viewportStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if rasterization not enabled.
-                                                                                   // Can be null if VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT
-                                                                                   // and VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT are set in pDynamicState
-                                                                                   // below, and also requires the VK_EXT_extended_dynamic_state3
-                                                                                   // extension enabled.
+                &m_viewportStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if rasterization not enabled.
+                                                                                                           // Can be null if VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT
+                                                                                                           // and VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT are set in pDynamicState
+                                                                                                           // below, and also requires the VK_EXT_extended_dynamic_state3
+                                                                                                           // extension enabled.
         if (m_filledRasterizationStateInfo)
             info.pRasterizationState =
-                &m_rasterizationStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // I guess this could be null if rasterization is not enabled.
-                                                                                        // Can be null if VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT,
-                                                                                        // VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
-                                                                                        // VK_DYNAMIC_STATE_POLYGON_MODE_EXT,
-                                                                                        // VK_DYNAMIC_STATE_CULL_MODE, VK_DYNAMIC_STATE_FRONT_FACE,
-                                                                                        // VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE, VK_DYNAMIC_STATE_DEPTH_BIAS,
-                                                                                        // and VK_DYNAMIC_STATE_LINE_WIDTH are set in pDynamicState below,
-                                                                                        // which also requires the VK_EXT_extended_dynamic_state3
-                                                                                        // extension enabled.
+                &m_rasterizationStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // I guess this could be null if rasterization is not enabled.
+                                                                                                                // Can be null if VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT,
+                                                                                                                // VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
+                                                                                                                // VK_DYNAMIC_STATE_POLYGON_MODE_EXT,
+                                                                                                                // VK_DYNAMIC_STATE_CULL_MODE, VK_DYNAMIC_STATE_FRONT_FACE,
+                                                                                                                // VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE, VK_DYNAMIC_STATE_DEPTH_BIAS,
+                                                                                                                // and VK_DYNAMIC_STATE_LINE_WIDTH are set in pDynamicState below,
+                                                                                                                // which also requires the VK_EXT_extended_dynamic_state3
+                                                                                                                // extension enabled.
         if (m_filledMultisampleStateInfo)
             info.pMultisampleState =
-                &m_multisampleStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if rasterization not enabled.
-                                                                                      //  Can be null if VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT,
-                                                                                      //  VK_DYNAMIC_STATE_SAMPLE_MASK_EXT, and
-                                                                                      //  VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT are set in
-                                                                                      //  pDynamicState below, and
-                                                                                      //  ((alphaToOne feature not enabled)
-                                                                                      //  or
-                                                                                      //  (VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT is set and
-                                                                                      //  VkPipelineMultisampleStateCreateInfo::sampleShadingEnable
-                                                                                      //  is VK_False).
-                                                                                      //   VK_EXT_extended_dynamic_state3 extension needs to be enabled
-                                                                                      //   to do this.
+                &m_multisampleStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if rasterization not enabled.
+                                                                                                              //  Can be null if VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT,
+                                                                                                              //  VK_DYNAMIC_STATE_SAMPLE_MASK_EXT, and
+                                                                                                              //  VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT are set in
+                                                                                                              //  pDynamicState below, and
+                                                                                                              //  ((alphaToOne feature not enabled)
+                                                                                                              //  or
+                                                                                                              //  (VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT is set and
+                                                                                                              //  VkPipelineMultisampleStateCreateInfo::sampleShadingEnable
+                                                                                                              //  is VK_False).
+                                                                                                              //   VK_EXT_extended_dynamic_state3 extension needs to be enabled
+                                                                                                              //   to do this.
         if (m_filledDepthStencilStateInfo)
             info.pDepthStencilState =
-                &m_depthStencilStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if rasterization not enabled.
-                                                                                       // Can be null if VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
-                                                                                       // VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE, VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
-                                                                                       // VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
-                                                                                       // VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE, VK_DYNAMIC_STATE_STENCIL_OP,
-                                                                                       // and VK_DYNAMIC_STATE_DEPTH_BOUNDS are set in pDynamicState below
-                                                                                       // Also requires the  VK_EXT_extended_dynamic_state3 extension.
+                &m_depthStencilStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if rasterization not enabled.
+                                                                                                               // Can be null if VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
+                                                                                                               // VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE, VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
+                                                                                                               // VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
+                                                                                                               // VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE, VK_DYNAMIC_STATE_STENCIL_OP,
+                                                                                                               // and VK_DYNAMIC_STATE_DEPTH_BOUNDS are set in pDynamicState below
+                                                                                                               // Also requires the  VK_EXT_extended_dynamic_state3 extension.
         if (m_filledColorBlendStateInfo)
             info.pColorBlendState =
-                &m_colorBlendStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Can be null if rasterization not enabled.
-                                                                                     // Can be null if VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT,
-                                                                                     // VK_DYNAMIC_STATE_LOGIC_OP_EXT,
-                                                                                     // VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
-                                                                                     // VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT,
-                                                                                     // VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT, and
-                                                                                     // VK_DYNAMIC_STATE_BLEND_CONSTANTS are set in pDynamicState below
-                                                                                     // Requires the VK_EXT_extended_dynamic_state3 extension.
+                &m_colorBlendStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Can be null if rasterization not enabled.
+                                                                                                             // Can be null if VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT,
+                                                                                                             // VK_DYNAMIC_STATE_LOGIC_OP_EXT,
+                                                                                                             // VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
+                                                                                                             // VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT,
+                                                                                                             // VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT, and
+                                                                                                             // VK_DYNAMIC_STATE_BLEND_CONSTANTS are set in pDynamicState below
+                                                                                                             // Requires the VK_EXT_extended_dynamic_state3 extension.
         if (m_filledDynamicStateInfo)
             info.pDynamicState =
-                &m_dynamicStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx]; // Could be null if no state in the pipeline needs to be dynamic.
-        info.layout = *layout;                                                    // Need fill
-        info.renderPass = *renderpass;                                            // Need fill
-        info.subpass = subpassIdx;                                                // Need fill
-        info.basePipelineHandle = basePipelineHandle;                             // Need fill
-        info.basePipelineIndex = basePipelineIndex;                               // Need fill
+                &m_dynamicStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx]; // Could be null if no state in the pipeline needs to be dynamic.
+        info.layout = *layout;                                                                            // Need fill
+        info.renderPass = *renderpass;                                                                    // Need fill
+        info.subpass = relIdxs.subpassIdx;                                                                // Need fill
+        info.basePipelineHandle = basePipelineHandle;                                                     // Need fill
+        info.basePipelineIndex = basePipelineIndex;                                                       // Need fill
 
         return &info;
     }
 
-    void VknInfos::initRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx)
+    void VknInfos::initRenderpass(VknIdxs &relIdxs)
     {
-        this->initVectors<VkRenderPassCreateInfo>(deviceIdx, renderpassIdx,
+        this->initVectors<VkRenderPassCreateInfo>(relIdxs.deviceIdx, relIdxs.renderpassIdx,
                                                   m_renderpassCreateInfos);
-        this->initVectors<VkAttachmentDescription>(deviceIdx, renderpassIdx,
+        this->initVectors<VkAttachmentDescription>(relIdxs.deviceIdx, relIdxs.renderpassIdx,
                                                    0, m_attachmentDescriptions);
-        this->initVectors<VkSubpassDescription>(deviceIdx, renderpassIdx,
+        this->initVectors<VkSubpassDescription>(relIdxs.deviceIdx, relIdxs.renderpassIdx,
                                                 0, m_subpassDescriptions);
-        this->initVectors<VkSubpassDependency>(deviceIdx, renderpassIdx,
+        this->initVectors<VkSubpassDependency>(relIdxs.deviceIdx, relIdxs.renderpassIdx,
                                                0, m_subpassDependencies);
         this->initVectors<VkAttachmentReference>(
-            deviceIdx, renderpassIdx, 0, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, 0, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
     }
 
     VkRenderPassCreateInfo *VknInfos::fillRenderpassCreateInfo(uint32_t deviceIdx,
@@ -193,15 +193,14 @@ namespace vkn
     }
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t shaderIdx,
-        std::vector<char> *code, VkShaderModuleCreateFlags flags)
+        VknIdxs &relIdxs, std::vector<char> *code, VkShaderModuleCreateFlags flags)
     {
         this->initVectors<VkShaderModuleCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, shaderIdx, m_shaderModuleCreateInfos);
-        m_shaderModuleCreateInfos[deviceIdx][renderpassIdx][subpassIdx][shaderIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, relIdxs.shaderIdx, m_shaderModuleCreateInfos);
+        m_shaderModuleCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][relIdxs.shaderIdx] =
             VkShaderModuleCreateInfo{};
         VkShaderModuleCreateInfo *info =
-            &m_shaderModuleCreateInfos[deviceIdx][renderpassIdx][subpassIdx][shaderIdx];
+            &m_shaderModuleCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][relIdxs.shaderIdx];
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags;
@@ -211,16 +210,16 @@ namespace vkn
     }
 
     VkPipelineShaderStageCreateInfo *VknInfos::fillShaderStageCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t shaderIdx,
+        VknIdxs &relIdxs,
         VkShaderModule *module, VkShaderStageFlagBits *stage,
         VkPipelineShaderStageCreateFlags *flags, VkSpecializationInfo *pSpecializationInfo)
     {
         this->initVectors<VkPipelineShaderStageCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, shaderIdx, m_shaderStageCreateInfos);
-        m_shaderStageCreateInfos[deviceIdx][renderpassIdx][subpassIdx][shaderIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, relIdxs.shaderIdx, m_shaderStageCreateInfos);
+        m_shaderStageCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][relIdxs.shaderIdx] =
             VkPipelineShaderStageCreateInfo{};
         VkPipelineShaderStageCreateInfo *info =
-            &m_shaderStageCreateInfos[deviceIdx][renderpassIdx][subpassIdx][shaderIdx];
+            &m_shaderStageCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][relIdxs.shaderIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = *flags; // need fill
@@ -232,24 +231,24 @@ namespace vkn
     }
 
     VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t numBindings, uint32_t numAttributes)
+        VknIdxs &relIdxs, uint32_t numBindings, uint32_t numAttributes)
     {
         this->initVectors<VkPipelineVertexInputStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_vertexInputStateCreateInfos);
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, m_vertexInputStateCreateInfos);
         this->initVectors<VkVertexInputBindingDescription>(
-            deviceIdx, renderpassIdx, subpassIdx, 0, m_vertexInputBindings);
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, 0, m_vertexInputBindings);
         this->initVectors<VkVertexInputAttributeDescription>(
-            deviceIdx, renderpassIdx, subpassIdx, 0, m_vertexInputAttributes);
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, 0, m_vertexInputAttributes);
 
         std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions =
-            &m_vertexInputBindings[deviceIdx][renderpassIdx][subpassIdx];
+            &m_vertexInputBindings[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         std::vector<VkVertexInputAttributeDescription> *vertexAttributeDescriptions =
-            &m_vertexInputAttributes[deviceIdx][renderpassIdx][subpassIdx];
+            &m_vertexInputAttributes[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
 
-        m_vertexInputStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+        m_vertexInputStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkPipelineVertexInputStateCreateInfo{};
         VkPipelineVertexInputStateCreateInfo *info =
-            &m_vertexInputStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_vertexInputStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = 0; // reserved for future use
@@ -268,15 +267,15 @@ namespace vkn
     }
 
     VkPipelineInputAssemblyStateCreateInfo *VknInfos::fillInputAssemblyStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-        VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
+        VknIdxs &relIdxs, VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
     {
         this->initVectors<VkPipelineInputAssemblyStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_inputAssemblyStateCreateInfos);
-        m_inputAssemblyStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx,
+            m_inputAssemblyStateCreateInfos);
+        m_inputAssemblyStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkPipelineInputAssemblyStateCreateInfo{};
         VkPipelineInputAssemblyStateCreateInfo *info =
-            &m_inputAssemblyStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_inputAssemblyStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -303,15 +302,16 @@ namespace vkn
     }
 
     VkPipelineViewportStateCreateInfo *VknInfos::fillViewportStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+        VknIdxs &relIdxs,
         std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors)
     {
         this->initVectors<VkPipelineViewportStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_viewportStateCreateInfos);
-        m_viewportStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx,
+            m_viewportStateCreateInfos);
+        m_viewportStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkPipelineViewportStateCreateInfo{};
         VkPipelineViewportStateCreateInfo *info =
-            &m_viewportStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_viewportStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -330,18 +330,18 @@ namespace vkn
     }
 
     VkPipelineRasterizationStateCreateInfo *VknInfos::fillRasterizationStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VkPolygonMode polygonMode,
+        VknIdxs &relIdxs, VkPolygonMode polygonMode,
         VkCullModeFlags cullMode, VkFrontFace frontFace,
         float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
         float lineWidth, VkBool32 depthClampEnable,
         VkBool32 rasterizerDiscardEnable, VkBool32 depthBiasEnable)
     {
         this->initVectors<VkPipelineRasterizationStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_rasterizationStateCreateInfos);
-        m_rasterizationStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, m_rasterizationStateCreateInfos);
+        m_rasterizationStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkPipelineRasterizationStateCreateInfo{};
         VkPipelineRasterizationStateCreateInfo *info =
-            &m_rasterizationStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_rasterizationStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -360,17 +360,17 @@ namespace vkn
     }
 
     VkPipelineMultisampleStateCreateInfo *VknInfos::fillMultisampleStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, float minSampleShading,
+        VknIdxs &relIdxs, float minSampleShading,
         VkSampleMask *pSampleMask, VkSampleCountFlagBits rasterizationSamples,
         VkBool32 sampleShadingEnable, VkBool32 alphaToCoverageEnable,
         VkBool32 alphaToOneEnable)
     {
         this->initVectors<VkPipelineMultisampleStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_multisampleStateCreateInfos);
-        m_multisampleStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, m_multisampleStateCreateInfos);
+        m_multisampleStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkPipelineMultisampleStateCreateInfo{};
         VkPipelineMultisampleStateCreateInfo *info =
-            &m_multisampleStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_multisampleStateCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -476,16 +476,15 @@ namespace vkn
     }
 
     VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-        std::vector<VkDescriptorSetLayout> setLayouts,
+        VknIdxs &relIdxs, std::vector<VkDescriptorSetLayout> setLayouts,
         std::vector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {
-        this->initVectors(deviceIdx, renderpassIdx, subpassIdx, m_layoutCreateInfos);
-        m_layoutCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
+        this->initVectors(relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, m_layoutCreateInfos);
+        m_layoutCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx] =
             VkPipelineLayoutCreateInfo{};
         VkPipelineLayoutCreateInfo *info =
-            &m_layoutCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_layoutCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = flags;
@@ -701,13 +700,14 @@ namespace vkn
         m_filledInstanceCreateInfo = true;
     }
 
-    void VknInfos::fillDeviceQueueCreateInfo(uint32_t deviceIdx, uint32_t queueFamilyIdx,
+    void VknInfos::fillDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
                                              uint32_t queueCount, VkApplicationInfo *pNext,
                                              VkDeviceQueueCreateFlags flags)
     {
-        this->initVectors<VkDeviceQueueCreateInfo>(deviceIdx, queueFamilyIdx, m_queueCreateInfos);
-        m_queueCreateInfos[deviceIdx][queueFamilyIdx] = VkDeviceQueueCreateInfo{};
-        VkDeviceQueueCreateInfo &info = m_queueCreateInfos[deviceIdx][queueFamilyIdx];
+        this->initVectors<VkDeviceQueueCreateInfo>(
+            relIdxs.deviceIdx, queueFamilyIdx, m_queueCreateInfos);
+        m_queueCreateInfos[relIdxs.deviceIdx][queueFamilyIdx] = VkDeviceQueueCreateInfo{};
+        VkDeviceQueueCreateInfo &info = m_queueCreateInfos[relIdxs.deviceIdx][queueFamilyIdx];
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         info.queueFamilyIndex = queueFamilyIdx;
         info.queueCount = queueCount;
@@ -715,7 +715,7 @@ namespace vkn
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
         if (!m_deviceQueuePrioritiesFilled)
             throw std::runtime_error("Queue priorities not filled before filling device queue create info.");
-        info.pQueuePriorities = m_queuePriorities[deviceIdx][queueFamilyIdx].data();
+        info.pQueuePriorities = m_queuePriorities[relIdxs.deviceIdx][queueFamilyIdx].data();
         m_filledDeviceQueueCreateInfo = true;
     }
 
@@ -748,16 +748,16 @@ namespace vkn
     }
 
     VkSwapchainCreateInfoKHR *VknInfos::fillSwapchainCreateInfo(
-        uint32_t deviceIdx, uint32_t swapchainIdx,
+        VknIdxs &relIdxs,
         VkSurfaceKHR *surface, uint32_t imageCount, VkExtent2D dimensions,
         VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
         VkSharingMode sharingMode, VkSurfaceTransformFlagBitsKHR preTransform,
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
         VkSwapchainKHR oldSwapchain)
     {
-        this->initVectors<VkSwapchainCreateInfoKHR>(deviceIdx, swapchainIdx, m_swapchainCreateInfos);
-        m_swapchainCreateInfos[deviceIdx][swapchainIdx] = VkSwapchainCreateInfoKHR{};
-        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapchainCreateInfos[deviceIdx][swapchainIdx];
+        this->initVectors<VkSwapchainCreateInfoKHR>(relIdxs.deviceIdx, relIdxs.swapchainIdx, m_swapchainCreateInfos);
+        m_swapchainCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx] = VkSwapchainCreateInfoKHR{};
+        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapchainCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx];
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainInfo.surface = *surface;                 // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain
@@ -935,16 +935,16 @@ namespace vkn
     }
 
     VkVertexInputBindingDescription *VknInfos::fillVertexInputBindingDescription(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t bindIdx,
+        VknIdxs &relIdxs, uint32_t bindIdx,
         uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
 
     {
         this->initVectors<VkVertexInputBindingDescription>(
-            deviceIdx, renderpassIdx, subpassIdx, bindIdx, m_vertexInputBindings);
-        m_vertexInputBindings[deviceIdx][renderpassIdx][subpassIdx][bindIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, bindIdx, m_vertexInputBindings);
+        m_vertexInputBindings[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][bindIdx] =
             VkVertexInputBindingDescription{};
         VkVertexInputBindingDescription *description =
-            &m_vertexInputBindings[deviceIdx][renderpassIdx][subpassIdx][bindIdx];
+            &m_vertexInputBindings[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][bindIdx];
         description->binding = binding;
         description->stride = stride;
         description->inputRate = inputRate;
@@ -952,15 +952,15 @@ namespace vkn
     }
 
     VkVertexInputAttributeDescription *VknInfos::fillVertexInputAttributeDescription(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-        uint32_t attributeIdx, uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+        VknIdxs &relIdxs, uint32_t attributeIdx, uint32_t binding,
+        uint32_t location, VkFormat format, uint32_t offset)
     {
         this->initVectors<VkVertexInputAttributeDescription>(
-            deviceIdx, renderpassIdx, subpassIdx, attributeIdx, m_vertexInputAttributes);
-        m_vertexInputAttributes[deviceIdx][renderpassIdx][subpassIdx][attributeIdx] =
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.subpassIdx, attributeIdx, m_vertexInputAttributes);
+        m_vertexInputAttributes[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][attributeIdx] =
             VkVertexInputAttributeDescription{};
         VkVertexInputAttributeDescription *description =
-            &m_vertexInputAttributes[deviceIdx][renderpassIdx][subpassIdx][attributeIdx];
+            &m_vertexInputAttributes[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx][attributeIdx];
         description->binding = binding;
         description->location = location;
         description->format = format;
@@ -980,31 +980,32 @@ namespace vkn
         return &m_vertexInputAttributes[deviceIdx][renderpassIdx][subpassIdx];
     }
 
-    VkImageViewCreateInfo *VknInfos::getImageViewCreateInfo(
-        uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx)
+    VkImageViewCreateInfo *VknInfos::getImageViewCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_imageViewCreateInfos[deviceIdx][swapchainIdx][imageViewIdx];
+        return &m_imageViewCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx][relIdxs.imageViewIdx];
     }
 
-    VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx)
+    VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_swapchainCreateInfos[deviceIdx][swapchainIdx];
+        return &m_swapchainCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx];
     }
 
-    VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(
-        uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx)
+    VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_framebufferCreateInfos[deviceIdx][swapchainIdx][imageViewIdx];
+        return &m_framebufferCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx][relIdxs.imageViewIdx];
     }
 
-    void VknInfos::fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t framebufferIdx,
+    void VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
                                              VkRenderPass *renderpass, std::vector<VkImageView> *attachments,
                                              uint32_t width, uint32_t height, uint32_t numLayers,
                                              VkFramebufferCreateFlags &flags)
     {
-        this->initVectors(deviceIdx, renderpassIdx, framebufferIdx, m_framebufferCreateInfos);
-        m_framebufferCreateInfos[deviceIdx][renderpassIdx][framebufferIdx] = VkFramebufferCreateInfo{};
-        VkFramebufferCreateInfo &info = m_framebufferCreateInfos[deviceIdx][renderpassIdx][framebufferIdx];
+        this->initVectors(
+            relIdxs.deviceIdx, relIdxs.renderpassIdx, relIdxs.framebufferIdx,
+            m_framebufferCreateInfos);
+        m_framebufferCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.framebufferIdx] = VkFramebufferCreateInfo{};
+        VkFramebufferCreateInfo &info =
+            m_framebufferCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.framebufferIdx];
         info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.renderPass = *renderpass;
@@ -1019,14 +1020,15 @@ namespace vkn
         info.flags = flags;
     }
 
-    void VknInfos::fillImageViewCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx,
+    void VknInfos::fillImageViewCreateInfo(VknIdxs &relIdxs,
                                            VkImage &image, VkImageViewType &viewType, VkFormat &format,
                                            VkComponentMapping &components, VkImageSubresourceRange &subresourceRange,
                                            VkImageViewCreateFlags &flags)
     {
-        this->initVectors(deviceIdx, swapchainIdx, imageViewIdx, m_imageViewCreateInfos);
-        m_imageViewCreateInfos[deviceIdx][swapchainIdx][imageViewIdx] = VkImageViewCreateInfo{};
-        VkImageViewCreateInfo &info = m_imageViewCreateInfos[deviceIdx][swapchainIdx][imageViewIdx];
+        this->initVectors(relIdxs.deviceIdx, relIdxs.swapchainIdx,
+                          relIdxs.imageViewIdx, m_imageViewCreateInfos);
+        m_imageViewCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx][relIdxs.imageViewIdx] = VkImageViewCreateInfo{};
+        VkImageViewCreateInfo &info = m_imageViewCreateInfos[relIdxs.deviceIdx][relIdxs.swapchainIdx][relIdxs.imageViewIdx];
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.image = image;

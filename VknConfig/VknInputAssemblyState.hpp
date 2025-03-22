@@ -4,31 +4,32 @@
 #include <vector>
 
 #include "VknInfos.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknInputAssemblyState
     {
     public:
-        VknInputAssemblyState();
-        VknInputAssemblyState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                              VknInfos *infos);
-        //~VknInputAssemblyState();
+        VknInputAssemblyState() = delete;
+        VknInputAssemblyState(
+            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void setDetails(VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable);
         void fillInputAssemblyStateCreateInfo();
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
 
-        VknInfos *m_infos;
-
+        // Params
         VkPrimitiveTopology m_topology{VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
         VkBool32 m_primitiveRestartEnable{VK_FALSE};
 
+        // State
         bool m_filled{false};
-        bool m_placeholder;
     };
 } // namespace vkn

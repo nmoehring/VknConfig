@@ -5,98 +5,49 @@
 
 namespace vkn
 {
-    VknPipeline::VknPipeline()
-        : m_device{nullptr}, m_infos{nullptr}, m_archive{nullptr}, m_pipeline{nullptr},
-          m_deviceIdx{0}, m_renderpassIdx{0}, m_subpassIdx{0}, m_deviceCreated{nullptr},
-          m_placeholder{true}
+    VknPipeline::VknPipeline(
+        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
-    }
-
-    VknPipeline::VknPipeline(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                             VkRenderPass *renderpass, VkPipeline *pipeline,
-                             VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated)
-        : m_pipeline{pipeline}, m_device{dev}, m_infos{infos}, m_archive{archive},
-          m_deviceIdx{deviceIdx}, m_renderpassIdx{renderpassIdx}, m_subpassIdx{subpassIdx},
-          m_deviceCreated{deviceCreated}, m_placeholder{false}
-    {
-        m_vertexInputState = VknVertexInputState{deviceIdx, renderpassIdx, subpassIdx, infos};
-        m_inputAssemblyState = VknInputAssemblyState{deviceIdx, renderpassIdx, subpassIdx, infos};
-        m_multisampleState = VknMultisampleState{deviceIdx, renderpassIdx, subpassIdx, infos};
-        m_rasterizationState = VknRasterizationState{deviceIdx, renderpassIdx, subpassIdx, infos};
-        m_viewportState = VknViewportState{deviceIdx, renderpassIdx, subpassIdx, infos};
-    }
-
-    VknPipeline::~VknPipeline()
-    {
-        if (!m_destroyed && !m_placeholder)
-            this->destroy();
-    }
-
-    void VknPipeline::destroy()
-    {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to destroy a placeholder object.");
-        if (m_destroyed)
-            throw std::runtime_error("Pipeline object already destroyed.");
-
-        for (auto &shaderStage : m_shaderStages)
-            shaderStage.destroy();
-        if (m_pipelineLayoutCreated)
-            vkDestroyPipelineLayout(*m_device, m_layout, nullptr);
-        for (auto &descriptorSetLayout : m_descriptorSetLayouts)
-            vkDestroyDescriptorSetLayout(*m_device, descriptorSetLayout, nullptr);
-        if (m_pipelineCreated)
-            vkDestroyPipeline(*m_device, *m_pipeline, nullptr);
-        m_destroyed = true;
-        std::cout << "VknPipeline DESTROYED." << std::endl;
+        m_vertexInputState = VknVertexInputState{engine, relIdxs, absIdxs, infos};
+        m_inputAssemblyState = VknInputAssemblyState{engine, relIdxs, absIdxs, infos};
+        m_multisampleState = VknMultisampleState{engine, relIdxs, absIdxs, infos};
+        m_rasterizationState = VknRasterizationState{engine, relIdxs, absIdxs, infos};
+        m_viewportState = VknViewportState{engine, relIdxs, absIdxs, infos};
     }
 
     void VknPipeline::addShaderStage(uint32_t shaderIdx,
                                      VknShaderStageType stageType, std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!(*m_deviceCreated))
-            throw std::runtime_error("Logical device not created before attempting to create shader stage.");
         if (shaderIdx != m_numShaderStages)
             throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
-        m_shaderStages.emplace_back(
-            m_deviceIdx, m_renderpassIdx, m_subpassIdx, m_numShaderStages++, m_infos,
-            m_archive, m_device);
-        m_shaderStages.back().setFilename(filename);
-        m_shaderStages.back().setShaderStageType(stageType);
-        m_shaderStages.back().setFlags(flags);
+        VknIdxs relIdxs = m_relIdxs;
+        relIdxs.shaderIdx = shaderIdx;
+        m_shaderStages.emplace_back(m_engine, relIdxs, m_absIdxs, m_infos);
+        m_shaderStages[shaderIdx].setFilename(filename);
+        m_shaderStages[shaderIdx].setShaderStageType(stageType);
+        m_shaderStages[shaderIdx].setFlags(flags);
     }
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        if (shaderIdx >= m_numShaderStages)
-            throw std::runtime_error("Shader index out of range.");
-        std::list<VknShaderStage>::iterator it = m_shaderStages.begin();
-        std::advance(it, shaderIdx);
-        return &(*it);
+        return &m_shaderStages[shaderIdx];
     }
 
     void VknPipeline::fillPipelineCreateInfo(
         VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        if (m_createInfoFilled)
+        if (m_filledCreateInfo)
             throw std::runtime_error("Pipeline create info already filled.");
         m_infos->fillGfxPipelineCreateInfo(
-            m_deviceIdx, m_renderpassIdx, m_subpassIdx, &m_layout, basePipelineHandle,
+            m_relIdxs, &m_layout, basePipelineHandle,
             basePipelineIndex, flags);
-        m_createInfoFilled = true;
+        m_filledCreateInfo = true;
     }
 
     void VknPipeline::fillDescriptorSetLayoutCreateInfo(
         VkDescriptorSetLayoutCreateFlags flags)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         m_infos->fillDescriptorSetLayoutCreateInfo(m_bindings, flags);
     }
 
@@ -104,8 +55,6 @@ namespace vkn
         uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
         VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         m_bindings.push_back(VkDescriptorSetLayoutBinding{});
         m_bindings.back().binding = binding;
         m_bindings.back().descriptorType = descriptorType;
@@ -116,28 +65,19 @@ namespace vkn
 
     void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        if (!(*m_deviceCreated))
-            throw std::runtime_error("Logical device not created before attempting to create descriptor set layout.");
-        if (m_pipelineLayoutCreated)
+        if (m_createdPipelineLayout)
             throw std::runtime_error("Pipeline layout already created, no need to create the descriptor set layout.");
         m_descriptorSetLayouts.push_back(VkDescriptorSetLayout{});
         VknResult res{
             vkCreateDescriptorSetLayout(
-                *m_device, descriptorSetLayoutCreateInfo,
-                nullptr, &m_descriptorSetLayouts.back()),
+                m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx),
+                descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayouts.back()),
             "Create descriptor set layout."};
-        if (!res.isSuccess())
-            throw std::runtime_error(res.toErr("Error creating descriptor set layout."));
-        m_archive->store(res);
     }
 
     void VknPipeline::createPushConstantRange(VkShaderStageFlags stageFlags, uint32_t offset,
                                               uint32_t size)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         m_pushConstantRanges.push_back(VkPushConstantRange{});
         m_pushConstantRanges.back().stageFlags = stageFlags;
         m_pushConstantRanges.back().offset = offset;
@@ -146,22 +86,18 @@ namespace vkn
 
     void VknPipeline::fillPipelineLayoutCreateInfo(VkPipelineLayoutCreateFlags flags)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        m_infos->fillPipelineLayoutCreateInfo(m_deviceIdx, m_renderpassIdx, m_subpassIdx,
-                                              m_descriptorSetLayouts, m_pushConstantRanges, flags);
+        m_infos->fillPipelineLayoutCreateInfo(m_relIdxs, m_descriptorSetLayouts,
+                                              m_pushConstantRanges, flags);
     }
 
     void VknPipeline::createLayout()
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
-        if (m_pipelineLayoutCreated)
+        if (m_createdPipelineLayout)
             throw std::runtime_error("Already created the pipeline layout.");
         VkPipelineLayoutCreateInfo *layoutCreateInfo = m_infos->getPipelineLayoutCreateInfo(
-            m_deviceIdx, m_renderpassIdx, m_subpassIdx);
-        vkCreatePipelineLayout(*m_device, layoutCreateInfo, nullptr, &m_layout);
-        m_pipelineLayoutCreated = true;
+            m_relIdxs);
+        vkCreatePipelineLayout(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx), layoutCreateInfo, nullptr, &m_layout);
+        m_createdPipelineLayout = true;
     }
 
 }

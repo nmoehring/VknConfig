@@ -11,8 +11,12 @@ namespace vkn
     class VknResult
     {
     public:
-        VknResult();
-        VknResult(VkResult result, std::string opDesc) : m_result{result}, m_opDesc{opDesc} {};
+        VknResult() = delete;
+        VknResult(std::string opDesc);
+        VknResult(VkResult result, std::string opDesc);
+
+        void operator=(VkResult result) { this->evaluate(result); }
+        void evaluate(VkResult result);
 
         std::string toString();
         std::string toErr(std::string msg = "test")
@@ -21,10 +25,16 @@ namespace vkn
         }
 
         bool isSuccess() { return m_result == VK_SUCCESS; }
+        bool isErrorStateEvaluated() { return m_errorStateEvaluated; }
 
     private:
+        // Members
         VkResult m_result{};
         std::string m_opDesc{""};
+        static VknResultArchive s_archive;
+
+        // State
+        bool m_errorStateEvaluated{false};
     };
 
     class VknResultArchive
@@ -42,6 +52,8 @@ namespace vkn
     public:
         void store(VknResult res)
         {
+            if (!res.isErrorStateEvaluated())
+                throw std::runtime_error("Target function not called, no result to store.");
             results.push(res);
             this->manage();
         }

@@ -2,53 +2,36 @@
 
 namespace vkn
 {
-    VknConfig::VknConfig()
-        : m_resultArchive(VknResultArchive{}), m_infos(VknInfos{}),
-          m_window(nullptr)
+    VknConfig::VknConfig(VknEngine *engine, VknInfos *infos, GLFWwindow *window)
+        : m_engine{engine}, m_infos{infos}, m_window(window)
     {
-        this->addDevice(0);
-    }
-
-    VknConfig::VknConfig(GLFWwindow *window)
-        : m_resultArchive(VknResultArchive{}), m_infos(VknInfos{}),
-          m_window(window)
-    {
-        this->addDevice(0);
-    }
-
-    VknConfig::~VknConfig()
-    {
-        if (!m_destroyed)
-            this->destroy();
-    }
-
-    void VknConfig::destroy()
-    {
-        if (m_destroyed)
-            throw std::runtime_error("Config object already destroyed.");
-        for (auto &device : m_devices)
-            device.destroy();
-        if (m_instanceCreated)
-            vkDestroyInstance(m_instance, nullptr);
-        m_destroyed = true;
-        std::cout << "VknConfig DESTROYED." << std::endl;
     }
 
     void VknConfig::addDevice(uint32_t deviceIdx)
     {
-        if (deviceIdx != m_numDevices)
+        if (!m_state.createdInstance)
+            throw std::runtime_error("Can't add a device until an instance is created.");
+        if (deviceIdx != m_state.numDevices)
             throw std::runtime_error("Device index should equal the current numDevices.");
-        m_devices.emplace_back(m_numDevices++, &m_infos, &m_resultArchive, &m_instance, &m_instanceCreated);
+
+        m_relIdxs.deviceIdx = deviceIdx;
+        m_absIdxs.deviceIdx =
+            m_devices.push_back(VknDevice{&m_engine, m_relIdxs, m_absIdxs, &m_infos});
+        ++m_state.numDevices;
     }
 
     void VknConfig::enableExtensions(std::vector<std::string> extensions)
     {
+        if (m_state.createdInstance)
+            throw std::runtime_error("Can't enable extensions after instance is already created.");
         for (auto &name : extensions)
             m_instanceExtensions.push_back(name);
     }
 
     void VknConfig::deviceInfo(uint32_t deviceIdx)
     {
+        if (m_state.createdInstance)
+            throw std::runtime_error("Can't create a new deviceInfo instance after an instance is already created.");
         this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
         this->createInstance();
         this->getDevice(deviceIdx)->createDevice();
@@ -56,6 +39,8 @@ namespace vkn
 
     void VknConfig::testNoInputs()
     {
+        if (m_state.createdInstance)
+            throw std::runtime_error("Can't create a test instance after an instance is already created.");
         std::string appName{"NoInputsTest"};
         std::string engineName{"MinVknConfig"};
         this->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
@@ -145,9 +130,11 @@ namespace vkn
                                 std::string engineName, VkApplicationInfo *pNext,
                                 uint32_t appVersion, uint32_t engineVersion)
     {
-        m_infos.fillAppName(appName);
-        m_infos.fillEngineName(engineName);
-        m_infos.fillAppInfo(apiVersion, appVersion, engineVersion);
+        if (m_state.filledAppInfo)
+            throw std::runtime_error("Already filled app info.");
+        m_infos->fillAppName(appName);
+        m_infos->fillEngineName(engineName);
+        m_infos->fillAppInfo(apiVersion, appVersion, engineVersion);
     }
 
     void VknConfig::fillInstanceCreateInfo(const char *const *enabledLayerNames,
@@ -156,60 +143,40 @@ namespace vkn
                                            uint32_t enabledExtensionNamesSize,
                                            VkInstanceCreateFlags flags)
     {
-        if (m_filledInstanceCreateInfo)
+        if (m_state.filledInstanceCreateInfo)
             throw std::runtime_error("Instance create info already filled.");
-        m_infos.fillEnabledLayerNames(enabledLayerNames, enabledLayerNamesSize);
-        m_infos.fillInstanceExtensionNames(enabledExtensionNames, enabledExtensionNamesSize);
-        m_infos.fillInstanceCreateInfo(flags);
-        m_filledInstanceCreateInfo = true;
+        m_infos->fillEnabledLayerNames(enabledLayerNames, enabledLayerNamesSize);
+        m_infos->fillInstanceExtensionNames(enabledExtensionNames, enabledExtensionNamesSize);
+        m_infos->fillInstanceCreateInfo(flags);
+        m_state.filledInstanceCreateInfo = true;
     }
 
     VknResult VknConfig::createInstance()
     {
-        if (m_instanceCreated)
+        if (m_state.createdInstance)
             throw std::runtime_error("Instance already created.");
-        if (!m_filledInstanceCreateInfo)
+        if (!m_state.filledInstanceCreateInfo)
             throw std::runtime_error("Creating instance without filling instance create info.");
-        VknResult res{vkCreateInstance(m_infos.getInstanceCreateInfo(), VK_NULL_HANDLE, &m_instance),
+        VknResult res{vkCreateInstance(m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE, &m_engine->instance),
                       "Create instance."};
-        if (!(res.isSuccess()))
-            throw std::runtime_error(res.toErr("Error creating instance."));
-        m_resultArchive.store(res);
 
-        m_instanceCreated = true;
+        m_state.createdInstance = true;
         return res;
-    }
-
-    VknRenderpass *VknConfig::getRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx)
-    {
-        VknRenderpass *renderpass{this->getDevice(deviceIdx)->getRenderpass(renderpassIdx)};
-        if (!(renderpass->getVkRenderPassCreated()))
-            throw std::runtime_error("Renderpass not created before getting renderpass.");
-
-        return renderpass;
-    }
-
-    void VknConfig::archiveResult(VknResult res)
-    {
-        m_resultArchive.store(res);
     }
 
     VknDevice *VknConfig::getDevice(uint32_t deviceIdx)
     {
-        if (deviceIdx >= m_numDevices)
-            throw std::runtime_error("Device index out of range.");
-        std::list<VknDevice>::iterator it = m_devices.begin();
-        std::advance(it, deviceIdx);
-        return &(*it);
+        return &m_devices[deviceIdx];
     }
 
-    void VknConfig::createWindowSurface()
+    void VknConfig::createWindowSurface(uint32_t surfaceIdx)
     {
-        if (!m_instanceCreated)
+        if (!m_state.createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
         if (m_window == nullptr)
             throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
-        if (glfwCreateWindowSurface(m_instance, m_window, nullptr, &m_surface) != VK_SUCCESS)
-            throw std::runtime_error("Failed to create window surface!");
+        VknResult res("Create window surface.");
+        res = glfwCreateWindowSurface(m_engine->instance, m_window, nullptr,
+                                      &m_engine->getElement<VkSurfaceKHR>(surfaceIdx))
     }
 }

@@ -9,6 +9,8 @@
 #include <stb_image.h>
 
 #include "VknConfig/VknConfig.hpp"
+#include "VknConfig/VknEngine.hpp"
+
 // #include "VknShaderStage.hpp"
 
 // GLFWwindow *window_ = nullptr;
@@ -23,7 +25,8 @@ int main()
 {
     GLFWwindow *window = nullptr;
     initWindow(&window);
-    vkn::VknConfig config{window};
+    vkn::VknEngine engine{};
+    vkn::VknConfig config{&engine, window};
     config.testNoInputs();
     auto device = config.getDevice(0);
     auto renderpass = device->getRenderpass(0);

@@ -5,7 +5,7 @@ namespace vkn
     class VknQueueFamily
     {
     public:
-        VknQueueFamily();
+        VknQueueFamily() = delete;
         VknQueueFamily(VkQueueFamilyProperties properties);
 
         bool supportsGraphics();
@@ -18,8 +18,10 @@ namespace vkn
         uint32_t getNumAvailable();
 
     private:
-        int m_numSelected{0};
+        // Members
         VkQueueFamilyProperties m_properties{};
-        bool m_placeholder;
+
+        // State
+        int m_numSelected{0};
     };
 }

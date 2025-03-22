@@ -4,17 +4,15 @@
 
 #include "VknPipeline.hpp"
 #include "VknFramebuffer.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknRenderpass
     {
     public:
-        VknRenderpass();
-        VknRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx, VknInfos *infos, VknResultArchive *archive,
-                      VkDevice *device, const bool *deviceCreated);
-        ~VknRenderpass();
-        void destroy();
+        VknRenderpass() = delete;
+        VknRenderpass(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void createAttachment(
             uint32_t subpassIdx,
@@ -41,36 +39,40 @@ namespace vkn
             VkSubpassDescriptionFlags flags = 0);
         void createRenderpass();
         void createPipelines();
-        VkRenderPass *getVkRenderPass() { return &m_renderpass; }
+        VkRenderPass *getVkRenderPass() { return m_renderpass; }
         VknPipeline *getPipeline(uint32_t idx);
-        bool getVkRenderPassCreated() { return m_renderpassCreated; }
+        bool getVkRenderPassCreated() { return createdRenderpass; }
 
     private:
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
-        VknResultArchive *m_archive{nullptr};
-        VkRenderPass m_renderpass{};
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        VkDevice *m_device;
-        const bool *m_deviceCreated{nullptr};
 
-        std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
+        // Wrapped object
+        VkRenderPass *m_renderpass{};
+
+        // Members
         std::list<VknPipeline> m_pipelines;
         std::vector<VknFramebuffer> m_framebuffers{};
         std::vector<std::vector<uint32_t>> m_numAttachRefs{};
         std::vector<uint32_t> m_numPreserveRefs{};
 
+        // Params
+        std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
+
+        // State
+        bool addedDevices{false};
+        bool createdRenderpass{false};
+        bool createdPipelines{false};
+        bool filledColorAttachment{false};
+        bool placeholder;
+
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
         uint32_t m_numPipelines{0};
-
-        bool m_destroyed{false};
-        bool m_devicesAdded{false};
-        bool m_renderpassCreated{false};
-        bool m_pipelinesCreated{false};
-        bool m_filledColorAttachment{false};
-        bool m_placeholder;
 
         void addPipeline();
         void fillRenderpassCreateInfo(

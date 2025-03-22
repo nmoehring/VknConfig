@@ -172,19 +172,18 @@ namespace vkn
             return &m_multisampleStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
         }
         VkPipelineLayoutCreateInfo *getPipelineLayoutCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
+            VknIdxs &relIdxs)
         {
-            return &m_layoutCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            return &m_layoutCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
         }
         void fillRenderpassPtrs(
-            uint32_t deviceIdx, uint32_t renderpassIdx, VkRenderPass *renderpass,
-            const bool *renderpassCreated);
+            VknIdxs &relIdxs, VkRenderPass *renderpass, const bool *renderpassCreated);
         bool getRenderpassCreated(uint32_t deviceIdx, uint32_t renderpassIdx)
         {
             return *(m_renderpassCreatedPtrs[deviceIdx][renderpassIdx]);
         }
-        void initRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx);
-        VkSwapchainCreateInfoKHR *getSwapchainCreateInfo(uint32_t deviceIdx, uint32_t swapchainIdx);
+        void initRenderpass(VknIdxs &relIdxs);
+        VkSwapchainCreateInfoKHR *getSwapchainCreateInfo(VknIdxs &relIdxs);
 
         uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx)
         {
@@ -192,7 +191,7 @@ namespace vkn
         }
         void setNumDeviceQueueFamilies(int num, uint32_t deviceIdx);
         void fillDeviceQueuePriorities(
-            uint32_t deviceIdx, uint32_t queueFamilyIdx, std::vector<float> priorities);
+            VknIdxs &relIdxs, uint32_t queueFamilyIdx, std::vector<float> priorities);
 
         // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
@@ -226,13 +225,13 @@ namespace vkn
             bool sparseResidencyImage3D = false, bool sparseResidency2Samples = false,
             bool sparseResidency4Samples = false, bool sparseResidency8Samples = false, bool sparseResidency16Samples = false,
             bool sparseResidencyAliased = false, bool variableMultisampleRate = false, bool inheritedQueries = false);
-        void fillDeviceQueueCreateInfo(uint32_t deviceIdx, uint32_t queueFamilyIdx, uint32_t queueCount,
+        void fillDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx, uint32_t queueCount,
                                        VkApplicationInfo *pNext = nullptr,
                                        VkDeviceQueueCreateFlags flags = 0);
         VkDeviceCreateInfo *fillDeviceCreateInfo(uint32_t deviceIdx);
 
         VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo(
-            uint32_t deviceIdx, uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount, VkExtent2D dimensions,
+            VknIdxs &relIdxs, VkSurfaceKHR *surface, uint32_t imageCount, VkExtent2D dimensions,
             VkSurfaceFormatKHR surfaceFormat = VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
             uint32_t numImageArrayLayers = 1, VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -243,32 +242,29 @@ namespace vkn
 
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-            uint32_t shaderIdx, std::vector<char> *code, VkShaderModuleCreateFlags flags = 0);
+            VknIdxs &relIdxs, std::vector<char> *code, VkShaderModuleCreateFlags flags = 0);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t shaderIdx,
-            VkShaderModule *module, VkShaderStageFlagBits *stage,
+            VknIdxs &relIdxs, VkShaderModule *module, VkShaderStageFlagBits *stage,
             VkPipelineShaderStageCreateFlags *flags = 0,
             VkSpecializationInfo *pSpecializationInfo = nullptr);
         VkPipelineVertexInputStateCreateInfo *fillVertexInputStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t numBindings, uint32_t numAttributes);
+            VknIdxs &relIdxs, uint32_t numBindings, uint32_t numAttributes);
         VkPipelineInputAssemblyStateCreateInfo *fillInputAssemblyStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-            VkPrimitiveTopology topology = VkPrimitiveTopology{},
+            VknIdxs &relIdxs, VkPrimitiveTopology topology = VkPrimitiveTopology{},
             VkBool32 primitiveRestartEnable = VK_FALSE);
         VkPipelineTessellationStateCreateInfo *fillTessellationStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t patchControlPoints = 0);
         VkPipelineViewportStateCreateInfo *fillViewportStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs,
             std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors);
         VkPipelineRasterizationStateCreateInfo *fillRasterizationStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs,
             VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
             float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
             float lineWidth = 0, VkBool32 depthClampEnable = VK_FALSE,
             VkBool32 rasterizerDiscardEnable = VK_FALSE, VkBool32 depthBiasEnable = VK_FALSE);
         VkPipelineMultisampleStateCreateInfo *fillMultisampleStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs,
             float minSampleShading, VkSampleMask *pSampleMask = VK_NULL_HANDLE,
             VkSampleCountFlagBits rasterizationSamples = VkSampleCountFlagBits{},
             VkBool32 sampleShadingEnable = VK_FALSE, VkBool32 alphaToCoverageEnable = VK_FALSE,
@@ -289,12 +285,12 @@ namespace vkn
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs,
             VkPipelineLayout *layout = nullptr,
             VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
             VkPipelineCreateFlags flags = 0);
         VkPipelineLayoutCreateInfo *fillPipelineLayoutCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs,
             std::vector<VkDescriptorSetLayout> setLayouts = std::vector<VkDescriptorSetLayout>{},
             std::vector<VkPushConstantRange> pushConstantRanges = std::vector<VkPushConstantRange>{},
             VkPipelineLayoutCreateFlags flags = 0);
@@ -343,11 +339,11 @@ namespace vkn
             std::vector<VkDescriptorSetLayoutBinding> bindings = std::vector<VkDescriptorSetLayoutBinding>{},
             VkDescriptorSetLayoutCreateFlags flags = 0);
         VkVertexInputBindingDescription *fillVertexInputBindingDescription(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs,
             uint32_t bindIdx, uint32_t binding = 0, uint32_t stride = 0,
             VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
         VkVertexInputAttributeDescription *fillVertexInputAttributeDescription(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t attributeIdx,
+            VknIdxs &relIdxs, uint32_t attributeIdx,
             uint32_t binding = 0, uint32_t location = 0, VkFormat format = VK_FORMAT_UNDEFINED,
             uint32_t offset = 0);
 
@@ -355,18 +351,15 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
         std::vector<VkVertexInputAttributeDescription> *getVertexInputAttributes(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
-        VkImageViewCreateInfo *getImageViewCreateInfo(
-            uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx);
-        VkFramebufferCreateInfo *getFramebufferCreateInfo(
-            uint32_t deviceIdx, uint32_t swapchainIdx, uint32_t imageViewIdx);
+        VkImageViewCreateInfo *getImageViewCreateInfo(VknIdxs &relIdxs);
+        VkFramebufferCreateInfo *getFramebufferCreateInfo(VknIdxs &relIdxs);
 
         void
-        fillFramebufferCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
-                                  uint32_t framebufferIdx, VkRenderPass *renderpass,
+        fillFramebufferCreateInfo(VknIdxs &relIdxs, VkRenderPass *renderpass,
                                   std::vector<VkImageView> *attachments, uint32_t width,
                                   uint32_t height, uint32_t numLayers, VkFramebufferCreateFlags &flags);
-        void fillImageViewCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx,
-                                     uint32_t imageViewIdx, VkImage &image, VkImageViewType &viewType,
+        void fillImageViewCreateInfo(VknIdxs &relIdxs, VkImage &image,
+                                     VkImageViewType &viewType,
                                      VkFormat &format, VkComponentMapping &components,
                                      VkImageSubresourceRange &subresourceRange, VkImageViewCreateFlags &flags);
 

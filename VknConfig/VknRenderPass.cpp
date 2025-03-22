@@ -2,50 +2,17 @@
 
 namespace vkn
 {
-    VknRenderpass::VknRenderpass() : m_deviceIdx{0}, m_renderpassIdx{0}, m_archive{nullptr},
-                                     m_infos{nullptr}, m_device{nullptr}, m_deviceCreated{nullptr}, m_placeholder{true}
+    VknRenderpass::VknRenderpass(
+        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
-    }
-
-    VknRenderpass::VknRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx, VknInfos *infos,
-                                 VknResultArchive *archive, VkDevice *device, const bool *deviceCreated)
-        : m_infos{infos}, m_archive{archive}, m_device{device}, m_deviceIdx{deviceIdx},
-          m_renderpassIdx{renderpassIdx}, m_deviceCreated{deviceCreated}, m_placeholder{false}
-    {
-
-        if (m_device == VK_NULL_HANDLE)
-            throw std::runtime_error("m_device pointer is null.");
-        if (m_deviceCreated == nullptr)
-            throw std::runtime_error("m_deviceCreated pointer is null.");
-        m_infos->initRenderpass(deviceIdx, renderpassIdx);
-        m_infos->fillRenderpassPtrs(deviceIdx, renderpassIdx, &m_renderpass, deviceCreated);
-    }
-
-    VknRenderpass::~VknRenderpass()
-    {
-        if (!m_destroyed && !m_placeholder)
-            this->destroy();
-    }
-
-    void VknRenderpass::destroy()
-    {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to destroy a placeholder object.");
-        if (m_destroyed)
-            throw std::runtime_error("Renderpass object already destroyed.");
-
-        if (m_renderpassCreated)
-            vkDestroyRenderPass(*m_device, m_renderpass, nullptr);
-        for (auto &pipeline : m_pipelines)
-            pipeline.destroy();
-        m_destroyed = true;
-        std::cout << "VknRenderpass DESTROYED." << std::endl;
+        // Move to create function
+        m_infos->initRenderpass(relIdxs);
+        m_infos->fillRenderpassPtrs(relIdxs, &m_renderpass);
     }
 
     void VknRenderpass::addPipeline()
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         m_rawPipelines.push_back(VkPipeline{});
         uint32_t newSubpassIdx = m_pipelines.size();
         m_pipelines.emplace_back(m_deviceIdx, m_renderpassIdx, newSubpassIdx, &m_renderpass,
@@ -54,8 +21,6 @@ namespace vkn
 
     void VknRenderpass::createRenderpass()
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!(*m_deviceCreated))
             throw std::runtime_error("Device not created before creating renderpass.");
         if (m_renderpassCreated)
@@ -73,8 +38,6 @@ namespace vkn
 
     VknPipeline *VknRenderpass::getPipeline(uint32_t pipelineIdx)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         if (pipelineIdx != m_numPipelines)
             throw std::runtime_error("Pipeline index out of range.");
         std::list<VknPipeline>::iterator it = m_pipelines.begin();
@@ -84,8 +47,6 @@ namespace vkn
 
     void VknRenderpass::fillRenderpassCreateInfo(VkRenderPassCreateFlags flags)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         // No flags available, no need to manually fill currently.
         m_infos->fillRenderpassCreateInfo(m_deviceIdx, m_renderpassIdx, m_numAttachments,
                                           m_numSubpasses, m_numSubpassDeps, flags);
@@ -95,8 +56,6 @@ namespace vkn
         uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
         VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         uint32_t subpassDepIdx = m_numSubpassDeps++;
         m_infos->fillSubpassDependency(
             srcSubpass, dstSubpass, srcStageMask, srcAccessMask, dstStageMask, dstAccessMask);
@@ -110,8 +69,6 @@ namespace vkn
         VkImageLayout finalLayout, VkImageLayout attachmentRefLayout,
         VkAttachmentDescriptionFlags flags)
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         uint32_t attachIdx = m_numAttachments++;
 
         m_infos->fillAttachmentDescription(
@@ -135,8 +92,6 @@ namespace vkn
 
     void VknRenderpass::createPipelines()
     {
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!m_renderpassCreated)
             throw std::runtime_error("Renderpass not created before creating pipelines.");
         if (m_pipelinesCreated)
@@ -161,10 +116,6 @@ namespace vkn
         uint32_t subpassIdx, bool isCompute, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
-        if (subpassIdx != m_numSubpasses)
-            throw std::runtime_error("SubpassIdx is invalid.");
-        if (m_placeholder)
-            throw std::runtime_error("Trying to configure a placeholder object.");
         if (!isCompute && !m_filledColorAttachment)
             throw std::runtime_error("No attachment created before creating subpass.");
         m_infos->fillSubpassDescription(

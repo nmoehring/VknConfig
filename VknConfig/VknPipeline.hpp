@@ -19,12 +19,8 @@ namespace vkn
     class VknPipeline
     {
     public:
-        VknPipeline();
-        VknPipeline(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VkRenderPass *renderpass,
-                    VkPipeline *pipeline,
-                    VkDevice *dev, VknInfos *infos, VknResultArchive *archive, const bool *deviceCreated);
-        ~VknPipeline();
-        void destroy();
+        VknPipeline() = delete;
+        VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void createDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
@@ -48,7 +44,6 @@ namespace vkn
 
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         VkPipeline *getVkPipeline() { return m_pipeline; }
-        void setPipelineCreated() { m_pipelineCreated = true; }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState; }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState; }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState; }
@@ -56,39 +51,38 @@ namespace vkn
         VknViewportState *getViewportState() { return &m_viewportState; }
 
     private:
-        // Ctor init
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
-        VkDevice *m_device;
-        const bool *m_deviceCreated;
-        VknInfos *m_infos;
-        VknResultArchive *m_archive;
-        VkPipeline *m_pipeline; // 1 Subpass per pipeline
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
 
-        // Init empty
-        VknVertexInputState m_vertexInputState{};
-        VknInputAssemblyState m_inputAssemblyState{};
-        // VknTessellationState m_tessellationState{};
-        VknViewportState m_viewportState{};
-        VknRasterizationState m_rasterizationState{};
-        VknMultisampleState m_multisampleState{};
-        // VknDepthStencilState m_depthStencilState{};
-        // VknColorBlendState m_colorBlendState{};
-        // VknDynamicState m_dynamicState{};
-        std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
+        // Wrapped object
+        VkPipeline *m_pipeline{}; // 1 Subpass per pipeline
 
+        // TODO: Implement with CC Valueable, if it doesn't initialize the data
+        //  Members
+        VknVertexInputState m_vertexInputState;
+        VknInputAssemblyState m_inputAssemblyState;
+        // VknTessellationState m_tessellationState;
+        VknViewportState m_viewportState;
+        VknRasterizationState m_rasterizationState;
+        VknMultisampleState m_multisampleState;
+        // VknDepthStencilState m_depthStencilState;
+        // VknColorBlendState m_colorBlendState;
+        // VknDynamicState m_dynamicState;
+        std::vector<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
+
+        // Params
         std::vector<VkDescriptorSetLayoutBinding> m_bindings{};      //+
         std::vector<VkPushConstantRange> m_pushConstantRanges{};     //=
         std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
         VkPipelineLayout m_layout{};                                 // Takes an array of descriptor set layouts ^
 
         // State
-        bool m_destroyed{false};
-        bool m_createInfoFilled{false};
-        bool m_pipelineCreated{false};
-        bool m_pipelineLayoutCreated{false};
-        bool m_placeholder;
+        bool m_filledCreateInfo{false};
+        bool m_createdPipeline{false};
+        bool m_createdPipelineLayout{false};
         uint32_t m_numShaderStages{0};
     };
 }

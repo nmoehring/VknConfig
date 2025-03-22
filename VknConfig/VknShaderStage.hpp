@@ -14,12 +14,9 @@ namespace vkn
     class VknShaderStage
     {
     public:
-        VknShaderStage();
-        VknShaderStage(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                       uint32_t shaderIdx, VknInfos *infos, VknResultArchive *archive,
-                       VkDevice *device);
-        ~VknShaderStage();
-        void destroy();
+        VknShaderStage() = delete;
+        VknShaderStage(
+            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void setShaderStageType(VknShaderStageType);
         void setFilename(std::string filename);
@@ -28,25 +25,21 @@ namespace vkn
         void createShaderStage();
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
-        uint32_t m_shaderIdx;
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
+
+        // Params
         std::vector<char> m_code;
-        bool m_placeholder;
-
-        VknInfos *m_infos;
-        VknResultArchive *m_archive;
-        VkDevice *m_vkDevice;
-
         VkShaderStageFlagBits m_shaderStageFlagBit{};
         std::string m_filename{};
         VkPipelineShaderStageCreateFlags m_createFlags{0};
-
         VkShaderModule m_shaderModule{VK_NULL_HANDLE};
         VkSpecializationInfo m_specializationInfo{};
 
-        bool m_destroyed{false};
+        // State
         bool m_shaderModuleCreated{false};
         bool m_shaderStageTypeFilled{false};
         bool m_filenameFilled{false};

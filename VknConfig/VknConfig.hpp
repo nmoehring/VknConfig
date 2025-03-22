@@ -1,7 +1,4 @@
-// I decided to use a Vkn prefix to stand apart from Vk prefixes of the API
-// All the structs are in info.hpp
-// Interface: need to select a physical device,
-//           need to select queue families
+// Contains instance, devices, and surfaces
 
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
@@ -18,19 +15,35 @@
 #include <GLFW/glfw3native.h>
 
 #include "VknDevice.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
+    struct VknConfigState
+    {
+        bool selectedQueues{false};
+        bool filledInstanceCreateInfo{false};
+        bool createdInstance{false};
+        bool filledAppInfo{false};
+        uint32_t numDevices{0};
+    };
+
     class VknConfig
     {
     public:
         void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
         void testNoInputs();
 
-        VknConfig();
-        VknConfig(GLFWwindow *window);
-        ~VknConfig();
-        void destroy();
+        // No default constructor, no empty object
+        VknConfig() = delete;
+        VknConfig(VknEngine *engine, VknInfos *infos, GLFWwindow *window);
+
+        // Prevent copy/move constructors and assignment operators
+        VknConfig(const VknConfig &) = delete;
+        VknConfig &operator=(const VknConfig &) = delete;
+        VknConfig(VknConfig &&) = delete;
+        VknConfig &operator=(VknConfig &&) = delete;
+
         void fillAppInfo(uint32_t apiVersion, std::string appName,
                          std::string engineName,
                          VkApplicationInfo *pNext = nullptr,
@@ -41,37 +54,30 @@ namespace vkn
                                     const char *const *enabledExtensionNames,
                                     uint32_t enabledExtensionNamesSize,
                                     VkInstanceCreateFlags flags = 0);
-        void addDevice(uint32_t deviceIdx);
-        VknResult createInstance();
-        void requestQueueFamilies(uint32_t deviceIndex);
-        VknResult createRenderpass();
-        std::vector<vkn::VknQueueFamily> getQueueData();
-        VknInfos *getInfos() { return &m_infos; }
-        VkInstance *getInstance() { return &m_instance; }
-        VknRenderpass *getRenderpass(uint32_t deviceIdx, uint32_t renderpassIdx);
         void enableExtensions(std::vector<std::string> extensions);
-        bool getInstanceCreated() { return m_instanceCreated; }
-        void selectQueues(uint32_t deviceIdx, bool chooseAllAvailableQueues = false);
+        VknResult createInstance();
+
+        void addDevice(uint32_t deviceIdx);
+        VkInstance *getInstance() { return &m_engine->instance; }
+        bool getInstanceCreated() { return m_state.createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
-        void createWindowSurface();
+        void createWindowSurface(uint32_t surfaceIdx);
 
     private:
-        VknResultArchive m_resultArchive;
-        VknInfos m_infos;
-        VkInstance m_instance;
-        std::list<VknDevice> m_devices{};                // A vector is fine because all the devices are inserted in one function call
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
+
+        // Params
         std::vector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
-        GLFWwindow *m_window;
-        VkSurfaceKHR m_surface;
+        GLFWwindow *m_window{nullptr};
 
-        bool m_instanceCreated{false};
-        bool m_physicalDeviceSelected{false};
-        bool m_queueFamiliesRequested{false};
-        bool m_queuesSelected{false};
-        bool m_destroyed{false};
-        bool m_filledInstanceCreateInfo{false};
-        uint32_t m_numDevices{0};
+        // Members
+        std::vector<VknDevice> m_devices;
 
-        void archiveResult(VknResult res);
+        // State
+        VknConfigState m_state;
     };
 }

@@ -1,15 +1,16 @@
 #include <vulkan/vulkan.h>
 
 #include "VknInfos.hpp"
+#include "VknEngine.hpp"
 
 namespace vkn
 {
     class VknRasterizationState
     {
     public:
-        VknRasterizationState();
-        VknRasterizationState(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-                              VknInfos *infos);
+        VknRasterizationState() = delete;
+        VknRasterizationState(
+            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void fillRasterizationStateCreateInfo();
 
@@ -25,13 +26,13 @@ namespace vkn
         void setDepthBiasSlopeFactor(float factor);
 
     private:
-        uint32_t m_deviceIdx;
-        uint32_t m_renderpassIdx;
-        uint32_t m_subpassIdx;
-        bool m_placeholder;
-        VknInfos *m_infos;
-        bool m_filled{false};
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
 
+        // Members
         VkPolygonMode m_polygonMode{VK_POLYGON_MODE_FILL};
         VkCullModeFlags m_cullMode{VK_CULL_MODE_BACK_BIT};
         VkFrontFace m_frontFace{VK_FRONT_FACE_CLOCKWISE};
@@ -42,5 +43,8 @@ namespace vkn
         float m_depthBiasConstantFactor{0};
         float m_depthBiasClamp{0};
         float m_depthBiasSlopeFactor{0};
+
+        // State
+        bool m_filled{false};
     };
 }
