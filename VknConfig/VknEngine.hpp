@@ -99,16 +99,16 @@ namespace vkn
 
     struct VknIdxs
     {
-        CCTL::Valueable deviceIdx{MAX_U32};
-        CCTL::Valueable renderpassIdx{MAX_U32};
-        CCTL::Valueable subpassIdx{MAX_U32};
-        CCTL::Valueable shaderIdx{MAX_U32};
-        CCTL::Valueable swapchainIdx{MAX_U32};
-        CCTL::Valueable frameIdx{MAX_U32};
-        CCTL::Valueable imageIdx{MAX_U32};
-        CCTL::Valueable queueFamilyIdx{MAX_U32};
-        CCTL::Valueable framebufferIdx{MAX_U32};
-        CCTL::Valueable imageViewIdx{MAX_U32};
-        CCTL::Valueable physicalDeviceIdx{MAX_U32};
+        std::optional<uint32_t> deviceIdx{MAX_U32};
+        std::optional<uint32_t> renderpassIdx{MAX_U32};
+        std::optional<uint32_t> subpassIdx{MAX_U32};
+        std::optional<uint32_t> shaderIdx{MAX_U32};
+        std::optional<uint32_t> swapchainIdx{MAX_U32};
+        std::optional<uint32_t> frameIdx{MAX_U32};
+        std::optional<uint32_t> imageIdx{MAX_U32};
+        std::optional<uint32_t> queueFamilyIdx{MAX_U32};
+        std::optional<uint32_t> framebufferIdx{MAX_U32};
+        std::optional<uint32_t> imageViewIdx{MAX_U32};
+        std::optional<uint32_t> physicalDeviceIdx{MAX_U32};
     };
 }
