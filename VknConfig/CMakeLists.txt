@@ -4,4 +4,4 @@ add_library(VknConfig VknConfig.cpp VknDevice.cpp VknInfos.cpp
     VknVertexInputState.cpp VknInputAssemblyState.cpp VknMultisampleState.cpp
     VknShaderStage.cpp VknRasterizationState.cpp VknQueueFamily.cpp
     VknViewportState.cpp VknSwapchain.cpp VknImageView.cpp)
-target_link_libraries(VknConfig vknconfig_compiler_args vulkan-1 CCUtilities)
+target_link_libraries(VknConfig vknconfig_compiler_args vulkan-1)

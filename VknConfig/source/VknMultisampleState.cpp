@@ -1,5 +1,5 @@
-#include "VknMultisampleState.hpp"
-#include "VknInfos.hpp"
+#include "../include/VknMultisampleState.hpp"
+#include "../include/VknInfos.hpp"
 
 namespace vkn
 {

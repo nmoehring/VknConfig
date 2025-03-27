@@ -1,6 +1,6 @@
 #include <string>
 
-#include "VknResult.hpp"
+#include "../include/VknResult.hpp"
 
 namespace vkn
 {

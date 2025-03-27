@@ -2,8 +2,8 @@
 #include <limits>
 #include <algorithm>
 
-#include "VknInfos.hpp"
-#include "VknEngine.hpp"
+#include "../include/VknInfos.hpp"
+#include "../include/VknEngine.hpp"
 namespace vkn
 {
     VknInfos::VknInfos()

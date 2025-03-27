@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "VknPhysicalDevice.hpp"
-#include "VknEngine.hpp"
+#include "../include/VknPhysicalDevice.hpp"
+#include "../include/VknEngine.hpp"
 
 namespace vkn
 {

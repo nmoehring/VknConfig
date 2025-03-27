@@ -43,14 +43,6 @@ include(FetchContent)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-FetchContent_Declare(
-    CCUtilities
-    GIT_REPOSITORY https://github.com/nmoehring/CCUtilities
-    GIT_TAG main
-)
-
-FetchContent_MakeAvailable(CCUtilities)
-
 # ########## LIB AND INCLUDE ############
 message("Vulkan header version: ${VulkanHeaderVersion}")
 message("Vulkan include directory: ${Vulkan_INCLUDE_DIRS}")
@@ -61,7 +53,6 @@ include_directories(
     ${Vulkan_INCLUDE_DIRS}
     ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
     ${glfw3_DIR}/include
-    ${CMAKE_BINARY_DIR}/_deps/ccutilities-src
 )
 
 # Optimizations (referenced in bs::thread-pool)

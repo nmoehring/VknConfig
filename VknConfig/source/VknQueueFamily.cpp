@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VknQueueFamily.hpp"
+#include "../include/VknQueueFamily.hpp"
 
 namespace vkn
 {

@@ -1,6 +1,6 @@
 #include <filesystem>
 
-#include "VknPipeline.hpp"
+#include "../include/VknPipeline.hpp"
 #include <iterator>
 
 namespace vkn

@@ -1,4 +1,4 @@
-#include "VknInputAssemblyState.hpp"
+#include "../include/VknInputAssemblyState.hpp"
 
 namespace vkn
 {

@@ -1,4 +1,4 @@
-#include "VknDevice.hpp"
+#include "../include/VknDevice.hpp"
 
 namespace vkn
 {

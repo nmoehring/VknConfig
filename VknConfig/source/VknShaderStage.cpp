@@ -1,8 +1,8 @@
 #include <filesystem>
 
-#include <CCUtilities.hpp>
-#include "VknShaderStage.hpp"
-#include "VknEngine.hpp"
+#include "../include/VknShaderStage.hpp"
+#include "../include/VknEngine.hpp"
+#include "../common.hpp"
 
 namespace vkn
 {
@@ -65,7 +65,7 @@ namespace vkn
         if (m_shaderModuleCreated)
             throw std::runtime_error("Shader module already created.");
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
-        std::vector<char> code{CCUtilities::readBinaryFile(shaderDir / m_filename)};
+        std::vector<char> code{readBinaryFile(shaderDir / m_filename)};
         for (auto &c : code)
             m_code.push_back(c);
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =

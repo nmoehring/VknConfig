@@ -8,8 +8,8 @@
 #include <GLFW/glfw3native.h>
 #include <stb_image.h>
 
-#include "VknConfig/VknConfig.hpp"
-#include "VknConfig/VknEngine.hpp"
+#include "VknConfig/include/VknConfig.hpp"
+#include "VknConfig/include/VknEngine.hpp"
 
 // #include "VknShaderStage.hpp"
 
@@ -26,7 +26,8 @@ int main()
     GLFWwindow *window = nullptr;
     initWindow(&window);
     vkn::VknEngine engine{};
-    vkn::VknConfig config{&engine, window};
+    vkn::VknInfos infos{};
+    vkn::VknConfig config{&engine, &infos, window};
     config.testNoInputs();
     auto device = config.getDevice(0);
     auto renderpass = device->getRenderpass(0);
@@ -37,7 +38,7 @@ int main()
     std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
 
     int idx = 0;
-    for (auto &queue : device->getQueues())
+    for (auto &queue : device->getPhysicalDevice()->getQueues())
     {
         std::cout << "Queue " << idx << ": " << std::endl;
         std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;
