@@ -7,10 +7,8 @@
 #include <memory>
 
 #include "VknRenderpass.hpp"
-#include "VknQueueFamily.hpp"
 #include "VknPhysicalDevice.hpp"
 #include "VknSwapchain.hpp"
-#include "VknEngine.hpp"
 
 namespace vkn
 {

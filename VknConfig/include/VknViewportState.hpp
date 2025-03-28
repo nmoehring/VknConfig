@@ -1,7 +1,6 @@
 #pragma once
 
 #include "VknInfos.hpp"
-#include "VknEngine.hpp"
 
 namespace vkn
 {

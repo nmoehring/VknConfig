@@ -5,8 +5,6 @@
 #include <vulkan/vulkan.h>
 #include <list>
 
-#include "VknResult.hpp"
-#include "VknInfos.hpp"
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
 #include "VknMultisampleState.hpp"

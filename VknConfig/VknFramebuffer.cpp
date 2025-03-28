@@ -1,7 +1,6 @@
 #include <stdexcept>
 
 #include "include/VknFramebuffer.hpp"
-#include "include/VknEngine.hpp"
 
 namespace vkn
 {

@@ -3,9 +3,6 @@
 #include <list>
 
 #include <vulkan/vulkan.h>
-#include "VknResult.hpp"
-#include "VknInfos.hpp"
-#include "VknEngine.hpp"
 #include "VknQueueFamily.hpp"
 
 namespace vkn

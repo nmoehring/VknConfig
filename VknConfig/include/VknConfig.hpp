@@ -15,7 +15,6 @@
 #include <GLFW/glfw3native.h>
 
 #include "VknDevice.hpp"
-#include "VknEngine.hpp"
 
 namespace vkn
 {

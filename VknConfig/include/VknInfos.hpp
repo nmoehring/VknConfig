@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include <vulkan/vulkan.h>
+#include "VknEngine.hpp"
 
 namespace vkn
 {

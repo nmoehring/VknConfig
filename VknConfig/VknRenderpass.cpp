@@ -98,7 +98,10 @@ namespace vkn
             throw std::runtime_error("Renderpass not created before creating pipelines.");
         if (m_createdPipelines)
             throw std::runtime_error("Pipelines already created.");
-        uint32_t numPipelines{m_engine->getObjectVector<VkPipeline>().size()};
+        size_t numPipelinesSize = m_engine->getObjectVector<VkPipeline>().size();
+        if (numPipelinesSize > std::numeric_limits<uint32_t>::max())
+            throw std::runtime_error("Too many pipelines. Max supported: " + std::to_string(std::numeric_limits<uint32_t>::max()));
+        uint32_t numPipelines = static_cast<uint32_t>(numPipelinesSize);
         for (auto &pipeline : m_pipelines)
         {
             pipeline.fillPipelineCreateInfo();

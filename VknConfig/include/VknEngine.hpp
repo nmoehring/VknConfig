@@ -26,31 +26,31 @@ namespace vkn
         template <typename T>
         std::vector<T> &getObjectVector()
         {
-            if (constexpr(std::is_same_v<T, VkDevice>))
+            if constexpr (std::is_same_v<T, VkDevice>)
                 return devices;
-            else if (constexpr(std::is_same_v<T, VkRenderPass>))
+            else if constexpr (std::is_same_v<T, VkRenderPass>)
                 return renderpasses;
-            else if (constexpr(std::is_same_v<T, VkPipeline>))
+            else if constexpr (std::is_same_v<T, VkPipeline>)
                 return pipelines;
-            else if (constexpr(std::is_same_v<T, VkSwapchainKHR>))
+            else if constexpr (std::is_same_v<T, VkSwapchainKHR>)
                 return swapchains;
-            else if (constexpr(std::is_same_v<T, VkImage>))
+            else if constexpr (std::is_same_v<T, VkImage>)
                 return images;
-            else if (constexpr(std::is_same_v<T, VkFramebuffer>))
+            else if constexpr (std::is_same_v<T, VkFramebuffer>)
                 return framebuffers;
-            else if (constexpr(std::is_same_v<T, VkImageView>))
+            else if constexpr (std::is_same_v<T, VkImageView>)
                 return imageViews;
-            else if (constexpr(std::is_same_v<T, VkDescriptorSetLayout>))
+            else if constexpr (std::is_same_v<T, VkDescriptorSetLayout>)
                 return descriptorSetLayouts;
-            else if (constexpr(std::is_same_v<T, VkPipelineLayout>))
+            else if constexpr (std::is_same_v<T, VkPipelineLayout>)
                 return pipelineLayouts;
-            else if (constexpr(std::is_same_v<T, VkPhysicalDevice>))
+            else if constexpr (std::is_same_v<T, VkPhysicalDevice>)
                 return physicalDevices;
-            else if (constexpr(std::is_same_v<T, VkShaderModule>))
+            else if constexpr (std::is_same_v<T, VkShaderModule>)
                 return shaderModules;
-            else if (constexpr(std::is_same_v<T, VkPipelineCache>))
+            else if constexpr (std::is_same_v<T, VkPipelineCache>)
                 return pipelineCaches;
-            else if (constexpr(std::is_same_v<T, VkSurfaceKHR>))
+            else if constexpr (std::is_same_v<T, VkSurfaceKHR>)
                 return surfaces;
             else
                 throw std::runtime_error("Invalid object type passed to getElement() of VknEngine");
@@ -60,7 +60,7 @@ namespace vkn
         uint32_t push_back(T val)
         {
             std::vector<T> &vec{this->getObjectVector<T>()};
-            idx = vec.size();
+            uint32_t idx = vec.size();
             this->getObjectVector<T>().push_back(val);
             return idx;
         }

@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "include/VknInfos.hpp"
-#include "include/VknEngine.hpp"
 namespace vkn
 {
     VknInfos::VknInfos()

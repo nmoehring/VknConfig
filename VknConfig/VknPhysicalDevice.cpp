@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "include/VknPhysicalDevice.hpp"
-#include "include/VknEngine.hpp"
 
 namespace vkn
 {

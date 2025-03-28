@@ -4,7 +4,6 @@
 
 #include "VknPipeline.hpp"
 #include "VknFramebuffer.hpp"
-#include "VknEngine.hpp"
 
 namespace vkn
 {

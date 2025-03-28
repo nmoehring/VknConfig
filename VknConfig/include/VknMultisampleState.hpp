@@ -2,7 +2,6 @@
 
 #include <vulkan/vulkan.h>
 #include "VknInfos.hpp"
-#include "VknEngine.hpp"
 
 namespace vkn
 {

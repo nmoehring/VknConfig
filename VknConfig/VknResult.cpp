@@ -4,7 +4,22 @@
 
 namespace vkn
 {
-    VknResultArchive s_archive = VknResultArchive{};
+    VknResult::VknResultArchive s_archive = VknResult::VknResultArchive{};
+
+    void VknResult::VknResultArchive::manage()
+    {
+        if (results.size() > maxResults)
+            for (uint64_t count{results.size() - maxResults}; count > 0; --count)
+                results.pop();
+    }
+
+    void VknResult::VknResultArchive::store(VknResult res)
+    {
+        if (!res.isErrorStateEvaluated())
+            throw std::runtime_error("Target function not called, no result to store.");
+        results.push(res);
+        this->manage();
+    }
 
     VknResult::VknResult(std::string opDesc) : m_opDesc{opDesc}
     {
@@ -14,7 +29,7 @@ namespace vkn
         : m_result{result}, m_opDesc{opDesc}
     {
         if (m_result != VK_SUCCESS)
-            throw std::runtime_error(this->toErr());
+            throw std::runtime_error(this->toErr("Error: "));
 
         m_errorStateEvaluated = true;
         s_archive.store(*this);
@@ -47,7 +62,7 @@ namespace vkn
         } // switch
     }
 
-    std::string VknResult::toErr(std::string msg = "test")
+    std::string VknResult::toErr(std::string msg)
     {
         return std::format("{}: {}", msg, this->toString());
     }

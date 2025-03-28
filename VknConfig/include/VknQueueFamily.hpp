@@ -1,5 +1,8 @@
 #pragma once
 
+#include "VknResult.hpp"
+#include "VknInfos.hpp"
+
 namespace vkn
 {
     class VknQueueFamily

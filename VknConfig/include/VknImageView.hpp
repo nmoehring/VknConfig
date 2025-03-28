@@ -4,7 +4,6 @@
 
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
-#include "VknEngine.hpp"
 
 namespace vkn
 {
