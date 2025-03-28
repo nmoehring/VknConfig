@@ -2,13 +2,14 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <optional>
+#include "VknResult.hpp"
 
 namespace vkn
 {
-
     const uint32_t MAX_U32{4294967295};
 
-    struct VknEngine
+    class VknEngine
     {
     public:
         VknEngine();
@@ -22,9 +23,8 @@ namespace vkn
         VknEngine(VknEngine &&) = delete;
         VknEngine &operator=(VknEngine &&) = delete;
 
-        VkInstance instance{};
         template <typename T>
-        std::vector<T> &getObjectVector(VknIdxs absIdxs)
+        std::vector<T> &getObjectVector()
         {
             if (constexpr(std::is_same_v<T, VkDevice>))
                 return devices;
@@ -77,7 +77,10 @@ namespace vkn
             return this->getObjectVector<T>()[idx];
         }
 
+        VkInstance &getInstance() { return instance; }
+
     private:
+        VkInstance instance{};
         bool instanceCreated{false};
         std::vector<VkDevice> devices{};
         std::vector<VkSurfaceKHR> surfaces{};
@@ -94,20 +97,22 @@ namespace vkn
         std::vector<VkPipelineCache> pipelineCaches{};
 
         VknResultArchive archive{};
-    };
+    }; // VknEngine
 
     struct VknIdxs
     {
-        std::optional<uint32_t> deviceIdx{MAX_U32};
-        std::optional<uint32_t> renderpassIdx{MAX_U32};
-        std::optional<uint32_t> subpassIdx{MAX_U32};
-        std::optional<uint32_t> shaderIdx{MAX_U32};
-        std::optional<uint32_t> swapchainIdx{MAX_U32};
-        std::optional<uint32_t> frameIdx{MAX_U32};
-        std::optional<uint32_t> imageIdx{MAX_U32};
-        std::optional<uint32_t> queueFamilyIdx{MAX_U32};
-        std::optional<uint32_t> framebufferIdx{MAX_U32};
-        std::optional<uint32_t> imageViewIdx{MAX_U32};
-        std::optional<uint32_t> physicalDeviceIdx{MAX_U32};
-    };
-}
+        std::optional<uint32_t> deviceIdx = std::nullopt;
+        std::optional<uint32_t> renderpassIdx = std::nullopt;
+        std::optional<uint32_t> subpassIdx = std::nullopt;
+        std::optional<uint32_t> shaderIdx = std::nullopt;
+        std::optional<uint32_t> swapchainIdx = std::nullopt;
+        std::optional<uint32_t> frameIdx = std::nullopt;
+        std::optional<uint32_t> imageIdx = std::nullopt;
+        std::optional<uint32_t> queueFamilyIdx = std::nullopt;
+        std::optional<uint32_t> framebufferIdx = std::nullopt;
+        std::optional<uint32_t> imageViewIdx = std::nullopt;
+        std::optional<uint32_t> physicalDeviceIdx = std::nullopt;
+        std::optional<uint32_t> surfaceIdx = std::nullopt;
+    }; // VknIdxs
+
+} // namespace vkn

@@ -1,11 +1,11 @@
-#include "../include/VknMultisampleState.hpp"
-#include "../include/VknInfos.hpp"
+#include "include/VknMultisampleState.hpp"
+#include "include/VknInfos.hpp"
 
 namespace vkn
 {
     VknMultisampleState::VknMultisampleState(
-        VknEngine *engine, VknIdxs relIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_infos{infos}
+        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
     }
 

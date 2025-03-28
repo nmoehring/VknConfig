@@ -1,4 +1,4 @@
-#include "../include/VknEngine.hpp"
+#include "include/VknEngine.hpp"
 
 namespace vkn
 {

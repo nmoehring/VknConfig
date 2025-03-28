@@ -1,7 +1,7 @@
 #include <filesystem>
 
-#include "../include/VknShaderStage.hpp"
-#include "../include/VknEngine.hpp"
+#include "include/VknShaderStage.hpp"
+#include "include/VknEngine.hpp"
 #include "../common.hpp"
 
 namespace vkn
@@ -46,7 +46,7 @@ namespace vkn
         m_specializationInfoFilled = true;
     }
 
-    void VknShaderStage::createShaderStage()
+    void VknShaderStage::fillShaderStageCreateInfo()
     {
         if (!m_filenameFilled || !m_shaderStageTypeFilled)
             throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");
@@ -70,9 +70,11 @@ namespace vkn
             m_code.push_back(c);
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(m_relIdxs, &m_code);
+        m_absIdxs.shaderIdx = m_engine->push_back(VkShaderModule{});
         VknResult res{
-            vkCreateShaderModule(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx),
-                                 shaderModuleCreateInfo, VK_NULL_HANDLE, &m_shaderModule),
+            vkCreateShaderModule(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
+                                 shaderModuleCreateInfo, VK_NULL_HANDLE,
+                                 &m_engine->getObject<VkShaderModule>(m_absIdxs.shaderIdx.value())),
             "Create shader module."};
         m_shaderModuleCreated = true;
     }

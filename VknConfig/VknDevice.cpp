@@ -1,4 +1,4 @@
-#include "../include/VknDevice.hpp"
+#include "include/VknDevice.hpp"
 
 namespace vkn
 {
@@ -65,17 +65,17 @@ namespace vkn
             throw std::runtime_error("Queues not selected before trying to create device.");
         if (m_createdVkDevice)
             throw std::runtime_error("Device already created.");
-        m_infos->fillDeviceExtensionNames(m_relIdxs.deviceIdx, m_extensions, m_extensionsSize);
+        m_infos->fillDeviceExtensionNames(m_relIdxs.deviceIdx.value(), m_extensions, m_extensionsSize);
         m_infos->fillDeviceFeatures(m_features);
         m_physicalDevice.fillQueueCreateInfos();
-        m_infos->fillDeviceCreateInfo(m_relIdxs.deviceIdx);
-        m_absIdxs.deviceIdx = m_engine->push_back<VkDevice>();
+        m_infos->fillDeviceCreateInfo(m_relIdxs.deviceIdx.value());
+        m_absIdxs.deviceIdx = m_engine->push_back(VkDevice{});
         VknResult res{
             vkCreateDevice(
                 *(m_physicalDevice.getVkPhysicalDevice()),
-                m_infos->getDeviceCreateInfo(m_relIdxs.deviceIdx),
+                m_infos->getDeviceCreateInfo(m_relIdxs.deviceIdx.value()),
                 nullptr,
-                &m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx)),
+                &m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value())),
             "Create device"};
         m_createdVkDevice = true;
         return res;

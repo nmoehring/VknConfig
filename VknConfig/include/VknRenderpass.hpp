@@ -14,7 +14,7 @@ namespace vkn
         VknRenderpass() = delete;
         VknRenderpass(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        void createAttachment(
+        void addAttachment(
             uint32_t subpassIdx,
             VknAttachmentType attachmentType = COLOR_ATTACHMENT,
             VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
@@ -27,7 +27,7 @@ namespace vkn
             VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             VkImageLayout attachmentRefLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             VkAttachmentDescriptionFlags flags = 0);
-        void createSubpassDependency(
+        void addSubpassDependency(
             uint32_t srcSubpass = VK_SUBPASS_EXTERNAL, uint32_t dstSubpass = 0,
             VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VkAccessFlags srcAccessMask = 0,
@@ -41,7 +41,7 @@ namespace vkn
         void createPipelines();
         VkRenderPass *getVkRenderPass() { return m_renderpass; }
         VknPipeline *getPipeline(uint32_t idx);
-        bool getVkRenderPassCreated() { return createdRenderpass; }
+        bool getVkRenderPassCreated() { return m_createdRenderpass; }
 
     private:
         // Engine
@@ -63,18 +63,17 @@ namespace vkn
         std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
 
         // State
-        bool addedDevices{false};
-        bool createdRenderpass{false};
-        bool createdPipelines{false};
-        bool filledColorAttachment{false};
-        bool placeholder;
+        bool m_addedDevices{false};
+        bool m_createdRenderpass{false};
+        bool m_createdPipelines{false};
+        bool m_filledColorAttachment{false};
 
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
         uint32_t m_numPipelines{0};
 
-        void addPipeline();
+        void addPipeline(uint32_t subpassIdx);
         void fillRenderpassCreateInfo(
             VkRenderPassCreateFlags flags = 0); // No flags currently available, no need to fill.
     };

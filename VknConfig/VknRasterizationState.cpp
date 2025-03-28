@@ -1,5 +1,5 @@
-#include "../include/VknRasterizationState.hpp"
-#include "../include/VknEngine.hpp"
+#include "include/VknRasterizationState.hpp"
+#include "include/VknEngine.hpp"
 
 namespace vkn
 {

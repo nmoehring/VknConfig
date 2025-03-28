@@ -1,9 +1,9 @@
-#include "../include/VknImageView.hpp"
+#include "include/VknImageView.hpp"
 
 namespace vkn
 {
-    VknImageView::VknImageView(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_infos{infos}
+    VknImageView::VknImageView(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
     }
 
@@ -71,7 +71,9 @@ namespace vkn
         if (m_createdImageView)
             throw std::runtime_error("Image view already created.");
         VkImageViewCreateInfo *createInfo{m_infos->getImageViewCreateInfo(m_relIdxs)};
-        vkCreateImageView(m_engine->getElement<VkDevice>(m_relIdxs), createInfo, VK_NULL_HANDLE, m_imageView);
+        m_absIdxs.imageViewIdx = m_engine->push_back(VkImageView{});
+        vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
+                          createInfo, VK_NULL_HANDLE, &m_engine->getObject<VkImageView>(m_absIdxs.imageViewIdx.value()));
         m_createdImageView = true;
     }
 }

@@ -19,15 +19,6 @@
 
 namespace vkn
 {
-    struct VknConfigState
-    {
-        bool selectedQueues{false};
-        bool filledInstanceCreateInfo{false};
-        bool createdInstance{false};
-        bool filledAppInfo{false};
-        uint32_t numDevices{0};
-    };
-
     class VknConfig
     {
     public:
@@ -58,8 +49,8 @@ namespace vkn
         VknResult createInstance();
 
         void addDevice(uint32_t deviceIdx);
-        VkInstance *getInstance() { return &m_engine->instance; }
-        bool getInstanceCreated() { return m_state.createdInstance; }
+        VkInstance *getInstance() { return &m_engine->getInstance(); }
+        bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
         void createWindowSurface(uint32_t surfaceIdx);
 
@@ -78,6 +69,10 @@ namespace vkn
         std::vector<VknDevice> m_devices;
 
         // State
-        VknConfigState m_state;
+        bool m_selectedQueues{false};
+        bool m_filledInstanceCreateInfo{false};
+        bool m_createdInstance{false};
+        bool m_filledAppInfo{false};
+        uint32_t m_numDevices{0};
     };
 }

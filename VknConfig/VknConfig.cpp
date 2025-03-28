@@ -1,4 +1,4 @@
-#include "../include/VknConfig.hpp"
+#include "include/VknConfig.hpp"
 
 namespace vkn
 {
@@ -9,20 +9,20 @@ namespace vkn
 
     void VknConfig::addDevice(uint32_t deviceIdx)
     {
-        if (!m_state.createdInstance)
+        if (!m_createdInstance)
             throw std::runtime_error("Can't add a device until an instance is created.");
-        if (deviceIdx != m_state.numDevices)
+        if (deviceIdx != m_numDevices)
             throw std::runtime_error("Device index should equal the current numDevices.");
 
         m_relIdxs.deviceIdx = deviceIdx;
-        m_absIdxs.deviceIdx =
-            m_devices.push_back(VknDevice{&m_engine, m_relIdxs, m_absIdxs, &m_infos});
-        ++m_state.numDevices;
+        m_absIdxs.deviceIdx = deviceIdx;
+        m_devices.push_back(VknDevice{m_engine, m_relIdxs, m_absIdxs, m_infos});
+        ++m_numDevices;
     }
 
     void VknConfig::enableExtensions(std::vector<std::string> extensions)
     {
-        if (m_state.createdInstance)
+        if (m_createdInstance)
             throw std::runtime_error("Can't enable extensions after instance is already created.");
         for (auto &name : extensions)
             m_instanceExtensions.push_back(name);
@@ -30,7 +30,7 @@ namespace vkn
 
     void VknConfig::deviceInfo(uint32_t deviceIdx)
     {
-        if (m_state.createdInstance)
+        if (m_createdInstance)
             throw std::runtime_error("Can't create a new deviceInfo instance after an instance is already created.");
         this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
         this->createInstance();
@@ -39,7 +39,7 @@ namespace vkn
 
     void VknConfig::testNoInputs()
     {
-        if (m_state.createdInstance)
+        if (m_createdInstance)
             throw std::runtime_error("Can't create a test instance after an instance is already created.");
         std::string appName{"NoInputsTest"};
         std::string engineName{"MinVknConfig"};
@@ -67,14 +67,14 @@ namespace vkn
             VK_KHR_SWAPCHAIN_EXTENSION_NAME};
         device->addExtensions(deviceExtensions, numExtensions);
         physDev->selectPhysicalDevice();
-        device->requestQueueFamilyProperties();
-        device->selectQueues(false);
-        device->fillDeviceQueuePrioritiesDefault();
+        physDev->requestQueueFamilyProperties();
+        physDev->selectQueues(false);
+        physDev->fillDeviceQueuePrioritiesDefault();
         device->createDevice();
         device->addRenderpass(0);
 
         auto renderpass = device->getRenderpass(0);
-        renderpass->createAttachment(0);
+        renderpass->addAttachment(0);
         renderpass->createSubpass(0);
         renderpass->createRenderpass();
 
@@ -83,8 +83,8 @@ namespace vkn
         pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
         auto vertShader = pipeline->getShaderStage(0);
         auto fragShader = pipeline->getShaderStage(1);
-        vertShader->createShaderStage();
-        fragShader->createShaderStage();
+        vertShader->fillShaderStageCreateInfo();
+        fragShader->fillShaderStageCreateInfo();
         vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
         // vertexInputState->fillVertexAttributeDescription();
         // vertexInputState->fillVertexBindingDescription();
@@ -114,8 +114,8 @@ namespace vkn
             multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
         */
 
-        this->createWindowSurface();
-        device->addSwapchain(0, &m_surface, 1, 800, 600);
+        this->createWindowSurface(0);
+        device->addSwapchain(0, &m_engine->getObject<VkSurfaceKHR>(0), 1, 800, 600);
         device->fillSwapchainCreateInfos();
         VknSwapchain *swapchain{device->getSwapchain(0)};
         swapchain->createSwapchain();
@@ -130,7 +130,7 @@ namespace vkn
                                 std::string engineName, VkApplicationInfo *pNext,
                                 uint32_t appVersion, uint32_t engineVersion)
     {
-        if (m_state.filledAppInfo)
+        if (m_filledAppInfo)
             throw std::runtime_error("Already filled app info.");
         m_infos->fillAppName(appName);
         m_infos->fillEngineName(engineName);
@@ -143,24 +143,26 @@ namespace vkn
                                            uint32_t enabledExtensionNamesSize,
                                            VkInstanceCreateFlags flags)
     {
-        if (m_state.filledInstanceCreateInfo)
+        if (m_filledInstanceCreateInfo)
             throw std::runtime_error("Instance create info already filled.");
         m_infos->fillEnabledLayerNames(enabledLayerNames, enabledLayerNamesSize);
         m_infos->fillInstanceExtensionNames(enabledExtensionNames, enabledExtensionNamesSize);
         m_infos->fillInstanceCreateInfo(flags);
-        m_state.filledInstanceCreateInfo = true;
+        m_filledInstanceCreateInfo = true;
     }
 
     VknResult VknConfig::createInstance()
     {
-        if (m_state.createdInstance)
+        if (m_createdInstance)
             throw std::runtime_error("Instance already created.");
-        if (!m_state.filledInstanceCreateInfo)
+        if (!m_filledInstanceCreateInfo)
             throw std::runtime_error("Creating instance without filling instance create info.");
-        VknResult res{vkCreateInstance(m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE, &m_engine->instance),
-                      "Create instance."};
+        m_engine->push_back(VkInstance{});
+        VknResult res{
+            vkCreateInstance(m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE, &m_engine->getInstance()),
+            "Create instance."};
 
-        m_state.createdInstance = true;
+        m_createdInstance = true;
         return res;
     }
 
@@ -171,12 +173,14 @@ namespace vkn
 
     void VknConfig::createWindowSurface(uint32_t surfaceIdx)
     {
-        if (!m_state.createdInstance)
+        if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
         if (m_window == nullptr)
             throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
-        VknResult res("Create window surface.");
-        res = glfwCreateWindowSurface(m_engine->instance, m_window, nullptr,
-                                      &m_engine->getElement<VkSurfaceKHR>(surfaceIdx))
+
+        m_engine->push_back(VkSurfaceKHR{});
+        VknResult res{"Create window surface."};
+        res = glfwCreateWindowSurface(m_engine->getInstance(), m_window, nullptr,
+                                      &m_engine->getObject<VkSurfaceKHR>(surfaceIdx));
     }
 }

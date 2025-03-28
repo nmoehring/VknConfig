@@ -23,7 +23,7 @@ namespace vkn
         void setPresentMode(VkPresentModeKHR presentMode);
         void setClipped(bool clipped);
         void setOldSwapchain(VkSwapchainKHR oldSwapchain);
-        void setSurface(VkSurfaceKHR *surface);
+        void setSurface(uint32_t surfaceIdx);
 
         VkSwapchainKHR *getVkSwapchain();
         std::vector<VkImageView> *getVkImageViews();
@@ -60,12 +60,13 @@ namespace vkn
         VkBool32 m_clipped{VK_TRUE};
         VkSwapchainKHR m_oldSwapchain{VK_NULL_HANDLE};
         uint32_t m_imageCount{1};
+        std::optional<uint32_t> m_surfaceIdx{};
 
         // State
         bool m_filledCreateInfo{false};
         bool m_createdSwapchain{false};
-        bool m_surfaceSet{false};
-        bool m_imageCountSet{false};
+        bool m_setSurface{false};
+        bool m_setImageCount{false};
 
         void resizeImageVectors();
         void addImageViews();

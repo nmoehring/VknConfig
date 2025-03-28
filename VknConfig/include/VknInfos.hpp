@@ -130,9 +130,9 @@ namespace vkn
             return &m_queueCreateInfos[deviceIdx][queueFamilyIdx];
         };
 
-        VkRenderPassCreateInfo *getRenderpassCreateInfo(uint32_t deviceIdx, uint32_t renderpassIdx)
+        VkRenderPassCreateInfo *getRenderpassCreateInfo(VknIdxs &relIdxs)
         {
-            return &m_renderpassCreateInfos[deviceIdx][renderpassIdx];
+            return &m_renderpassCreateInfos[relIdxs.deviceIdx.value()][relIdxs.renderpassIdx.value()];
         }
 
         VkDeviceCreateInfo *getDeviceCreateInfo(uint32_t deviceIdx)
@@ -141,10 +141,9 @@ namespace vkn
                 throw std::runtime_error("DeviceCreateInfo not filled before get.");
             return &m_deviceCreateInfos[deviceIdx];
         };
-        std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos(
-            uint32_t deviceIdx, uint32_t renderpassIdx)
+        std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos(VknIdxs &relIdxs)
         {
-            return &m_gfxPipelineCreateInfos[deviceIdx][renderpassIdx];
+            return &m_gfxPipelineCreateInfos[relIdxs.deviceIdx.value()][relIdxs.renderpassIdx.value()];
         }
         std::vector<VkPipelineShaderStageCreateInfo> *getShaderStageCreateInfos(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
@@ -174,13 +173,7 @@ namespace vkn
         VkPipelineLayoutCreateInfo *getPipelineLayoutCreateInfo(
             VknIdxs &relIdxs)
         {
-            return &m_layoutCreateInfos[relIdxs.deviceIdx][relIdxs.renderpassIdx][relIdxs.subpassIdx];
-        }
-        void fillRenderpassPtrs(
-            VknIdxs &relIdxs, VkRenderPass *renderpass, const bool *renderpassCreated);
-        bool getRenderpassCreated(uint32_t deviceIdx, uint32_t renderpassIdx)
-        {
-            return *(m_renderpassCreatedPtrs[deviceIdx][renderpassIdx]);
+            return &m_layoutCreateInfos[relIdxs.deviceIdx.value()][relIdxs.renderpassIdx.value()][relIdxs.subpassIdx.value()];
         }
         void initRenderpass(VknIdxs &relIdxs);
         VkSwapchainCreateInfoKHR *getSwapchainCreateInfo(VknIdxs &relIdxs);
@@ -285,7 +278,7 @@ namespace vkn
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, std::vector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
-            VknIdxs &relIdxs,
+            VknIdxs &relIdxs, VkRenderPass &renderpass,
             VkPipelineLayout *layout = nullptr,
             VkPipeline basePipelineHandle = VkPipeline{}, int32_t basePipelineIndex = int32_t{},
             VkPipelineCreateFlags flags = 0);
@@ -299,10 +292,10 @@ namespace vkn
             const void *pInitialData = nullptr,
             VkPipelineCacheCreateFlags flags = 0);
         VkRenderPassCreateInfo *fillRenderpassCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t numAttachments,
+            VknIdxs &relIdxs, uint32_t numAttachments,
             uint32_t numSubpasses, uint32_t numSubpassDeps, VkRenderPassCreateFlags flags = 0);
         VkAttachmentDescription *fillAttachmentDescription(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t attachIdx,
+            VknIdxs &relIdxs, uint32_t attachIdx,
             VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
             VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
             VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -313,7 +306,7 @@ namespace vkn
             VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             VkAttachmentDescriptionFlags flags = 0);
         void fillAttachmentReference(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknIdxs &relIdxs, uint32_t subpassIdx,
             uint32_t attachIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
             VkImageLayout layout);
         std::vector<std::vector<std::vector<VkAttachmentReference>>> *getRenderpassAttachmentReferences(
@@ -325,7 +318,7 @@ namespace vkn
         std::vector<std::vector<uint32_t>> *getRenderpassPreserveAttachments(uint32_t deviceIdx, uint32_t renderpassIdx);
         VkSubpassDescription *fillSubpassDescription(
             uint32_t numColor, uint32_t numInput, uint32_t numResolve, uint32_t numDepthStencil,
-            uint32_t numPreserve, uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            uint32_t numPreserve, VknIdxs &relIdxs, uint32_t subpassIdx,
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         VkSubpassDependency *fillSubpassDependency(
@@ -408,9 +401,6 @@ namespace vkn
 
         std::vector<std::vector<std::vector<std::vector<VkVertexInputBindingDescription>>>> m_vertexInputBindings{};     // Device>Renderpass>Subpass>Infos
         std::vector<std::vector<std::vector<std::vector<VkVertexInputAttributeDescription>>>> m_vertexInputAttributes{}; // Device>Renderpass>Subpass>Infos
-
-        std::vector<std::vector<VkRenderPass *>> m_renderpasses{};        // Device>Ptrs
-        std::vector<std::vector<const bool *>> m_renderpassCreatedPtrs{}; // Device>Ptrs
 
         std::vector<std::vector<std::vector<VkFramebufferCreateInfo>>> m_framebufferCreateInfos{}; // Device>Renderpass>Framebuffers
         std::vector<std::vector<std::vector<VkImageViewCreateInfo>>> m_imageViewCreateInfos{};     // Device>Swapchain>ImageViews

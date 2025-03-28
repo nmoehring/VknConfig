@@ -1,12 +1,12 @@
 #include <stdexcept>
 
-#include "../include/VknFramebuffer.hpp"
-#include "../include/VknEngine.hpp"
+#include "include/VknFramebuffer.hpp"
+#include "include/VknEngine.hpp"
 
 namespace vkn
 {
-    VknFramebuffer::VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_infos{infos}
+    VknFramebuffer::VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
     }
 
@@ -31,7 +31,7 @@ namespace vkn
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled frame buffer create info.");
         m_infos->fillFramebufferCreateInfo(
-            m_relIdxs, &m_engine->getElement<VkRenderPass>(m_relIdxs), m_attachments,
+            m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs.renderpassIdx.value()), m_attachments,
             m_width, m_height, m_numLayers, m_createFlags);
         m_filledCreateInfo = true;
     }
@@ -44,9 +44,11 @@ namespace vkn
             throw std::runtime_error("Framebuffer already created.");
         VkFramebufferCreateInfo *createInfo =
             m_infos->getFramebufferCreateInfo(m_relIdxs);
+        m_absIdxs.framebufferIdx = m_engine->push_back(VkFramebuffer{});
         vkCreateFramebuffer(
-            m_engine->getElement<VkDevice>(m_relIdxs), createInfo, VK_NULL_HANDLE,
-            &m_buffer);
+            m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()), createInfo, VK_NULL_HANDLE,
+            &m_engine->getObject<VkFramebuffer>(m_absIdxs.framebufferIdx.value()));
+        m_createdFramebuffer = true;
     }
 
     void VknFramebuffer::setAttachments(std::vector<VkImageView> *vkImageViews)

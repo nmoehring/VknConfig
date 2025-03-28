@@ -22,14 +22,14 @@ namespace vkn
         VknPipeline() = delete;
         VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        void createDescriptorSetLayoutBinding(
+        void addDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
         void fillDescriptorSetLayoutCreateInfo(
             VkDescriptorSetLayoutCreateFlags flags = 0);
         void createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo);
-        void createPushConstantRange(VkShaderStageFlags stageFlags = 0, uint32_t offset = 0,
-                                     uint32_t size = 0);
+        void addPushConstantRange(VkShaderStageFlags stageFlags = 0, uint32_t offset = 0,
+                                  uint32_t size = 0);
         void fillPipelineLayoutCreateInfo(
             VkPipelineLayoutCreateFlags flags = 0);
         void createLayout();
@@ -44,11 +44,12 @@ namespace vkn
 
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         VkPipeline *getVkPipeline() { return m_pipeline; }
-        VknVertexInputState *getVertexInputState() { return &m_vertexInputState; }
-        VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState; }
-        VknMultisampleState *getMultisampleState() { return &m_multisampleState; }
-        VknRasterizationState *getRasterizationState() { return &m_rasterizationState; }
-        VknViewportState *getViewportState() { return &m_viewportState; }
+        VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
+        VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
+        VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }
+        VknRasterizationState *getRasterizationState() { return &m_rasterizationState.value(); }
+        VknViewportState *getViewportState() { return &m_viewportState.value(); }
+        void setAbsIdx(uint32_t absSubpassIdx);
 
     private:
         // Engine
@@ -62,15 +63,15 @@ namespace vkn
 
         // TODO: Implement with CC Valueable, if it doesn't initialize the data
         //  Members
-        VknVertexInputState m_vertexInputState;
-        VknInputAssemblyState m_inputAssemblyState;
-        // VknTessellationState m_tessellationState;
-        VknViewportState m_viewportState;
-        VknRasterizationState m_rasterizationState;
-        VknMultisampleState m_multisampleState;
-        // VknDepthStencilState m_depthStencilState;
-        // VknColorBlendState m_colorBlendState;
-        // VknDynamicState m_dynamicState;
+        std::optional<VknVertexInputState> m_vertexInputState = std::nullopt;
+        std::optional<VknInputAssemblyState> m_inputAssemblyState = std::nullopt;
+        // std::optional<VknTessellationState> m_tessellationState = std::nullopt;
+        std::optional<VknViewportState> m_viewportState = std::nullopt;
+        std::optional<VknRasterizationState> m_rasterizationState = std::nullopt;
+        std::optional<VknMultisampleState> m_multisampleState = std::nullopt;
+        // std::optional<VknDepthStencilState> m_depthStencilState = std::nullopt;
+        // std::optional<VknColorBlendState> m_colorBlendState = std::nullopt;
+        // std::optional<VknDynamicState> m_dynamicState = std::nullopt;
         std::vector<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
 
         // Params
@@ -78,11 +79,15 @@ namespace vkn
         std::vector<VkPushConstantRange> m_pushConstantRanges{};     //=
         std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
         VkPipelineLayout m_layout{};                                 // Takes an array of descriptor set layouts ^
+        VkPipeline m_basePipelineHandle{};
+        int32_t m_basePipelineIndex{};
 
         // State
         bool m_filledCreateInfo{false};
         bool m_createdPipeline{false};
         bool m_createdPipelineLayout{false};
         uint32_t m_numShaderStages{0};
+        std::vector<uint32_t> m_descriptorSetLayoutIdxs{};
+        std::vector<uint32_t> m_pipelineLayoutIdxs{};
     };
 }

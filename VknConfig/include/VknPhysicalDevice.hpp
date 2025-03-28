@@ -6,6 +6,7 @@
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
 #include "VknEngine.hpp"
+#include "VknQueueFamily.hpp"
 
 namespace vkn
 {
@@ -17,7 +18,8 @@ namespace vkn
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         VkPhysicalDevice *getVkPhysicalDevice();
-        std::vector<VkPhysicalDeviceProperties> *getProperties();
+        VkPhysicalDeviceProperties &getProperties();
+        std::vector<VkPhysicalDeviceProperties> &getAllProperties();
         bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);
         VknResult enumeratePhysicalDevices();
         VknResult selectPhysicalDevice();
@@ -32,10 +34,6 @@ namespace vkn
         int getNumQueueFamilies() { return m_queues.size(); }
         std::vector<VknQueueFamily> &getQueues() { return m_queues; }
         VknQueueFamily &getQueue(int idx);
-        std::vector<VkPhysicalDeviceProperties> &getAllProperties()
-        {
-            return s_properties;
-        }
 
     private:
         // Engine

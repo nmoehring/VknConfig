@@ -22,7 +22,7 @@ namespace vkn
         void setFilename(std::string filename);
         void setFlags(VkPipelineShaderStageCreateFlags createFlags);
         void setSpecialization(VkSpecializationInfo m_specializationInfo);
-        void createShaderStage();
+        void fillShaderStageCreateInfo();
 
     private:
         // Engine

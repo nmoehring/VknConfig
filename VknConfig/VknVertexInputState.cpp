@@ -1,4 +1,4 @@
-#include "../include/VknVertexInputState.hpp"
+#include "include/VknVertexInputState.hpp"
 
 namespace vkn
 {

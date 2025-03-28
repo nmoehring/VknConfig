@@ -1,9 +1,10 @@
-#include "../include/VknInputAssemblyState.hpp"
+#include "include/VknInputAssemblyState.hpp"
 
 namespace vkn
 {
-    VknInputAssemblyState::VknInputAssemblyState(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_infos{infos}
+    VknInputAssemblyState::VknInputAssemblyState(
+        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
     }
 

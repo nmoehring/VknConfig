@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "../include/VknPhysicalDevice.hpp"
-#include "../include/VknEngine.hpp"
+#include "include/VknPhysicalDevice.hpp"
+#include "include/VknEngine.hpp"
 
 namespace vkn
 {
@@ -84,7 +84,7 @@ namespace vkn
     {
         if (s_enumeratedPhysicalDevices)
             throw std::runtime_error("Already enumerated physical devices.");
-        VknResult res1{vkEnumeratePhysicalDevices(m_engine->instance, &s_deviceCount, nullptr),
+        VknResult res1{vkEnumeratePhysicalDevices(m_engine->getInstance(), &s_deviceCount, nullptr),
                        "Enumerate physical devices."};
 
         if (s_deviceCount == 0)
@@ -93,7 +93,7 @@ namespace vkn
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
 
         s_physicalDevices.resize(s_deviceCount);
-        VknResult res2{vkEnumeratePhysicalDevices(m_engine->instance, &s_deviceCount,
+        VknResult res2{vkEnumeratePhysicalDevices(m_engine->getInstance(), &s_deviceCount,
                                                   s_physicalDevices.data()),
                        "Enum physical devices and store."};
         s_enumeratedPhysicalDevices = true;
@@ -123,7 +123,7 @@ namespace vkn
         VkBool32 presentSupport = false;
         VknResult res{
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                s_physicalDevices[m_relIdxs.physicalDeviceIdx], queueFamilyIdx, surface, &presentSupport),
+                s_physicalDevices[m_relIdxs.physicalDeviceIdx.value()], queueFamilyIdx, surface, &presentSupport),
             "Get Surface Support"};
         return presentSupport;
     }
@@ -133,7 +133,7 @@ namespace vkn
         {
             if (!m_selectedPhysicalDevice)
                 throw std::runtime_error("Physical device not selected before getting device limits.");
-            return &s_properties[m_relIdxs.physicalDeviceIdx].limits;
+            return &s_properties[m_relIdxs.physicalDeviceIdx.value()].limits;
         }
     }
 
@@ -152,14 +152,21 @@ namespace vkn
     {
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before getting VkPhysicalDevice.");
-        return &m_engine->getObject<VkPhysicalDevice>(m_absIdxs.physicalDeviceIdx);
+        return &m_engine->getObject<VkPhysicalDevice>(m_absIdxs.physicalDeviceIdx.value());
     }
 
-    std::vector<VkPhysicalDeviceProperties> *VknPhysicalDevice::getProperties()
+    VkPhysicalDeviceProperties &VknPhysicalDevice::getProperties()
     {
         if (!s_enumeratedPhysicalDevices)
             throw std::runtime_error("Physical devices not enumerated before getting physical device properties.");
-        return s_properties[m_relIdxs.physicalDeviceIdx];
+        return s_properties[m_relIdxs.physicalDeviceIdx.value()];
+    }
+
+    std::vector<VkPhysicalDeviceProperties> &VknPhysicalDevice::getAllProperties()
+    {
+        if (!s_enumeratedPhysicalDevices)
+            throw std::runtime_error("Physical device not enumerated before getting physical device properties vector.");
+        return s_properties;
     }
 
 }

@@ -1,6 +1,6 @@
 #include <filesystem>
 
-#include "../include/VknPipeline.hpp"
+#include "include/VknPipeline.hpp"
 #include <iterator>
 
 namespace vkn
@@ -40,8 +40,8 @@ namespace vkn
         if (m_filledCreateInfo)
             throw std::runtime_error("Pipeline create info already filled.");
         m_infos->fillGfxPipelineCreateInfo(
-            m_relIdxs, &m_layout, basePipelineHandle,
-            basePipelineIndex, flags);
+            m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs.renderpassIdx.value()),
+            &m_layout, m_basePipelineHandle, m_basePipelineIndex, flags);
         m_filledCreateInfo = true;
     }
 
@@ -51,7 +51,7 @@ namespace vkn
         m_infos->fillDescriptorSetLayoutCreateInfo(m_bindings, flags);
     }
 
-    void VknPipeline::createDescriptorSetLayoutBinding(
+    void VknPipeline::addDescriptorSetLayoutBinding(
         uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
         VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers)
     {
@@ -65,18 +65,17 @@ namespace vkn
 
     void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo)
     {
-        if (m_createdPipelineLayout)
-            throw std::runtime_error("Pipeline layout already created, no need to create the descriptor set layout.");
-        m_descriptorSetLayouts.push_back(VkDescriptorSetLayout{});
+        m_descriptorSetLayoutIdxs.push_back(m_engine->push_back(VkDescriptorSetLayout{}));
         VknResult res{
             vkCreateDescriptorSetLayout(
-                m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx),
-                descriptorSetLayoutCreateInfo, nullptr, &m_descriptorSetLayouts.back()),
+                m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
+                descriptorSetLayoutCreateInfo, nullptr,
+                &m_engine->getObject<VkDescriptorSetLayout>(m_descriptorSetLayoutIdxs.back())),
             "Create descriptor set layout."};
     }
 
-    void VknPipeline::createPushConstantRange(VkShaderStageFlags stageFlags, uint32_t offset,
-                                              uint32_t size)
+    void VknPipeline::addPushConstantRange(VkShaderStageFlags stageFlags, uint32_t offset,
+                                           uint32_t size)
     {
         m_pushConstantRanges.push_back(VkPushConstantRange{});
         m_pushConstantRanges.back().stageFlags = stageFlags;
@@ -96,8 +95,15 @@ namespace vkn
             throw std::runtime_error("Already created the pipeline layout.");
         VkPipelineLayoutCreateInfo *layoutCreateInfo = m_infos->getPipelineLayoutCreateInfo(
             m_relIdxs);
-        vkCreatePipelineLayout(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx), layoutCreateInfo, nullptr, &m_layout);
+        m_pipelineLayoutIdxs.push_back(m_engine->push_back(VkPipelineLayout{}));
+        vkCreatePipelineLayout(
+            m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()), layoutCreateInfo,
+            nullptr, &m_engine->getObject<VkPipelineLayout>(m_pipelineLayoutIdxs.back()));
         m_createdPipelineLayout = true;
     }
 
+    void VknPipeline::setAbsIdx(uint32_t absSubpassIdx)
+    {
+        m_absIdxs.subpassIdx = absSubpassIdx;
+    }
 }
