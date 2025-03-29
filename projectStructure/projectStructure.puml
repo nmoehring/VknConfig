@@ -1,0 +1,50 @@
+@startuml
+class VknConfig {
+}
+class VknDevice {
+}
+class VknPhysicalDevice {
+}
+class VknQueueFamily {
+}
+class VknSwapchain {
+}
+class VknImageView {
+}
+class VknRenderpass {
+}
+class VknPipeline {
+}
+class VknVertexInputState {
+}
+class VknInputAssemblyState {
+}
+class VknMultisampleState {
+}
+class VknRasterizationState {
+}
+class VknShaderStage {
+}
+class VknViewportState {
+}
+class VknEngine {
+}
+class VknInfos {
+}
+class VknResult {
+}
+
+VknConfig -- VknDevice
+VknDevice -- VknPhysicalDevice
+VknPhysicalDevice -- VknQueueFamily
+VknDevice -- VknSwapchain
+VknSwapchain -- VknImageView
+VknDevice -- VknRenderpass
+VknRenderpass -- VknPipeline
+VknPipeline -- VknVertexInputState
+VknPipeline -- VknInputAssemblyState
+VknPipeline -- VknMultisampleState
+VknPipeline -- VknRasterizationState
+VknPipeline -- VknShaderStage
+VknPipeline -- VknViewportState
+@enduml

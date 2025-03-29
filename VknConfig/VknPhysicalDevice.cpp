@@ -36,7 +36,8 @@ namespace vkn
             throw std::runtime_error("Physical device not selected before requesting queue properties.");
         uint32_t propertyCount{0};
         vkGetPhysicalDeviceQueueFamilyProperties(
-            m_vkPhysicalDevice, &propertyCount, VK_NULL_HANDLE);
+            s_physicalDevices[m_absIdxs.physicalDeviceIdx.value()],
+            &propertyCount, VK_NULL_HANDLE);
         if (propertyCount == 0)
             throw std::runtime_error("No available queue families found.");
         std::vector<VkQueueFamilyProperties> queues;
@@ -45,7 +46,7 @@ namespace vkn
             throw std::runtime_error("m_queues already filled before requesting queue properties.");
 
         vkGetPhysicalDeviceQueueFamilyProperties(
-            m_vkPhysicalDevice,
+            s_physicalDevices[m_absIdxs.physicalDeviceIdx.value()],
             &propertyCount,
             queues.data());
         for (auto &props : queues)

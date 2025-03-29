@@ -1,7 +1,7 @@
 #include <filesystem>
 
 #include "include/VknShaderStage.hpp"
-#include "../VknCommon.hpp"
+#include "include/VknCommon.hpp"
 
 namespace vkn
 {

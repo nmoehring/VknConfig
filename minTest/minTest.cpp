@@ -1,11 +1,12 @@
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+
 #include <vector>
 #include <iostream>
 #include <filesystem>
 
-#define GLFW_EXPOSE_NATIVE_WIN32
-#define GLFW_EXPOSE_NATIVE_WGL
-#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+#include <GLFW/glfw3.h>
 #include <stb_image.h>
 
 #include "VknConfig/include/VknConfig.hpp"

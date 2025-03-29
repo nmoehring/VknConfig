@@ -108,7 +108,7 @@ namespace vkn
     {
         if (!m_createdSwapchain)
             throw std::runtime_error("Trying to get swapchain before it's created.");
-        return &m_vkSwapchain;
+        return &m_engine->getObject<VkSwapchainKHR>(m_absIdxs.swapchainIdx.value());
     }
 
     void VknSwapchain::fillSwapchainCreateInfo()
@@ -140,7 +140,8 @@ namespace vkn
         m_absIdxs.swapchainIdx = m_engine->push_back(VkSwapchainKHR{});
         VknResult res{
             vkCreateSwapchainKHR(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
-                                 createInfo, nullptr, &m_vkSwapchain),
+                                 createInfo, nullptr,
+                                 &m_engine->getObject<VkSwapchainKHR>(m_absIdxs.swapchainIdx.value())),
             "Create swapchain"};
 
         m_createdSwapchain = true;
@@ -153,10 +154,12 @@ namespace vkn
 
         uint32_t imageCount{0};
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
-                                m_vkSwapchain, &imageCount, VK_NULL_HANDLE);
+                                m_engine->getObject<VkSwapchainKHR>(m_absIdxs.swapchainIdx.value()),
+                                &imageCount, VK_NULL_HANDLE);
         std::vector<VkImage> swapChainImages(imageCount);
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
-                                m_vkSwapchain, &imageCount, m_images.data());
+                                m_engine->getObject<VkSwapchainKHR>(m_absIdxs.swapchainIdx.value()),
+                                &imageCount, m_images.data());
     }
 
     void VknSwapchain::addImageViews()
