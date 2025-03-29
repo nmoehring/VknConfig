@@ -7,7 +7,7 @@ namespace vkn
     class VknRasterizationState
     {
     public:
-        VknRasterizationState() = delete;
+        VknRasterizationState() = default;
         VknRasterizationState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 

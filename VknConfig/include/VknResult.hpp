@@ -8,6 +8,29 @@
 
 namespace vkn
 {
+    template <typename T>
+    class VknArchive
+    {
+        std::queue<T> m_data{};
+        uint32_t m_capacity{1000};
+
+        void manage()
+        {
+            if (m_data.size() > m_capacity)
+                for (uint64_t count{m_data.size() - m_capacity}; count > 0; --count)
+                    m_data.pop();
+        }
+
+    public:
+        void store(T res)
+        {
+            if (!res.isErrorStateEvaluated())
+                throw std::runtime_error("Target function not called, no result to store.");
+            m_data.push(res);
+            this->manage();
+        }
+    };
+
     class VknResult
     {
     public:
@@ -23,21 +46,10 @@ namespace vkn
         bool isErrorStateEvaluated() { return m_errorStateEvaluated; }
 
     private:
-        class VknResultArchive
-        {
-            std::queue<VknResult> results{};
-            uint32_t maxResults{1000};
-
-            void manage();
-
-        public:
-            void store(VknResult res);
-        };
-
         // Members
         VkResult m_result{};
         std::string m_opDesc{""};
-        static VknResultArchive s_archive;
+        static VknArchive<VknResult> s_archive;
 
         // State
         bool m_errorStateEvaluated{false};

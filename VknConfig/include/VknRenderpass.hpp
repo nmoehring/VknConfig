@@ -10,7 +10,7 @@ namespace vkn
     class VknRenderpass
     {
     public:
-        VknRenderpass() = delete;
+        VknRenderpass() = default;
         VknRenderpass(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void addAttachment(

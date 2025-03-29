@@ -7,8 +7,6 @@
 
 namespace vkn
 {
-    const uint32_t MAX_U32{4294967295};
-
     class VknEngine
     {
     public:
@@ -95,8 +93,6 @@ namespace vkn
         std::vector<VkPhysicalDevice> physicalDevices{};
         std::vector<VkShaderModule> shaderModules{};
         std::vector<VkPipelineCache> pipelineCaches{};
-
-        VknResultArchive archive{};
     }; // VknEngine
 
     struct VknIdxs

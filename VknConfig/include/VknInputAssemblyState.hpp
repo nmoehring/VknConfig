@@ -10,7 +10,7 @@ namespace vkn
     class VknInputAssemblyState
     {
     public:
-        VknInputAssemblyState() = delete;
+        VknInputAssemblyState() = default;
         VknInputAssemblyState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 

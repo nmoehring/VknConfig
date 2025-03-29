@@ -9,7 +9,7 @@ namespace vkn
     class VknSwapchain
     {
     public:
-        VknSwapchain() = delete;
+        VknSwapchain() = default;
         VknSwapchain(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *m_infos);
 
         void setImageCount(uint32_t imageCount);
@@ -49,7 +49,7 @@ namespace vkn
         std::vector<VkImageView> m_rawImageViews{};
 
         // Params
-        VkExtent2D m_dimensions;
+        VkExtent2D m_dimensions{VkExtent2D{640, 480}};
         VkSurfaceFormatKHR m_surfaceFormat{VkSurfaceFormatKHR{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR}};
         uint32_t m_numImageArrayLayers{1};
         VkImageUsageFlags m_usage{VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT};

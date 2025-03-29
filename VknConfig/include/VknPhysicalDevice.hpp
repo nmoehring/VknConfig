@@ -10,7 +10,7 @@ namespace vkn
     class VknPhysicalDevice
     {
     public:
-        VknPhysicalDevice() = delete;
+        VknPhysicalDevice() = default;
         VknPhysicalDevice(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 

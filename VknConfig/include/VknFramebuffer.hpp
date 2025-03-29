@@ -10,7 +10,7 @@ namespace vkn
     class VknFramebuffer
     {
     public:
-        VknFramebuffer() = delete;
+        VknFramebuffer() = default;
         VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void fillDimensions(uint32_t width, uint32_t height);

@@ -10,7 +10,7 @@ namespace vkn
     class VknVertexInputState
     {
     public:
-        VknVertexInputState() = delete;
+        VknVertexInputState() = default;
         VknVertexInputState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 

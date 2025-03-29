@@ -15,7 +15,7 @@ namespace vkn
     class VknDevice
     {
     public:
-        VknDevice() = delete;
+        VknDevice() = default;
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void addExtensions(const char *ext[], uint32_t size);

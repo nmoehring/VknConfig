@@ -17,7 +17,7 @@ namespace vkn
     class VknPipeline
     {
     public:
-        VknPipeline() = delete;
+        VknPipeline() = default;
         VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void addDescriptorSetLayoutBinding(

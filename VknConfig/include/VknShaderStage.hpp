@@ -14,7 +14,7 @@ namespace vkn
     class VknShaderStage
     {
     public:
-        VknShaderStage() = delete;
+        VknShaderStage() = default;
         VknShaderStage(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 

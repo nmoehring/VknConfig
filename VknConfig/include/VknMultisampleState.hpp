@@ -8,7 +8,7 @@ namespace vkn
     class VknMultisampleState
     {
     public:
-        VknMultisampleState() = delete;
+        VknMultisampleState() = default;
         VknMultisampleState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 

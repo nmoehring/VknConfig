@@ -8,7 +8,7 @@ namespace vkn
     class VknQueueFamily
     {
     public:
-        VknQueueFamily() = delete;
+        VknQueueFamily() = default;
         VknQueueFamily(VkQueueFamilyProperties properties);
 
         bool supportsGraphics();

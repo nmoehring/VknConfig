@@ -7,7 +7,7 @@ namespace vkn
     class VknViewportState
     {
     public:
-        VknViewportState() = delete;
+        VknViewportState() = default;
         VknViewportState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
         VknViewportState(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos,
@@ -30,16 +30,15 @@ namespace vkn
         VknInfos *m_infos{nullptr};
 
         // Params
-        VkExtent2D *m_swapchainExtent;
+        VkExtent2D *m_swapchainExtent{};
         VkOffset2D m_defaultOffset{};
         VkExtent2D m_defaultExtent{};
         VkViewport m_defaultViewport{};
         VkRect2D m_defaultScissor{};
-        std::vector<VkViewport> m_viewports;
-        std::vector<VkRect2D> m_scissors;
+        std::vector<VkViewport> m_viewports{};
+        std::vector<VkRect2D> m_scissors{};
 
         // State
-        const bool *m_swapchainCreated;
         bool m_filled{false};
     };
 }

@@ -10,7 +10,7 @@ namespace vkn
     class VknImageView
     {
     public:
-        VknImageView() = delete;
+        VknImageView() = default;
         VknImageView(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void fillCreateFlags(VkImageViewCreateFlags);
