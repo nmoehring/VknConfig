@@ -27,9 +27,6 @@ namespace vkn
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
 
-        // Wrapped object
-        VkFramebuffer m_buffer{VkFramebuffer{}};
-
         // Params
         std::vector<VkImageView> *m_attachments{};
         uint32_t m_width{800};

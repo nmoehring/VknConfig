@@ -1,3 +1,41 @@
+/**
+ * @file VknInfos.hpp
+ * @brief Provides methods for filling Vulkan info structures.
+ *
+ * VknInfos is a free/top-level class within the VknConfig project.
+ * It is responsible for filling various Vulkan info structures, such as
+ * VkApplicationInfo, VkInstanceCreateInfo, VkDeviceCreateInfo, etc.
+ * VknInfos does not depend on any other Vkn classes.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound)
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound)
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level) <<=== YOU ARE HERE
+ * [VknResult] (Free/Top-Level)
+ */
+
 #pragma once
 #include <string>
 #include <vector>

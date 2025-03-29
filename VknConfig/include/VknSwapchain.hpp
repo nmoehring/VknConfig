@@ -1,3 +1,41 @@
+/**
+ * @file VknSwapchain.hpp
+ * @brief Manages a Vulkan swapchain and its associated image views.
+ *
+ * VknSwapchain is a hierarchy-bound class within the VknConfig project.
+ * It is used by VknDevice to manage a Vulkan swapchain and its associated image views.
+ * VknSwapchain depends on VknEngine, VknInfos, VknImageView, and VknIdxs.
+ * VknSwapchain is a child of VknDevice.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound)
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound)
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ */
+
 #pragma once
 
 #include <vulkan/vulkan.h>
@@ -39,9 +77,6 @@ namespace vkn
         VknIdxs m_relIdxs{};
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
-
-        // Wrapped object
-        VkSwapchainKHR m_vkSwapchain = VK_NULL_HANDLE;
 
         // Members
         std::vector<VknImageView> m_imageViews{};

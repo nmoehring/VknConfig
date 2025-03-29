@@ -14,9 +14,9 @@ namespace vkn
         uint32_t imageWidth, uint32_t imageHeight)
     {
         m_relIdxs.swapchainIdx = swapchainIdx;
-        m_swapchains.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
-        m_swapchains[swapchainIdx].setImageCount(imageCount);
-        m_swapchains[swapchainIdx].setImageDimensions(imageWidth, imageHeight);
+        VknSwapchain swapchain = m_swapchains.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
+        swapchain.setImageCount(imageCount);
+        swapchain.setImageDimensions(imageWidth, imageHeight);
     }
 
     void VknDevice::fillSwapchainCreateInfos()
@@ -29,7 +29,9 @@ namespace vkn
     {
         if (swapchainIdx + 1 > m_swapchains.size())
             throw std::runtime_error("GetSwapchain index out of range.");
-        return &m_swapchains[swapchainIdx];
+        std::list<VknSwapchain>::iterator it = m_swapchains.begin();
+        std::advance(it, swapchainIdx);
+        return &(*it);
     }
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
@@ -41,13 +43,13 @@ namespace vkn
     {
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before retrieving it.");
-        return m_vkDevice;
+        return &m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value());
     }
 
     VknRenderpass *VknDevice::getRenderpass(uint32_t renderpassIdx)
     {
-        if (!m_createdVkDevice)
-            throw std::runtime_error("Logical device not created before getting renderpass.");
+        if (renderpassIdx + 1 > m_renderpasses.size())
+            throw std::runtime_error("GetRenderpass index out of range.");
         std::list<VknRenderpass>::iterator it = m_renderpasses.begin();
         std::advance(it, renderpassIdx);
         return &(*it);
@@ -83,9 +85,9 @@ namespace vkn
 
     void VknDevice::addRenderpass(uint32_t renderpassIdx)
     {
-        if (renderpassIdx != m_numRenderpasses)
+        if (renderpassIdx != m_renderpasses.size())
             throw std::runtime_error("RenderpassIdx passed to addRenderpass is invalid. Should be next idx.");
         m_relIdxs.renderpassIdx = renderpassIdx;
-        m_renderpasses.emplace_back(m_engine, m_relIdxs, m_infos);
+        m_renderpasses.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
 } // namespace vkn

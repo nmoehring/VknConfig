@@ -16,9 +16,9 @@ namespace vkn
 
     void VknInputAssemblyState::fillInputAssemblyStateCreateInfo()
     {
-        if (m_filled)
+        if (m_filledCreateInfo)
             throw std::runtime_error("Input assembly state create info already filled.");
         m_infos->fillInputAssemblyStateCreateInfo(m_relIdxs, m_topology, m_primitiveRestartEnable);
-        m_filled = true;
+        m_filledCreateInfo = true;
     }
 }

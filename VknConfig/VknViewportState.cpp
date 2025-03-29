@@ -18,17 +18,15 @@ namespace vkn
 
     void VknViewportState::fillViewportStateCreateInfo()
     {
-        if (m_filled)
+        if (m_filledCreateInfo)
             throw std::runtime_error("ViewportStateCreateInfo already filled.");
         m_infos->fillViewportStateCreateInfo(
             m_relIdxs, &m_viewports, &m_scissors);
-        m_filled = true;
+        m_filledCreateInfo = true;
     }
 
     void VknViewportState::addViewportWithSwapchain(float x, float y, float minDepth, float maxDepth)
     {
-        if (!*m_swapchainCreated)
-            throw std::runtime_error("Attempting to add a viewport to a viewport state with swapchain values without a swapchain.");
         m_viewports.push_back(VkViewport{});
         VkViewport &viewport = m_viewports.back();
         viewport.x = x;
@@ -53,8 +51,6 @@ namespace vkn
 
     void VknViewportState::addScissorWithSwapchain(VkOffset2D offset)
     {
-        if (!*m_swapchainCreated)
-            throw std::runtime_error("Attempting to add a scissor to a viewport state with swapchain values without a swapchain.");
         m_scissors.push_back(VkRect2D{});
         VkRect2D &scissor = m_scissors.back();
         scissor.offset = offset;

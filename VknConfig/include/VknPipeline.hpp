@@ -1,3 +1,42 @@
+/**
+ * @file VknPipeline.hpp
+ * @brief Manages a Vulkan graphics pipeline.
+ *
+ * VknPipeline is a hierarchy-bound class within the VknConfig project.
+ * It is used by VknRenderpass to manage a Vulkan graphics pipeline.
+ * VknPipeline depends on VknEngine, VknInfos, VknVertexInputState, VknInputAssemblyState,
+ * VknMultisampleState, VknRasterizationState, VknShaderStage, and VknIdxs.
+ * VknPipeline is a child of VknRenderpass.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound)
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ */
+
 #pragma once
 
 #include <unordered_map>
@@ -41,7 +80,7 @@ namespace vkn
                             VkPipelineShaderStageCreateFlags flags = 0);
 
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
-        VkPipeline *getVkPipeline() { return m_pipeline; }
+        VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs.subpassIdx.value()); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }
@@ -56,9 +95,6 @@ namespace vkn
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
 
-        // Wrapped object
-        VkPipeline *m_pipeline{}; // 1 Subpass per pipeline
-
         // TODO: Implement with CC Valueable, if it doesn't initialize the data
         //  Members
         std::optional<VknVertexInputState> m_vertexInputState = std::nullopt;
@@ -70,7 +106,7 @@ namespace vkn
         // std::optional<VknDepthStencilState> m_depthStencilState = std::nullopt;
         // std::optional<VknColorBlendState> m_colorBlendState = std::nullopt;
         // std::optional<VknDynamicState> m_dynamicState = std::nullopt;
-        std::vector<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
+        std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
 
         // Params
         std::vector<VkDescriptorSetLayoutBinding> m_bindings{};      //+

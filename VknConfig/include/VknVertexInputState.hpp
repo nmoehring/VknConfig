@@ -1,3 +1,41 @@
+/**
+ * @file VknVertexInputState.hpp
+ * @brief Configures the vertex input state for a graphics pipeline.
+ *
+ * VknVertexInputState is a hierarchy-bound leaf class within the VknConfig project.
+ * It is used by VknPipeline to configure how vertex data is provided to the pipeline.
+ * VknVertexInputState depends on VknInfos and VknIdxs.
+ * It does not have any classes that depend on it.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound)
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound)
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf) <<=== YOU ARE HERE
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ */
+
 #pragma once
 
 #include <vulkan/vulkan.h>

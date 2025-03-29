@@ -1,3 +1,42 @@
+/**
+ * @file VknPhysicalDevice.hpp
+ * @brief Manages a Vulkan physical device and its properties.
+ *
+ * VknPhysicalDevice is a hierarchy-bound class within the VknConfig project.
+ * It is used by VknDevice to manage a Vulkan physical device,
+ * enumerate its properties, and select queue families.
+ * VknPhysicalDevice depends on VknEngine, VknInfos, VknQueueFamily, and VknIdxs.
+ * VknPhysicalDevice is a child of VknDevice.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound)
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound)
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ */
+
 #pragma once
 
 #include <list>
@@ -38,9 +77,6 @@ namespace vkn
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         VknInfos *m_infos; // external ptr
-
-        // Wrapped object
-        VkPhysicalDevice m_vkPhysicalDevice{}; // ptr to static list member, won't be invalidated
 
         // Members
         static std::vector<VkPhysicalDevice> s_physicalDevices; // changes don't invalidate member ptrs

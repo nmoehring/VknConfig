@@ -23,15 +23,19 @@ namespace vkn
             throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
         VknIdxs relIdxs = m_relIdxs;
         relIdxs.shaderIdx = shaderIdx;
-        m_shaderStages.emplace_back(m_engine, relIdxs, m_absIdxs, m_infos);
-        m_shaderStages[shaderIdx].setFilename(filename);
-        m_shaderStages[shaderIdx].setShaderStageType(stageType);
-        m_shaderStages[shaderIdx].setFlags(flags);
+        VknShaderStage shaderStage = m_shaderStages.emplace_back(m_engine, relIdxs, m_absIdxs, m_infos);
+        shaderStage.setFilename(filename);
+        shaderStage.setShaderStageType(stageType);
+        shaderStage.setFlags(flags);
     }
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
     {
-        return &m_shaderStages[shaderIdx];
+        if (shaderIdx + 1 > m_shaderStages.size())
+            throw std::runtime_error("GetSwapchain index out of range.");
+        std::list<VknShaderStage>::iterator it = m_shaderStages.begin();
+        std::advance(it, shaderIdx);
+        return &(*it);
     }
 
     void VknPipeline::fillPipelineCreateInfo(

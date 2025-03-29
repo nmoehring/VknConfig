@@ -1,3 +1,41 @@
+/**
+ * @file VknRenderpass.hpp
+ * @brief Manages a Vulkan render pass and its associated pipelines.
+ *
+ * VknRenderpass is a hierarchy-bound class within the VknConfig project.
+ * It is used by VknDevice to manage a Vulkan render pass and its associated pipelines.
+ * VknRenderpass depends on VknEngine, VknInfos, VknPipeline, and VknIdxs.
+ * VknRenderpass is a child of VknDevice.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound)
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound)
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ */
+
 #pragma once
 
 #include <vector>
@@ -38,8 +76,9 @@ namespace vkn
             VkSubpassDescriptionFlags flags = 0);
         void createRenderpass();
         void createPipelines();
-        VkRenderPass *getVkRenderPass() { return m_renderpass; }
+        VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs.renderpassIdx.value()); }
         VknPipeline *getPipeline(uint32_t idx);
+        VknFramebuffer *getFramebuffer(uint32_t idx);
         bool getVkRenderPassCreated() { return m_createdRenderpass; }
 
     private:
@@ -49,12 +88,9 @@ namespace vkn
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
 
-        // Wrapped object
-        VkRenderPass *m_renderpass{};
-
         // Members
         std::list<VknPipeline> m_pipelines;
-        std::vector<VknFramebuffer> m_framebuffers{};
+        std::list<VknFramebuffer> m_framebuffers{};
         std::vector<std::vector<uint32_t>> m_numAttachRefs{};
         std::vector<uint32_t> m_numPreserveRefs{};
 
@@ -70,7 +106,6 @@ namespace vkn
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
-        uint32_t m_numPipelines{0};
 
         void addPipeline(uint32_t subpassIdx);
         void fillRenderpassCreateInfo(

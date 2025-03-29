@@ -1,5 +1,41 @@
-// I decided to use a Vkn prefix to stand apart from Vk prefixes of the API
-// All the structs are in info.hpp
+/**
+ * @file VknDevice.hpp
+ * @brief Manages a Vulkan logical device and its associated resources.
+ *
+ * VknDevice is a hierarchy-bound class within the VknConfig project.
+ * It is responsible for creating and managing a Vulkan logical device,
+ * swapchains, and renderpasses.
+ * VknDevice depends on VknEngine, VknInfos, VknPhysicalDevice, VknSwapchain, VknRenderpass, and VknIdxs.
+ * VknDevice is a child of VknConfig.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *         |
+ *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         |   |
+ *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |
+ *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *             |
+ *             +-- [VknPipeline] (Hierarchy-Bound)
+ *                 |
+ *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
+ *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ */
 
 #pragma once
 
@@ -40,12 +76,9 @@ namespace vkn
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
 
-        // Wrapped object
-        VkDevice *m_vkDevice{};
-
         // Members
         std::list<VknRenderpass> m_renderpasses{}; // List, because elements don't need to be together, refs could be invalidated
-        std::vector<VknSwapchain> m_swapchains{};  // Doesn't need to change after creation
+        std::list<VknSwapchain> m_swapchains{};    // Doesn't need to change after creation
         VknPhysicalDevice m_physicalDevice;
 
         // Params
@@ -56,6 +89,5 @@ namespace vkn
         // State
         bool m_createdVkDevice{false};
         bool m_filledQueueCreateInfos{false};
-        uint32_t m_numRenderpasses{0};
     };
 }

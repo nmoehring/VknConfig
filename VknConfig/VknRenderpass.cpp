@@ -40,10 +40,19 @@ namespace vkn
 
     VknPipeline *VknRenderpass::getPipeline(uint32_t pipelineIdx)
     {
-        if (pipelineIdx != m_numPipelines)
+        if (pipelineIdx + 1 > m_pipelines.size())
             throw std::runtime_error("Pipeline index out of range.");
         std::list<VknPipeline>::iterator it = m_pipelines.begin();
         std::advance(it, pipelineIdx);
+        return &(*it);
+    }
+
+    VknFramebuffer *VknRenderpass::getFramebuffer(uint32_t bufferIdx)
+    {
+        if (bufferIdx + 1 > m_framebuffers.size())
+            throw std::runtime_error("Framebuffer index out of range.");
+        std::list<VknFramebuffer>::iterator it = m_framebuffers.begin();
+        std::advance(it, bufferIdx);
         return &(*it);
     }
 
