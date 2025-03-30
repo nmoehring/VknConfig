@@ -41,6 +41,7 @@
 
 #pragma once
 
+#include <list>
 #include <vector>
 #include <memory>
 #include <functional>
@@ -57,19 +58,23 @@ namespace vkn
     class VknConfig
     {
     public:
+        // Template config
         void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
         void testNoInputs();
 
-        // No default constructor, no empty object
+        // Overloads
         VknConfig() = delete;
-        VknConfig(VknEngine *engine, VknInfos *infos, GLFWwindow *window);
-
-        // Prevent copy/move constructors and assignment operators
+        VknConfig(VknEngine *engine, VknInfos *infos);
         VknConfig(const VknConfig &) = delete;
         VknConfig &operator=(const VknConfig &) = delete;
         VknConfig(VknConfig &&) = delete;
         VknConfig &operator=(VknConfig &&) = delete;
 
+        // Add
+        VknDevice *addDevice(uint32_t deviceIdx);
+        void addWindow(GLFWwindow *window);
+
+        // Config
         void fillAppInfo(uint32_t apiVersion, std::string appName,
                          std::string engineName,
                          VkApplicationInfo *pNext = nullptr,
@@ -81,13 +86,15 @@ namespace vkn
                                     uint32_t enabledExtensionNamesSize,
                                     VkInstanceCreateFlags flags = 0);
         void enableExtensions(std::vector<std::string> extensions);
-        VknResult createInstance();
 
-        void addDevice(uint32_t deviceIdx);
-        VkInstance *getInstance() { return &m_engine->getInstance(); }
+        // Create
+        VknResult createInstance();
+        void createWindowSurface(uint32_t surfaceIdx);
+
+        // Getters
+        VkInstance *getInstance() { return &m_engine->getObject<VkInstance>(0); }
         bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
-        void createWindowSurface(uint32_t surfaceIdx);
 
     private:
         // Engine
@@ -101,13 +108,12 @@ namespace vkn
         GLFWwindow *m_window{nullptr};
 
         // Members
-        std::vector<VknDevice> m_devices;
+        std::list<VknDevice> m_devices;
 
         // State
         bool m_selectedQueues{false};
         bool m_filledInstanceCreateInfo{false};
         bool m_createdInstance{false};
         bool m_filledAppInfo{false};
-        uint32_t m_numDevices{0};
     };
 }

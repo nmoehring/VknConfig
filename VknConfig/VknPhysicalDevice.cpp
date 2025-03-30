@@ -4,8 +4,9 @@
 
 namespace vkn
 {
-    bool s_enumeratedPhysicalDevices{false};
-    uint32_t s_deviceCount{0};
+    std::vector<VkPhysicalDevice> VknPhysicalDevice::s_physicalDevices{};
+    std::vector<VkPhysicalDeviceProperties> VknPhysicalDevice::s_properties{};
+    bool VknPhysicalDevice::s_enumeratedPhysicalDevices{false};
 
     VknPhysicalDevice::VknPhysicalDevice(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
@@ -84,17 +85,20 @@ namespace vkn
     {
         if (s_enumeratedPhysicalDevices)
             throw std::runtime_error("Already enumerated physical devices.");
-        VknResult res1{vkEnumeratePhysicalDevices(m_engine->getInstance(), &s_deviceCount, nullptr),
+        uint32_t deviceCount{};
+        VknResult res1{vkEnumeratePhysicalDevices(
+                           m_engine->getObject<VkInstance>(0), &deviceCount, nullptr),
                        "Enumerate physical devices."};
 
-        if (s_deviceCount == 0)
+        if (deviceCount == 0)
             throw std::runtime_error("No GPU's supporting Vulkan found.");
-        else if (s_deviceCount > 1)
+        else if (deviceCount > 1)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
 
-        s_physicalDevices.resize(s_deviceCount);
-        VknResult res2{vkEnumeratePhysicalDevices(m_engine->getInstance(), &s_deviceCount,
-                                                  s_physicalDevices.data()),
+        s_physicalDevices.resize(deviceCount);
+        VknResult res2{vkEnumeratePhysicalDevices(
+                           m_engine->getObject<VkInstance>(0), &deviceCount,
+                           s_physicalDevices.data()),
                        "Enum physical devices and store."};
         s_enumeratedPhysicalDevices = true;
         return res2;

@@ -4,7 +4,7 @@
 
 namespace vkn
 {
-    VknArchive<VknResult> s_archive = VknArchive<VknResult>{};
+    VknArchive<VknResult> VknResult::s_archive = VknArchive<VknResult>{};
 
     VknResult::VknResult(std::string opDesc) : m_opDesc{opDesc}
     {

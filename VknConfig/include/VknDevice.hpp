@@ -54,15 +54,14 @@ namespace vkn
         VknDevice() = default;
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
+        VknSwapchain *addSwapchain(uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
+                                   uint32_t imageWidth, uint32_t imageHeight);
+        VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
         void addExtensions(const char *ext[], uint32_t size);
-        VknResult createDevice();
 
         void setSwapchainDimensions();
         void fillSwapchainCreateInfos();
-        void addSwapchain(uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
-                          uint32_t imageWidth, uint32_t imageHeight);
-
-        void addRenderpass(uint32_t newRenderpassIdx);
+        VknResult createDevice();
 
         VknPhysicalDevice *getPhysicalDevice();
         VknSwapchain *getSwapchain(uint32_t swapchainIdx);

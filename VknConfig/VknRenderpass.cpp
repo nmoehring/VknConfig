@@ -10,7 +10,7 @@ namespace vkn
         m_infos->initRenderpass(relIdxs);
     }
 
-    void VknRenderpass::addPipeline(uint32_t subpassIdx)
+    VknPipeline *VknRenderpass::addPipeline(uint32_t subpassIdx)
     {
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
@@ -20,6 +20,7 @@ namespace vkn
         VknIdxs relIdxs{m_relIdxs};
         relIdxs.subpassIdx = subpassIdx;
         m_pipelines.emplace_back(m_engine, relIdxs, m_absIdxs, m_infos);
+        return &m_pipelines.back();
     }
 
     void VknRenderpass::createRenderpass()
@@ -127,7 +128,7 @@ namespace vkn
         m_createdPipelines = true;
     }
 
-    void VknRenderpass::createSubpass(
+    void VknRenderpass::addSubpass(
         uint32_t subpassIdx, bool isCompute, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {

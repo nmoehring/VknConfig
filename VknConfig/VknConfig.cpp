@@ -2,22 +2,33 @@
 
 namespace vkn
 {
-    VknConfig::VknConfig(VknEngine *engine, VknInfos *infos, GLFWwindow *window)
-        : m_engine{engine}, m_infos{infos}, m_window(window)
+    VknConfig::VknConfig(VknEngine *engine, VknInfos *infos)
+        : m_engine{engine}, m_infos{infos}
     {
     }
 
-    void VknConfig::addDevice(uint32_t deviceIdx)
+    VknDevice *VknConfig::addDevice(uint32_t deviceIdx)
     {
         if (!m_createdInstance)
             throw std::runtime_error("Can't add a device until an instance is created.");
-        if (deviceIdx != m_numDevices)
+        if (deviceIdx != m_devices.size())
             throw std::runtime_error("Device index should equal the current numDevices.");
 
         m_relIdxs.deviceIdx = deviceIdx;
         m_absIdxs.deviceIdx = deviceIdx;
         m_devices.push_back(VknDevice{m_engine, m_relIdxs, m_absIdxs, m_infos});
-        ++m_numDevices;
+        return &m_devices.back();
+    }
+
+    void VknConfig::addWindow(GLFWwindow *window)
+    {
+        uint32_t count;
+        const char **extensions = glfwGetRequiredInstanceExtensions(&count);
+        if (count == 0 | extensions == nullptr)
+            throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
+        m_window = window;
+        if (m_window == nullptr)
+            throw std::runtime_error("Window passed to VknConfig is null. There may be a problem with window creation.");
     }
 
     void VknConfig::enableExtensions(std::vector<std::string> extensions)
@@ -56,33 +67,29 @@ namespace vkn
             layers, layersSize, instanceExtensions, instanceExtensionsSize);
         this->createInstance();
 
-        // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-        // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-        // VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-
-        auto device = this->getDevice(0);
-        auto physDev = device->getPhysicalDevice();
+        VknDevice *device = this->addDevice(0);
+        device->addExtensions(deviceExtensions, numExtensions);
+        VknPhysicalDevice *physDev = device->getPhysicalDevice();
         const uint32_t numExtensions{1};
         const char *deviceExtensions[numExtensions] = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-        device->addExtensions(deviceExtensions, numExtensions);
+
         physDev->selectPhysicalDevice();
         physDev->requestQueueFamilyProperties();
         physDev->selectQueues(false);
         physDev->fillDeviceQueuePrioritiesDefault();
+        physDev->fillQueueCreateInfos();
         device->createDevice();
         device->addRenderpass(0);
 
-        auto renderpass = device->getRenderpass(0);
+        VknRenderpass *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
         renderpass->createSubpass(0);
         renderpass->createRenderpass();
+        VknPipeline *pipeline = renderpass->getPipeline(0);
 
-        auto pipeline = renderpass->getPipeline(0);
-        pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
-        pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
-        auto vertShader = pipeline->getShaderStage(0);
-        auto fragShader = pipeline->getShaderStage(1);
+        VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
+        VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
         vertShader->fillShaderStageCreateInfo();
         fragShader->fillShaderStageCreateInfo();
         vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
@@ -159,7 +166,9 @@ namespace vkn
             throw std::runtime_error("Creating instance without filling instance create info.");
         m_engine->push_back(VkInstance{});
         VknResult res{
-            vkCreateInstance(m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE, &m_engine->getInstance()),
+            vkCreateInstance(
+                m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE,
+                &m_engine->getObject<VkInstance>(0)),
             "Create instance."};
 
         m_createdInstance = true;
@@ -168,6 +177,8 @@ namespace vkn
 
     VknDevice *VknConfig::getDevice(uint32_t deviceIdx)
     {
+        if (deviceIdx + 1 > m_devices.size())
+            throw std::runtime_error("Device index out of range.");
         return &m_devices[deviceIdx];
     }
 
@@ -180,7 +191,8 @@ namespace vkn
 
         m_engine->push_back(VkSurfaceKHR{});
         VknResult res{"Create window surface."};
-        res = glfwCreateWindowSurface(m_engine->getInstance(), m_window, nullptr,
-                                      &m_engine->getObject<VkSurfaceKHR>(surfaceIdx));
+        res = glfwCreateWindowSurface(
+            m_engine->getObject<VkInstance>(0), m_window, nullptr,
+            &m_engine->getObject<VkSurfaceKHR>(surfaceIdx));
     }
 }

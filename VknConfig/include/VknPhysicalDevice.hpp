@@ -73,15 +73,14 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine; // external ptr
+        VknEngine *m_engine{nullptr}; // external ptr
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
-        VknInfos *m_infos; // external ptr
+        VknInfos *m_infos{nullptr}; // external ptr
 
         // Members
         static std::vector<VkPhysicalDevice> s_physicalDevices; // changes don't invalidate member ptrs
         static std::vector<VkPhysicalDeviceProperties> s_properties;
-        // std::vector<VkQueue> m_queues{};
         std::vector<VknQueueFamily> m_queues{}; // Vector fine, this shouldn't change.
 
         // State
@@ -90,7 +89,5 @@ namespace vkn
         bool m_requestedQueues{false};
         bool m_selectedQueues{false};
         bool m_filledQueueCreateInfos{false};
-        static uint32_t s_deviceCount;
     };
-
 }

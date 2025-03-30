@@ -1,11 +1,8 @@
-#define GLFW_EXPOSE_NATIVE_WIN32
-#define GLFW_EXPOSE_NATIVE_WGL
-
 #include <vector>
 #include <iostream>
 #include <filesystem>
 
-#include <GLFW/glfw3native.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 
@@ -20,15 +17,33 @@ void printDevProps(std::vector<VkPhysicalDeviceProperties> devProps);
 void printFamProps(std::vector<VkQueueFamilyProperties> famProps);
 std::vector<char> readFile(const std::string &filename);
 std::vector<const char *> noNames{};
-bool initWindow(GLFWwindow **outWindow);
+GLFWwindow *initWindow();
+
+// GLFW error callback
+void glfwErrorCallback(int error, const char *description)
+{
+    std::cerr << "GLFW Error: " << description << std::endl;
+}
+
+// GLFW key callback
+void glfwKeyCallback(GLFWwindow *window, int key, int, int action, int mods)
+{
+    const bool pressed{action != GLFW_RELEASE};
+    if (key == GLFW_KEY_ESCAPE && pressed)
+    {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+}
 
 int main()
 {
-    GLFWwindow *window = nullptr;
-    initWindow(&window);
+    GLFWwindow *window = initWindow();
+    if (!glfwVulkanSupported())
+        throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
     vkn::VknEngine engine{};
     vkn::VknInfos infos{};
-    vkn::VknConfig config{&engine, &infos, window};
+    vkn::VknConfig config{&engine, &infos};
+    config.addWindow(window);
     config.testNoInputs();
     auto device = config.getDevice(0);
     auto renderpass = device->getRenderpass(0);
@@ -56,15 +71,18 @@ int main()
         glfwPollEvents();
     }
     glfwDestroyWindow(window);
+    glfwTerminate();
 }
 
-bool initWindow(GLFWwindow **outWindow)
+GLFWwindow *initWindow()
 {
     if (!glfwInit())
-        return false;
-
+        return nullptr;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    GLFWwindow *window = glfwCreateWindow(640, 480, "Window Title", NULL, NULL);
+    return window;
+    /*
+
     const char *title = "Minimum VknConfig Test";
 
     uint32_t posX = 200;
@@ -81,22 +99,24 @@ bool initWindow(GLFWwindow **outWindow)
     }
 
     glfwSetWindowPos(window, posX, posY);
-
-    glfwSetErrorCallback([](int error, const char *description)
+    glfwSetErrorCallback(glfwErrorCallback);
+    glfwSetKeyCallback(window, glfwKeyCallback);
+    /*glfwSetErrorCallback([](int error, const char *description)
                          { printf("GLFW Error (%i): %s\n", error, description); });
 
     glfwSetKeyCallback(
         window, [](GLFWwindow *window, int key, int, int action, int mods)
         {
-        const bool pressed = action != GLFW_RELEASE;
+        const bool pressed{action != GLFW_RELEASE};
         if (key == GLFW_KEY_ESCAPE && pressed) {
           glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
         if (key == GLFW_KEY_ESCAPE && pressed)
           glfwSetWindowShouldClose(window, GLFW_TRUE); });
 
+
 #if defined(WIN32)
-    HWND hwnd = glfwGetWin32Window(window);
+    HWND hwnd{glfwGetWin32Window(window)};
     SetWindowLongPtr(
         hwnd, GWL_STYLE,
         GetWindowLongPtrA(hwnd, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX));
@@ -108,4 +128,6 @@ bool initWindow(GLFWwindow **outWindow)
     }
 
     return true;
+
+*/
 }

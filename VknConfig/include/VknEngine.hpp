@@ -62,7 +62,9 @@ namespace vkn
         template <typename T>
         std::vector<T> &getObjectVector()
         {
-            if constexpr (std::is_same_v<T, VkDevice>)
+            if constexpr (std::is_same_v<T, VkInstance>)
+                return instances;
+            else if constexpr (std::is_same_v<T, VkDevice>)
                 return devices;
             else if constexpr (std::is_same_v<T, VkRenderPass>)
                 return renderpasses;
@@ -113,11 +115,8 @@ namespace vkn
             return this->getObjectVector<T>()[idx];
         }
 
-        VkInstance &getInstance() { return instance; }
-
     private:
-        VkInstance instance{};
-        bool instanceCreated{false};
+        std::vector<VkInstance> instances{};
         std::vector<VkDevice> devices{};
         std::vector<VkSurfaceKHR> surfaces{};
         std::vector<VkRenderPass> renderpasses{};

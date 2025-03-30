@@ -24,12 +24,16 @@ namespace vkn
 
         for (auto &imageView : imageViews)
             vkDestroyImageView(VK_NULL_HANDLE, imageView, VK_NULL_HANDLE);
+        for (auto &image : images)
+            vkDestroyImage(VK_NULL_HANDLE, image, VK_NULL_HANDLE);
         for (auto &swapchain : swapchains)
             vkDestroySwapchainKHR(VK_NULL_HANDLE, swapchain, VK_NULL_HANDLE);
 
         for (auto &device : devices)
             vkDestroyDevice(device, VK_NULL_HANDLE);
-        if (instanceCreated)
+        for (auto &surface : surfaces)
+            vkDestroySurfaceKHR(VK_NULL_HANDLE, surface, VK_NULL_HANDLE);
+        for (auto &instance : instances)
             vkDestroyInstance(instance, VK_NULL_HANDLE);
     }
 }
