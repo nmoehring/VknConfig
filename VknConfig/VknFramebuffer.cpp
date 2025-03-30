@@ -9,13 +9,13 @@ namespace vkn
     {
     }
 
-    void VknFramebuffer::fillDimensions(uint32_t width, uint32_t height)
+    void VknFramebuffer::setDimensions(uint32_t width, uint32_t height)
     {
         m_width = width;
         m_height = height;
     }
 
-    void VknFramebuffer::fillNumLayers(uint32_t numLayers)
+    void VknFramebuffer::setNumLayers(uint32_t numLayers)
     {
         m_numLayers = numLayers;
     }

@@ -10,26 +10,28 @@
  * Hierarchy Graph:
  * [VknConfig] (Top-Level)
  *     |
- *     +-- [VknDevice] (Hierarchy-Bound)
+ *     +-- [VknDevice]
  *         |
- *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknQueueFamily] ^ / \
  *         |
- *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         +-- [VknSwapchain]
  *         |   |
- *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknImageView] ^ / \
  *         |
- *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *         +-- [VknRenderpass]
  *             |
- *             +-- [VknPipeline] (Hierarchy-Bound)
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
- *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
- *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
- *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
- *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
- *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
  *
  * [VknEngine] (Free/Top-Level) <<=== YOU ARE HERE
  * [VknInfos] (Free/Top-Level)
@@ -40,6 +42,7 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <unordered_map>
 #include <optional>
 #include "VknResult.hpp"
 
@@ -58,41 +61,6 @@ namespace vkn
         // Prevent moving
         VknEngine(VknEngine &&) = delete;
         VknEngine &operator=(VknEngine &&) = delete;
-
-        template <typename T>
-        std::vector<T> &getObjectVector()
-        {
-            if constexpr (std::is_same_v<T, VkInstance>)
-                return instances;
-            else if constexpr (std::is_same_v<T, VkDevice>)
-                return devices;
-            else if constexpr (std::is_same_v<T, VkRenderPass>)
-                return renderpasses;
-            else if constexpr (std::is_same_v<T, VkPipeline>)
-                return pipelines;
-            else if constexpr (std::is_same_v<T, VkSwapchainKHR>)
-                return swapchains;
-            else if constexpr (std::is_same_v<T, VkImage>)
-                return images;
-            else if constexpr (std::is_same_v<T, VkFramebuffer>)
-                return framebuffers;
-            else if constexpr (std::is_same_v<T, VkImageView>)
-                return imageViews;
-            else if constexpr (std::is_same_v<T, VkDescriptorSetLayout>)
-                return descriptorSetLayouts;
-            else if constexpr (std::is_same_v<T, VkPipelineLayout>)
-                return pipelineLayouts;
-            else if constexpr (std::is_same_v<T, VkPhysicalDevice>)
-                return physicalDevices;
-            else if constexpr (std::is_same_v<T, VkShaderModule>)
-                return shaderModules;
-            else if constexpr (std::is_same_v<T, VkPipelineCache>)
-                return pipelineCaches;
-            else if constexpr (std::is_same_v<T, VkSurfaceKHR>)
-                return surfaces;
-            else
-                throw std::runtime_error("Invalid object type passed to getElement() of VknEngine");
-        }
 
         template <typename T>
         uint32_t push_back(T val)
@@ -115,7 +83,13 @@ namespace vkn
             return this->getObjectVector<T>()[idx];
         }
 
+        template <typename T>
+        T &getObjectVector()
+        {
+        }
+
     private:
+        std::unordered_map<std::string, void *> m_objectVectors{};
         std::vector<VkInstance> instances{};
         std::vector<VkDevice> devices{};
         std::vector<VkSurfaceKHR> surfaces{};
@@ -132,20 +106,68 @@ namespace vkn
         std::vector<VkPipelineCache> pipelineCaches{};
     }; // VknEngine
 
-    struct VknIdxs
+    class VknIdxs
     {
-        std::optional<uint32_t> deviceIdx = std::nullopt;
-        std::optional<uint32_t> renderpassIdx = std::nullopt;
-        std::optional<uint32_t> subpassIdx = std::nullopt;
-        std::optional<uint32_t> shaderIdx = std::nullopt;
-        std::optional<uint32_t> swapchainIdx = std::nullopt;
-        std::optional<uint32_t> frameIdx = std::nullopt;
-        std::optional<uint32_t> imageIdx = std::nullopt;
-        std::optional<uint32_t> queueFamilyIdx = std::nullopt;
-        std::optional<uint32_t> framebufferIdx = std::nullopt;
-        std::optional<uint32_t> imageViewIdx = std::nullopt;
-        std::optional<uint32_t> physicalDeviceIdx = std::nullopt;
-        std::optional<uint32_t> surfaceIdx = std::nullopt;
+        std::unordered_map<std::string, uint32_t> m_data{};
+
+    public:
+        // Overloads
+        VknIdxs() = default;
+        ~VknIdxs() = default;
+        VknIdxs(const VknIdxs &other) = default;
+        VknIdxs &operator=(const VknIdxs &other) = default;
+        VknIdxs(VknIdxs &&other) = default;
+        VknIdxs &operator=(VknIdxs &&other) = default;
+
+        // Getters
+        template <typename T>
+        uint32_t &get()
+        {
+            return m_data.at(typeToStr<T>());
+        }
+
+        // Add a new key-value pair
+        template <typename T>
+        void add(uint32_t value)
+        {
+            m_data[typeToStr<T>()] = value;
+        }
+
     }; // VknIdxs
+
+    template <typename T>
+    std::string &TypeToStr()
+    {
+        if constexpr (std::is_same_v<T, VkInstance>)
+            return "instance";
+        else if constexpr (std::is_same_v<T, VkDevice>)
+            return "device";
+        else if constexpr (std::is_same_v<T, VkRenderPass>)
+            return "renderpass";
+        else if constexpr (std::is_same_v<T, VkPipeline>)
+            return "pipeline";
+        else if constexpr (std::is_same_v<T, VkSwapchainKHR>)
+            return "swapchain";
+        else if constexpr (std::is_same_v<T, VkImage>)
+            return "image";
+        else if constexpr (std::is_same_v<T, VkFramebuffer>)
+            return "framebuffer";
+        else if constexpr (std::is_same_v<T, VkImageView>)
+            return "imageView";
+        else if constexpr (std::is_same_v<T, VkDescriptorSetLayout>)
+            return "descriptorSetLayout";
+        else if constexpr (std::is_same_v<T, VkPipelineLayout>)
+            return "pipelineLayout";
+        else if constexpr (std::is_same_v<T, VkPhysicalDevice>)
+            return "physicalDevice";
+        else if constexpr (std::is_same_v<T, VkShaderModule>)
+            return "shaderModule";
+        else if constexpr (std::is_same_v<T, VkPipelineCache>)
+            return "pipelineCache";
+        else if constexpr (std::is_same_v<T, VkSurfaceKHR>)
+            return "surface";
+        else
+            throw std::runtime_error("Invalid object type passed to typeToStr().");
+    } // typeToStr<T>()
 
 } // namespace vkn

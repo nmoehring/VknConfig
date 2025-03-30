@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iterator>
 
+#include "include/VknCommon.hpp"
 #include "include/VknPipeline.hpp"
 
 namespace vkn
@@ -31,11 +32,7 @@ namespace vkn
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
     {
-        if (shaderIdx + 1 > m_shaderStages.size())
-            throw std::runtime_error("GetSwapchain index out of range.");
-        std::list<VknShaderStage>::iterator it = m_shaderStages.begin();
-        std::advance(it, shaderIdx);
-        return &(*it);
+        return getListElement(shaderIdx, m_shaderStages);
     }
 
     void VknPipeline::fillPipelineCreateInfo(
@@ -104,10 +101,5 @@ namespace vkn
             m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()), layoutCreateInfo,
             nullptr, &m_engine->getObject<VkPipelineLayout>(m_pipelineLayoutIdxs.back()));
         m_createdPipelineLayout = true;
-    }
-
-    void VknPipeline::setAbsIdx(uint32_t absSubpassIdx)
-    {
-        m_absIdxs.subpassIdx = absSubpassIdx;
     }
 }

@@ -1,4 +1,5 @@
 #include "include/VknConfig.hpp"
+#include "include/VknCommon.hpp"
 
 namespace vkn
 {
@@ -14,9 +15,11 @@ namespace vkn
         if (deviceIdx != m_devices.size())
             throw std::runtime_error("Device index should equal the current numDevices.");
 
-        m_relIdxs.deviceIdx = deviceIdx;
-        m_absIdxs.deviceIdx = deviceIdx;
-        m_devices.push_back(VknDevice{m_engine, m_relIdxs, m_absIdxs, m_infos});
+        VknIdxs relIdxs = m_relIdxs;
+        VknIdxs absIdxs = m_absIdxs;
+        absIdxs.deviceIdx = m_engine->push_back(VkDevice{});
+        relIdxs.deviceIdx = m_devices.size();
+        m_devices.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
         return &m_devices.back();
     }
 
@@ -84,9 +87,9 @@ namespace vkn
 
         VknRenderpass *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
-        renderpass->createSubpass(0);
+        renderpass->addSubpass(0);
         renderpass->createRenderpass();
-        VknPipeline *pipeline = renderpass->getPipeline(0);
+        VknPipeline *pipeline = renderpass->addPipeline(0);
 
         VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
         VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
@@ -177,9 +180,7 @@ namespace vkn
 
     VknDevice *VknConfig::getDevice(uint32_t deviceIdx)
     {
-        if (deviceIdx + 1 > m_devices.size())
-            throw std::runtime_error("Device index out of range.");
-        return &m_devices[deviceIdx];
+        return getListElement(deviceIdx, m_devices);
     }
 
     void VknConfig::createWindowSurface(uint32_t surfaceIdx)

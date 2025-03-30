@@ -1,4 +1,5 @@
 #include "include/VknDevice.hpp"
+#include "include/VknCommon.hpp"
 
 namespace vkn
 {
@@ -13,8 +14,14 @@ namespace vkn
         uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
         uint32_t imageWidth, uint32_t imageHeight)
     {
-        m_relIdxs.swapchainIdx = swapchainIdx;
-        VknSwapchain &swapchain = m_swapchains.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
+        if (swapchainIdx + 1 > m_swapchains.size())
+            throw std::runtime_error("AddSwapchain index invalid.");
+        VknIdxs absIdxs = m_absIdxs;
+        VknIdxs relIdxs = m_relIdxs;
+        absIdxs.swapchainIdx = m_engine->push_back(VkSwapchainKHR{});
+        relIdxs.swapchainIdx = m_swapchains.size();
+        VknSwapchain &swapchain = m_swapchains.emplace_back(m_engine, relIdxs, absIdxs, m_infos);
+
         swapchain.setImageCount(imageCount);
         swapchain.setImageDimensions(imageWidth, imageHeight);
         return &swapchain;
@@ -28,11 +35,7 @@ namespace vkn
 
     VknSwapchain *VknDevice::getSwapchain(uint32_t swapchainIdx)
     {
-        if (swapchainIdx + 1 > m_swapchains.size())
-            throw std::runtime_error("GetSwapchain index out of range.");
-        std::list<VknSwapchain>::iterator it = m_swapchains.begin();
-        std::advance(it, swapchainIdx);
-        return &(*it);
+        return getListElement(swapchainIdx, m_swapchains);
     }
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
@@ -49,11 +52,7 @@ namespace vkn
 
     VknRenderpass *VknDevice::getRenderpass(uint32_t renderpassIdx)
     {
-        if (renderpassIdx + 1 > m_renderpasses.size())
-            throw std::runtime_error("GetRenderpass index out of range.");
-        std::list<VknRenderpass>::iterator it = m_renderpasses.begin();
-        std::advance(it, renderpassIdx);
-        return &(*it);
+        return getListElement(renderpassIdx, m_renderpasses);
     }
 
     void VknDevice::addExtensions(const char *ext[], uint32_t size)
@@ -88,7 +87,10 @@ namespace vkn
     {
         if (renderpassIdx != m_renderpasses.size())
             throw std::runtime_error("RenderpassIdx passed to addRenderpass is invalid. Should be next idx.");
-        m_relIdxs.renderpassIdx = renderpassIdx;
-        return &m_renderpasses.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
+        VknIdxs relIdxs = m_relIdxs;
+        VknIdxs absIdxs = m_absIdxs;
+        absIdxs.renderpassIdx = m_engine->push_back(VkRenderPass{});
+        relIdxs.renderpassIdx = m_renderpasses.size();
+        return &m_renderpasses.emplace_back(m_engine, relIdxs, absIdxs, m_infos);
     }
 } // namespace vkn

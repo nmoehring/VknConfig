@@ -11,26 +11,28 @@
  * Hierarchy Graph:
  * [VknConfig] (Top-Level)
  *     |
- *     +-- [VknDevice] (Hierarchy-Bound)
+ *     +-- [VknDevice]
  *         |
- *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknQueueFamily] ^ / \
  *         |
- *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         +-- [VknSwapchain]
  *         |   |
- *         |   +-- [VknImageView] (Hierarchy-Bound Leaf) <<=== YOU ARE HERE
+ *         |   +-- [VknImageView] ^ / \ <<=== YOU ARE HERE
  *         |
- *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *         +-- [VknRenderpass]
  *             |
- *             +-- [VknPipeline] (Hierarchy-Bound)
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
- *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
- *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
- *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
- *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
- *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
  *
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
@@ -49,17 +51,20 @@ namespace vkn
     class VknImageView
     {
     public:
+        // Overloads
         VknImageView() = default;
         VknImageView(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        void fillCreateFlags(VkImageViewCreateFlags);
+        // Config
+        void setCreateFlags(VkImageViewCreateFlags);
         void setImage(VkImage image);
         void setViewType(VkImageViewType viewType);
         void setFormat(VkFormat format);
         void setComponents(VkComponentMapping components);
         void setSubresourceRange(VkImageSubresourceRange subresourceRange);
-        void fillImageViewCreateInfo();
 
+        // Create
+        void fillImageViewCreateInfo();
         void createImageView();
 
     private:

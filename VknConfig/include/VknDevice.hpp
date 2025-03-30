@@ -11,26 +11,28 @@
  * Hierarchy Graph:
  * [VknConfig] (Top-Level)
  *     |
- *     +-- [VknDevice] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *     +-- [VknDevice]  <<=== YOU ARE HERE
  *         |
- *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknQueueFamily] ^ / \
  *         |
- *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         +-- [VknSwapchain]
  *         |   |
- *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknImageView] ^ / \
  *         |
- *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *         +-- [VknRenderpass]
  *             |
- *             +-- [VknPipeline] (Hierarchy-Bound)
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
- *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
- *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
- *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
- *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
- *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
  *
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
@@ -51,18 +53,23 @@ namespace vkn
     class VknDevice
     {
     public:
+        // Overloads
         VknDevice() = default;
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
+        // Add
         VknSwapchain *addSwapchain(uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
                                    uint32_t imageWidth, uint32_t imageHeight);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
+
+        // Config
         void addExtensions(const char *ext[], uint32_t size);
 
-        void setSwapchainDimensions();
+        // Create
         void fillSwapchainCreateInfos();
         VknResult createDevice();
 
+        // Getters
         VknPhysicalDevice *getPhysicalDevice();
         VknSwapchain *getSwapchain(uint32_t swapchainIdx);
         VknRenderpass *getRenderpass(uint32_t renderpassIdx);

@@ -1,4 +1,5 @@
 #include "include/VknRenderpass.hpp"
+#include "include/VknCommon.hpp"
 
 namespace vkn
 {
@@ -10,16 +11,25 @@ namespace vkn
         m_infos->initRenderpass(relIdxs);
     }
 
+    VknFramebuffer *VknRenderpass::addFramebuffer(uint32_t framebufferIdx)
+    {
+        if (framebufferIdx + 1 > m_framebuffers.size())
+            throw std::runtime_error("FramebufferIdx invalid. Should be next index.");
+        if (!m_createdRenderpass)
+            throw std::runtime_error("Renderpass not created before adding framebuffer.");
+    }
+
     VknPipeline *VknRenderpass::addPipeline(uint32_t subpassIdx)
     {
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
         if (!m_createdRenderpass)
             throw std::runtime_error("Renderpass not created before adding pipeline.");
-        m_rawPipelines.push_back(VkPipeline{});
         VknIdxs relIdxs{m_relIdxs};
+        VknIdxs absIdxs{m_absIdxs};
+        absIdxs.subpassIdx = m_engine->push_back(VkPipeline{});
         relIdxs.subpassIdx = subpassIdx;
-        m_pipelines.emplace_back(m_engine, relIdxs, m_absIdxs, m_infos);
+        m_pipelines.emplace_back(m_engine, relIdxs, absIdxs, m_infos);
         return &m_pipelines.back();
     }
 
@@ -41,20 +51,12 @@ namespace vkn
 
     VknPipeline *VknRenderpass::getPipeline(uint32_t pipelineIdx)
     {
-        if (pipelineIdx + 1 > m_pipelines.size())
-            throw std::runtime_error("Pipeline index out of range.");
-        std::list<VknPipeline>::iterator it = m_pipelines.begin();
-        std::advance(it, pipelineIdx);
-        return &(*it);
+        return getListElement(pipelineIdx, m_pipelines);
     }
 
     VknFramebuffer *VknRenderpass::getFramebuffer(uint32_t bufferIdx)
     {
-        if (bufferIdx + 1 > m_framebuffers.size())
-            throw std::runtime_error("Framebuffer index out of range.");
-        std::list<VknFramebuffer>::iterator it = m_framebuffers.begin();
-        std::advance(it, bufferIdx);
-        return &(*it);
+        return getListElement(bufferIdx, m_framebuffers);
     }
 
     void VknRenderpass::fillRenderpassCreateInfo(VkRenderPassCreateFlags flags)
@@ -113,10 +115,7 @@ namespace vkn
             throw std::runtime_error("Too many pipelines. Max supported: " + std::to_string(std::numeric_limits<uint32_t>::max()));
         uint32_t numPipelines = static_cast<uint32_t>(numPipelinesSize);
         for (auto &pipeline : m_pipelines)
-        {
             pipeline.fillPipelineCreateInfo();
-            pipeline.setAbsIdx(m_engine->push_back(VkPipeline{}));
-        }
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
         VknResult res{vkCreateGraphicsPipelines(

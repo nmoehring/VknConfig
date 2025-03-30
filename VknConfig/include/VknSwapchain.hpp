@@ -10,26 +10,28 @@
  * Hierarchy Graph:
  * [VknConfig] (Top-Level)
  *     |
- *     +-- [VknDevice] (Hierarchy-Bound)
+ *     +-- [VknDevice]
  *         |
- *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknQueueFamily] ^ / \
  *         |
- *         +-- [VknSwapchain] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *         +-- [VknSwapchain]  <<=== YOU ARE HERE
  *         |   |
- *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknImageView] ^ / \
  *         |
- *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *         +-- [VknRenderpass]
  *             |
- *             +-- [VknPipeline] (Hierarchy-Bound)
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
- *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
- *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
- *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
- *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
- *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
  *
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
@@ -47,9 +49,14 @@ namespace vkn
     class VknSwapchain
     {
     public:
+        // Overloads
         VknSwapchain() = default;
         VknSwapchain(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *m_infos);
 
+        // Add
+        void addImageViews();
+
+        // Config
         void setImageCount(uint32_t imageCount);
         void setImageDimensions(uint32_t imageWidth, uint32_t imageHeight);
         void setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace);
@@ -63,13 +70,15 @@ namespace vkn
         void setOldSwapchain(VkSwapchainKHR oldSwapchain);
         void setSurface(uint32_t surfaceIdx);
 
-        VkSwapchainKHR *getVkSwapchain();
-        std::vector<VkImageView> *getVkImageViews();
-
+        // Create
         void fillSwapchainCreateInfo();
         void createSwapchain();
-        void getImages();
         void createImageViews();
+
+        // Getters
+        VkSwapchainKHR *getVkSwapchain();
+        std::vector<VkImageView> *getVkImageViews();
+        void getImages();
 
     private:
         // Engine
@@ -104,6 +113,5 @@ namespace vkn
         bool m_setImageCount{false};
 
         void resizeImageVectors();
-        void addImageViews();
-    };
+        };
 }

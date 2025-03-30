@@ -10,26 +10,28 @@
  * Hierarchy Graph:
  * [VknConfig] (Top-Level) <<=== YOU ARE HERE
  *     |
- *     +-- [VknDevice] (Hierarchy-Bound)
+ *     +-- [VknDevice]
  *         |
- *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknQueueFamily] ^ / \
  *         |
- *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         +-- [VknSwapchain]
  *         |   |
- *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknImageView] ^ / \
  *         |
- *         +-- [VknRenderpass] (Hierarchy-Bound)
+ *         +-- [VknRenderpass]
  *             |
- *             +-- [VknPipeline] (Hierarchy-Bound)
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
- *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
- *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
- *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
- *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
- *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
  *
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
@@ -58,7 +60,7 @@ namespace vkn
     class VknConfig
     {
     public:
-        // Template config
+        // Config
         void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
         void testNoInputs();
 

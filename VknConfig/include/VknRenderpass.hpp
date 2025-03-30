@@ -10,26 +10,28 @@
  * Hierarchy Graph:
  * [VknConfig] (Top-Level)
  *     |
- *     +-- [VknDevice] (Hierarchy-Bound)
+ *     +-- [VknDevice]
  *         |
- *         +-- [VknPhysicalDevice] (Hierarchy-Bound)
+ *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknQueueFamily] ^ / \
  *         |
- *         +-- [VknSwapchain] (Hierarchy-Bound)
+ *         +-- [VknSwapchain]
  *         |   |
- *         |   +-- [VknImageView] (Hierarchy-Bound Leaf)
+ *         |   +-- [VknImageView] ^ / \
  *         |
- *         +-- [VknRenderpass] (Hierarchy-Bound) <<=== YOU ARE HERE
+ *         +-- [VknRenderpass]  <<=== YOU ARE HERE
  *             |
- *             +-- [VknPipeline] (Hierarchy-Bound)
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] (Hierarchy-Bound Leaf)
- *                 +-- [VknInputAssemblyState] (Hierarchy-Bound Leaf)
- *                 +-- [VknMultisampleState] (Hierarchy-Bound Leaf)
- *                 +-- [VknRasterizationState] (Hierarchy-Bound Leaf)
- *                 +-- [VknShaderStage] (Hierarchy-Bound Leaf)
- *                 +-- [VknViewportState] (Hierarchy-Bound Leaf)
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
  *
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
@@ -54,6 +56,7 @@ namespace vkn
 
         // Add
         VknPipeline *addPipeline(uint32_t subpassIdx);
+        VknFramebuffer *addFramebuffer(uint32_t framebufferIdx);
 
         // Config
         void addAttachment(
@@ -79,10 +82,10 @@ namespace vkn
             uint32_t subpassIdx, bool isCompute = false,
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
-        void fillRenderpassCreateInfo(
-            VkRenderPassCreateFlags flags = 0); // No flags currently available, no need to fill.
 
         // Create
+        void fillRenderpassCreateInfo(
+            VkRenderPassCreateFlags flags = 0); // No flags currently available, no need to fill.
         void createRenderpass();
         void createPipelines();
 

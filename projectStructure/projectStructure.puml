@@ -13,6 +13,8 @@ class VknImageView {
 }
 class VknRenderpass {
 }
+class VknFramebuffer {
+}
 class VknPipeline {
 }
 class VknVertexInputState {
@@ -41,6 +43,7 @@ VknDevice -- VknSwapchain
 VknSwapchain -- VknImageView
 VknDevice -- VknRenderpass
 VknRenderpass -- VknPipeline
+VknRenderpass -- VknFramebuffer
 VknPipeline -- VknVertexInputState
 VknPipeline -- VknInputAssemblyState
 VknPipeline -- VknMultisampleState

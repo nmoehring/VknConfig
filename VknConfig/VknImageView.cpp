@@ -7,7 +7,7 @@ namespace vkn
     {
     }
 
-    void VknImageView::fillCreateFlags(VkImageViewCreateFlags createFlags)
+    void VknImageView::setCreateFlags(VkImageViewCreateFlags createFlags)
     {
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled create info, configuring this setting is unnecessary.");
