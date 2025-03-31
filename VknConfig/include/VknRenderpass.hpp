@@ -90,7 +90,7 @@ namespace vkn
         void createPipelines();
 
         // Getters
-        VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs.renderpassIdx.value()); }
+        VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
         bool getVkRenderPassCreated() { return m_createdRenderpass; }

@@ -85,7 +85,7 @@ namespace vkn
         // Members
         std::list<VknRenderpass> m_renderpasses{}; // List, because elements don't need to be together, refs could be invalidated
         std::list<VknSwapchain> m_swapchains{};    // Doesn't need to change after creation
-        VknPhysicalDevice m_physicalDevice;
+        std::list<VknPhysicalDevice> m_physicalDevices{};
 
         // Params
         const char *const *m_extensions{nullptr};

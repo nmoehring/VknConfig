@@ -17,17 +17,16 @@ namespace vkn
         m_viewportState = VknViewportState{engine, relIdxs, absIdxs, infos};
     }
 
-    void VknPipeline::addShaderStage(uint32_t shaderIdx,
-                                     VknShaderStageType stageType, std::string filename, VkPipelineShaderStageCreateFlags flags)
+    VknShaderStage *VknPipeline::addShaderStage(uint32_t shaderIdx,
+                                                VknShaderStageType stageType,
+                                                std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
-        if (shaderIdx != m_numShaderStages)
-            throw std::runtime_error("ShaderIdx passed to addShaderStage is invalid. Should be next idx.");
-        VknIdxs relIdxs = m_relIdxs;
-        relIdxs.shaderIdx = shaderIdx;
-        VknShaderStage shaderStage = m_shaderStages.emplace_back(m_engine, relIdxs, m_absIdxs, m_infos);
+        VknShaderStage &shaderStage = addNewVknObject<VknShaderStage, VkShaderModule>(
+            shaderIdx, m_shaderStages, m_engine, m_relIdxs, m_absIdxs, m_infos);
         shaderStage.setFilename(filename);
         shaderStage.setShaderStageType(stageType);
         shaderStage.setFlags(flags);
+        return &shaderStage;
     }
 
     VknShaderStage *VknPipeline::getShaderStage(uint32_t shaderIdx)
@@ -41,7 +40,7 @@ namespace vkn
         if (m_filledCreateInfo)
             throw std::runtime_error("Pipeline create info already filled.");
         m_infos->fillGfxPipelineCreateInfo(
-            m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs.renderpassIdx.value()),
+            m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()),
             &m_layout, m_basePipelineHandle, m_basePipelineIndex, flags);
         m_filledCreateInfo = true;
     }
@@ -69,7 +68,7 @@ namespace vkn
         m_descriptorSetLayoutIdxs.push_back(m_engine->push_back(VkDescriptorSetLayout{}));
         VknResult res{
             vkCreateDescriptorSetLayout(
-                m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
+                m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
                 descriptorSetLayoutCreateInfo, nullptr,
                 &m_engine->getObject<VkDescriptorSetLayout>(m_descriptorSetLayoutIdxs.back())),
             "Create descriptor set layout."};
@@ -98,7 +97,7 @@ namespace vkn
             m_relIdxs);
         m_pipelineLayoutIdxs.push_back(m_engine->push_back(VkPipelineLayout{}));
         vkCreatePipelineLayout(
-            m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()), layoutCreateInfo,
+            m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()), layoutCreateInfo,
             nullptr, &m_engine->getObject<VkPipelineLayout>(m_pipelineLayoutIdxs.back()));
         m_createdPipelineLayout = true;
     }

@@ -1,10 +1,10 @@
 #include <iostream>
 
 #include "include/VknPhysicalDevice.hpp"
+#include "include/VknCommon.hpp"
 
 namespace vkn
 {
-    std::vector<VkPhysicalDevice> VknPhysicalDevice::s_physicalDevices{};
     std::vector<VkPhysicalDeviceProperties> VknPhysicalDevice::s_properties{};
     bool VknPhysicalDevice::s_enumeratedPhysicalDevices{false};
 
@@ -37,17 +37,19 @@ namespace vkn
             throw std::runtime_error("Physical device not selected before requesting queue properties.");
         uint32_t propertyCount{0};
         vkGetPhysicalDeviceQueueFamilyProperties(
-            s_physicalDevices[m_absIdxs.physicalDeviceIdx.value()],
+            m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkPhysicalDevice>()),
             &propertyCount, VK_NULL_HANDLE);
         if (propertyCount == 0)
             throw std::runtime_error("No available queue families found.");
         std::vector<VkQueueFamilyProperties> queues;
-        m_queues.resize(propertyCount);
+        for (int i = 0; i < propertyCount; ++i)
+            addNewVknObject<VknQueueFamily, VkQueueFamilyProperties>(
+                i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);
         if (m_queues.size() > 0)
             throw std::runtime_error("m_queues already filled before requesting queue properties.");
 
         vkGetPhysicalDeviceQueueFamilyProperties(
-            s_physicalDevices[m_absIdxs.physicalDeviceIdx.value()],
+            m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkPhysicalDevice>()),
             &propertyCount,
             queues.data());
         for (auto &props : queues)
@@ -156,14 +158,14 @@ namespace vkn
     {
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before getting VkPhysicalDevice.");
-        return &m_engine->getObject<VkPhysicalDevice>(m_absIdxs.physicalDeviceIdx.value());
+        return &m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkPhysicalDevice>());
     }
 
     VkPhysicalDeviceProperties &VknPhysicalDevice::getProperties()
     {
         if (!s_enumeratedPhysicalDevices)
             throw std::runtime_error("Physical devices not enumerated before getting physical device properties.");
-        return s_properties[m_relIdxs.physicalDeviceIdx.value()];
+        return s_properties[m_relIdxs.get<VkPhysicalDevice>()];
     }
 
     std::vector<VkPhysicalDeviceProperties> &VknPhysicalDevice::getAllProperties()

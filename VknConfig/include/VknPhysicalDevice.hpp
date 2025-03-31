@@ -81,9 +81,8 @@ namespace vkn
         VknInfos *m_infos{nullptr}; // external ptr
 
         // Members
-        static std::vector<VkPhysicalDevice> s_physicalDevices; // changes don't invalidate member ptrs
         static std::vector<VkPhysicalDeviceProperties> s_properties;
-        std::vector<VknQueueFamily> m_queues{}; // Vector fine, this shouldn't change.
+        std::list<VknQueueFamily> m_queues{}; // Vector fine, this shouldn't change.
 
         // State
         bool m_selectedPhysicalDevice{false};

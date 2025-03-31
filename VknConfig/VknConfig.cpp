@@ -12,15 +12,8 @@ namespace vkn
     {
         if (!m_createdInstance)
             throw std::runtime_error("Can't add a device until an instance is created.");
-        if (deviceIdx != m_devices.size())
-            throw std::runtime_error("Device index should equal the current numDevices.");
-
-        VknIdxs relIdxs = m_relIdxs;
-        VknIdxs absIdxs = m_absIdxs;
-        absIdxs.deviceIdx = m_engine->push_back(VkDevice{});
-        relIdxs.deviceIdx = m_devices.size();
-        m_devices.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
-        return &m_devices.back();
+        return &addNewVknObject<VknDevice, VkDevice>(
+            deviceIdx, m_devices, m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
 
     void VknConfig::addWindow(GLFWwindow *window)

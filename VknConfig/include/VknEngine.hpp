@@ -84,13 +84,18 @@ namespace vkn
         }
 
         template <typename T>
-        T &getObjectVector()
+        std::vector<T> &getObjectVector()
         {
+            std::string typeName = TypeToStr<T>();
+            if (m_objectVectors.find(typeName) == m_objectVectors.end())
+
+                m_objectVectors[typeName] = new std::vector<T>();
+            return *static_cast<std::vector<T> *>(m_objectVectors[typeName]);
         }
 
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
-        std::vector<VkInstance> instances{};
+        /*std::vector<VkInstance> instances{};
         std::vector<VkDevice> devices{};
         std::vector<VkSurfaceKHR> surfaces{};
         std::vector<VkRenderPass> renderpasses{};
@@ -103,7 +108,7 @@ namespace vkn
         std::vector<VkPipelineLayout> pipelineLayouts{};
         std::vector<VkPhysicalDevice> physicalDevices{};
         std::vector<VkShaderModule> shaderModules{};
-        std::vector<VkPipelineCache> pipelineCaches{};
+        std::vector<VkPipelineCache> pipelineCaches{};*/
     }; // VknEngine
 
     class VknIdxs

@@ -17,6 +17,8 @@ namespace vkn
             throw std::runtime_error("FramebufferIdx invalid. Should be next index.");
         if (!m_createdRenderpass)
             throw std::runtime_error("Renderpass not created before adding framebuffer.");
+        return &addNewVknObject<VknFramebuffer, VkFramebuffer>(
+            framebufferIdx, m_framebuffers, m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
 
     VknPipeline *VknRenderpass::addPipeline(uint32_t subpassIdx)
@@ -25,12 +27,8 @@ namespace vkn
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
         if (!m_createdRenderpass)
             throw std::runtime_error("Renderpass not created before adding pipeline.");
-        VknIdxs relIdxs{m_relIdxs};
-        VknIdxs absIdxs{m_absIdxs};
-        absIdxs.subpassIdx = m_engine->push_back(VkPipeline{});
-        relIdxs.subpassIdx = subpassIdx;
-        m_pipelines.emplace_back(m_engine, relIdxs, absIdxs, m_infos);
-        return &m_pipelines.back();
+        return &addNewVknObject<VknPipeline, VkPipeline>(subpassIdx, m_pipelines,
+                                                         m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
 
     void VknRenderpass::createRenderpass()
@@ -40,11 +38,10 @@ namespace vkn
         this->fillRenderpassCreateInfo();
         VkRenderPassCreateInfo *createInfo{
             m_infos->getRenderpassCreateInfo(m_relIdxs)};
-        m_absIdxs.renderpassIdx = m_engine->push_back(VkRenderPass{});
         VknResult res{vkCreateRenderPass(
-                          m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
+                          m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
                           createInfo, VK_NULL_HANDLE,
-                          &m_engine->getObject<VkRenderPass>(m_absIdxs.renderpassIdx.value())),
+                          &m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>())),
                       "Create renderpass."};
         m_createdRenderpass = true;
     }
@@ -110,19 +107,19 @@ namespace vkn
             throw std::runtime_error("Renderpass not created before creating pipelines.");
         if (m_createdPipelines)
             throw std::runtime_error("Pipelines already created.");
-        size_t numPipelinesSize = m_engine->getObjectVector<VkPipeline>().size();
-        if (numPipelinesSize > std::numeric_limits<uint32_t>::max())
+        std::vector<VkPipeline> enginePipelines = m_engine->getObjectVector<VkPipeline>();
+        if (m_pipelines.size() - m_pipelines.size() > std::numeric_limits<uint32_t>::max())
             throw std::runtime_error("Too many pipelines. Max supported: " + std::to_string(std::numeric_limits<uint32_t>::max()));
-        uint32_t numPipelines = static_cast<uint32_t>(numPipelinesSize);
+        uint32_t startIdx = static_cast<uint32_t>(enginePipelines.size() - m_pipelines.size());
         for (auto &pipeline : m_pipelines)
             pipeline.fillPipelineCreateInfo();
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
         VknResult res{vkCreateGraphicsPipelines(
-                          m_engine->getObject<VkDevice>(m_absIdxs.deviceIdx.value()),
+                          m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
                           VK_NULL_HANDLE, m_numSubpasses,
                           pipelineCreateInfos->data(), nullptr,
-                          &m_engine->getObjectVector<VkPipeline>().data()[numPipelines]),
+                          &enginePipelines.data()[startIdx]),
                       "Create pipeline."};
         m_createdPipelines = true;
     }

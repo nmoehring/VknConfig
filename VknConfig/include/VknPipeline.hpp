@@ -77,12 +77,12 @@ namespace vkn
             VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0);
 
-        void addShaderStage(uint32_t newShaderStageIdx,
-                            VknShaderStageType stageType, std::string filename,
-                            VkPipelineShaderStageCreateFlags flags = 0);
+        VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
+                                       VknShaderStageType stageType, std::string filename,
+                                       VkPipelineShaderStageCreateFlags flags = 0);
 
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
-        VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs.subpassIdx.value()); }
+        VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs.get<VkPipeline>()); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }
