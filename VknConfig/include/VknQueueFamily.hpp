@@ -48,19 +48,33 @@ namespace vkn
     class VknQueueFamily
     {
     public:
+        // Overloads
         VknQueueFamily() = default;
-        VknQueueFamily(VkQueueFamilyProperties properties);
+        VknQueueFamily(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
+        // Config
+        void setNumSelected(int num);
+        void setQueueFamilyProperties(VkQueueFamilyProperties properties)
+        {
+            m_properties = properties;
+        }
+
+        // Getters
+        int getNumSelected();
+        uint32_t getNumAvailable();
         bool supportsGraphics();
         bool supportsCompute();
         bool supportsTransfer();
         bool supportsSparseBinding();
         bool supportsMemoryProtection();
-        int getNumSelected();
-        void setNumSelected(int num);
-        uint32_t getNumAvailable();
 
     private:
+        // Engine
+        VknEngine *m_engine{nullptr};
+        VknIdxs m_relIdxs{};
+        VknIdxs m_absIdxs{};
+        VknInfos *m_infos{nullptr};
+
         // Members
         VkQueueFamilyProperties m_properties{};
 

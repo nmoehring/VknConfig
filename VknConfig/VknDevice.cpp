@@ -35,7 +35,7 @@ namespace vkn
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
     {
-        return &m_physicalDevices[0];
+        return getListElement(0, m_physicalDevices);
     }
 
     VkDevice *VknDevice::getVkDevice()
@@ -58,17 +58,17 @@ namespace vkn
 
     VknResult VknDevice::createDevice()
     {
-        if (!m_physicalDevices[0].areQueuesSelected())
+        if (!getListElement(0, m_physicalDevices)->areQueuesSelected())
             throw std::runtime_error("Queues not selected before trying to create device.");
         if (m_createdVkDevice)
             throw std::runtime_error("Device already created.");
         m_infos->fillDeviceExtensionNames(m_relIdxs.get<VkDevice>(), m_extensions, m_extensionsSize);
         m_infos->fillDeviceFeatures(m_features);
-        m_physicalDevices[0].fillQueueCreateInfos();
+        getListElement(0, m_physicalDevices)->fillQueueCreateInfos();
         m_infos->fillDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{
             vkCreateDevice(
-                *(m_physicalDevices[0].getVkPhysicalDevice()),
+                *(getListElement(0, m_physicalDevices)->getVkPhysicalDevice()),
                 m_infos->getDeviceCreateInfo(m_relIdxs.get<VkPhysicalDevice>()),
                 nullptr,
                 &m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>())),

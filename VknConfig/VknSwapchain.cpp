@@ -1,5 +1,5 @@
 #include "include/VknSwapchain.hpp"
-#include "VknCommon.hpp"
+#include "include/VknCommon.hpp"
 
 namespace vkn
 {
@@ -167,6 +167,8 @@ namespace vkn
         if (!m_createdSwapchain)
             throw std::runtime_error("Can't create image views before creating the swapchain.");
 
+        std::vector<VkImageView> engineImageViews = m_engine->getObjectVector<VkImageView>();
+        m_startAbsIdx = engineImageViews.size();
         for (uint32_t i = 0; i < m_imageCount; ++i)
             addNewVknObject<VknImageView, VkImageView>(
                 i, m_imageViews, m_engine, m_relIdxs, m_absIdxs, m_infos);

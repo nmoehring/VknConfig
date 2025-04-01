@@ -26,7 +26,8 @@ namespace vkn
         if (!m_requestedQueues)
             throw std::runtime_error("Queue properties not requested before filling queue priorities.");
         for (int i = 0; i < m_queues.size(); ++i)
-            m_infos->fillDeviceQueuePriorities(m_relIdxs, i, std::vector<float>(m_queues[i].getNumSelected(), 1.0f));
+            m_infos->fillDeviceQueuePriorities(
+                m_relIdxs, i, std::vector<float>(getListElement<VknQueueFamily>(i, m_queues)->getNumSelected(), 1.0f));
     }
 
     void VknPhysicalDevice::requestQueueFamilyProperties()
@@ -48,12 +49,20 @@ namespace vkn
         if (m_queues.size() > 0)
             throw std::runtime_error("m_queues already filled before requesting queue properties.");
 
+        std::vector<VkQueueFamilyProperties> *engineQueues = &m_engine->getObjectVector<VkQueueFamilyProperties>();
+        m_startAbsIdx = engineQueues->size();
+        engineQueues->resize(engineQueues->size() + propertyCount);
         vkGetPhysicalDeviceQueueFamilyProperties(
             m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkPhysicalDevice>()),
             &propertyCount,
-            queues.data());
-        for (auto &props : queues)
-            m_queues.emplace_back(props);
+            engineQueues->data() + m_startAbsIdx);
+        for (int i = 0; i < propertyCount; ++i)
+            getListElement(i, m_queues)->setQueueFamilyProperties(queues[i]);
+        for (auto &queue : *engineQueues)
+        {
+            m_queues.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
+            m_queues.back().setQueueFamilyProperties(queue);
+        }
         m_requestedQueues = true;
     }
 
@@ -62,7 +71,8 @@ namespace vkn
         if (m_filledQueueCreateInfos)
             throw std::runtime_error("Already filled queue create infos.");
         for (int i = 0; i < m_queues.size(); ++i)
-            m_infos->fillDeviceQueueCreateInfo(m_relIdxs, i, m_queues[i].getNumSelected());
+            m_infos->fillDeviceQueueCreateInfo(
+                m_relIdxs, i, getListElement<VknQueueFamily>(i, m_queues)->getNumSelected());
         m_filledQueueCreateInfos = true;
     }
 
@@ -77,8 +87,8 @@ namespace vkn
         {
             int numSelected = 1;
             if (chooseAllAvailableQueues)
-                numSelected = m_queues[i].getNumAvailable();
-            this->m_queues[i].setNumSelected(numSelected);
+                numSelected = getListElement<VknQueueFamily>(i, m_queues)->getNumAvailable();
+            getListElement<VknQueueFamily>(i, m_queues)->setNumSelected(numSelected);
         }
         m_selectedQueues = true;
     }
@@ -97,10 +107,10 @@ namespace vkn
         else if (deviceCount > 1)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
 
-        s_physicalDevices.resize(deviceCount);
+        m_engine->getObjectVector<VkPhysicalDevice>().resize(deviceCount);
         VknResult res2{vkEnumeratePhysicalDevices(
                            m_engine->getObject<VkInstance>(0), &deviceCount,
-                           s_physicalDevices.data()),
+                           m_engine->getObjectVector<VkPhysicalDevice>().data()),
                        "Enum physical devices and store."};
         s_enumeratedPhysicalDevices = true;
         return res2;
@@ -114,7 +124,7 @@ namespace vkn
         if (!s_enumeratedPhysicalDevices)
             res = this->enumeratePhysicalDevices();
 
-        m_relIdxs.physicalDeviceIdx = 0;
+        m_relIdxs.add<VkPhysicalDevice>(0);
         m_selectedPhysicalDevice = true;
         this->queryProperties();
 
@@ -129,7 +139,8 @@ namespace vkn
         VkBool32 presentSupport = false;
         VknResult res{
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                s_physicalDevices[m_relIdxs.physicalDeviceIdx.value()], queueFamilyIdx, surface, &presentSupport),
+                m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkPhysicalDevice>()),
+                queueFamilyIdx, surface, &presentSupport),
             "Get Surface Support"};
         return presentSupport;
     }
@@ -139,7 +150,7 @@ namespace vkn
         {
             if (!m_selectedPhysicalDevice)
                 throw std::runtime_error("Physical device not selected before getting device limits.");
-            return &s_properties[m_relIdxs.physicalDeviceIdx.value()].limits;
+            return &s_properties[m_relIdxs.get<VkPhysicalDevice>()].limits;
         }
     }
 
@@ -147,7 +158,7 @@ namespace vkn
     {
         if (!s_enumeratedPhysicalDevices)
             throw std::runtime_error("Physical devices not enumerated before getting physical device properties.");
-        for (auto &physicalDevice : s_physicalDevices)
+        for (auto &physicalDevice : m_engine->getObjectVector<VkPhysicalDevice>())
         {
             s_properties.push_back(VkPhysicalDeviceProperties{});
             vkGetPhysicalDeviceProperties(physicalDevice, &s_properties.back());

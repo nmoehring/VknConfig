@@ -64,11 +64,11 @@ namespace vkn
         this->createInstance();
 
         VknDevice *device = this->addDevice(0);
-        device->addExtensions(deviceExtensions, numExtensions);
         VknPhysicalDevice *physDev = device->getPhysicalDevice();
         const uint32_t numExtensions{1};
         const char *deviceExtensions[numExtensions] = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        device->addExtensions(deviceExtensions, numExtensions);
 
         physDev->selectPhysicalDevice();
         physDev->requestQueueFamilyProperties();

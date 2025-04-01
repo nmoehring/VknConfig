@@ -48,6 +48,41 @@
 
 namespace vkn
 {
+    template <typename T>
+    std::string typeToStr()
+    {
+        if constexpr (std::is_same_v<T, VkInstance>)
+            return "instance";
+        else if constexpr (std::is_same_v<T, VkDevice>)
+            return "device";
+        else if constexpr (std::is_same_v<T, VkRenderPass>)
+            return "renderpass";
+        else if constexpr (std::is_same_v<T, VkPipeline>)
+            return "pipeline";
+        else if constexpr (std::is_same_v<T, VkSwapchainKHR>)
+            return "swapchain";
+        else if constexpr (std::is_same_v<T, VkImage>)
+            return "image";
+        else if constexpr (std::is_same_v<T, VkFramebuffer>)
+            return "framebuffer";
+        else if constexpr (std::is_same_v<T, VkImageView>)
+            return "imageView";
+        else if constexpr (std::is_same_v<T, VkDescriptorSetLayout>)
+            return "descriptorSetLayout";
+        else if constexpr (std::is_same_v<T, VkPipelineLayout>)
+            return "pipelineLayout";
+        else if constexpr (std::is_same_v<T, VkPhysicalDevice>)
+            return "physicalDevice";
+        else if constexpr (std::is_same_v<T, VkShaderModule>)
+            return "shaderModule";
+        else if constexpr (std::is_same_v<T, VkPipelineCache>)
+            return "pipelineCache";
+        else if constexpr (std::is_same_v<T, VkSurfaceKHR>)
+            return "surface";
+        else
+            throw std::runtime_error("Invalid object type passed to typeToStr().");
+    } // typeToStr<T>()
+
     class VknEngine
     {
     public:
@@ -86,7 +121,7 @@ namespace vkn
         template <typename T>
         std::vector<T> &getObjectVector()
         {
-            std::string typeName = TypeToStr<T>();
+            std::string typeName = typeToStr<T>();
             if (m_objectVectors.find(typeName) == m_objectVectors.end())
 
                 m_objectVectors[typeName] = new std::vector<T>();
@@ -139,40 +174,4 @@ namespace vkn
         }
 
     }; // VknIdxs
-
-    template <typename T>
-    std::string &TypeToStr()
-    {
-        if constexpr (std::is_same_v<T, VkInstance>)
-            return "instance";
-        else if constexpr (std::is_same_v<T, VkDevice>)
-            return "device";
-        else if constexpr (std::is_same_v<T, VkRenderPass>)
-            return "renderpass";
-        else if constexpr (std::is_same_v<T, VkPipeline>)
-            return "pipeline";
-        else if constexpr (std::is_same_v<T, VkSwapchainKHR>)
-            return "swapchain";
-        else if constexpr (std::is_same_v<T, VkImage>)
-            return "image";
-        else if constexpr (std::is_same_v<T, VkFramebuffer>)
-            return "framebuffer";
-        else if constexpr (std::is_same_v<T, VkImageView>)
-            return "imageView";
-        else if constexpr (std::is_same_v<T, VkDescriptorSetLayout>)
-            return "descriptorSetLayout";
-        else if constexpr (std::is_same_v<T, VkPipelineLayout>)
-            return "pipelineLayout";
-        else if constexpr (std::is_same_v<T, VkPhysicalDevice>)
-            return "physicalDevice";
-        else if constexpr (std::is_same_v<T, VkShaderModule>)
-            return "shaderModule";
-        else if constexpr (std::is_same_v<T, VkPipelineCache>)
-            return "pipelineCache";
-        else if constexpr (std::is_same_v<T, VkSurfaceKHR>)
-            return "surface";
-        else
-            throw std::runtime_error("Invalid object type passed to typeToStr().");
-    } // typeToStr<T>()
-
 } // namespace vkn

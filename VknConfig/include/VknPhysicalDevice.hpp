@@ -70,7 +70,7 @@ namespace vkn
         bool areQueuesSelected() { return m_selectedQueues; }
         void selectQueues(bool chooseAllAvailableQueues);
         int getNumQueueFamilies() { return m_queues.size(); }
-        std::vector<VknQueueFamily> &getQueues() { return m_queues; }
+        std::list<VknQueueFamily> &getQueues() { return m_queues; }
         VknQueueFamily &getQueue(int idx);
 
     private:
@@ -85,6 +85,7 @@ namespace vkn
         std::list<VknQueueFamily> m_queues{}; // Vector fine, this shouldn't change.
 
         // State
+        uint32_t m_startAbsIdx{0};
         bool m_selectedPhysicalDevice{false};
         static bool s_enumeratedPhysicalDevices;
         bool m_requestedQueues{false};

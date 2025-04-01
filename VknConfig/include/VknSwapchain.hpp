@@ -88,7 +88,7 @@ namespace vkn
         VknInfos *m_infos{nullptr};
 
         // Members
-        std::vector<VknImageView> m_imageViews{};
+        std::list<VknImageView> m_imageViews{};
         std::vector<VkImage> m_images{};
         std::vector<VkImageView> m_rawImageViews{};
 
@@ -107,11 +107,12 @@ namespace vkn
         std::optional<uint32_t> m_surfaceIdx{};
 
         // State
+        uint32_t m_startAbsIdx{0};
         bool m_filledCreateInfo{false};
         bool m_createdSwapchain{false};
         bool m_setSurface{false};
         bool m_setImageCount{false};
 
         void resizeImageVectors();
-        };
+    };
 }

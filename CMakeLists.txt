@@ -1,22 +1,10 @@
-# Uses vcpkg to install all the dependencies. vcpkg is included via CMakePresets.json
-# Output files are written to a neighboring vknconfig_build folder. This directory is
-# meant to stay unchanged, as it typically has version control through git.
-# cmake minimum version is set to 3.29 because it ships with Visual Studio 2022
-
-# ######## INITIALIZE ###########
 cmake_minimum_required(VERSION 3.29)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(VknConfig VERSION 0.3 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
-# ########### UTILITY FUNCTIONS ##############
+# --- Utility functions ---
 # Copy directories to build folders keeping in mind debug configs
-function(createBuildDir)
-    if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR})
-        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    endif()
-endfunction()
-
 function(copyResources)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/Debug)
@@ -36,14 +24,32 @@ function(buildSubDir subdir)
     endif()
 endfunction()
 
-createBuildDir()
+# --- Create build dir ---
+if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR})
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 
-# ##### FIND, CONFIGURE, AND BUILD DEPENDENCIES #####(What's left anyway after vcpkg ran)
+# --- DEPENDENCIES ---
 include(FetchContent)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-# ########## LIB AND INCLUDE ############
+# --- Fetch gtest ---
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG main
+    GIT_SHALLOW
+)
+
+if(MSVC)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif()
+
+FetchContent_MakeAvailable(googletest)
+
+# ########## LIB AND INCLUDE ########### #
 message("Vulkan header version: ${VulkanHeaderVersion}")
 message("Vulkan include directory: ${Vulkan_INCLUDE_DIRS}")
 message("^If this points to some other installed Vulkan header files and not your SDK install,
@@ -55,25 +61,54 @@ include_directories(
     ${glfw3_DIR}/include
 )
 
-# Optimizations (referenced in bs::thread-pool)
-# TODO: Other system Cxx compiler optimizations
-# TODO: SPIR-V optimizations
-# TODO: Translate SPIR-V to LLVM and use LLVM optimizations, translate back to SPIR-V.
-# For Clang or GCC, use the -O3 flag.
-# For MSVC, use /O2.
+# --- Compiler Arguments (Cross-Platform) ---
+add_library(VknConfig_args INTERFACE)
+target_compile_features(VknConfig_args INTERFACE cxx_std_20)
 
-# CMake docs recommended this style of modifying compiler/linker flags and
-# specifying the C++ version
-add_library(vknconfig_compiler_args INTERFACE)
-target_compile_features(vknconfig_compiler_args INTERFACE cxx_std_20)
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    if(MSVC)
+        target_compile_options(VknConfig_args INTERFACE /O2) # MSVC Release optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        target_compile_options(VknConfig_args INTERFACE -O3) # GCC Release optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(VknConfig_args INTERFACE -O3) # Clang Release optimization
+    endif()
+elseif(CMAKE_BUILD_TYPE MATCHES Debug)
+    if(MSVC)
+        target_compile_options(VknConfig_args INTERFACE /Od /Zi) # MSVC Debug optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        target_compile_options(VknConfig_args INTERFACE -Og -g) # GCC Debug optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(VknConfig_args INTERFACE -Og -g) # Clang Debug optimization
+    endif()
+elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+    if(MSVC)
+        target_compile_options(VknConfig_args INTERFACE /O2 /Zi) # MSVC RelWithDebInfo optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        target_compile_options(VknConfig_args INTERFACE -O3 -g) # GCC RelWithDebInfo optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(VknConfig_args INTERFACE -O3 -g) # Clang RelWithDebInfo optimization
+    endif()
+elseif(CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+    if(MSVC)
+        target_compile_options(VknConfig_args INTERFACE /O1) # MSVC MinSizeRel optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        target_compile_options(VknConfig_args INTERFACE -Os) # GCC MinSizeRel optimization
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(VknConfig_args INTERFACE -Os) # Clang MinSizeRel optimization
+    endif()
+endif()
 
+# --- Lib Dirs ---
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message("Adding debug library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
         ${Vulkan_INCLUDE_DIR}/../lib
     )
-elseif(CMAKE_BUILD_TYPE MATCHES Release)
+elseif(CMAKE_BUILD_TYPE MATCHES Release OR
+    CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
+    CMAKE_BUILD_TYPE MATCHES MinSizeRel)
     target_compile_options(vknconfig_compiler_args INTERFACE /O2)
     message("Adding release library directories.")
     link_directories(
@@ -84,12 +119,14 @@ else()
     message("Unknown build type.")
 endif()
 
-# Single-header libraries
+# --- Single-header libraries
 add_library(vma INTERFACE)
 target_sources(vma INTERFACE single-headers/vma.cpp)
 
-# ############ PROCESS SUBDIRECTORIES #################
+# --- subdir ---
 add_subdirectory(VknConfig)
+
+# add_subdirectory(tests)
 
 # add_subdirectory(VkCore)
 buildSubDir(VkExtCheck)

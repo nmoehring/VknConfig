@@ -173,7 +173,7 @@ namespace vkn
 
         VkRenderPassCreateInfo *getRenderpassCreateInfo(VknIdxs &relIdxs)
         {
-            return &m_renderpassCreateInfos[relIdxs.deviceIdx.value()][relIdxs.renderpassIdx.value()];
+            return &m_renderpassCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
         }
 
         VkDeviceCreateInfo *getDeviceCreateInfo(uint32_t deviceIdx)
@@ -184,7 +184,7 @@ namespace vkn
         };
         std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos(VknIdxs &relIdxs)
         {
-            return &m_gfxPipelineCreateInfos[relIdxs.deviceIdx.value()][relIdxs.renderpassIdx.value()];
+            return &m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
         }
         std::vector<VkPipelineShaderStageCreateInfo> *getShaderStageCreateInfos(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
@@ -214,7 +214,7 @@ namespace vkn
         VkPipelineLayoutCreateInfo *getPipelineLayoutCreateInfo(
             VknIdxs &relIdxs)
         {
-            return &m_layoutCreateInfos[relIdxs.deviceIdx.value()][relIdxs.renderpassIdx.value()][relIdxs.subpassIdx.value()];
+            return &m_layoutCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
         }
         void initRenderpass(VknIdxs &relIdxs);
         VkSwapchainCreateInfoKHR *getSwapchainCreateInfo(VknIdxs &relIdxs);

@@ -6,8 +6,9 @@
 
 namespace vkn
 {
-    VknQueueFamily::VknQueueFamily(VkQueueFamilyProperties properties)
-        : m_properties{properties} {}
+    VknQueueFamily::VknQueueFamily(
+        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
+        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos} {}
 
     bool VknQueueFamily::supportsGraphics()
     {

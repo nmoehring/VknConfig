@@ -16,6 +16,7 @@
         "glslangd",
         "gltf",
         "gltfsdk",
+        "googletest",
         "gpubuffer",
         "gtest",
         "HARFBUZZ",

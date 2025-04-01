@@ -1,12 +1,6 @@
 #Ignore vcpkg if present (its in the build dir now)
 /vcpkg_installed/
 
-#Give up on vscode settings being portable
-/.vscode/settings.json
-
-#Ignore imgui backends
-/imguiBackends
-
 #Ignore CMake cache
 CMakeCache.txt
 
