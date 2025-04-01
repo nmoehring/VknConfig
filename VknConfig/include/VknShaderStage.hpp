@@ -45,6 +45,8 @@
 
 namespace vkn
 {
+
+    /** @brief Represents the type of shader stage. */
     enum VknShaderStageType
     {
         VKN_VERTEX_STAGE = VK_SHADER_STAGE_VERTEX_BIT,
@@ -64,6 +66,10 @@ namespace vkn
         void setSpecialization(VkSpecializationInfo m_specializationInfo);
         void fillShaderStageCreateInfo();
 
+        // Create
+        /** @brief Creates the VkShaderModule object from the loaded shader code.*/
+        void createShaderModule();
+
     private:
         // Engine
         VknEngine *m_engine{nullptr};
@@ -72,19 +78,17 @@ namespace vkn
         VknInfos *m_infos{nullptr};
 
         // Params
-        std::vector<char> m_code;
+        std::vector<char> m_code; /**< Stores the shader's SPIR-V bytecode. */
         VkShaderStageFlagBits m_shaderStageFlagBit{};
         std::string m_filename{};
-        VkPipelineShaderStageCreateFlags m_createFlags{0};
-        VkShaderModule m_shaderModule{VK_NULL_HANDLE};
-        VkSpecializationInfo m_specializationInfo{};
+        VkPipelineShaderStageCreateFlags m_createFlags{0}; /**< Flags for shader stage creation */
+        VkShaderModule m_shaderModule{VK_NULL_HANDLE};     /**< Module created from m_code, passed to createInfo */
+        VkSpecializationInfo m_specializationInfo{};       /**< Specialization constants for the shader. */
 
         // State
-        bool m_shaderModuleCreated{false};
+        bool m_shaderModuleCreated{false}; /**< True if the shader module has been created. */
         bool m_shaderStageTypeFilled{false};
         bool m_filenameFilled{false};
         bool m_specializationInfoFilled{false};
-
-        void createShaderModule();
     };
 }

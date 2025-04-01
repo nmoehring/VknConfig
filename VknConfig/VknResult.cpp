@@ -16,14 +16,14 @@ namespace vkn
         if (m_result != VK_SUCCESS)
             throw std::runtime_error(this->toErr("Error: "));
 
-        m_errorStateEvaluated = true;
+        m_evaluatedErrorState = true;
         s_archive.store(*this);
     }
 
     void VknResult::evaluate(VkResult result)
     {
         m_result = result;
-        m_errorStateEvaluated = true;
+        m_evaluatedErrorState = true;
         s_archive.store(*this);
     }
 
