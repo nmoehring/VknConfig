@@ -62,6 +62,7 @@ The VknConfig project is organized into a clear hierarchy of classes, with some 
 * VMA
 
 ### Building
+(I'm not sure about build.cmake, yet)
 
 1.  Clone the repository:
 
@@ -70,21 +71,14 @@ The VknConfig project is organized into a clear hierarchy of classes, with some 
     cd VknConfig
     ```
 
-2.  Create a build directory:
-
-    ```bash
-    mkdir VknConfig_build
-    cd VknConfig_build
-    ```
-
-3.  Configure the project with CMake:
+2.  Configure the project with CMake:
 
     ```bash
     cmake .. -DCMAKE_TOOLCHAIN_FILE=path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
     ```
     (Replace `path/to/vcpkg` with the actual path to your vcpkg installation.)
 
-4.  Build the project:
+3.  Build the project:
 
     ```bash
     cmake --build . --config Release
@@ -92,16 +86,15 @@ The VknConfig project is organized into a clear hierarchy of classes, with some 
 
 ### Usage
 
-(Provide a simple code example here to demonstrate how to use the library. This could be a basic Vulkan setup.)
-
 ```cpp
 #include "VknConfig/include/VknConfig.hpp"
 #include "VknConfig/include/VknEngine.hpp"
+#include "VknConfig/include/VknInfos.hpp"
 
 int main() {
     vkn::VknEngine engine{};
     vkn::VknInfos infos{};
     vkn::VknConfig config{&engine, &infos, nullptr};
-    // ... your Vulkan code here ...
+    // ... config setup ...
     return 0;
 }
