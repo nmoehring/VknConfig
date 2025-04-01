@@ -11,14 +11,10 @@ namespace vkn
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    VknSwapchain *VknDevice::addSwapchain(
-        uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
-        uint32_t imageWidth, uint32_t imageHeight)
+    VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
     {
         VknSwapchain &swapchain = addNewVknObject<VknSwapchain, VkSwapchainKHR>(
             swapchainIdx, m_swapchains, m_engine, m_relIdxs, m_absIdxs, m_infos);
-        swapchain.setImageCount(imageCount);
-        swapchain.setImageDimensions(imageWidth, imageHeight);
         return &swapchain;
     }
 
@@ -69,7 +65,7 @@ namespace vkn
         VknResult res{
             vkCreateDevice(
                 *(getListElement(0, m_physicalDevices)->getVkPhysicalDevice()),
-                m_infos->getDeviceCreateInfo(m_relIdxs.get<VkPhysicalDevice>()),
+                m_infos->getDeviceCreateInfo(m_relIdxs.get<VkDevice>()),
                 nullptr,
                 &m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>())),
             "Create device"};

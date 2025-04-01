@@ -25,8 +25,6 @@ namespace vkn
     {
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
-        if (!m_createdRenderpass)
-            throw std::runtime_error("Renderpass not created before adding pipeline.");
         return &addNewVknObject<VknPipeline, VkPipeline>(subpassIdx, m_pipelines,
                                                          m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
@@ -35,9 +33,8 @@ namespace vkn
     {
         if (m_createdRenderpass)
             throw std::runtime_error("Renderpass already created.");
-        this->fillRenderpassCreateInfo();
-        VkRenderPassCreateInfo *createInfo{
-            m_infos->getRenderpassCreateInfo(m_relIdxs)};
+        VkRenderPassCreateInfo *createInfo = m_infos->fillRenderpassCreateInfo(m_relIdxs, m_numAttachments,
+                                                                               m_numSubpasses, m_numSubpassDeps, 0); // Flags not used ever
         VknResult res{vkCreateRenderPass(
                           m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
                           createInfo, VK_NULL_HANDLE,
@@ -54,13 +51,6 @@ namespace vkn
     VknFramebuffer *VknRenderpass::getFramebuffer(uint32_t bufferIdx)
     {
         return getListElement(bufferIdx, m_framebuffers);
-    }
-
-    void VknRenderpass::fillRenderpassCreateInfo(VkRenderPassCreateFlags flags)
-    {
-        // No flags available, no need to manually fill currently.
-        m_infos->fillRenderpassCreateInfo(m_relIdxs, m_numAttachments,
-                                          m_numSubpasses, m_numSubpassDeps, flags);
     }
 
     void VknRenderpass::addSubpassDependency(
@@ -112,7 +102,7 @@ namespace vkn
             throw std::runtime_error("Too many pipelines. Max supported: " + std::to_string(std::numeric_limits<uint32_t>::max()));
         uint32_t startIdx = static_cast<uint32_t>(enginePipelines.size() - m_pipelines.size());
         for (auto &pipeline : m_pipelines)
-            pipeline.fillPipelineCreateInfo();
+            pipeline._fillPipelineCreateInfo();
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
         VknResult res{vkCreateGraphicsPipelines(
@@ -124,7 +114,7 @@ namespace vkn
         m_createdPipelines = true;
     }
 
-    void VknRenderpass::addSubpass(
+    VknPipeline *VknRenderpass::addSubpass(
         uint32_t subpassIdx, bool isCompute, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
@@ -137,6 +127,6 @@ namespace vkn
             m_numAttachRefs[subpassIdx][DEPTH_STENCIL_ATTACHMENT],
             m_numPreserveRefs[subpassIdx], m_relIdxs,
             m_numSubpasses++, pipelineBindPoint, flags);
-        this->addPipeline(subpassIdx);
+        return this->addPipeline(subpassIdx);
     }
 }

@@ -73,12 +73,12 @@ namespace vkn
         // Create
         void fillSwapchainCreateInfo();
         void createSwapchain();
+        void createImages();
         void createImageViews();
 
         // Getters
         VkSwapchainKHR *getVkSwapchain();
         std::vector<VkImageView> *getVkImageViews();
-        void getImages();
 
     private:
         // Engine
@@ -89,8 +89,6 @@ namespace vkn
 
         // Members
         std::list<VknImageView> m_imageViews{};
-        std::vector<VkImage> m_images{};
-        std::vector<VkImageView> m_rawImageViews{};
 
         // Params
         VkExtent2D m_dimensions{VkExtent2D{640, 480}};
@@ -107,12 +105,10 @@ namespace vkn
         std::optional<uint32_t> m_surfaceIdx{};
 
         // State
-        uint32_t m_startAbsIdx{0};
+        uint32_t m_imageStartAbsIdx{0};
         bool m_filledCreateInfo{false};
         bool m_createdSwapchain{false};
         bool m_setSurface{false};
         bool m_setImageCount{false};
-
-        void resizeImageVectors();
     };
 }

@@ -69,6 +69,7 @@ namespace vkn
                     m_data.pop();
         }
 
+    public:
         /** @brief Stores a result in the archive.
          * @param res The result to store. */
         void store(T res)

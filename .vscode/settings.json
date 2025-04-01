@@ -40,6 +40,7 @@
         "objname",
         "OPENXR",
         "pkgs",
+        "ppln",
         "pthreads",
         "RAPIDJSON",
         "reflectd",

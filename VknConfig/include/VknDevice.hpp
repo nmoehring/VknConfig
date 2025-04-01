@@ -58,8 +58,7 @@ namespace vkn
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         // Add
-        VknSwapchain *addSwapchain(uint32_t swapchainIdx, VkSurfaceKHR *surface, uint32_t imageCount,
-                                   uint32_t imageWidth, uint32_t imageHeight);
+        VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
 
         // Config

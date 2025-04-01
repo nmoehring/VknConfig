@@ -34,21 +34,11 @@ namespace vkn
         return getListElement(shaderIdx, m_shaderStages);
     }
 
-    void VknPipeline::fillPipelineCreateInfo(
-        VkPipeline basePipelineHandle, int32_t basePipelineIndex, VkPipelineCreateFlags flags)
+    void VknPipeline::_fillPipelineCreateInfo()
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Pipeline create info already filled.");
         m_infos->fillGfxPipelineCreateInfo(
             m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()),
-            &m_layout, m_basePipelineHandle, m_basePipelineIndex, flags);
-        m_filledCreateInfo = true;
-    }
-
-    void VknPipeline::fillDescriptorSetLayoutCreateInfo(
-        VkDescriptorSetLayoutCreateFlags flags)
-    {
-        m_infos->fillDescriptorSetLayoutCreateInfo(m_bindings, flags);
+            &m_layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
     }
 
     void VknPipeline::addDescriptorSetLayoutBinding(
@@ -63,13 +53,15 @@ namespace vkn
         m_bindings.back().pImmutableSamplers = pImmutableSamplers;
     }
 
-    void VknPipeline::createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo)
+    void VknPipeline::createDescriptorSetLayout()
     {
+        VkDescriptorSetLayoutCreateInfo *createInfo = m_infos->fillDescriptorSetLayoutCreateInfo(
+            m_bindings, m_descriptorSetLayoutCreateFlags);
         m_descriptorSetLayoutIdxs.push_back(m_engine->push_back(VkDescriptorSetLayout{}));
         VknResult res{
             vkCreateDescriptorSetLayout(
                 m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
-                descriptorSetLayoutCreateInfo, nullptr,
+                createInfo, nullptr,
                 &m_engine->getObject<VkDescriptorSetLayout>(m_descriptorSetLayoutIdxs.back())),
             "Create descriptor set layout."};
     }
@@ -83,21 +75,15 @@ namespace vkn
         m_pushConstantRanges.back().size = size;
     }
 
-    void VknPipeline::fillPipelineLayoutCreateInfo(VkPipelineLayoutCreateFlags flags)
-    {
-        m_infos->fillPipelineLayoutCreateInfo(m_relIdxs, m_descriptorSetLayouts,
-                                              m_pushConstantRanges, flags);
-    }
-
     void VknPipeline::createLayout()
     {
         if (m_createdPipelineLayout)
             throw std::runtime_error("Already created the pipeline layout.");
-        VkPipelineLayoutCreateInfo *layoutCreateInfo = m_infos->getPipelineLayoutCreateInfo(
-            m_relIdxs);
+        VkPipelineLayoutCreateInfo *createInfo = m_infos->fillPipelineLayoutCreateInfo(m_relIdxs, m_descriptorSetLayouts,
+                                                                                       m_pushConstantRanges, m_layoutCreateFlags);
         m_pipelineLayoutIdxs.push_back(m_engine->push_back(VkPipelineLayout{}));
         vkCreatePipelineLayout(
-            m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()), layoutCreateInfo,
+            m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()), createInfo,
             nullptr, &m_engine->getObject<VkPipelineLayout>(m_pipelineLayoutIdxs.back()));
         m_createdPipelineLayout = true;
     }

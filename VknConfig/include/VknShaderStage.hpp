@@ -86,9 +86,9 @@ namespace vkn
         VkSpecializationInfo m_specializationInfo{};       /**< Specialization constants for the shader. */
 
         // State
-        bool m_shaderModuleCreated{false}; /**< True if the shader module has been created. */
-        bool m_shaderStageTypeFilled{false};
-        bool m_filenameFilled{false};
-        bool m_specializationInfoFilled{false};
+        bool m_createdShaderModule{false}; /**< True if the shader module has been created. */
+        bool m_setShaderStageType{false};
+        bool m_setFilename{false};
+        bool m_filledSpecializationInfo{false};
     };
 }

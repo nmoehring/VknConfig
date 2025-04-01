@@ -58,11 +58,11 @@ namespace vkn
         else if constexpr (std::is_same_v<T, VkRenderPass>)
             return "renderpass";
         else if constexpr (std::is_same_v<T, VkPipeline>)
-            return "pipeline";
+            return "ppln"; // weird because I want to avoid hash table collisions
         else if constexpr (std::is_same_v<T, VkSwapchainKHR>)
             return "swapchain";
         else if constexpr (std::is_same_v<T, VkImage>)
-            return "image";
+            return "img";
         else if constexpr (std::is_same_v<T, VkFramebuffer>)
             return "framebuffer";
         else if constexpr (std::is_same_v<T, VkImageView>)
@@ -79,6 +79,8 @@ namespace vkn
             return "pipelineCache";
         else if constexpr (std::is_same_v<T, VkSurfaceKHR>)
             return "surface";
+        else if constexpr (std::is_same_v<T, VkQueueFamilyProperties>)
+            return "qFamilyProperties";
         else
             throw std::runtime_error("Invalid object type passed to typeToStr().");
     } // typeToStr<T>()
@@ -121,11 +123,11 @@ namespace vkn
         template <typename T>
         std::vector<T> &getObjectVector()
         {
-            std::string typeName = typeToStr<T>();
-            if (m_objectVectors.find(typeName) == m_objectVectors.end())
+            std::string vkTypeStr = typeToStr<T>();
+            if (m_objectVectors.find(vkTypeStr) == m_objectVectors.end())
 
-                m_objectVectors[typeName] = new std::vector<T>();
-            return *static_cast<std::vector<T> *>(m_objectVectors[typeName]);
+                m_objectVectors[vkTypeStr] = new std::vector<T>();
+            return *static_cast<std::vector<T> *>(m_objectVectors[vkTypeStr]);
         }
 
     private:
@@ -163,6 +165,9 @@ namespace vkn
         template <typename T>
         uint32_t &get()
         {
+            std::string vkTypeStr = typeToStr<T>();
+            if (m_data.count(vkTypeStr) == 0)
+                throw std::runtime_error("Key of type " + vkTypeStr + " not found in VknIdxs. Key may not be set yet.");
             return m_data.at(typeToStr<T>());
         }
 

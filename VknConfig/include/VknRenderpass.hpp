@@ -55,7 +55,10 @@ namespace vkn
         VknRenderpass(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         // Add
-        VknPipeline *addPipeline(uint32_t subpassIdx);
+        VknPipeline *addSubpass(
+            uint32_t subpassIdx, bool isCompute = false,
+            VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+            VkSubpassDescriptionFlags flags = 0);
         VknFramebuffer *addFramebuffer(uint32_t framebufferIdx);
 
         // Config
@@ -78,14 +81,8 @@ namespace vkn
             VkAccessFlags srcAccessMask = 0,
             VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
             VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
-        void addSubpass(
-            uint32_t subpassIdx, bool isCompute = false,
-            VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-            VkSubpassDescriptionFlags flags = 0);
 
         // Create
-        void fillRenderpassCreateInfo(
-            VkRenderPassCreateFlags flags = 0); // No flags currently available, no need to fill.
         void createRenderpass();
         void createPipelines();
 
@@ -93,7 +90,6 @@ namespace vkn
         VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
-        bool getVkRenderPassCreated() { return m_createdRenderpass; }
 
     private:
         // Engine
@@ -103,22 +99,20 @@ namespace vkn
         VknInfos *m_infos{nullptr};
 
         // Members
-        std::list<VknPipeline> m_pipelines;
+        std::list<VknPipeline> m_pipelines{};
         std::list<VknFramebuffer> m_framebuffers{};
         std::vector<std::vector<uint32_t>> m_numAttachRefs{};
         std::vector<uint32_t> m_numPreserveRefs{};
-
-        // Params
-        std::vector<VkPipeline> m_rawPipelines; // index should be subpass index
 
         // State
         bool m_addedDevices{false};
         bool m_createdRenderpass{false};
         bool m_createdPipelines{false};
         bool m_filledColorAttachment{false};
-
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
+
+        VknPipeline *addPipeline(uint32_t subpassIdx);
     };
 }

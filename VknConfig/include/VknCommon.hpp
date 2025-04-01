@@ -22,7 +22,7 @@ namespace vkn
     VknT &addNewVknObject(uint32_t idx, std::list<VknT> &objList, VknEngine *engine,
                           VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
     {
-        if (idx + 1 > objList.size())
+        if (idx > objList.size())
             throw std::runtime_error("List index out of range.");
         VknIdxs newRelIdxs = relIdxs;
         VknIdxs newAbsIdxs = absIdxs;

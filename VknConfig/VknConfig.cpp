@@ -63,7 +63,7 @@ namespace vkn
             layers, layersSize, instanceExtensions, instanceExtensionsSize);
         this->createInstance();
 
-        VknDevice *device = this->addDevice(0);
+        auto *device = this->addDevice(0);
         VknPhysicalDevice *physDev = device->getPhysicalDevice();
         const uint32_t numExtensions{1};
         const char *deviceExtensions[numExtensions] = {
@@ -74,15 +74,19 @@ namespace vkn
         physDev->requestQueueFamilyProperties();
         physDev->selectQueues(false);
         physDev->fillDeviceQueuePrioritiesDefault();
-        physDev->fillQueueCreateInfos();
         device->createDevice();
-        device->addRenderpass(0);
 
-        VknRenderpass *renderpass = device->addRenderpass(0);
+        this->createWindowSurface(0);
+        auto *swapchain = device->addSwapchain(0);
+        swapchain->setSurface(0);
+        swapchain->setImageCount(1);
+        device->fillSwapchainCreateInfos();
+        swapchain->createSwapchain();
+
+        auto *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
-        renderpass->addSubpass(0);
+        VknPipeline *pipeline = renderpass->addSubpass(0);
         renderpass->createRenderpass();
-        VknPipeline *pipeline = renderpass->addPipeline(0);
 
         VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
         VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
@@ -109,19 +113,12 @@ namespace vkn
         auto multisampleStateCreateInfos{infos->fillMultisampleStateCreateInfo()};
         auto depthStencilStateCreateInfos{infos->fillDepthStencilStateCreateInfo()};
         auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
-        pipeline->fillPipelineLayoutCreateInfo();
         pipeline->createLayout();
         /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
             basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
             tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
             multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
         */
-
-        this->createWindowSurface(0);
-        device->addSwapchain(0, &m_engine->getObject<VkSurfaceKHR>(0), 1, 800, 600);
-        device->fillSwapchainCreateInfos();
-        VknSwapchain *swapchain{device->getSwapchain(0)};
-        swapchain->createSwapchain();
 
         // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
         // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};

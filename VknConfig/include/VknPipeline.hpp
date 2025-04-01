@@ -62,7 +62,7 @@ namespace vkn
         VknPipeline() = default;
         VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        // Add
+        // Add Vkn Member
         VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
                                        VknShaderStageType stageType, std::string filename,
                                        VkPipelineShaderStageCreateFlags flags = 0);
@@ -71,20 +71,18 @@ namespace vkn
         void addDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
-        void fillDescriptorSetLayoutCreateInfo(
-            VkDescriptorSetLayoutCreateFlags flags = 0);
         void addPushConstantRange(VkShaderStageFlags stageFlags = 0, uint32_t offset = 0,
                                   uint32_t size = 0);
+        void setBasePipelineHandle(VkPipeline basePipelineHandle) { m_basePipelineHandle = basePipelineHandle; }
+        void setBasePipelineIndex(int32_t basePipelineIndex) { m_basePipelineIndex = basePipelineIndex; }
+        void setCreateFlags(VkPipelineCreateFlags createFlags) { m_createFlags = createFlags; }
+        void setLayoutCreateFlags(VkPipelineLayoutCreateFlags layoutCreateFlags) { m_layoutCreateFlags = layoutCreateFlags; }
 
         // Create
-        void fillPipelineLayoutCreateInfo(
-            VkPipelineLayoutCreateFlags flags = 0);
-        void fillPipelineCreateInfo(
-            VkPipeline basePipelineHandle = VK_NULL_HANDLE,
-            int32_t basePipelineIndex = -1,
-            VkPipelineCreateFlags flags = 0);
+
+        void _fillPipelineCreateInfo();
         void createLayout();
-        void createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo);
+        void createDescriptorSetLayout();
 
         // Get
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
@@ -119,11 +117,13 @@ namespace vkn
         std::vector<VkPushConstantRange> m_pushConstantRanges{};     //=
         std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
         VkPipelineLayout m_layout{};                                 // Takes an array of descriptor set layouts ^
-        VkPipeline m_basePipelineHandle{};
-        int32_t m_basePipelineIndex{};
+        VkPipeline m_basePipelineHandle{VK_NULL_HANDLE};
+        int32_t m_basePipelineIndex{-1};
+        VkPipelineCreateFlags m_createFlags{0};
+        VkPipelineLayoutCreateFlags m_layoutCreateFlags{0};
+        VkDescriptorSetLayoutCreateFlags m_descriptorSetLayoutCreateFlags{0};
 
         // State
-        bool m_filledCreateInfo{false};
         bool m_createdPipeline{false};
         bool m_createdPipelineLayout{false};
         uint32_t m_numShaderStages{0};

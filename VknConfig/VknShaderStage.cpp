@@ -24,14 +24,13 @@ namespace vkn
         default:
             throw std::runtime_error("Shader stage not recognized.");
         }
-        m_shaderStageTypeFilled = true;
+        m_setShaderStageType = true;
     }
 
     void VknShaderStage::setFilename(std::string filename)
     {
         m_filename = filename;
-        this->createShaderModule();
-        m_filenameFilled = true;
+        m_setFilename = true;
     }
 
     void VknShaderStage::setFlags(VkPipelineShaderStageCreateFlags createFlags)
@@ -41,17 +40,19 @@ namespace vkn
 
     void VknShaderStage::setSpecialization(VkSpecializationInfo specializationInfo)
     {
+        if (m_filledSpecializationInfo)
+            throw std::runtime_error("Specialization info already filled.");
         m_specializationInfo = specializationInfo;
-        m_specializationInfoFilled = true;
+        m_filledSpecializationInfo = true;
     }
 
     void VknShaderStage::fillShaderStageCreateInfo()
     {
-        if (!m_filenameFilled || !m_shaderStageTypeFilled)
+        if (!m_setFilename || !m_setShaderStageType)
             throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");
 
         VkSpecializationInfo *specialization = nullptr;
-        if (m_specializationInfoFilled)
+        if (m_filledSpecializationInfo)
             specialization = &m_specializationInfo;
         else
             specialization = VK_NULL_HANDLE;
@@ -61,7 +62,7 @@ namespace vkn
 
     void VknShaderStage::createShaderModule()
     {
-        if (m_shaderModuleCreated)
+        if (m_createdShaderModule)
             throw std::runtime_error("Shader module already created.");
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
         std::vector<char> code{readBinaryFile(shaderDir / m_filename)};
@@ -74,6 +75,6 @@ namespace vkn
                                  shaderModuleCreateInfo, VK_NULL_HANDLE,
                                  &m_engine->getObject<VkShaderModule>(m_absIdxs.get<VkShaderModule>())),
             "Create shader module."};
-        m_shaderModuleCreated = true;
+        m_createdShaderModule = true;
     }
 }

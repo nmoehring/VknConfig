@@ -62,7 +62,6 @@ namespace vkn
         VknResult enumeratePhysicalDevices();
         VknResult selectPhysicalDevice();
         VkPhysicalDeviceLimits *getLimits();
-        void queryProperties();
         void requestQueueFamilyProperties();
         void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities);
         void fillDeviceQueuePrioritiesDefault();
