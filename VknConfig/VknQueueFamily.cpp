@@ -12,27 +12,32 @@ namespace vkn
 
     bool VknQueueFamily::supportsGraphics()
     {
-        return ((m_properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) > 0);
+        VkQueueFamilyProperties *props = &m_engine->getObject<VkQueueFamilyProperties>(m_absIdxs.get<VkQueueFamilyProperties>());
+        return ((props->queueFlags & VK_QUEUE_GRAPHICS_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsCompute()
     {
-        return ((m_properties.queueFlags & VK_QUEUE_COMPUTE_BIT) > 0);
+        VkQueueFamilyProperties *props = &m_engine->getObject<VkQueueFamilyProperties>(m_absIdxs.get<VkQueueFamilyProperties>());
+        return ((props->queueFlags & VK_QUEUE_COMPUTE_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsTransfer()
     {
-        return ((m_properties.queueFlags & VK_QUEUE_TRANSFER_BIT) > 0);
+        VkQueueFamilyProperties *props = &m_engine->getObject<VkQueueFamilyProperties>(m_absIdxs.get<VkQueueFamilyProperties>());
+        return ((props->queueFlags & VK_QUEUE_TRANSFER_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsSparseBinding()
     {
-        return ((m_properties.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) > 0);
+        VkQueueFamilyProperties *props = &m_engine->getObject<VkQueueFamilyProperties>(m_absIdxs.get<VkQueueFamilyProperties>());
+        return ((props->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsMemoryProtection()
     {
-        return ((m_properties.queueFlags & VK_QUEUE_PROTECTED_BIT) > 0);
+        VkQueueFamilyProperties *props = &m_engine->getObject<VkQueueFamilyProperties>(m_absIdxs.get<VkQueueFamilyProperties>());
+        return ((props->queueFlags & VK_QUEUE_PROTECTED_BIT) > 0);
     }
 
     int VknQueueFamily::getNumSelected()
@@ -50,6 +55,7 @@ namespace vkn
 
     uint32_t VknQueueFamily::getNumAvailable()
     {
-        return m_properties.queueCount;
+        VkQueueFamilyProperties *props = &m_engine->getObject<VkQueueFamilyProperties>(m_absIdxs.get<VkQueueFamilyProperties>());
+        return props->queueCount;
     }
 }

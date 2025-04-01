@@ -54,10 +54,6 @@ namespace vkn
 
         // Config
         void setNumSelected(int num);
-        void setQueueFamilyProperties(VkQueueFamilyProperties properties)
-        {
-            m_properties = properties;
-        }
 
         // Getters
         int getNumSelected();
@@ -74,9 +70,6 @@ namespace vkn
         VknIdxs m_relIdxs{};
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
-
-        // Members
-        VkQueueFamilyProperties m_properties{};
 
         // State
         int m_numSelected{0};

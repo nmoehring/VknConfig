@@ -58,29 +58,35 @@ namespace vkn
     class VknPipeline
     {
     public:
+        // Overloads
         VknPipeline() = default;
         VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
+        // Add
+        VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
+                                       VknShaderStageType stageType, std::string filename,
+                                       VkPipelineShaderStageCreateFlags flags = 0);
+
+        // Config
         void addDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
         void fillDescriptorSetLayoutCreateInfo(
             VkDescriptorSetLayoutCreateFlags flags = 0);
-        void createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo);
         void addPushConstantRange(VkShaderStageFlags stageFlags = 0, uint32_t offset = 0,
                                   uint32_t size = 0);
+
+        // Create
         void fillPipelineLayoutCreateInfo(
             VkPipelineLayoutCreateFlags flags = 0);
-        void createLayout();
-
         void fillPipelineCreateInfo(
-            VkPipeline basePipelineHandle = VK_NULL_HANDLE, int32_t basePipelineIndex = -1,
+            VkPipeline basePipelineHandle = VK_NULL_HANDLE,
+            int32_t basePipelineIndex = -1,
             VkPipelineCreateFlags flags = 0);
+        void createLayout();
+        void createDescriptorSetLayout(VkDescriptorSetLayoutCreateInfo *descriptorSetLayoutCreateInfo);
 
-        VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
-                                       VknShaderStageType stageType, std::string filename,
-                                       VkPipelineShaderStageCreateFlags flags = 0);
-
+        // Get
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs.get<VkPipeline>()); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
@@ -96,7 +102,6 @@ namespace vkn
         VknIdxs m_absIdxs{};
         VknInfos *m_infos{nullptr};
 
-        // TODO: Implement with CC Valueable, if it doesn't initialize the data
         //  Members
         std::optional<VknVertexInputState> m_vertexInputState = std::nullopt;
         std::optional<VknInputAssemblyState> m_inputAssemblyState = std::nullopt;

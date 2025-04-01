@@ -56,12 +56,13 @@ namespace vkn
             m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkPhysicalDevice>()),
             &propertyCount,
             engineQueues->data() + m_startAbsIdx);
-        for (int i = 0; i < propertyCount; ++i)
-            getListElement(i, m_queues)->setQueueFamilyProperties(queues[i]);
-        for (auto &queue : *engineQueues)
+        for (uint32_t i = 0; i < propertyCount; ++i) // Exception to using AddNewVknObj()
         {
-            m_queues.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos);
-            m_queues.back().setQueueFamilyProperties(queue);
+            VknIdxs absIdxs = m_absIdxs;
+            VknIdxs relIdxs = m_relIdxs;
+            absIdxs.add<VkQueueFamilyProperties>(m_startAbsIdx + i);
+            relIdxs.add<VkQueueFamilyProperties>(i);
+            m_queues.emplace_back(m_engine, relIdxs, absIdxs, m_infos);
         }
         m_requestedQueues = true;
     }
