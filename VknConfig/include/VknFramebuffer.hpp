@@ -26,6 +26,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -44,6 +48,7 @@
 
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
+#include "VknFramebuffer.hpp"
 
 namespace vkn
 {
@@ -66,10 +71,11 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
-        VknIdxs m_relIdxs{};
-        VknIdxs m_absIdxs{};
-        VknInfos *m_infos{nullptr};
+        VknEngine *m_engine;
+
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos;
 
         // Params
         std::vector<VkImageView> *m_attachments{};

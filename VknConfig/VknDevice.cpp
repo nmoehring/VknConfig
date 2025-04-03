@@ -1,5 +1,4 @@
 #include "include/VknDevice.hpp"
-#include "include/VknCommon.hpp"
 
 namespace vkn
 {

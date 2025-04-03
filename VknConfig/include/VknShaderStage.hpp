@@ -26,6 +26,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -40,8 +44,11 @@
 
 #pragma once
 
+#include <filesystem>
+
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
+#include "VknCommon.hpp"
 
 namespace vkn
 {
@@ -70,12 +77,19 @@ namespace vkn
         /** @brief Creates the VkShaderModule object from the loaded shader code.*/
         void createShaderModule();
 
+        // Get
+        bool isShaderModuleCreated()
+        {
+            return m_createdShaderModule;
+        }
+
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
-        VknIdxs m_relIdxs{};
-        VknIdxs m_absIdxs{};
-        VknInfos *m_infos{nullptr};
+        VknEngine *m_engine;
+
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos;
 
         // Params
         std::vector<char> m_code; /**< Stores the shader's SPIR-V bytecode. */

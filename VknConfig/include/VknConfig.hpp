@@ -14,24 +14,28 @@
  *         |
  *         +-- [VknPhysicalDevice]
  *         |   |
- *         |   +-- [VknQueueFamily] ^ / \
+ *         |   +-- [VknQueueFamily]
  *         |
  *         +-- [VknSwapchain]
  *         |   |
- *         |   +-- [VknImageView] ^ / \
+ *         |   +-- [VknImageView]
  *         |
  *         +-- [VknRenderpass]
  *             |
- *             +-- [VknFramebuffer] ^ / \
+ *             +-- [VknFramebuffer]
  *             |
  *             +-- [VknPipeline]
  *                 |
- *                 +-- [VknVertexInputState] ^ / \
- *                 +-- [VknInputAssemblyState] ^ / \
- *                 +-- [VknMultisampleState] ^ / \
- *                 +-- [VknRasterizationState] ^ / \
- *                 +-- [VknShaderStage] ^ / \
- *                 +-- [VknViewportState] ^ / \
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
+ *                 +-- [VknVertexInputState]
+ *                 +-- [VknInputAssemblyState]
+ *                 +-- [VknMultisampleState]
+ *                 +-- [VknRasterizationState]
+ *                 +-- [VknShaderStage]
+ *                 +-- [VknViewportState]
  *
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
@@ -54,6 +58,7 @@
 #include <GLFW/glfw3native.h>
 
 #include "VknDevice.hpp"
+#include "VknCommon.hpp"
 
 namespace vkn
 {
@@ -100,10 +105,11 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
-        VknIdxs m_relIdxs{};
-        VknIdxs m_absIdxs{};
-        VknInfos *m_infos{nullptr};
+        VknEngine *m_engine;
+
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos;
 
         // Params
         std::vector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change

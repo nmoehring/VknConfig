@@ -1,10 +1,9 @@
-#include <filesystem>
-
 #include "include/VknShaderStage.hpp"
-#include "include/VknCommon.hpp"
 
 namespace vkn
 {
+    static VknShaderStage *s_editable = nullptr;
+
     VknShaderStage::VknShaderStage(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}

@@ -27,6 +27,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -42,9 +46,11 @@
 #pragma once
 
 #include <list>
+#include <iostream>
 
 #include <vulkan/vulkan.h>
 #include "VknQueueFamily.hpp"
+#include "VknCommon.hpp"
 
 namespace vkn
 {
@@ -74,10 +80,11 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr}; // external ptr
+        VknEngine *m_engine;
+        ; // external ptr
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
-        VknInfos *m_infos{nullptr}; // external ptr
+        VknInfos *m_infos; // external ptr
 
         // Members
         static std::vector<VkPhysicalDeviceProperties> s_properties;

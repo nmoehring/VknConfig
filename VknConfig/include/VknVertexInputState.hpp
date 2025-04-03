@@ -26,6 +26,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \ <<=== YOU ARE HERE
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -62,10 +66,11 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
+        VknEngine *m_engine;
+
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
-        VknInfos *m_infos{nullptr};
+        VknInfos *m_infos;
 
         // State
         uint32_t m_numBindings{0};

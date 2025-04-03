@@ -1,5 +1,4 @@
 #include "include/VknRenderpass.hpp"
-#include "include/VknCommon.hpp"
 
 namespace vkn
 {
@@ -97,6 +96,10 @@ namespace vkn
             throw std::runtime_error("Renderpass not created before creating pipelines.");
         if (m_createdPipelines)
             throw std::runtime_error("Pipelines already created.");
+        for (auto &pipeline : m_pipelines)
+            for (auto &shaderStage : *pipeline.getShaderStages())
+                if (shaderStage.isShaderModuleCreated())
+                    throw std::runtime_error("Shader module in shader stage not created before pipelines created.");
         std::vector<VkPipeline> enginePipelines = m_engine->getObjectVector<VkPipeline>();
         if (m_pipelines.size() - m_pipelines.size() > std::numeric_limits<uint32_t>::max())
             throw std::runtime_error("Too many pipelines. Max supported: " + std::to_string(std::numeric_limits<uint32_t>::max()));
@@ -114,7 +117,7 @@ namespace vkn
         m_createdPipelines = true;
     }
 
-    VknPipeline *VknRenderpass::addSubpass(
+    void VknRenderpass::addSubpass(
         uint32_t subpassIdx, bool isCompute, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
@@ -127,6 +130,6 @@ namespace vkn
             m_numAttachRefs[subpassIdx][DEPTH_STENCIL_ATTACHMENT],
             m_numPreserveRefs[subpassIdx], m_relIdxs,
             m_numSubpasses++, pipelineBindPoint, flags);
-        return this->addPipeline(subpassIdx);
+        this->addPipeline(subpassIdx);
     }
 }

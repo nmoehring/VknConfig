@@ -26,6 +26,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -43,6 +47,9 @@
 #include <vector>
 #include <iostream>
 #include <cstdint>
+#include <stdexcept>
+#include <limits>
+#include <algorithm>
 
 #include <vulkan/vulkan.h>
 #include "VknEngine.hpp"
@@ -325,7 +332,7 @@ namespace vkn
             VkPipelineCreateFlags flags = 0);
         VkPipelineLayoutCreateInfo *fillPipelineLayoutCreateInfo(
             VknIdxs &relIdxs,
-            std::vector<VkDescriptorSetLayout> setLayouts = std::vector<VkDescriptorSetLayout>{},
+            std::span<VkDescriptorSetLayout> setLayouts = std::span<VkDescriptorSetLayout>{},
             std::vector<VkPushConstantRange> pushConstantRanges = std::vector<VkPushConstantRange>{},
             VkPipelineLayoutCreateFlags flags = 0);
         VkPipelineCacheCreateInfo *fillPipelineCacheCreateInfo(

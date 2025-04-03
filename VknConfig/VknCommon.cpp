@@ -1,7 +1,5 @@
 #include "include/VknCommon.hpp"
 
-#include <fstream>
-
 namespace vkn
 {
     std::vector<char> readBinaryFile(std::filesystem::path filename)

@@ -1,5 +1,3 @@
-#include <string>
-
 #include "include/VknResult.hpp"
 
 namespace vkn

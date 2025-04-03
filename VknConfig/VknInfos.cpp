@@ -1,7 +1,3 @@
-#include <stdexcept>
-#include <limits>
-#include <algorithm>
-
 #include "include/VknInfos.hpp"
 namespace vkn
 {
@@ -451,7 +447,8 @@ namespace vkn
     }
 
     VkDescriptorSetLayoutCreateInfo *VknInfos::fillDescriptorSetLayoutCreateInfo(
-        std::vector<VkDescriptorSetLayoutBinding> bindings, VkDescriptorSetLayoutCreateFlags flags)
+        std::vector<VkDescriptorSetLayoutBinding> bindings,
+        VkDescriptorSetLayoutCreateFlags flags)
     {
         m_descriptorSetLayoutCreateInfos.push_back(VkDescriptorSetLayoutCreateInfo{});
         VkDescriptorSetLayoutCreateInfo &info = m_descriptorSetLayoutCreateInfos.back();
@@ -467,7 +464,7 @@ namespace vkn
     }
 
     VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
-        VknIdxs &relIdxs, std::vector<VkDescriptorSetLayout> setLayouts,
+        VknIdxs &relIdxs, std::span<VkDescriptorSetLayout> setLayouts,
         std::vector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {

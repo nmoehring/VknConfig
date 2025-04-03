@@ -1,11 +1,18 @@
-#include <vector>
+#pragma once
+
 #include <filesystem>
 #include <list>
+#include <fstream> //todo: some of my includes are only used in the cpp, so it may not be obvious, maybe comment as such
+#include <string>
+
 #include "VknEngine.hpp"
-#include "VknInfos.hpp"
 
 namespace vkn
 {
+    // Forward declarations to avoid circular dependencies
+    class VknIdxs;
+    class VknInfos;
+
     std::vector<char> readBinaryFile(std::filesystem::path filename);
 
     template <typename T>

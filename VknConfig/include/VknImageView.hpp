@@ -27,6 +27,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -69,10 +73,10 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
-        VknIdxs m_relIdxs{};
-        VknIdxs m_absIdxs{};
-        VknInfos *m_infos{nullptr};
+        VknEngine *m_engine;
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos;
 
         // Params
         VkImageViewCreateFlags m_createFlags{0};

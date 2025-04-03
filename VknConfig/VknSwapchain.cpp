@@ -1,5 +1,4 @@
 #include "include/VknSwapchain.hpp"
-#include "include/VknCommon.hpp"
 
 namespace vkn
 {

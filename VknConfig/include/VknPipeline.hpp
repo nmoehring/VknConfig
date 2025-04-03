@@ -27,6 +27,10 @@
  *             |
  *             +-- [VknPipeline]  <<=== YOU ARE HERE
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -45,13 +49,17 @@
 
 #include <vulkan/vulkan.h>
 #include <list>
+#include <filesystem>
+#include <iterator>
 
+#include "VknCommon.hpp"
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
 #include "VknMultisampleState.hpp"
 #include "VknViewportState.hpp"
 #include "VknRasterizationState.hpp"
 #include "VknShaderStage.hpp"
+#include "VknPipelineLayout.hpp"
 
 namespace vkn
 {
@@ -66,26 +74,24 @@ namespace vkn
         VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
                                        VknShaderStageType stageType, std::string filename,
                                        VkPipelineShaderStageCreateFlags flags = 0);
+        VknPipelineLayout *getPipelineLayout(uint32_t layoutIdx);
 
         // Config
         void addDescriptorSetLayoutBinding(
             uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
             VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
-        void addPushConstantRange(VkShaderStageFlags stageFlags = 0, uint32_t offset = 0,
-                                  uint32_t size = 0);
         void setBasePipelineHandle(VkPipeline basePipelineHandle) { m_basePipelineHandle = basePipelineHandle; }
         void setBasePipelineIndex(int32_t basePipelineIndex) { m_basePipelineIndex = basePipelineIndex; }
         void setCreateFlags(VkPipelineCreateFlags createFlags) { m_createFlags = createFlags; }
         void setLayoutCreateFlags(VkPipelineLayoutCreateFlags layoutCreateFlags) { m_layoutCreateFlags = layoutCreateFlags; }
 
         // Create
-
         void _fillPipelineCreateInfo();
-        void createLayout();
-        void createDescriptorSetLayout();
 
         // Get
+        VknPipelineLayout *getLayout();
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
+        std::list<VknShaderStage> *getShaderStages() { return &m_shaderStages; }
         VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs.get<VkPipeline>()); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
@@ -95,12 +101,14 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
-        VknIdxs m_relIdxs{};
-        VknIdxs m_absIdxs{};
-        VknInfos *m_infos{nullptr};
+        VknEngine *m_engine;
+
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos;
 
         //  Members
+        std::list<VknPipelineLayout> m_layouts{};
         std::optional<VknVertexInputState> m_vertexInputState = std::nullopt;
         std::optional<VknInputAssemblyState> m_inputAssemblyState = std::nullopt;
         // std::optional<VknTessellationState> m_tessellationState = std::nullopt;
@@ -113,10 +121,6 @@ namespace vkn
         std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
 
         // Params
-        std::vector<VkDescriptorSetLayoutBinding> m_bindings{};      //+
-        std::vector<VkPushConstantRange> m_pushConstantRanges{};     //=
-        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
-        VkPipelineLayout m_layout{};                                 // Takes an array of descriptor set layouts ^
         VkPipeline m_basePipelineHandle{VK_NULL_HANDLE};
         int32_t m_basePipelineIndex{-1};
         VkPipelineCreateFlags m_createFlags{0};
@@ -125,9 +129,8 @@ namespace vkn
 
         // State
         bool m_createdPipeline{false};
-        bool m_createdPipelineLayout{false};
-        uint32_t m_numShaderStages{0};
-        std::vector<uint32_t> m_descriptorSetLayoutIdxs{};
-        std::vector<uint32_t> m_pipelineLayoutIdxs{};
+        static VknPipeline *s_editable;
+
+        void testEditability();
     };
 }

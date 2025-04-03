@@ -1,5 +1,4 @@
 #include "include/VknConfig.hpp"
-#include "include/VknCommon.hpp"
 
 namespace vkn
 {
@@ -48,6 +47,9 @@ namespace vkn
     {
         if (m_createdInstance)
             throw std::runtime_error("Can't create a test instance after an instance is already created.");
+
+        // Shallow Config members
+        this->createWindowSurface(0);
         std::string appName{"NoInputsTest"};
         std::string engineName{"MinVknConfig"};
         this->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
@@ -63,38 +65,46 @@ namespace vkn
             layers, layersSize, instanceExtensions, instanceExtensionsSize);
         this->createInstance();
 
+        // Config=>Devices
         auto *device = this->addDevice(0);
         VknPhysicalDevice *physDev = device->getPhysicalDevice();
         const uint32_t numExtensions{1};
         const char *deviceExtensions[numExtensions] = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME};
         device->addExtensions(deviceExtensions, numExtensions);
-
+        // Config->Device->PhysicalDevice
         physDev->selectPhysicalDevice();
         physDev->requestQueueFamilyProperties();
         physDev->selectQueues(false);
         physDev->fillDeviceQueuePrioritiesDefault();
         device->createDevice();
 
-        this->createWindowSurface(0);
+        // Config=>Device=>Swapchain
         auto *swapchain = device->addSwapchain(0);
         swapchain->setSurface(0);
         swapchain->setImageCount(1);
         device->fillSwapchainCreateInfos();
         swapchain->createSwapchain();
 
+        // Config=>Device=>Renderpass
         auto *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
-        VknPipeline *pipeline = renderpass->addSubpass(0);
+        renderpass->addSubpass(0);
         renderpass->createRenderpass();
 
+        // Config=>Device=>Pipeline (subpass creates a pipeline)
+        auto *pipeline = renderpass->getPipeline(0);
+
+        // Config=>Device=>Pipeline=>ShaderStage
         VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
-        VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+        vertShader->createShaderModule();
         vertShader->fillShaderStageCreateInfo();
+        VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+        fragShader->createShaderModule();
         fragShader->fillShaderStageCreateInfo();
+
+        // Config=>Device=>Pipeline=>[Various Pipeline States]
         vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
-        // vertexInputState->fillVertexAttributeDescription();
-        // vertexInputState->fillVertexBindingDescription();
         vertexInputState->fillVertexInputStateCreateInfo();
         vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
         inputAssemblyState->fillInputAssemblyStateCreateInfo();
@@ -106,22 +116,10 @@ namespace vkn
         viewportState->addViewport();
         viewportState->addScissor();
         viewportState->fillViewportStateCreateInfo();
-        /*auto inputAssemblyStateCreateInfos{infos->fillInputAssemblyStateCreateInfo()};
-        auto tessellationStateCreateInfos{infos->fillTessellationStateCreateInfo()};
-        auto viewportStateCreateInfos{infos->fillViewportStateCreateInfo()};
-        auto rasterizationStateCreateInfos{infos->fillRasterizationStateCreateInfo()};
-        auto multisampleStateCreateInfos{infos->fillMultisampleStateCreateInfo()};
-        auto depthStencilStateCreateInfos{infos->fillDepthStencilStateCreateInfo()};
-        auto colorBlendStateCreateInfos{infos->fillColorBlendStateCreateInfo()}; */
-        pipeline->createLayout();
-        /*, layoutCreateInfo, renderpass, subpass, basepipelinehandle,
-            basepipelineidx, flags, vertexInputStateCreateInfo, inputAssemblyStateCreateInfo,
-            tessellationStateCreateInfo, viewportStateCreateInfo, rasterizationStateCreateInfo,
-            multisampleStateCreateInfo, depthStencilStateCreateInfo, colorBlendStateCreateInfo);
-        */
 
-        // auto layoutCreateInfo{infos->fillPipelineLayoutCreateInfo()};
-        // auto cacheCreateInfos{infos->fillPipelineCacheCreateInfo()};
+        // Config=>Device=>Pipeline=>PipelineLayout
+        auto *layout = pipeline->getLayout();
+        layout->createPipelineLayout();
 
         renderpass->createPipelines();
     }

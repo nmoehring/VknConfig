@@ -26,6 +26,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -40,11 +44,13 @@
 
 #pragma once
 
+#include <string>
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <unordered_map>
 #include <optional>
-#include "VknResult.hpp"
+#include <span> // For std::span
+#include <stdexcept>
 
 namespace vkn
 {
@@ -128,6 +134,15 @@ namespace vkn
 
                 m_objectVectors[vkTypeStr] = new std::vector<T>();
             return *static_cast<std::vector<T> *>(m_objectVectors[vkTypeStr]);
+        }
+
+        template <typename T>
+        std::span<T> getObjectVectorSlice(uint32_t startIdx, uint32_t length)
+        {
+            std::vector<T> &vec = this->getObjectVector<T>();
+            if (startIdx + length > vec.size())
+                throw std::out_of_range("Slice range exceeds vector size.");
+            return std::span<T>(vec.data() + startIdx, length);
         }
 
     private:

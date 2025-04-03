@@ -26,6 +26,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -43,6 +47,9 @@
 #include <string>
 #include <format>
 #include <queue>
+#include <string>
+#include <stdexcept> // Ensure this is included for std::runtime_error
+#include <format>    // Ensure this is included for std::format
 
 #include <vulkan/vulkan.h>
 

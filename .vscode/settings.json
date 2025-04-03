@@ -8,6 +8,7 @@
         "cmakelists",
         "DFONT",
         "DTARGET",
+        "Editability",
         "endforeach",
         "endfunction",
         "enginecore",

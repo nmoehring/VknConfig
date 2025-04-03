@@ -1,7 +1,3 @@
-#include <stdexcept>
-
-#include <vulkan/vulkan.h>
-
 #include "include/VknQueueFamily.hpp"
 
 namespace vkn

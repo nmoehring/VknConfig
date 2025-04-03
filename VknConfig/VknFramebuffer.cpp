@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include "include/VknFramebuffer.hpp"
 
 namespace vkn

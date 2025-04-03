@@ -27,6 +27,10 @@
  *             |
  *             +-- [VknPipeline]
  *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout]
+ *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
  *                 +-- [VknMultisampleState] ^ / \
@@ -47,6 +51,7 @@
 #include "VknRenderpass.hpp"
 #include "VknPhysicalDevice.hpp"
 #include "VknSwapchain.hpp"
+#include "VknCommon.hpp"
 
 namespace vkn
 {
@@ -76,10 +81,11 @@ namespace vkn
 
     private:
         // Engine
-        VknEngine *m_engine{nullptr};
-        VknIdxs m_relIdxs{};
-        VknIdxs m_absIdxs{};
-        VknInfos *m_infos{nullptr};
+        VknEngine *m_engine;
+
+        VknIdxs m_relIdxs;
+        VknIdxs m_absIdxs;
+        VknInfos *m_infos;
 
         // Members
         std::list<VknRenderpass> m_renderpasses{}; // List, because elements don't need to be together, refs could be invalidated
