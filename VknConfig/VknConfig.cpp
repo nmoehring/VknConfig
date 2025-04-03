@@ -49,7 +49,6 @@ namespace vkn
             throw std::runtime_error("Can't create a test instance after an instance is already created.");
 
         // Shallow Config members
-        this->createWindowSurface(0);
         std::string appName{"NoInputsTest"};
         std::string engineName{"MinVknConfig"};
         this->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
@@ -64,6 +63,7 @@ namespace vkn
         this->fillInstanceCreateInfo(
             layers, layersSize, instanceExtensions, instanceExtensionsSize);
         this->createInstance();
+        this->createWindowSurface(0);
 
         // Config=>Devices
         auto *device = this->addDevice(0);

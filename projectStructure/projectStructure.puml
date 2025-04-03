@@ -1,40 +1,27 @@
 @startuml
-class VknConfig {
+'left to right direction
+class VknConfig {}
+class VknDevice {}
+class VknPhysicalDevice {}
+class VknQueueFamily {}
+class VknSwapchain {}
+class VknImageView {}
+class VknRenderpass {}
+class VknFramebuffer {}
+class VknPipeline {}
+package "Pipeline States" {
+class VknVertexInputState {}
+class VknInputAssemblyState {}
+class VknMultisampleState {}
+class VknRasterizationState {}
+class VknShaderStage {}
+class VknViewportState {}
 }
-class VknDevice {
-}
-class VknPhysicalDevice {
-}
-class VknQueueFamily {
-}
-class VknSwapchain {
-}
-class VknImageView {
-}
-class VknRenderpass {
-}
-class VknFramebuffer {
-}
-class VknPipeline {
-}
-class VknVertexInputState {
-}
-class VknInputAssemblyState {
-}
-class VknMultisampleState {
-}
-class VknRasterizationState {
-}
-class VknShaderStage {
-}
-class VknViewportState {
-}
-class VknEngine {
-}
-class VknInfos {
-}
-class VknResult {
-}
+class VknEngine {}
+class VknInfos {}
+class VknResult {}
+class VknDescriptorSetLayout{}
+class VknPipelineLayout{}
 
 VknConfig -- VknDevice
 VknDevice -- VknPhysicalDevice
@@ -44,10 +31,13 @@ VknSwapchain -- VknImageView
 VknDevice -- VknRenderpass
 VknRenderpass -- VknPipeline
 VknRenderpass -- VknFramebuffer
-VknPipeline -- VknVertexInputState
-VknPipeline -- VknInputAssemblyState
-VknPipeline -- VknMultisampleState
-VknPipeline -- VknRasterizationState
-VknPipeline -- VknShaderStage
-VknPipeline -- VknViewportState
+VknPipeline -- "Pipeline States"
+'VknPipeline -- VknVertexInputState
+'VknPipeline -- VknInputAssemblyState
+'VknPipeline -- VknMultisampleState
+'VknPipeline -- VknRasterizationState
+'VknPipeline -- VknShaderStage
+'VknPipeline -- VknViewportState
+VknPipeline -- VknPipelineLayout
+VknPipelineLayout -- VknDescriptorSetLayout
 @enduml

@@ -98,7 +98,7 @@ namespace vkn
             throw std::runtime_error("Pipelines already created.");
         for (auto &pipeline : m_pipelines)
             for (auto &shaderStage : *pipeline.getShaderStages())
-                if (shaderStage.isShaderModuleCreated())
+                if (!shaderStage.isShaderModuleCreated())
                     throw std::runtime_error("Shader module in shader stage not created before pipelines created.");
         std::vector<VkPipeline> enginePipelines = m_engine->getObjectVector<VkPipeline>();
         if (m_pipelines.size() - m_pipelines.size() > std::numeric_limits<uint32_t>::max())
