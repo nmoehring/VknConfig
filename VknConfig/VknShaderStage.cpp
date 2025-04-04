@@ -49,14 +49,15 @@ namespace vkn
     {
         if (!m_setFilename || !m_setShaderStageType)
             throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");
-
+        if (!m_createdShaderModule)
+            throw std::runtime_error("Shader module not created before shader stage creation.");
         VkSpecializationInfo *specialization = nullptr;
         if (m_filledSpecializationInfo)
             specialization = &m_specializationInfo;
         else
             specialization = VK_NULL_HANDLE;
-        m_infos->fillShaderStageCreateInfo(m_relIdxs, &m_shaderModule, &m_shaderStageFlagBit,
-                                           &m_createFlags, specialization);
+        m_infos->fillShaderStageCreateInfo(m_relIdxs, this->getShaderModule(),
+                                           &m_shaderStageFlagBit, &m_createFlags, specialization);
     }
 
     void VknShaderStage::createShaderModule()
@@ -75,5 +76,15 @@ namespace vkn
                                  &m_engine->getObject<VkShaderModule>(m_absIdxs.get<VkShaderModule>())),
             "Create shader module."};
         m_createdShaderModule = true;
+    }
+
+    bool VknShaderStage::isShaderModuleCreated()
+    {
+        return m_createdShaderModule;
+    }
+
+    VkShaderModule *VknShaderStage::getShaderModule()
+    {
+        return &m_engine->getObject<VkShaderModule>(m_absIdxs.get<VkShaderModule>());
     }
 }

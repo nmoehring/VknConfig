@@ -78,10 +78,8 @@ namespace vkn
         void createShaderModule();
 
         // Get
-        bool isShaderModuleCreated()
-        {
-            return m_createdShaderModule;
-        }
+        bool isShaderModuleCreated();
+        VkShaderModule *getShaderModule();
 
     private:
         // Engine
@@ -96,7 +94,6 @@ namespace vkn
         VkShaderStageFlagBits m_shaderStageFlagBit{};
         std::string m_filename{};
         VkPipelineShaderStageCreateFlags m_createFlags{0}; /**< Flags for shader stage creation */
-        VkShaderModule m_shaderModule{VK_NULL_HANDLE};     /**< Module created from m_code, passed to createInfo */
         VkSpecializationInfo m_specializationInfo{};       /**< Specialization constants for the shader. */
 
         // State

@@ -100,10 +100,9 @@ namespace vkn
             for (auto &shaderStage : *pipeline.getShaderStages())
                 if (!shaderStage.isShaderModuleCreated())
                     throw std::runtime_error("Shader module in shader stage not created before pipelines created.");
-        std::vector<VkPipeline> enginePipelines = m_engine->getObjectVector<VkPipeline>();
-        if (m_pipelines.size() - m_pipelines.size() > std::numeric_limits<uint32_t>::max())
-            throw std::runtime_error("Too many pipelines. Max supported: " + std::to_string(std::numeric_limits<uint32_t>::max()));
-        uint32_t startIdx = static_cast<uint32_t>(enginePipelines.size() - m_pipelines.size());
+        std::span<VkPipeline> pipelines{
+            m_engine->getObjectVectorSlice<VkPipeline>(
+                m_pipelineStartIdx, m_pipelines.size())};
         for (auto &pipeline : m_pipelines)
             pipeline._fillPipelineCreateInfo();
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
