@@ -24,6 +24,9 @@ namespace vkn
     {
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
+
+        if (m_pipelineStartIdx == 3123123123)
+            m_pipelineStartIdx = m_engine->getVectorSize<VkPipeline>();
         return &addNewVknObject<VknPipeline, VkPipeline>(subpassIdx, m_pipelines,
                                                          m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
@@ -35,9 +38,9 @@ namespace vkn
         VkRenderPassCreateInfo *createInfo = m_infos->fillRenderpassCreateInfo(m_relIdxs, m_numAttachments,
                                                                                m_numSubpasses, m_numSubpassDeps, 0); // Flags not used ever
         VknResult res{vkCreateRenderPass(
-                          m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
+                          m_engine->getObject<VkDevice>(m_absIdxs),
                           createInfo, VK_NULL_HANDLE,
-                          &m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>())),
+                          &m_engine->getObject<VkRenderPass>(m_absIdxs)),
                       "Create renderpass."};
         m_createdRenderpass = true;
     }
@@ -100,18 +103,19 @@ namespace vkn
             for (auto &shaderStage : *pipeline.getShaderStages())
                 if (!shaderStage.isShaderModuleCreated())
                     throw std::runtime_error("Shader module in shader stage not created before pipelines created.");
+
         std::span<VkPipeline> pipelines{
-            m_engine->getObjectVectorSlice<VkPipeline>(
+            m_engine->getVectorSlice<VkPipeline>(
                 m_pipelineStartIdx, m_pipelines.size())};
         for (auto &pipeline : m_pipelines)
             pipeline._fillPipelineCreateInfo();
         std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
         VknResult res{vkCreateGraphicsPipelines(
-                          m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
+                          m_engine->getObject<VkDevice>(m_absIdxs),
                           VK_NULL_HANDLE, m_numSubpasses,
                           pipelineCreateInfos->data(), nullptr,
-                          &enginePipelines.data()[startIdx]),
+                          pipelines.data()),
                       "Create pipeline."};
         m_createdPipelines = true;
     }

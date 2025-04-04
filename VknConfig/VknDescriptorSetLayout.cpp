@@ -33,9 +33,9 @@ namespace vkn
             m_bindings, m_createFlags);
         VknResult res{
             vkCreateDescriptorSetLayout(
-                m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
+                m_engine->getObject<VkDevice>(m_absIdxs),
                 createInfo, nullptr,
-                &m_engine->getObject<VkDescriptorSetLayout>(m_absIdxs.get<VkDescriptorSetLayout>())),
+                &m_engine->getObject<VkDescriptorSetLayout>(m_absIdxs)),
             "Create descriptor set layout."};
     }
 

@@ -37,7 +37,7 @@ namespace vkn
     {
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before retrieving it.");
-        return &m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>());
+        return &m_engine->getObject<VkDevice>(m_absIdxs);
     }
 
     VknRenderpass *VknDevice::getRenderpass(uint32_t renderpassIdx)
@@ -66,7 +66,7 @@ namespace vkn
                 *(getListElement(0, m_physicalDevices)->getVkPhysicalDevice()),
                 m_infos->getDeviceCreateInfo(m_relIdxs.get<VkDevice>()),
                 nullptr,
-                &m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>())),
+                &m_engine->getObject<VkDevice>(m_absIdxs)),
             "Create device"};
         m_createdVkDevice = true;
         return res;

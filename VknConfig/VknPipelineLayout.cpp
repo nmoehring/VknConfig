@@ -11,7 +11,7 @@ namespace vkn
     // Config
     VknDescriptorSetLayout *VknPipelineLayout::addDescriptorSetLayout()
     {
-        m_descriptorSetLayoutStartIdx = m_engine->getObjectVector<VkDescriptorSetLayout>().size();
+        m_descriptorSetLayoutStartIdx = m_engine->getVector<VkDescriptorSetLayout>().size();
         return &addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout>(
             uint32_t{0}, m_descriptorSetLayouts, m_engine,
             m_relIdxs, m_absIdxs, m_infos);
@@ -34,11 +34,11 @@ namespace vkn
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
 
         VkPipelineLayoutCreateInfo *createInfo = m_infos->fillPipelineLayoutCreateInfo(
-            m_relIdxs, m_engine->getObjectVectorSlice<VkDescriptorSetLayout>(m_descriptorSetLayoutStartIdx, m_descriptorSetLayouts.size()),
+            m_relIdxs, m_engine->getVectorSlice<VkDescriptorSetLayout>(m_descriptorSetLayoutStartIdx, m_descriptorSetLayouts.size()),
             m_pushConstantRanges, m_createFlags);
         vkCreatePipelineLayout(
-            m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()), createInfo,
-            nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs.get<VkPipelineLayout>()));
+            m_engine->getObject<VkDevice>(m_absIdxs), createInfo,
+            nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs));
         m_createdPipelineLayout = true;
     }
 }

@@ -71,9 +71,9 @@ namespace vkn
         if (m_createdImageView)
             throw std::runtime_error("Image view already created.");
         VkImageViewCreateInfo *createInfo{m_infos->getImageViewCreateInfo(m_relIdxs)};
-        vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
+        vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs),
                           createInfo, VK_NULL_HANDLE,
-                          &m_engine->getObject<VkImageView>(m_absIdxs.get<VkImageView>()));
+                          &m_engine->getObject<VkImageView>(m_absIdxs));
         m_createdImageView = true;
     }
 }

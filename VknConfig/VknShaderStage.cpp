@@ -71,9 +71,9 @@ namespace vkn
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(m_relIdxs, &m_code);
         VknResult res{
-            vkCreateShaderModule(m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()),
+            vkCreateShaderModule(m_engine->getObject<VkDevice>(m_absIdxs),
                                  shaderModuleCreateInfo, VK_NULL_HANDLE,
-                                 &m_engine->getObject<VkShaderModule>(m_absIdxs.get<VkShaderModule>())),
+                                 this->getShaderModule()),
             "Create shader module."};
         m_createdShaderModule = true;
     }
@@ -85,6 +85,6 @@ namespace vkn
 
     VkShaderModule *VknShaderStage::getShaderModule()
     {
-        return &m_engine->getObject<VkShaderModule>(m_absIdxs.get<VkShaderModule>());
+        return &m_engine->getObject<VkShaderModule>(m_absIdxs);
     }
 }

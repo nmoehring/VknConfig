@@ -28,7 +28,7 @@ namespace vkn
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled frame buffer create info.");
         m_infos->fillFramebufferCreateInfo(
-            m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()),
+            m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs),
             m_attachments, m_width, m_height, m_numLayers, m_createFlags);
         m_filledCreateInfo = true;
     }
@@ -42,8 +42,8 @@ namespace vkn
         VkFramebufferCreateInfo *createInfo =
             m_infos->getFramebufferCreateInfo(m_relIdxs);
         vkCreateFramebuffer(
-            m_engine->getObject<VkDevice>(m_absIdxs.get<VkDevice>()), createInfo, VK_NULL_HANDLE,
-            &m_engine->getObject<VkFramebuffer>(m_absIdxs.get<VkFramebuffer>()));
+            m_engine->getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
+            &m_engine->getObject<VkFramebuffer>(m_absIdxs));
         m_createdFramebuffer = true;
     }
 

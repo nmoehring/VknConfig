@@ -91,78 +91,6 @@ namespace vkn
             throw std::runtime_error("Invalid object type passed to typeToStr().");
     } // typeToStr<T>()
 
-    class VknEngine
-    {
-    public:
-        VknEngine();
-        ~VknEngine();
-
-        // Prevent copying
-        VknEngine(const VknEngine &) = delete;
-        VknEngine &operator=(const VknEngine &) = delete;
-
-        // Prevent moving
-        VknEngine(VknEngine &&) = delete;
-        VknEngine &operator=(VknEngine &&) = delete;
-
-        template <typename T>
-        uint32_t push_back(T val)
-        {
-            std::vector<T> &vec{this->getObjectVector<T>()};
-            uint32_t idx = vec.size();
-            this->getObjectVector<T>().push_back(val);
-            return idx;
-        }
-
-        template <typename T>
-        uint32_t push_back()
-        {
-            return this->push_back<T>(T{});
-        }
-
-        template <typename T>
-        T &getObject(uint32_t idx)
-        {
-            return this->getObjectVector<T>()[idx];
-        }
-
-        template <typename T>
-        std::vector<T> &getObjectVector()
-        {
-            std::string vkTypeStr = typeToStr<T>();
-            if (m_objectVectors.find(vkTypeStr) == m_objectVectors.end())
-
-                m_objectVectors[vkTypeStr] = new std::vector<T>();
-            return *static_cast<std::vector<T> *>(m_objectVectors[vkTypeStr]);
-        }
-
-        template <typename T>
-        std::span<T> getObjectVectorSlice(uint32_t startIdx, uint32_t length)
-        {
-            std::vector<T> &vec = this->getObjectVector<T>();
-            if (startIdx + length > vec.size())
-                throw std::out_of_range("Slice range exceeds vector size.");
-            return std::span<T>(vec.data() + startIdx, length);
-        }
-
-    private:
-        std::unordered_map<std::string, void *> m_objectVectors{};
-        /*std::vector<VkInstance> instances{};
-        std::vector<VkDevice> devices{};
-        std::vector<VkSurfaceKHR> surfaces{};
-        std::vector<VkRenderPass> renderpasses{};
-        std::vector<VkPipeline> pipelines{};
-        std::vector<VkSwapchainKHR> swapchains{};
-        std::vector<VkImage> images{};
-        std::vector<VkFramebuffer> framebuffers{};
-        std::vector<VkImageView> imageViews{};
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
-        std::vector<VkPipelineLayout> pipelineLayouts{};
-        std::vector<VkPhysicalDevice> physicalDevices{};
-        std::vector<VkShaderModule> shaderModules{};
-        std::vector<VkPipelineCache> pipelineCaches{};*/
-    }; // VknEngine
-
     class VknIdxs
     {
         std::unordered_map<std::string, uint32_t> m_data{};
@@ -194,4 +122,89 @@ namespace vkn
         }
 
     }; // VknIdxs
+
+    class VknEngine
+    {
+    public:
+        VknEngine();
+        ~VknEngine();
+
+        // Prevent copying
+        VknEngine(const VknEngine &) = delete;
+        VknEngine &operator=(const VknEngine &) = delete;
+
+        // Prevent moving
+        VknEngine(VknEngine &&) = delete;
+        VknEngine &operator=(VknEngine &&) = delete;
+
+        template <typename T>
+        uint32_t push_back(T val)
+        {
+            std::vector<T> &vec{this->getVector<T>()};
+            uint32_t idx = vec.size();
+            this->getVector<T>().push_back(val);
+            return idx;
+        }
+
+        template <typename T>
+        uint32_t push_back()
+        {
+            return this->push_back<T>(T{});
+        }
+
+        template <typename T>
+        T &getObject(uint32_t idx)
+        {
+            return this->getVector<T>()[idx];
+        }
+
+        template <typename T>
+        T &getObject(VknIdxs &absIdxs)
+        {
+            return this->getVector<T>()[absIdxs.get<T>()];
+        }
+
+        template <typename T>
+        std::vector<T> &getVector()
+        {
+            std::string vkTypeStr = typeToStr<T>();
+            if (m_objectVectors.find(vkTypeStr) == m_objectVectors.end())
+
+                m_objectVectors[vkTypeStr] = new std::vector<T>();
+            return *static_cast<std::vector<T> *>(m_objectVectors[vkTypeStr]);
+        }
+
+        template <typename T>
+        std::span<T> getVectorSlice(uint32_t startIdx, uint32_t length)
+        {
+            std::vector<T> &vec = this->getVector<T>();
+            if (startIdx + length > vec.size())
+                throw std::out_of_range("Slice range exceeds vector size.");
+            return std::span<T>(vec.data() + startIdx, length);
+        }
+
+        template <typename T>
+        uint32_t getVectorSize()
+        {
+            return this->getVector<T>().size();
+        }
+
+    private:
+        std::unordered_map<std::string, void *> m_objectVectors{};
+        /*std::vector<VkInstance> instances{};
+        std::vector<VkDevice> devices{};
+        std::vector<VkSurfaceKHR> surfaces{};
+        std::vector<VkRenderPass> renderpasses{};
+        std::vector<VkPipeline> pipelines{};
+        std::vector<VkSwapchainKHR> swapchains{};
+        std::vector<VkImage> images{};
+        std::vector<VkFramebuffer> framebuffers{};
+        std::vector<VkImageView> imageViews{};
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
+        std::vector<VkPipelineLayout> pipelineLayouts{};
+        std::vector<VkPhysicalDevice> physicalDevices{};
+        std::vector<VkShaderModule> shaderModules{};
+        std::vector<VkPipelineCache> pipelineCaches{};*/
+    }; // VknEngine
+
 } // namespace vkn

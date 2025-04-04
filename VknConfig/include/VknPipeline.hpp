@@ -86,13 +86,13 @@ namespace vkn
         void setLayoutCreateFlags(VkPipelineLayoutCreateFlags layoutCreateFlags) { m_layoutCreateFlags = layoutCreateFlags; }
 
         // Create
-        void _fillPipelineCreateInfo();
+        VkGraphicsPipelineCreateInfo *_fillPipelineCreateInfo();
 
         // Get
         VknPipelineLayout *getLayout();
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         std::list<VknShaderStage> *getShaderStages() { return &m_shaderStages; }
-        VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs.get<VkPipeline>()); }
+        VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }

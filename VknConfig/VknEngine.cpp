@@ -6,34 +6,34 @@ namespace vkn
 
     VknEngine::~VknEngine()
     {
-        for (auto &shaderModule : this->getObjectVector<VkShaderModule>())
+        for (auto &shaderModule : this->getVector<VkShaderModule>())
             vkDestroyShaderModule(VK_NULL_HANDLE, shaderModule, VK_NULL_HANDLE);
-        for (auto &descriptorSetLayout : this->getObjectVector<VkDescriptorSetLayout>())
+        for (auto &descriptorSetLayout : this->getVector<VkDescriptorSetLayout>())
             vkDestroyDescriptorSetLayout(VK_NULL_HANDLE, descriptorSetLayout, VK_NULL_HANDLE);
-        for (auto &pipelineLayout : this->getObjectVector<VkPipelineLayout>())
+        for (auto &pipelineLayout : this->getVector<VkPipelineLayout>())
             vkDestroyPipelineLayout(VK_NULL_HANDLE, pipelineLayout, VK_NULL_HANDLE);
-        for (auto &pipelineCache : this->getObjectVector<VkPipelineCache>())
+        for (auto &pipelineCache : this->getVector<VkPipelineCache>())
             vkDestroyPipelineCache(VK_NULL_HANDLE, pipelineCache, VK_NULL_HANDLE);
-        for (auto &pipeline : this->getObjectVector<VkPipeline>())
+        for (auto &pipeline : this->getVector<VkPipeline>())
             vkDestroyPipeline(VK_NULL_HANDLE, pipeline, VK_NULL_HANDLE);
 
-        for (auto &framebuffer : this->getObjectVector<VkFramebuffer>())
+        for (auto &framebuffer : this->getVector<VkFramebuffer>())
             vkDestroyFramebuffer(VK_NULL_HANDLE, framebuffer, VK_NULL_HANDLE);
-        for (auto &renderpass : this->getObjectVector<VkRenderPass>())
+        for (auto &renderpass : this->getVector<VkRenderPass>())
             vkDestroyRenderPass(VK_NULL_HANDLE, renderpass, VK_NULL_HANDLE);
 
-        for (auto &imageView : this->getObjectVector<VkImageView>())
+        for (auto &imageView : this->getVector<VkImageView>())
             vkDestroyImageView(VK_NULL_HANDLE, imageView, VK_NULL_HANDLE);
-        for (auto &image : this->getObjectVector<VkImage>())
+        for (auto &image : this->getVector<VkImage>())
             vkDestroyImage(VK_NULL_HANDLE, image, VK_NULL_HANDLE);
-        for (auto &swapchain : this->getObjectVector<VkSwapchainKHR>())
+        for (auto &swapchain : this->getVector<VkSwapchainKHR>())
             vkDestroySwapchainKHR(VK_NULL_HANDLE, swapchain, VK_NULL_HANDLE);
 
-        for (auto &device : this->getObjectVector<VkDevice>())
+        for (auto &device : this->getVector<VkDevice>())
             vkDestroyDevice(device, VK_NULL_HANDLE);
-        for (auto &surface : this->getObjectVector<VkSurfaceKHR>())
+        for (auto &surface : this->getVector<VkSurfaceKHR>())
             vkDestroySurfaceKHR(VK_NULL_HANDLE, surface, VK_NULL_HANDLE);
-        for (auto &instance : this->getObjectVector<VkInstance>())
+        for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
     }
 }

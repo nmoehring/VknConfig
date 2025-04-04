@@ -91,7 +91,7 @@ namespace vkn
         void createPipelines();
 
         // Getters
-        VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()); }
+        VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
 
@@ -117,6 +117,7 @@ namespace vkn
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
+        uint32_t m_pipelineStartIdx{3123123123};
 
         VknPipeline *addPipeline(uint32_t subpassIdx);
     };

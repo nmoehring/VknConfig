@@ -41,12 +41,12 @@ namespace vkn
         return &m_layouts.front();
     }
 
-    void VknPipeline::_fillPipelineCreateInfo()
+    VkGraphicsPipelineCreateInfo *VknPipeline::_fillPipelineCreateInfo()
     {
         testEditability();
-        VkPipelineLayout *layout{&m_engine->getObject<VkPipelineLayout>(m_absIdxs.get<VkPipeline>())};
-        m_infos->fillGfxPipelineCreateInfo(
-            m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs.get<VkRenderPass>()),
+        VkPipelineLayout *layout{&m_engine->getObject<VkPipelineLayout>(m_absIdxs)};
+        return m_infos->fillGfxPipelineCreateInfo(
+            m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs),
             layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
     }
 
