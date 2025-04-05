@@ -15,7 +15,9 @@
         },
         {
             "name": "llvm",
-            "version>=": "18.1.6#1"
+            "version>=": "18.1.6#1",
+            "platform": "windows",
+            "host": true
         },
         {
             "name": "glm",
