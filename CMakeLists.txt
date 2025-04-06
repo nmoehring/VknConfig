@@ -34,6 +34,9 @@ include(FetchContent)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
+message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
+message(STATUS "Vulkan_LIBRARIES: ${Vulkan_LIBRARIES}")
+
 # --- Fetch gtest ---
 include(FetchContent)
 FetchContent_Declare(
@@ -101,19 +104,14 @@ endif()
 
 # --- Lib Dirs ---
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    message("Adding debug library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
-        ${Vulkan_INCLUDE_DIR}/../lib
     )
 elseif(CMAKE_BUILD_TYPE MATCHES Release OR
     CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
     CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-    target_compile_options(vknconfig_compiler_args INTERFACE /O2)
-    message("Adding release library directories.")
     link_directories(
         ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
-        ${Vulkan_INCLUDE_DIR}/../lib
     )
 else()
     message("Unknown build type.")

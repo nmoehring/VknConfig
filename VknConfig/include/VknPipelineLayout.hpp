@@ -23,6 +23,9 @@ namespace vkn
         // Create
         void createPipelineLayout();
 
+        // Get
+        VkPipelineLayout *getVkLayout();
+
     private:
         // Engine
         VknEngine *m_engine;

@@ -2,16 +2,10 @@
 #include <iostream>
 #include <filesystem>
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <stb_image.h>
+// #define GLFW_INCLUDE_VULKAN
 
 #include "VknConfig/include/VknConfig.hpp"
 #include "VknConfig/include/VknEngine.hpp"
-
-// #include "VknShaderStage.hpp"
-
-// GLFWwindow *window_ = nullptr;
 
 void printDevProps(std::vector<VkPhysicalDeviceProperties> devProps);
 void printFamProps(std::vector<VkQueueFamilyProperties> famProps);

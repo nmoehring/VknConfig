@@ -48,7 +48,7 @@ namespace vkn
                 i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);
 
         vkGetPhysicalDeviceQueueFamilyProperties(
-            m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            *this->getVkPhysicalDevice(),
             &propertyCount,
             engineQueues->data() + m_startAbsIdx);
         m_requestedQueues = true;
@@ -90,16 +90,21 @@ namespace vkn
                            m_engine->getObject<VkInstance>(0), &deviceCount, nullptr),
                        "Enumerate physical devices."};
 
+        // What I'm doing : get the vector of physdevices, query the properties at the end.
         if (deviceCount == 0)
             throw std::runtime_error("No GPU's supporting Vulkan found.");
         else if (deviceCount > 1)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
-
-        m_engine->getVector<VkPhysicalDevice>().resize(deviceCount);
+        std::vector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
+        physDevices->resize(deviceCount);
         VknResult res2{vkEnumeratePhysicalDevices(
-                           m_engine->getObject<VkInstance>(0), &deviceCount,
-                           m_engine->getVector<VkPhysicalDevice>().data()),
+                           m_engine->getObject<VkInstance>(0), &deviceCount, physDevices->data()),
                        "Enum physical devices and store."};
+
+        s_properties.resize(deviceCount);
+        for (auto &vkDevice : *physDevices)
+            vkGetPhysicalDeviceProperties(
+                m_engine->getObject<VkPhysicalDevice>(0), s_properties.data());
         s_enumeratedPhysicalDevices = true;
         return res2;
     }
@@ -126,7 +131,7 @@ namespace vkn
         VkBool32 presentSupport = false;
         VknResult res{
             vkGetPhysicalDeviceSurfaceSupportKHR(
-                m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+                *this->getVkPhysicalDevice(),
                 queueFamilyIdx, surface, &presentSupport),
             "Get Surface Support"};
         return presentSupport;
@@ -134,11 +139,9 @@ namespace vkn
 
     VkPhysicalDeviceLimits *VknPhysicalDevice::getLimits()
     {
-        {
-            if (!m_selectedPhysicalDevice)
-                throw std::runtime_error("Physical device not selected before getting device limits.");
-            return &s_properties[m_relIdxs.get<VkPhysicalDevice>()].limits;
-        }
+        if (!m_selectedPhysicalDevice)
+            throw std::runtime_error("Physical device not selected before getting device limits.");
+        return &s_properties[m_relIdxs.get<VkPhysicalDevice>()].limits;
     }
 
     VkPhysicalDevice *VknPhysicalDevice::getVkPhysicalDevice()

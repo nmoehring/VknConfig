@@ -6,5 +6,16 @@ add_library(VknConfig VknConfig.cpp VknDevice.cpp VknInfos.cpp
     VknViewportState.cpp VknSwapchain.cpp VknImageView.cpp
     VknFramebuffer.cpp VknEngine.cpp VknCommon.cpp VknPipelineLayout.cpp
     VknDescriptorSetLayout.cpp)
-target_link_libraries(VknConfig VknConfig_args vulkan-1)
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+# target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})
+elseif(CMAKE_BUILD_TYPE MATCHES Release OR
+    CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
+    CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+# target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})
+else()
+    message("Unknown build type.")
+endif()
+
+target_link_libraries(VknConfig VknConfig_args ${Vulkan_LIBRARIES})
 target_include_directories(VknConfig PUBLIC $CMAKE_CURRENT_SOURCE_DIR}/include)

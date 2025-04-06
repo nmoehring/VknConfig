@@ -41,4 +41,9 @@ namespace vkn
             nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs));
         m_createdPipelineLayout = true;
     }
+
+    VkPipelineLayout *VknPipelineLayout::getVkLayout()
+    {
+        return &m_engine->getObject<VkPipelineLayout>(m_absIdxs);
+    }
 }

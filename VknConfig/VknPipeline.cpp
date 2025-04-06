@@ -44,7 +44,7 @@ namespace vkn
     VkGraphicsPipelineCreateInfo *VknPipeline::_fillPipelineCreateInfo()
     {
         testEditability();
-        VkPipelineLayout *layout{&m_engine->getObject<VkPipelineLayout>(m_absIdxs)};
+        VkPipelineLayout *layout = this->getLayout()->getVkLayout();
         return m_infos->fillGfxPipelineCreateInfo(
             m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs),
             layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
