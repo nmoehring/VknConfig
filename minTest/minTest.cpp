@@ -64,6 +64,7 @@ int main()
         // Poll for and process events
         glfwPollEvents();
     }
+    engine.shutdown();
     glfwDestroyWindow(window);
     glfwTerminate();
 }

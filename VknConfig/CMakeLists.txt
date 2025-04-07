@@ -9,8 +9,8 @@ add_library(VknConfig VknConfig.cpp VknDevice.cpp VknInfos.cpp
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
 # target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})
-elseif(CMAKE_BUILD_TYPE MATCHES Release OR
-    CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
+elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
+    CMAKE_BUILD_TYPE MATCHES Release OR
     CMAKE_BUILD_TYPE MATCHES MinSizeRel)
 # target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})
 else()

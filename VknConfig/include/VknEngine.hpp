@@ -137,6 +137,8 @@ namespace vkn
         VknEngine(VknEngine &&) = delete;
         VknEngine &operator=(VknEngine &&) = delete;
 
+        void shutdown();
+
         template <typename T>
         uint32_t push_back(T val)
         {
@@ -191,6 +193,7 @@ namespace vkn
 
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
+        bool m_poweredOn{true};
         /*std::vector<VkInstance> instances{};
         std::vector<VkDevice> devices{};
         std::vector<VkSurfaceKHR> surfaces{};

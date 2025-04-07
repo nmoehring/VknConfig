@@ -6,6 +6,12 @@ namespace vkn
 
     VknEngine::~VknEngine()
     {
+        if (m_poweredOn)
+            this->shutdown();
+    }
+
+    void VknEngine::shutdown()
+    {
         for (auto &shaderModule : this->getVector<VkShaderModule>())
             vkDestroyShaderModule(VK_NULL_HANDLE, shaderModule, VK_NULL_HANDLE);
         for (auto &descriptorSetLayout : this->getVector<VkDescriptorSetLayout>())
@@ -35,5 +41,6 @@ namespace vkn
             vkDestroySurfaceKHR(VK_NULL_HANDLE, surface, VK_NULL_HANDLE);
         for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
+        m_poweredOn = false;
     }
 }
