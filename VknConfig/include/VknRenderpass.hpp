@@ -48,6 +48,8 @@
 
 #include "VknPipeline.hpp"
 #include "VknFramebuffer.hpp"
+#include "VknCommon.hpp"
+#include "VknSwapchain.hpp"
 
 namespace vkn
 {
@@ -58,12 +60,14 @@ namespace vkn
         VknRenderpass() = default;
         VknRenderpass(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        // Add
+        // Members
         void addSubpass(
             uint32_t subpassIdx, bool isCompute = false,
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         VknFramebuffer *addFramebuffer(uint32_t framebufferIdx);
+        std::list<VknFramebuffer> *addFramebuffers(
+            uint32_t imageViewStartIdx = 0, uint32_t imageCount = 0);
 
         // Config
         void addAttachment(
@@ -79,16 +83,17 @@ namespace vkn
             VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             VkImageLayout attachmentRefLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             VkAttachmentDescriptionFlags flags = 0);
-        void addSubpassDependency(
-            uint32_t srcSubpass = VK_SUBPASS_EXTERNAL, uint32_t dstSubpass = 0,
-            VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VkAccessFlags srcAccessMask = 0,
-            VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+        void addSubpassDependency(uint32_t dependencyIdx,
+                                  uint32_t srcSubpass = VK_SUBPASS_EXTERNAL, uint32_t dstSubpass = 0,
+                                  VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                                  VkAccessFlags srcAccessMask = 0,
+                                  VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                                  VkAccessFlags dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
 
         // Create
         void createRenderpass();
         void createPipelines();
+        void createFramebuffers();
 
         // Getters
         VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }
@@ -118,7 +123,9 @@ namespace vkn
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
         uint32_t m_pipelineStartIdx{3123123123};
+        VknRenderpass *s_editable;
 
         VknPipeline *addPipeline(uint32_t subpassIdx);
+        void testEditability();
     };
 }

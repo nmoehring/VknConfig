@@ -1,3 +1,49 @@
+/**
+ * @file VknDescriptorSetLayout.hpp
+ * @brief Manages a Vulkan VkDescriptorSetLayout object.
+ *
+ * VknDescriptorSetLayout is a hierarchy-bound leaf class within the VknConfig project.
+ * It is used by VknPipelineLayout to define the layout of bindings within a
+ * single descriptor set.
+ * VknDescriptorSetLayout depends on VknEngine, VknInfos, and VknIdxs.
+ * It does not have any classes that depend on it.
+ *
+ * Hierarchy Graph:
+ * [VknConfig] (Top-Level)
+ *     |
+ *     +-- [VknDevice]
+ *         |
+ *         +-- [VknPhysicalDevice]
+ *         |   |
+ *         |   +-- [VknQueueFamily] ^ / \
+ *         |
+ *         +-- [VknSwapchain]
+ *         |   |
+ *         |   +-- [VknImageView] ^ / \
+ *         |
+ *         +-- [VknRenderpass]
+ *             |
+ *             +-- [VknFramebuffer] ^ / \
+ *             |
+ *             +-- [VknPipeline]
+ *                 |
+ *                 +-- [VknPipelineLayout]
+ *                 |   |
+ *                 |   +-- [VknDescriptorSetLayout] ^ / \ <<=== YOU ARE HERE
+ *                 |
+ *                 +-- [VknVertexInputState] ^ / \
+ *                 +-- [VknInputAssemblyState] ^ / \
+ *                 +-- [VknMultisampleState] ^ / \
+ *                 +-- [VknRasterizationState] ^ / \
+ *                 +-- [VknShaderStage] ^ / \
+ *                 +-- [VknViewportState] ^ / \
+ *
+ * [VknEngine] (Free/Top-Level)
+ * [VknInfos] (Free/Top-Level)
+ * [VknResult] (Free/Top-Level)
+ * [VknImage] (Free/Top-Level)
+ */
+
 #pragma once
 
 #include "VknEngine.hpp"
@@ -24,7 +70,7 @@ namespace vkn
         void createDescriptorSetLayout();
 
         // Get
-        uint32_t getStartIdx();
+        VkDescriptorSetLayout *getVkDescriptorSetLayout();
 
     private:
         // Engine
@@ -39,10 +85,9 @@ namespace vkn
 
         // State
         bool m_createdDescriptorSetLayout{false};
-        uint32_t m_numBindings{0};
-        std::vector<uint32_t> m_descriptorSetLayoutIdxs{};
         static VknDescriptorSetLayout *s_editable;
 
         void testEditability();
+        uint32_t getStartIdx();
     };
 } // namespace vkn

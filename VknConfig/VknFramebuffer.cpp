@@ -2,43 +2,46 @@
 
 namespace vkn
 {
+
+    VknFramebuffer *VknFramebuffer::s_editable{nullptr};
+
     VknFramebuffer::VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
+        s_editable = this;
     }
 
     void VknFramebuffer::setDimensions(uint32_t width, uint32_t height)
     {
+        testEditability();
         m_width = width;
         m_height = height;
+        if (m_setAttachments)
+            this->setAttachmentDimensions(width, height);
     }
 
     void VknFramebuffer::setNumLayers(uint32_t numLayers)
     {
+        testEditability();
         m_numLayers = numLayers;
     }
 
     void VknFramebuffer::setCreateFlags(VkFramebufferCreateFlags createFlags)
     {
+        testEditability();
         m_createFlags = createFlags;
-    }
-
-    void VknFramebuffer::fillFramebufferCreateInfo()
-    {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Already filled frame buffer create info.");
-        m_infos->fillFramebufferCreateInfo(
-            m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs),
-            m_attachments, m_width, m_height, m_numLayers, m_createFlags);
-        m_filledCreateInfo = true;
     }
 
     void VknFramebuffer::createFramebuffer()
     {
-        if (!m_filledCreateInfo)
-            throw std::runtime_error("Trying to create framebuffer before filling create info.");
         if (m_createdFramebuffer)
             throw std::runtime_error("Framebuffer already created.");
+        testEditability();
+
+        m_infos->fillFramebufferCreateInfo(
+            m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs),
+            this->getAttachmentImageViews(), m_width, m_height, m_numLayers, m_createFlags);
+
         VkFramebufferCreateInfo *createInfo =
             m_infos->getFramebufferCreateInfo(m_relIdxs);
         vkCreateFramebuffer(
@@ -47,14 +50,73 @@ namespace vkn
         m_createdFramebuffer = true;
     }
 
-    void VknFramebuffer::setAttachments(std::vector<VkImageView> *vkImageViews)
+    void VknFramebuffer::addAttachments()
     {
-        if (m_attachmentsSet)
+        if (m_setAttachments)
             throw std::runtime_error("Attachments already set on framebuffer.");
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Framebuffer create info already filled.");
+        testEditability();
 
-        m_attachments = vkImageViews;
-        m_attachmentsSet = true;
+        std::vector<std::vector<std::vector<VkAttachmentReference>>> *refs = m_infos->getRenderpassAttachmentReferences(
+            m_relIdxs);
+        std::vector<VkAttachmentDescription> *descriptions = m_infos->getRenderpassAttachmentDescriptions(
+            m_relIdxs);
+
+        m_imageViewStartIdx = m_engine->getVectorSize<VkImageView>();
+        for (uint32_t i = 0; i < descriptions->size(); ++i)
+            for (auto &subPassVec : *refs)
+                for (uint32_t j = 0; j < subPassVec.size(); ++j)
+                    for (auto &attachmentRef : subPassVec[j])
+                        if (attachmentRef.attachment == i)
+                        {
+                            VknImage newImage{addNewVknObject<VknImage, VkImage>(m_attachImages.size(), m_attachImages,
+                                                                                 m_engine, m_relIdxs, m_absIdxs, m_infos)};
+                            VknImageView newView{addNewVknObject<VknImageView, VkImageView>(m_attachViews.size(), m_attachViews,
+                                                                                            m_engine, m_relIdxs, m_absIdxs,
+                                                                                            m_infos)};
+                            newView.setImage(&newImage);
+                            newImage.setExtent({m_width, m_height, 1});
+                            newImage.setFormat(descriptions->at(i).format);
+                            newView.setFormat(descriptions->at(i).format);
+                            newImage.setSamples(descriptions->at(i).samples);
+                            switch (j)
+                            {
+                            case COLOR_ATTACHMENT:
+                                newImage.setUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+                                break;
+                            case DEPTH_STENCIL_ATTACHMENT:
+                                newImage.setUsage(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+                                break;
+                            case RESOLVE_ATTACHMENT:
+                                newImage.setUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+                                break;
+                            case INPUT_ATTACHMENT:
+                                newImage.setUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+                                break;
+                            case PRESERVE_ATTACHMENT:
+                                newImage.setUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+                                break;
+                            }
+                        }
+        m_setAttachments = true;
+    }
+
+    void VknFramebuffer::setAttachmentDimensions(uint32_t width, uint32_t height)
+    {
+        testEditability();
+        for (auto &image : m_attachImages)
+            image.setExtent({width, height, 1});
+    }
+
+    void VknFramebuffer::addSwapchainVkImage(uint32_t engineImageIdx)
+    {
+        testEditability();
+        m_swapchainVkImage = &m_engine->getObject<VkImage>(engineImageIdx);
+    }
+
+    void VknFramebuffer::testEditability()
+    {
+        testEditability();
+        if (s_editable != this)
+            throw std::runtime_error("Members of a VknPipeline must be added all at once so that they are stored contiguously.");
     }
 }

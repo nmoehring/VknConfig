@@ -58,9 +58,6 @@ namespace vkn
         VknSwapchain() = default;
         VknSwapchain(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *m_infos);
 
-        // Add
-        void addImageViews();
-
         // Config
         void setImageCount(uint32_t imageCount);
         void setImageDimensions(uint32_t imageWidth, uint32_t imageHeight);
@@ -76,14 +73,15 @@ namespace vkn
         void setSurface(uint32_t surfaceIdx);
 
         // Create
-        void fillSwapchainCreateInfo();
         void createSwapchain();
-        void createImages();
-        void createImageViews();
+        std::list<VknImageView> *createImages();
 
         // Getters
         VkSwapchainKHR *getVkSwapchain();
-        std::vector<VkImageView> *getVkImageViews();
+        std::span<VkImageView> *getVkImageViews();
+        std::list<VknImageView> *getImageViews();
+        uint32_t getImageViewStartIdx();
+        uint32_t getNumImages();
 
     private:
         // Engine
@@ -116,5 +114,13 @@ namespace vkn
         bool m_createdSwapchain{false};
         bool m_setSurface{false};
         bool m_setImageCount{false};
+        uint32_t m_imageViewStartIdx{0};
+        VknSwapchain *s_editable;
+
+        void testEditability();
+
+        void fillSwapchainCreateInfo();
+        void addImageViews();
+        void createImageViews();
     };
 }

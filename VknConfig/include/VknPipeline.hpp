@@ -3,9 +3,10 @@
  * @brief Manages a Vulkan graphics pipeline.
  *
  * VknPipeline is a hierarchy-bound class within the VknConfig project.
- * It is used by VknRenderpass to manage a Vulkan graphics pipeline.
- * VknPipeline depends on VknEngine, VknInfos, VknVertexInputState, VknInputAssemblyState,
- * VknMultisampleState, VknRasterizationState, VknShaderStage, and VknIdxs.
+ * It is used by VknRenderpass to manage a Vulkan graphics pipeline for a specific subpass.
+ * It aggregates various pipeline state configuration objects (like VknVertexInputState,
+ * VknRasterizationState, etc.), shader stages (VknShaderStage), and the pipeline layout (VknPipelineLayout).
+ * VknPipeline depends on VknEngine, VknInfos, VknIdxs, and its constituent state/stage/layout classes.
  * VknPipeline is a child of VknRenderpass.
  *
  * Hierarchy Graph:
@@ -29,7 +30,7 @@
  *                 |
  *                 +-- [VknPipelineLayout]
  *                 |   |
- *                 |   +-- [VknDescriptorSetLayout]
+ *                 |   +-- [VknDescriptorSetLayout] ^ / \
  *                 |
  *                 +-- [VknVertexInputState] ^ / \
  *                 +-- [VknInputAssemblyState] ^ / \
@@ -41,6 +42,7 @@
  * [VknEngine] (Free/Top-Level)
  * [VknInfos] (Free/Top-Level)
  * [VknResult] (Free/Top-Level)
+ * [VknImage] (Free/Top-Level)
  */
 
 #pragma once
@@ -70,26 +72,21 @@ namespace vkn
         VknPipeline() = default;
         VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        // Add Vkn Member
+        // Vkn Members
         VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
                                        VknShaderStageType stageType, std::string filename,
                                        VkPipelineShaderStageCreateFlags flags = 0);
-        VknPipelineLayout *getPipelineLayout(uint32_t layoutIdx);
+        VknPipelineLayout *getLayout();
 
         // Config
-        void addDescriptorSetLayoutBinding(
-            uint32_t binding, VkDescriptorType descriptorType, uint32_t descriptorCount,
-            VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers);
         void setBasePipelineHandle(VkPipeline basePipelineHandle) { m_basePipelineHandle = basePipelineHandle; }
         void setBasePipelineIndex(int32_t basePipelineIndex) { m_basePipelineIndex = basePipelineIndex; }
         void setCreateFlags(VkPipelineCreateFlags createFlags) { m_createFlags = createFlags; }
-        void setLayoutCreateFlags(VkPipelineLayoutCreateFlags layoutCreateFlags) { m_layoutCreateFlags = layoutCreateFlags; }
 
         // Create
         VkGraphicsPipelineCreateInfo *_fillPipelineCreateInfo();
 
         // Get
-        VknPipelineLayout *getLayout();
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         std::list<VknShaderStage> *getShaderStages() { return &m_shaderStages; }
         VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs); }
@@ -102,7 +99,6 @@ namespace vkn
     private:
         // Engine
         VknEngine *m_engine;
-
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         VknInfos *m_infos;
@@ -124,8 +120,6 @@ namespace vkn
         VkPipeline m_basePipelineHandle{VK_NULL_HANDLE};
         int32_t m_basePipelineIndex{-1};
         VkPipelineCreateFlags m_createFlags{0};
-        VkPipelineLayoutCreateFlags m_layoutCreateFlags{0};
-        VkDescriptorSetLayoutCreateFlags m_descriptorSetLayoutCreateFlags{0};
 
         // State
         bool m_createdPipeline{false};

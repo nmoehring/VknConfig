@@ -15,11 +15,21 @@ namespace vkn
         m_createFlags = createFlags;
     }
 
-    void VknImageView::setImage(VkImage image)
+    void VknImageView::setImage(VkImage *image)
     {
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled create info, configuring this setting is unnecessary.");
 
+        m_vkImage = image;
+        m_setVkImage = true;
+    }
+
+    void VknImageView::setImage(VknImage *image)
+    {
+        if (m_setVkImage)
+            throw std::runtime_error("VkImage was set directly. Can't set VknImage.");
+        if (m_filledCreateInfo)
+            throw std::runtime_error("Already filled create info, configuring this setting is unnecessary.");
         m_image = image;
     }
 
@@ -59,8 +69,6 @@ namespace vkn
     {
         if (m_filledCreateInfo)
             throw std::runtime_error("Image view create info already filled.");
-        m_infos->fillImageViewCreateInfo(m_relIdxs, m_image,
-                                         m_viewType, m_format, m_components, m_subresourceRange, m_createFlags);
         m_filledCreateInfo = true;
     }
 
@@ -70,9 +78,16 @@ namespace vkn
             throw std::runtime_error("Trying to create image view before filling create info.");
         if (m_createdImageView)
             throw std::runtime_error("Image view already created.");
-        VkImageViewCreateInfo *createInfo{m_infos->getImageViewCreateInfo(m_relIdxs)};
+        VkImageViewCreateInfo *ci{nullptr};
+        if (m_setVkImage)
+            ci = m_infos->fillImageViewCreateInfo(m_relIdxs, *m_vkImage,
+                                                  m_viewType, m_format, m_components, m_subresourceRange, m_createFlags);
+        else
+            ci = m_infos->fillImageViewCreateInfo(m_relIdxs, *m_image->getVkImage(),
+                                                  m_viewType, m_format, m_components, m_subresourceRange, m_createFlags);
+
         vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs),
-                          createInfo, VK_NULL_HANDLE,
+                          ci, VK_NULL_HANDLE,
                           &m_engine->getObject<VkImageView>(m_absIdxs));
         m_createdImageView = true;
     }

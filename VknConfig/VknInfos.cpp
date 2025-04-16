@@ -814,11 +814,19 @@ namespace vkn
     }
 
     std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getRenderpassAttachmentReferences(
-        uint32_t deviceIdx, uint32_t renderpassIdx)
+        VknIdxs &relIdxs)
     {
         this->initVectors<VkAttachmentReference>(
-            deviceIdx, renderpassIdx, 0, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
-        return &m_attachmentReferences[deviceIdx][renderpassIdx];
+            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
+        return &m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
+    }
+
+    std::vector<VkAttachmentDescription> *VknInfos::getRenderpassAttachmentDescriptions(
+        VknIdxs &relIdxs)
+    {
+        this->initVectors<VkAttachmentDescription>(
+            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0, m_attachmentDescriptions);
+        return &m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
     }
 
     std::vector<std::vector<VkAttachmentReference>> *VknInfos::getSubpassAttachmentReferences(
@@ -907,14 +915,15 @@ namespace vkn
     }
 
     VkSubpassDependency *VknInfos::fillSubpassDependency(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassDepIdx,
+        VknIdxs &relIdxs,
         uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
         VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
         this->initVectors<VkSubpassDependency>(
-            deviceIdx, renderpassIdx, subpassDepIdx, m_subpassDependencies);
-        m_subpassDependencies[deviceIdx][renderpassIdx][subpassDepIdx] = VkSubpassDependency{};
-        VkSubpassDependency &dependency = m_subpassDependencies[deviceIdx][renderpassIdx][subpassDepIdx];
+            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0,
+            m_subpassDependencies);
+        m_subpassDependencies[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].push_back(VkSubpassDependency{});
+        VkSubpassDependency &dependency = m_subpassDependencies[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].back();
         dependency.srcSubpass = srcSubpass;
         dependency.dstSubpass = dstSubpass;
         dependency.srcStageMask = srcStageMask;
@@ -987,7 +996,7 @@ namespace vkn
     }
 
     void VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
-                                             VkRenderPass *renderpass, std::vector<VkImageView> *attachments,
+                                             VkRenderPass *renderpass, std::span<VkImageView> attachments,
                                              uint32_t width, uint32_t height, uint32_t numLayers,
                                              VkFramebufferCreateFlags &flags)
     {
@@ -1000,21 +1009,48 @@ namespace vkn
         info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.renderPass = *renderpass;
-        info.attachmentCount = attachments->size();
+        info.attachmentCount = attachments.size();
         if (info.attachmentCount == 0)
             info.pAttachments = VK_NULL_HANDLE;
         else
-            info.pAttachments = attachments->data();
+            info.pAttachments = attachments.data();
         info.width = width;
         info.height = height;
         info.layers = numLayers;
         info.flags = flags;
     }
 
-    void VknInfos::fillImageViewCreateInfo(VknIdxs &relIdxs,
-                                           VkImage &image, VkImageViewType &viewType, VkFormat &format,
-                                           VkComponentMapping &components, VkImageSubresourceRange &subresourceRange,
-                                           VkImageViewCreateFlags &flags)
+    VkImageCreateInfo *VknInfos::fillImageCreateInfo(
+        VknIdxs &relId, VkImageType imageType, VkFormat format, VkExtent3D extent,
+        uint32_t mipLevels, uint32_t arrayLayers, VkSampleCountFlagBits samples, VkImageTiling tiling,
+        VkImageUsageFlags usage, VkImageLayout initialLayout,
+        VkImageCreateFlags flags)
+    {
+        m_imageCreateInfos.push_back(VkImageCreateInfo{});
+        VkImageCreateInfo *info = &m_imageCreateInfos.back();
+        info->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        info->pNext = VK_NULL_HANDLE;
+        info->flags = flags;
+        info->imageType = imageType;
+        info->format = format;
+        info->extent = extent;
+        info->mipLevels = mipLevels;
+        info->arrayLayers = arrayLayers;
+        info->samples = samples;
+        info->tiling = tiling;
+        info->usage = usage;
+        info->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        info->queueFamilyIndexCount = 0;
+        info->pQueueFamilyIndices = VK_NULL_HANDLE;
+        info->initialLayout = initialLayout;
+        return info;
+    }
+
+    VkImageViewCreateInfo *VknInfos::fillImageViewCreateInfo(VknIdxs &relIdxs,
+                                                             VkImage &image, VkImageViewType &viewType, VkFormat &format,
+                                                             VkComponentMapping &components, VkImageSubresourceRange &subresourceRange,
+                                                             VkImageViewCreateFlags &flags)
+
     {
         this->initVectors(relIdxs.get<VkDevice>(), relIdxs.get<VkSwapchainKHR>(),
                           relIdxs.get<VkImageView>(), m_imageViewCreateInfos);
