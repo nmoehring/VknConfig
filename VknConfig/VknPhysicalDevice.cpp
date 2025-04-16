@@ -59,8 +59,11 @@ namespace vkn
         if (m_filledQueueCreateInfos)
             throw std::runtime_error("Already filled queue create infos.");
         for (int i = 0; i < m_queues.size(); ++i)
+        {
+            VknQueueFamily *fam = getListElement<VknQueueFamily>(i, m_queues);
             m_infos->fillDeviceQueueCreateInfo(
-                m_relIdxs, i, getListElement<VknQueueFamily>(i, m_queues)->getNumSelected());
+                m_relIdxs, i, fam->getNumSelected(), fam->getFlags());
+        }
         m_filledQueueCreateInfos = true;
     }
 

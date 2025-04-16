@@ -62,10 +62,12 @@ namespace vkn
 
         // Config
         void setNumSelected(int num);
+        void setMemoryProtection();
 
         // Getters
         int getNumSelected();
         uint32_t getNumAvailable();
+        VkDeviceQueueCreateFlags getFlags();
         bool supportsGraphics();
         bool supportsCompute();
         bool supportsTransfer();
@@ -75,10 +77,12 @@ namespace vkn
     private:
         // Engine
         VknEngine *m_engine;
-
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         VknInfos *m_infos;
+
+        // Params
+        VkDeviceQueueCreateFlags m_createFlags{0};
 
         // State
         int m_numSelected{0};

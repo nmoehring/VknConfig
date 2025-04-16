@@ -55,6 +55,7 @@
 #include "VknEngine.hpp"
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
+#include "VknFeatures.hpp"
 
 namespace vkn
 {
@@ -245,31 +246,9 @@ namespace vkn
         void fillAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion);
         void fillInstanceCreateInfo(VkInstanceCreateFlags flags);
         void fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size);
-        void fillDeviceFeatures(
-            bool robustBufferAccess, bool fullDrawIndexUint32, bool imageCubeArray,
-            bool independentBlend, bool geometryShader, bool tessellationShader,
-            bool sampleRateShading, bool dualSrcBlend, bool logicOp,
-            bool multiDrawIndirect, bool drawIndirectFirstInstance, bool depthClamp,
-            bool depthBiasClamp, bool fillModeNonSolid, bool depthBounds,
-            bool wideLines, bool largePoints, bool alphaToOne,
-            bool multiViewport, bool samplerAnisotropy, bool textureCompressionETC2,
-            bool textureCompressionASTC_LDR, bool textureCompressionBC, bool occlusionQueryPrecise,
-            bool pipelineStatisticsQuery, bool vertexPipelineStoresAndAtomics,
-            bool fragmentStoresAndAtomics, bool shaderTessellationAndGeometryPointSize,
-            bool shaderImageGatherExtended, bool shaderStorageImageExtendedFormats,
-            bool shaderStorageImageMultisample, bool shaderStorageImageReadWithoutFormat,
-            bool shaderStorageImageWriteWithoutFormat, bool shaderUniformBufferArrayDynamicIndexing,
-            bool shaderSampledImageArrayDynamicIndexing, bool shaderStorageBufferArrayDynamicIndexing,
-            bool shaderStorageImageArrayDynamicIndexing, bool shaderClipDistance,
-            bool shaderCullDistance, bool shaderFloat64, bool shaderInt64,
-            bool shaderInt16, bool shaderResourceResidency, bool shaderResourceMinLod,
-            bool sparseBinding, bool sparseResidencyBuffer, bool sparseResidencyImage2D,
-            bool sparseResidencyImage3D, bool sparseResidency2Samples,
-            bool sparseResidency4Samples, bool sparseResidency8Samples, bool sparseResidency16Samples,
-            bool sparseResidencyAliased, bool variableMultisampleRate, bool inheritedQueries);
-        void fillDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx, uint32_t queueCount,
-                                       VkApplicationInfo *pNext,
-                                       VkDeviceQueueCreateFlags flags);
+        void fillDeviceFeatures(VknFeatures features);
+        void fillDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
+                                       uint32_t queueCount, VkDeviceQueueCreateFlags flags);
         VkDeviceCreateInfo *fillDeviceCreateInfo(uint32_t deviceIdx);
 
         VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo(
@@ -284,7 +263,7 @@ namespace vkn
 
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
-            VknIdxs &relIdxs, std::vector<char> *code, VkShaderModuleCreateFlags flags);
+            VknIdxs &relIdxs, std::vector<char> *code);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
             VknIdxs &relIdxs, VkShaderModule *module, VkShaderStageFlagBits *stage,
             VkPipelineShaderStageCreateFlags *flags,

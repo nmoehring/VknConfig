@@ -108,20 +108,21 @@ namespace vkn
         return &m_engine->getObject<VkSwapchainKHR>(m_absIdxs);
     }
 
-    void VknSwapchain::fillSwapchainCreateInfo()
+    VkSwapchainCreateInfoKHR *VknSwapchain::fillSwapchainCreateInfo()
     {
         this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled swapchain create info.");
         if (!m_setSurface)
             throw std::runtime_error("Can't fill swapchain create info until surface is added.");
-        m_infos->fillSwapchainCreateInfo(m_relIdxs,
-                                         &m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
-                                         m_imageCount, m_dimensions, m_surfaceFormat,
-                                         m_numImageArrayLayers, m_usage, m_sharingMode,
-                                         m_preTransform, m_compositeAlpha, m_presentMode,
-                                         m_clipped, m_oldSwapchain);
+        VkSwapchainCreateInfoKHR *ci = m_infos->fillSwapchainCreateInfo(m_relIdxs,
+                                                                        &m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+                                                                        m_imageCount, m_dimensions, m_surfaceFormat,
+                                                                        m_numImageArrayLayers, m_usage, m_sharingMode,
+                                                                        m_preTransform, m_compositeAlpha, m_presentMode,
+                                                                        m_clipped, m_oldSwapchain);
         m_filledCreateInfo = true;
+        return ci;
     }
 
     void VknSwapchain::createSwapchain()
@@ -208,12 +209,6 @@ namespace vkn
     std::list<VknImageView> *VknSwapchain::getImageViews()
     {
         return &m_imageViews;
-    }
-
-    std::span<VkImageView> *VknSwapchain::getVkImageViews()
-    {
-        return &m_engine->getVectorSlice<VkImageView>(
-            m_imageStartAbsIdx, m_imageCount);
     }
 
     uint32_t VknSwapchain::getImageViewStartIdx()

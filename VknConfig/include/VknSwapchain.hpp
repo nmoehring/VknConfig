@@ -78,7 +78,6 @@ namespace vkn
 
         // Getters
         VkSwapchainKHR *getVkSwapchain();
-        std::span<VkImageView> *getVkImageViews();
         std::list<VknImageView> *getImageViews();
         uint32_t getImageViewStartIdx();
         uint32_t getNumImages();
@@ -119,7 +118,7 @@ namespace vkn
 
         void testEditability();
 
-        void fillSwapchainCreateInfo();
+        VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo();
         void addImageViews();
         void createImageViews();
     };

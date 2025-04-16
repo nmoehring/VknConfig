@@ -17,12 +17,6 @@ namespace vkn
         return &swapchain;
     }
 
-    void VknDevice::fillSwapchainCreateInfos()
-    {
-        for (auto &swapchain : m_swapchains)
-            swapchain.fillSwapchainCreateInfo();
-    }
-
     VknSwapchain *VknDevice::getSwapchain(uint32_t swapchainIdx)
     {
         return getListElement(swapchainIdx, m_swapchains);
@@ -58,7 +52,7 @@ namespace vkn
         if (m_createdVkDevice)
             throw std::runtime_error("Device already created.");
         m_infos->fillDeviceExtensionNames(m_relIdxs.get<VkDevice>(), m_extensions, m_extensionsSize);
-        m_infos->fillDeviceFeatures(m_features);
+        m_infos->fillDeviceFeatures(features);
         getListElement(0, m_physicalDevices)->fillQueueCreateInfos();
         m_infos->fillDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{

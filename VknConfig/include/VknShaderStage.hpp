@@ -101,5 +101,8 @@ namespace vkn
         bool m_setShaderStageType{false};
         bool m_setFilename{false};
         bool m_filledSpecializationInfo{false};
+        static VknShaderStage *s_editable;
+
+        void testEditability();
     };
 }

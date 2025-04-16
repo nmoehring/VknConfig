@@ -62,6 +62,9 @@ namespace vkn
         VknDevice() = default;
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
+        // Features
+        VknFeatures features{};
+
         // Add
         VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
@@ -70,7 +73,6 @@ namespace vkn
         void addExtensions(const char *ext[], uint32_t size);
 
         // Create
-        void fillSwapchainCreateInfos();
         VknResult createDevice();
 
         // Getters
@@ -95,7 +97,6 @@ namespace vkn
         // Params
         const char *const *m_extensions{nullptr};
         uint32_t m_extensionsSize{0};
-        VkPhysicalDeviceFeatures *m_features{nullptr};
 
         // State
         bool m_createdVkDevice{false};

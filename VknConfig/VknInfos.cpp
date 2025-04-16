@@ -1,4 +1,5 @@
 #include "include/VknInfos.hpp"
+
 namespace vkn
 {
     VknInfos::VknInfos()
@@ -178,7 +179,7 @@ namespace vkn
     }
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
-        VknIdxs &relIdxs, std::vector<char> *code, VkShaderModuleCreateFlags flags)
+        VknIdxs &relIdxs, std::vector<char> *code)
     {
         this->initVectors<VkShaderModuleCreateInfo>(
             relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(),
@@ -189,7 +190,7 @@ namespace vkn
             &m_shaderModuleCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][relIdxs.get<VkShaderModule>()];
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
-        info->flags = flags;
+        info->flags = 0;
         info->codeSize = code->size();
         info->pCode = reinterpret_cast<const uint32_t *>(code->data());
         return info;
@@ -565,85 +566,9 @@ namespace vkn
         m_filledLayerNames = true;
     }
 
-    void VknInfos::fillDeviceFeatures(bool robustBufferAccess, bool fullDrawIndexUint32, bool imageCubeArray,
-                                      bool independentBlend, bool geometryShader, bool tessellationShader,
-                                      bool sampleRateShading, bool dualSrcBlend, bool logicOp,
-                                      bool multiDrawIndirect, bool drawIndirectFirstInstance, bool depthClamp,
-                                      bool depthBiasClamp, bool fillModeNonSolid, bool depthBounds,
-                                      bool wideLines, bool largePoints, bool alphaToOne,
-                                      bool multiViewport, bool samplerAnisotropy, bool textureCompressionETC2,
-                                      bool textureCompressionASTC_LDR, bool textureCompressionBC, bool occlusionQueryPrecise,
-                                      bool pipelineStatisticsQuery, bool vertexPipelineStoresAndAtomics,
-                                      bool fragmentStoresAndAtomics, bool shaderTessellationAndGeometryPointSize,
-                                      bool shaderImageGatherExtended, bool shaderStorageImageExtendedFormats,
-                                      bool shaderStorageImageMultisample, bool shaderStorageImageReadWithoutFormat,
-                                      bool shaderStorageImageWriteWithoutFormat, bool shaderUniformBufferArrayDynamicIndexing,
-                                      bool shaderSampledImageArrayDynamicIndexing, bool shaderStorageBufferArrayDynamicIndexing,
-                                      bool shaderStorageImageArrayDynamicIndexing, bool shaderClipDistance,
-                                      bool shaderCullDistance, bool shaderFloat64, bool shaderInt64,
-                                      bool shaderInt16, bool shaderResourceResidency, bool shaderResourceMinLod,
-                                      bool sparseBinding, bool sparseResidencyBuffer, bool sparseResidencyImage2D,
-                                      bool sparseResidencyImage3D, bool sparseResidency2Samples,
-                                      bool sparseResidency4Samples, bool sparseResidency8Samples, bool sparseResidency16Samples,
-                                      bool sparseResidencyAliased, bool variableMultisampleRate, bool inheritedQueries)
+    void VknInfos::fillDeviceFeatures(VknFeatures features)
     {
-        m_enabledFeatures.push_back(VkPhysicalDeviceFeatures{});
-        VkPhysicalDeviceFeatures *info = &m_enabledFeatures.back();
-        info->robustBufferAccess = robustBufferAccess;
-        info->fullDrawIndexUint32 = fullDrawIndexUint32;
-        info->imageCubeArray = imageCubeArray;
-        info->independentBlend = independentBlend;
-        info->geometryShader = geometryShader;
-        info->tessellationShader = tessellationShader;
-        info->sampleRateShading = sampleRateShading;
-        info->dualSrcBlend = dualSrcBlend;
-        info->logicOp = logicOp;
-        info->multiDrawIndirect = multiDrawIndirect;
-        info->drawIndirectFirstInstance = drawIndirectFirstInstance;
-        info->depthClamp = depthClamp;
-        info->depthBiasClamp = depthBiasClamp;
-        info->fillModeNonSolid = fillModeNonSolid;
-        info->depthBounds = depthBounds;
-        info->wideLines = wideLines;
-        info->largePoints = largePoints;
-        info->alphaToOne = alphaToOne;
-        info->multiViewport = multiViewport;
-        info->samplerAnisotropy = samplerAnisotropy;
-        info->textureCompressionETC2 = textureCompressionETC2;
-        info->textureCompressionASTC_LDR = textureCompressionASTC_LDR;
-        info->textureCompressionBC = textureCompressionBC;
-        info->occlusionQueryPrecise = occlusionQueryPrecise;
-        info->pipelineStatisticsQuery = pipelineStatisticsQuery;
-        info->vertexPipelineStoresAndAtomics = vertexPipelineStoresAndAtomics;
-        info->fragmentStoresAndAtomics = fragmentStoresAndAtomics;
-        info->shaderTessellationAndGeometryPointSize = shaderTessellationAndGeometryPointSize;
-        info->shaderImageGatherExtended = shaderImageGatherExtended;
-        info->shaderStorageImageExtendedFormats = shaderStorageImageExtendedFormats;
-        info->shaderStorageImageMultisample = shaderStorageImageMultisample;
-        info->shaderStorageImageReadWithoutFormat = shaderStorageImageReadWithoutFormat;
-        info->shaderStorageImageWriteWithoutFormat = shaderStorageImageWriteWithoutFormat;
-        info->shaderUniformBufferArrayDynamicIndexing = shaderUniformBufferArrayDynamicIndexing;
-        info->shaderSampledImageArrayDynamicIndexing = shaderSampledImageArrayDynamicIndexing;
-        info->shaderStorageBufferArrayDynamicIndexing = shaderStorageBufferArrayDynamicIndexing;
-        info->shaderStorageImageArrayDynamicIndexing = shaderStorageImageArrayDynamicIndexing;
-        info->shaderClipDistance = shaderClipDistance;
-        info->shaderCullDistance = shaderCullDistance;
-        info->shaderFloat64 = shaderFloat64;
-        info->shaderInt64 = shaderInt64;
-        info->shaderInt16 = shaderInt16;
-        info->shaderResourceResidency = shaderResourceResidency;
-        info->shaderResourceMinLod = shaderResourceMinLod;
-        info->sparseBinding = sparseBinding;
-        info->sparseResidencyBuffer = sparseResidencyBuffer;
-        info->sparseResidencyImage2D = sparseResidencyImage2D;
-        info->sparseResidencyImage3D = sparseResidencyImage3D;
-        info->sparseResidency2Samples = sparseResidency2Samples;
-        info->sparseResidency4Samples = sparseResidency4Samples;
-        info->sparseResidency8Samples = sparseResidency8Samples;
-        info->sparseResidency16Samples = sparseResidency16Samples;
-        info->sparseResidencyAliased = sparseResidencyAliased;
-        info->variableMultisampleRate = variableMultisampleRate;
-        info->inheritedQueries = inheritedQueries;
+        m_enabledFeatures.push_back(features.createInfo());
     }
 
     void VknInfos::fillAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion)
@@ -690,7 +615,7 @@ namespace vkn
     }
 
     void VknInfos::fillDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
-                                             uint32_t queueCount, VkApplicationInfo *pNext,
+                                             uint32_t queueCount,
                                              VkDeviceQueueCreateFlags flags)
     {
         this->initVectors<VkDeviceQueueCreateInfo>(
@@ -700,7 +625,7 @@ namespace vkn
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         info.queueFamilyIndex = queueFamilyIdx;
         info.queueCount = queueCount;
-        info.pNext = pNext;
+        info.pNext = VK_NULL_HANDLE;
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
         if (!m_deviceQueuePrioritiesFilled)
             throw std::runtime_error("Queue priorities not filled before filling device queue create info.");
@@ -995,10 +920,10 @@ namespace vkn
         return &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()][relIdxs.get<VkImageView>()];
     }
 
-    void VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
-                                             VkRenderPass *renderpass, std::span<VkImageView> attachments,
-                                             uint32_t width, uint32_t height, uint32_t numLayers,
-                                             VkFramebufferCreateFlags &flags)
+    VkFramebufferCreateInfo *VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
+                                                                 VkRenderPass *renderpass, std::span<VkImageView> attachments,
+                                                                 uint32_t width, uint32_t height, uint32_t numLayers,
+                                                                 VkFramebufferCreateFlags &flags)
     {
         this->initVectors(
             relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkFramebuffer>(),
@@ -1018,6 +943,7 @@ namespace vkn
         info.height = height;
         info.layers = numLayers;
         info.flags = flags;
+        return &info;
     }
 
     VkImageCreateInfo *VknInfos::fillImageCreateInfo(
@@ -1064,5 +990,6 @@ namespace vkn
         info.components = components;
         info.subresourceRange = subresourceRange;
         info.flags = flags;
+        return &info;
     }
 }

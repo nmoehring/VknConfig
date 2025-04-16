@@ -113,9 +113,15 @@ namespace vkn
         m_swapchainVkImage = &m_engine->getObject<VkImage>(engineImageIdx);
     }
 
+    std::span<VkImageView> VknFramebuffer::getAttachmentImageViews()
+    {
+        if (!m_setAttachments)
+            throw std::runtime_error("Attachments not set before trying to get() them.");
+        return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, m_attachImages.size());
+    }
+
     void VknFramebuffer::testEditability()
     {
-        testEditability();
         if (s_editable != this)
             throw std::runtime_error("Members of a VknPipeline must be added all at once so that they are stored contiguously.");
     }

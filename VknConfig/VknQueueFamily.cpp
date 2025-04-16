@@ -41,12 +41,24 @@ namespace vkn
         return m_numSelected;
     }
 
+    VkDeviceQueueCreateFlags VknQueueFamily::getFlags()
+    {
+        return m_createFlags;
+    }
+
     void VknQueueFamily::setNumSelected(int num)
     {
         if (num <= this->getNumAvailable())
             m_numSelected = num;
         else
             throw std::runtime_error("Tried to select too many queues.");
+    }
+
+    void VknQueueFamily::setMemoryProtection()
+    {
+        if (!this->supportsMemoryProtection())
+            throw std::runtime_error("Can't set memory protection. Not supported for this queue.");
+        m_createFlags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
     }
 
     uint32_t VknQueueFamily::getNumAvailable()

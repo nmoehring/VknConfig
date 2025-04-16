@@ -123,7 +123,7 @@ namespace vkn
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
         uint32_t m_pipelineStartIdx{3123123123};
-        VknRenderpass *s_editable;
+        static VknRenderpass *s_editable;
 
         VknPipeline *addPipeline(uint32_t subpassIdx);
         void testEditability();

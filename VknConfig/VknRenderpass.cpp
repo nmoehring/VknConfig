@@ -3,7 +3,7 @@
 namespace vkn
 {
 
-    VknPipeline *VknPipeline::s_editable{nullptr};
+    VknRenderpass *VknRenderpass::s_editable{nullptr};
 
     VknRenderpass::VknRenderpass(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
@@ -176,6 +176,6 @@ namespace vkn
     void VknRenderpass::testEditability()
     {
         if (s_editable != this)
-            throw std::runtime_error("Members of a VknPipeline must be added all at once so that they are stored contiguously.");
+            throw std::runtime_error("Members of VknRenderpass must be added all at once so that they are stored contiguously.");
     }
 }

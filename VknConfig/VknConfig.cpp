@@ -83,7 +83,6 @@ namespace vkn
         auto *swapchain = device->addSwapchain(0);
         swapchain->setSurface(0);
         swapchain->setImageCount(1);
-        device->fillSwapchainCreateInfos();
         swapchain->createSwapchain();
         auto *imageViews = swapchain->createImages();
 
