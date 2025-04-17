@@ -108,12 +108,12 @@ namespace vkn
         std::optional<uint32_t> m_surfaceIdx{};
 
         // State
-        uint32_t m_imageStartAbsIdx{0};
         bool m_filledCreateInfo{false};
         bool m_createdSwapchain{false};
         bool m_setSurface{false};
         bool m_setImageCount{false};
         uint32_t m_imageViewStartIdx{0};
+        uint32_t m_imageStartIdx{0};
         VknSwapchain *s_editable;
 
         void testEditability();

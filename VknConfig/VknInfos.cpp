@@ -917,7 +917,7 @@ namespace vkn
 
     VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()][relIdxs.get<VkImageView>()];
+        return &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkFramebuffer>()];
     }
 
     VkFramebufferCreateInfo *VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,

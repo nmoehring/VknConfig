@@ -74,8 +74,6 @@ namespace vkn
 
     VkImage *VknImage::getVkImage()
     {
-        if (!m_createdVkImage)
-            throw std::runtime_error("Image not created before getting.");
         return &m_engine->getObject<VkImage>(m_absIdxs);
     }
 }
