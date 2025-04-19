@@ -159,7 +159,7 @@ namespace vkn
             throw std::runtime_error("Swapchain imageCount does not equal what should have been set.");
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                 m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
-                                &imageCount, engineImages->data() + m_imageStartAbsIdx);
+                                &imageCount, engineImages->data() + m_imageStartIdx);
         this->addImageViews();
         this->createImageViews();
         return &m_imageViews;

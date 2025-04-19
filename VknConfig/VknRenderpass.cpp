@@ -92,12 +92,12 @@ namespace vkn
             stencilStoreOp, initialLayout, finalLayout, flags);
 
         uint32_t refIdx{0};
-        m_infos->initVectors<uint32_t>(subpassIdx, NUM_ATTACHMENT_TYPES - 1, m_numAttachRefs);
         m_infos->initVectors<uint32_t>(subpassIdx, m_numPreserveRefs);
-        if (attachmentType != PRESERVE_ATTACHMENT)
-            refIdx = m_numAttachRefs[subpassIdx][attachmentType]++;
-        else
+        m_infos->initVectors<uint32_t>(subpassIdx, NUM_ATTACHMENT_TYPES - 1, m_numAttachRefs);
+        if (attachmentType == PRESERVE_ATTACHMENT)
             refIdx = m_numPreserveRefs[subpassIdx]++;
+        else
+            refIdx = m_numAttachRefs[subpassIdx][attachmentType]++;
 
         if (attachmentType == COLOR_ATTACHMENT)
             m_filledColorAttachment = true;

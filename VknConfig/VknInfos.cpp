@@ -721,6 +721,7 @@ namespace vkn
         uint32_t refIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
         VkImageLayout layout)
     {
+
         this->initVectors<VkAttachmentReference>(
             relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), subpassIdx, attachmentType,
             refIdx, m_attachmentReferences);
@@ -730,12 +731,10 @@ namespace vkn
         if (attachmentType == PRESERVE_ATTACHMENT)
             m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][refIdx] = attachmentIdx;
         else
-        {
             m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][attachmentType][refIdx] = VkAttachmentReference{};
-            VkAttachmentReference &ref = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][attachmentType][refIdx];
-            ref.attachment = attachmentIdx;
-            ref.layout = layout;
-        }
+        VkAttachmentReference &ref = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][attachmentType][refIdx];
+        ref.attachment = attachmentIdx;
+        ref.layout = layout;
     }
 
     std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getRenderpassAttachmentReferences(
