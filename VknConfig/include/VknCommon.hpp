@@ -152,6 +152,13 @@ namespace vkn
             positions[*idx2] = temp;
         }
 
+        DataType *getData()
+        {
+            if (size == 0)
+                throw std::runtime_error("Called getData on VknSpace with no data.");
+            return data;
+        }
+
         bool isEmpty() { return size == 0; }
         bool notEmpty() { return size > 0; }
         SizeType size() { return size; }
@@ -179,5 +186,10 @@ namespace vkn
         {
             return data(position);
         }
+
+        DataType *getData() { return data.getData(); }
+
+        void append(DataType element) { data.append(element); }
+        void insert(DataType element, SizeType position) { data.insert(position, element); }
     };
 }

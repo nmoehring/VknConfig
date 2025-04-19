@@ -179,12 +179,12 @@ namespace vkn
         {
             if (!(this->checkFill(DEVICE_QUEUE_CREATE_INFO)))
                 throw std::runtime_error("DeviceQueueCreateInfo not filled before get.");
-            return &m_queueCreateInfos[deviceIdx][queueFamilyIdx];
+            return &m_queueCreateInfos[deviceIdx](queueFamilyIdx);
         };
 
         VkRenderPassCreateInfo *getRenderpassCreateInfo(VknIdxs &relIdxs)
         {
-            return &m_renderpassCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
+            return &m_renderpassCreateInfos[relIdxs.get<VkDevice>()](relIdxs.get<VkRenderPass>());
         }
 
         VkDeviceCreateInfo *getDeviceCreateInfo(uint32_t deviceIdx)
@@ -193,14 +193,14 @@ namespace vkn
                 throw std::runtime_error("DeviceCreateInfo not filled before get.");
             return &m_deviceCreateInfos[deviceIdx];
         };
-        std::vector<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos(VknIdxs &relIdxs)
+        VknSpace<VkGraphicsPipelineCreateInfo> *getPipelineCreateInfos(VknIdxs &relIdxs)
         {
             return &m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
         }
-        std::vector<VkPipelineShaderStageCreateInfo> *getShaderStageCreateInfos(
+        VknSpace<VkPipelineShaderStageCreateInfo> *getShaderStageCreateInfos(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
         {
-            return &m_shaderStageCreateInfos[deviceIdx][renderpassIdx](subpassIdx);
+            return &m_shaderStageCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
         }
         VkPipelineVertexInputStateCreateInfo *getVertexInputStateCreateInfos(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
