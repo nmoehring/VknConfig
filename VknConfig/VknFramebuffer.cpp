@@ -56,6 +56,7 @@ namespace vkn
             throw std::runtime_error("Attachments already set on framebuffer.");
         testEditability();
 
+        //>attachment_infos
         std::vector<std::vector<std::vector<VkAttachmentReference>>> *refs = m_infos->getRenderpassAttachmentReferences(
             m_relIdxs);
         std::vector<VkAttachmentDescription> *descriptions = m_infos->getRenderpassAttachmentDescriptions(

@@ -737,7 +737,8 @@ namespace vkn
         ref.layout = layout;
     }
 
-    std::vector<std::vector<std::vector<VkAttachmentReference>>> *VknInfos::getRenderpassAttachmentReferences(
+    // Subpass>RefType>Refs
+    VknSpace<VkAttachmentReference> *VknInfos::getRenderpassAttachmentReferences(
         VknIdxs &relIdxs)
     {
         this->initVectors<VkAttachmentReference>(

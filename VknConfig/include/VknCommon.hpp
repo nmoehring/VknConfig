@@ -76,6 +76,66 @@ namespace vkn
     public:
         VknVector() = default;
 
+        ~VknVector()
+        {
+            delete[] positions;
+            delete[] data;
+        }
+
+        VknVector(const VknVector &other)
+        {
+            size = other.size;
+            positions = new SizeType[size];
+            data = new DataType[size];
+            for (SizeType i = 0; i < size; ++i)
+            {
+                positions[i] = other.positions[i];
+                data[i] = other.data[i];
+            }
+        }
+
+        VknVector &operator=(const VknVector &other)
+        {
+            delete[] positions;
+            delete[] data;
+            size = other.size;
+            positions = new SizeType[size];
+            data = new DataType[size];
+            for (SizeType i = 0; i < size; ++i)
+            {
+                positions[i] = other.positions[i];
+                data[i] = other.data[i];
+            }
+        }
+
+        VknVector(const VknVector &&other)
+        {
+            size = other.size;
+            positions = other.positions;
+            data = other.data;
+
+            delete[] other.positions;
+            delete[] other.data;
+            other.positions = nullptr;
+            other.data = nullptr;
+            other.size = 0;
+        }
+
+        VknVector &operator=(const VknVector &&other)
+        {
+            size = other.size;
+            delete[] positions;
+            delete[] data;
+            positions = other.positions;
+            data = other.data;
+
+            delete[] other.positions;
+            delete[] other.data;
+            other.positions = nullptr;
+            other.data = nullptr;
+            others.size = 0;
+        }
+
         DataType &operator()(SizeType position)
         {
             DataType *result = this->get(position);
