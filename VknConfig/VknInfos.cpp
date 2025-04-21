@@ -9,10 +9,8 @@ namespace vkn
     void VknInfos::fillDeviceQueuePriorities(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
                                              std::vector<float> priorities)
     {
-        this->initVectors<float>(relIdxs.get<VkDevice>(), queueFamilyIdx,
-                                 priorities.size() - 1, m_queuePriorities);
         for (auto &priority : priorities)
-            m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].push_back(priority);
+            m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].append(priority);
         m_deviceQueuePrioritiesFilled = true;
     }
 
@@ -28,30 +26,22 @@ namespace vkn
         VkPipelineLayout *layout, VkPipeline basePipelineHandle,
         int32_t basePipelineIndex, VkPipelineCreateFlags flags)
     {
-        if (relIdxs.get<VkDevice>() + 1 <= m_gfxPipelineCreateInfos.size() &&
-            relIdxs.get<VkRenderPass>() + 1 <= m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()].size() &&
-            relIdxs.get<VkPipeline>() + 1 <= m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].size() &&
-            m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].stageCount > 0)
-            throw std::runtime_error("Pipeline create info has already been filled.");
-        this->initVectors<VkGraphicsPipelineCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), m_gfxPipelineCreateInfos);
-        m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkGraphicsPipelineCreateInfo{};
         VkGraphicsPipelineCreateInfo &info =
-            m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                .insert(VkGraphicsPipelineCreateInfo{}, relIdxs.get<VkPipeline>());
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags;
-        info.stageCount = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].size(); // Need fill
-        info.pStages = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].data();    // Need fill
+        info.stageCount = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].getDataSize(); // Need fill
+        info.pStages = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].getData();        // Need fill
         if (m_filledVertexInputStateInfo)
             info.pVertexInputState =
-                &m_vertexInputStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
+                &m_vertexInputStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
                                                                                                                                  // set in pDynamicState below. Ignored if mesh shader stage
                                                                                                                                  // included in pStages.
         if (m_filledInputAssemblyStateInfo)
             info.pInputAssemblyState =
-                &m_inputAssemblyStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
+                &m_inputAssemblyStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
                                                                                                                                    // and VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY are set in pDynamicState,
                                                                                                                                    // below and dynamicPrimitiveTopologyUnrestricted is VK_TRUE in the
                                                                                                                                    // VkPhysicalDeviceExtendedDynamicState3PropertiesEXT struct,
@@ -59,18 +49,18 @@ namespace vkn
                                                                                                                                    // Also ignored if mesh shader stage included in pStages.
         if (m_filledTessellationStateInfo)
             info.pTessellationState =
-                &m_tessellationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
+                &m_tessellationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
                                                                                                                                   // is set in the pDynamicState below.
         if (m_filledViewportStateInfo)
             info.pViewportState =
-                &m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if rasterization not enabled.
+                &m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                               // Can be null if VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT
                                                                                                                               // and VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT are set in pDynamicState
                                                                                                                               // below, and also requires the VK_EXT_extended_dynamic_state3
                                                                                                                               // extension enabled.
         if (m_filledRasterizationStateInfo)
             info.pRasterizationState =
-                &m_rasterizationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // I guess this could be null if rasterization is not enabled.
+                &m_rasterizationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // I guess this could be null if rasterization is not enabled.
                                                                                                                                    // Can be null if VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT,
                                                                                                                                    // VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE,
                                                                                                                                    // VK_DYNAMIC_STATE_POLYGON_MODE_EXT,
@@ -81,7 +71,7 @@ namespace vkn
                                                                                                                                    // extension enabled.
         if (m_filledMultisampleStateInfo)
             info.pMultisampleState =
-                &m_multisampleStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if rasterization not enabled.
+                &m_multisampleStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                                  //  Can be null if VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT,
                                                                                                                                  //  VK_DYNAMIC_STATE_SAMPLE_MASK_EXT, and
                                                                                                                                  //  VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT are set in
@@ -95,7 +85,7 @@ namespace vkn
                                                                                                                                  //   to do this.
         if (m_filledDepthStencilStateInfo)
             info.pDepthStencilState =
-                &m_depthStencilStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if rasterization not enabled.
+                &m_depthStencilStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                                   // Can be null if VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
                                                                                                                                   // VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE, VK_DYNAMIC_STATE_DEPTH_COMPARE_OP,
                                                                                                                                   // VK_DYNAMIC_STATE_DEPTH_BOUNDS_TEST_ENABLE,
@@ -104,7 +94,7 @@ namespace vkn
                                                                                                                                   // Also requires the  VK_EXT_extended_dynamic_state3 extension.
         if (m_filledColorBlendStateInfo)
             info.pColorBlendState =
-                &m_colorBlendStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Can be null if rasterization not enabled.
+                &m_colorBlendStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                                 // Can be null if VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT,
                                                                                                                                 // VK_DYNAMIC_STATE_LOGIC_OP_EXT,
                                                                                                                                 // VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT,
@@ -114,7 +104,7 @@ namespace vkn
                                                                                                                                 // Requires the VK_EXT_extended_dynamic_state3 extension.
         if (m_filledDynamicStateInfo)
             info.pDynamicState =
-                &m_dynamicStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]; // Could be null if no state in the pipeline needs to be dynamic.
+                &m_dynamicStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Could be null if no state in the pipeline needs to be dynamic.
         info.layout = *layout;                                                                                               // Need fill
         info.renderPass = renderpass;                                                                                        // Need fill
         info.subpass = relIdxs.get<VkPipeline>();                                                                            // Need fill
@@ -124,56 +114,31 @@ namespace vkn
         return &info;
     }
 
-    void VknInfos::initRenderpass(VknIdxs &relIdxs)
-    {
-        this->initVectors<VkRenderPassCreateInfo>(relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(),
-                                                  m_renderpassCreateInfos);
-        this->initVectors<VkAttachmentDescription>(relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(),
-                                                   0, m_attachmentDescriptions);
-        this->initVectors<VkSubpassDescription>(relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(),
-                                                0, m_subpassDescriptions);
-        this->initVectors<VkSubpassDependency>(relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(),
-                                               0, m_subpassDependencies);
-        this->initVectors<VkAttachmentReference>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0,
-            NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
-    }
-
     VkRenderPassCreateInfo *VknInfos::fillRenderpassCreateInfo(VknIdxs &relIdxs,
                                                                uint32_t numAttachments,
                                                                uint32_t numSubpasses,
                                                                uint32_t numSubpassDeps,
                                                                VkRenderPassCreateFlags flags)
     {
-        this->initVectors<VkRenderPassCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), m_renderpassCreateInfos);
-        m_renderpassCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()] = VkRenderPassCreateInfo{};
-        VkRenderPassCreateInfo &renderpassInfo = m_renderpassCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
-        std::vector<VkAttachmentDescription> &attachmentDescriptions =
+        VkRenderPassCreateInfo &renderpassInfo =
+            m_renderpassCreateInfos[relIdxs.get<VkDevice>()]
+                .insert(VkRenderPassCreateInfo{}, relIdxs.get<VkRenderPass>());
+        VknSpace<VkAttachmentDescription> &attachmentDescriptions =
             m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
-        std::vector<VkSubpassDescription> &subpassDescriptions =
+        VknSpace<VkSubpassDescription> &subpassDescriptions =
             m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
-        std::vector<VkSubpassDependency> &subpassDependencies =
+        VknSpace<VkSubpassDependency> &subpassDependencies =
             m_subpassDependencies[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
 
         renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderpassInfo.pNext = VK_NULL_HANDLE;
         renderpassInfo.flags = flags;
         renderpassInfo.attachmentCount = numAttachments;
-        if (numAttachments == 0)
-            renderpassInfo.pAttachments = VK_NULL_HANDLE;
-        else
-            renderpassInfo.pAttachments = attachmentDescriptions.data();
+        renderpassInfo.pAttachments = numAttachments == 0 ? VK_NULL_HANDLE : attachmentDescriptions.getData();
         renderpassInfo.subpassCount = numSubpasses;
-        if (numSubpasses == 0)
-            renderpassInfo.pSubpasses = VK_NULL_HANDLE;
-        else
-            renderpassInfo.pSubpasses = subpassDescriptions.data();
+        renderpassInfo.pSubpasses = numSubpasses == 0 ? VK_NULL_HANDLE : subpassDescriptions.getData();
         renderpassInfo.dependencyCount = numSubpassDeps;
-        if (numSubpassDeps == 0)
-            renderpassInfo.pDependencies = VK_NULL_HANDLE;
-        else
-            renderpassInfo.pDependencies = subpassDependencies.data();
+        renderpassInfo.pDependencies = numSubpassDeps == 0 ? VK_NULL_HANDLE : subpassDependencies.getData();
 
         return &renderpassInfo;
     }
@@ -181,13 +146,9 @@ namespace vkn
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
         VknIdxs &relIdxs, std::vector<char> *code)
     {
-        this->initVectors<VkShaderModuleCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(),
-            relIdxs.get<VkPipeline>(), relIdxs.get<VkShaderModule>(), m_shaderModuleCreateInfos);
-        m_shaderModuleCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][relIdxs.get<VkShaderModule>()] =
-            VkShaderModuleCreateInfo{};
         VkShaderModuleCreateInfo *info =
-            &m_shaderModuleCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][relIdxs.get<VkShaderModule>()];
+            &m_shaderModuleCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
+                 .insert(VkShaderModuleCreateInfo{}, relIdxs.get<VkShaderModule>());
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0;
@@ -201,13 +162,9 @@ namespace vkn
         VkShaderModule *module, VkShaderStageFlagBits *stage,
         VkPipelineShaderStageCreateFlags *flags, VkSpecializationInfo *pSpecializationInfo)
     {
-        this->initVectors<VkPipelineShaderStageCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(),
-            relIdxs.get<VkShaderModule>(), m_shaderStageCreateInfos);
-        m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][relIdxs.get<VkShaderModule>()] =
-            VkPipelineShaderStageCreateInfo{};
         VkPipelineShaderStageCreateInfo *info =
-            &m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][relIdxs.get<VkShaderModule>()];
+            &m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
+                 .insert(VkPipelineShaderStageCreateInfo{}, relIdxs.get<VkShaderModule>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = *flags; // need fill
@@ -221,22 +178,14 @@ namespace vkn
     VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
         VknIdxs &relIdxs, uint32_t numBindings, uint32_t numAttributes)
     {
-        this->initVectors<VkPipelineVertexInputStateCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), m_vertexInputStateCreateInfos);
-        this->initVectors<VkVertexInputBindingDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), 0, m_vertexInputBindings);
-        this->initVectors<VkVertexInputAttributeDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), 0, m_vertexInputAttributes);
-
-        std::vector<VkVertexInputBindingDescription> *vertexBindingDescriptions =
+        VknSpace<VkVertexInputBindingDescription> *vertexBindingDescriptions =
             &m_vertexInputBindings[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
-        std::vector<VkVertexInputAttributeDescription> *vertexAttributeDescriptions =
+        VknSpace<VkVertexInputAttributeDescription> *vertexAttributeDescriptions =
             &m_vertexInputAttributes[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
 
-        m_vertexInputStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkPipelineVertexInputStateCreateInfo{};
         VkPipelineVertexInputStateCreateInfo *info =
-            &m_vertexInputStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            &m_vertexInputStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkPipelineVertexInputStateCreateInfo{}, relIdxs.get<VkPipeline>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = 0; // reserved for future use
@@ -244,12 +193,12 @@ namespace vkn
         if (numBindings == 0)
             info->pVertexBindingDescriptions = VK_NULL_HANDLE;
         else
-            info->pVertexBindingDescriptions = vertexBindingDescriptions->data();
+            info->pVertexBindingDescriptions = vertexBindingDescriptions->getData();
         info->vertexAttributeDescriptionCount = numAttributes;
         if (numAttributes == 0)
             info->pVertexAttributeDescriptions = VK_NULL_HANDLE;
         else
-            info->pVertexAttributeDescriptions = vertexAttributeDescriptions->data();
+            info->pVertexAttributeDescriptions = vertexAttributeDescriptions->getData();
         m_filledVertexInputStateInfo = true;
         return info;
     }
@@ -257,13 +206,9 @@ namespace vkn
     VkPipelineInputAssemblyStateCreateInfo *VknInfos::fillInputAssemblyStateCreateInfo(
         VknIdxs &relIdxs, VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
     {
-        this->initVectors<VkPipelineInputAssemblyStateCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(),
-            m_inputAssemblyStateCreateInfos);
-        m_inputAssemblyStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkPipelineInputAssemblyStateCreateInfo{};
         VkPipelineInputAssemblyStateCreateInfo *info =
-            &m_inputAssemblyStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            &m_inputAssemblyStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkPipelineInputAssemblyStateCreateInfo{}, relIdxs.get<VkPipeline>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -276,12 +221,9 @@ namespace vkn
     VkPipelineTessellationStateCreateInfo *VknInfos::fillTessellationStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t patchControlPoints)
     {
-        this->initVectors<VkPipelineTessellationStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_tessellationStateCreateInfos);
-        m_tessellationStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
-            VkPipelineTessellationStateCreateInfo{};
         VkPipelineTessellationStateCreateInfo *info =
-            &m_tessellationStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_tessellationStateCreateInfos[deviceIdx][renderpassIdx]
+                 .insert(VkPipelineTessellationStateCreateInfo{}, subpassIdx);
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -293,13 +235,9 @@ namespace vkn
         VknIdxs &relIdxs,
         std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors)
     {
-        this->initVectors<VkPipelineViewportStateCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(),
-            m_viewportStateCreateInfos);
-        m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkPipelineViewportStateCreateInfo{};
         VkPipelineViewportStateCreateInfo *info =
-            &m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            &m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkPipelineViewportStateCreateInfo{}, relIdxs.get<VkPipeline>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -324,12 +262,9 @@ namespace vkn
         float lineWidth, VkBool32 depthClampEnable,
         VkBool32 rasterizerDiscardEnable, VkBool32 depthBiasEnable)
     {
-        this->initVectors<VkPipelineRasterizationStateCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), m_rasterizationStateCreateInfos);
-        m_rasterizationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkPipelineRasterizationStateCreateInfo{};
         VkPipelineRasterizationStateCreateInfo *info =
-            &m_rasterizationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            &m_rasterizationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkPipelineRasterizationStateCreateInfo{}, relIdxs.get<VkPipeline>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -353,12 +288,9 @@ namespace vkn
         VkBool32 sampleShadingEnable, VkBool32 alphaToCoverageEnable,
         VkBool32 alphaToOneEnable)
     {
-        this->initVectors<VkPipelineMultisampleStateCreateInfo>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), m_multisampleStateCreateInfos);
-        m_multisampleStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkPipelineMultisampleStateCreateInfo{};
         VkPipelineMultisampleStateCreateInfo *info =
-            &m_multisampleStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            &m_multisampleStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkPipelineMultisampleStateCreateInfo{}, relIdxs.get<VkPipeline>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
@@ -380,12 +312,9 @@ namespace vkn
         VkBool32 depthTestEnable, VkBool32 depthWriteEnable,
         VkBool32 depthBoundsTestEnable, VkBool32 stencilTestEnable)
     {
-        this->initVectors<VkPipelineDepthStencilStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_depthStencilStateCreateInfos);
-        m_depthStencilStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
-            VkPipelineDepthStencilStateCreateInfo{};
         VkPipelineDepthStencilStateCreateInfo *info =
-            &m_depthStencilStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_depthStencilStateCreateInfos[deviceIdx][renderpassIdx]
+                 .insert(VkPipelineDepthStencilStateCreateInfo{}, subpassIdx);
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags;
@@ -407,43 +336,31 @@ namespace vkn
         float blendConstants[4], VkBool32 logicOpEnable,
         VkPipelineColorBlendStateCreateFlags flags)
     {
-        this->initVectors<VkPipelineColorBlendStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_colorBlendStateCreateInfos);
-        m_colorBlendStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
-            VkPipelineColorBlendStateCreateInfo{};
         VkPipelineColorBlendStateCreateInfo *info =
-            &m_colorBlendStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_colorBlendStateCreateInfos[deviceIdx][renderpassIdx]
+                 .insert(VkPipelineColorBlendStateCreateInfo{}, subpassIdx);
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags;
         info->logicOpEnable = logicOpEnable;
         info->logicOp = logicOp;
         info->attachmentCount = attachments.size();
-        if (attachments.size() == 0)
-            info->pAttachments = VK_NULL_HANDLE;
-        else
-            info->pAttachments = attachments.data();
-        info->blendConstants[4] = {};
+        info->pAttachments = attachments.empty() ? VK_NULL_HANDLE : attachments.data();
+        std::copy(&blendConstants[0], &blendConstants[4], info->blendConstants);
         return info;
     }
 
     VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, std::vector<VkDynamicState> dynamicStates)
     {
-        this->initVectors<VkPipelineDynamicStateCreateInfo>(
-            deviceIdx, renderpassIdx, subpassIdx, m_dynamicStateCreateInfos);
-        m_dynamicStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx] =
-            VkPipelineDynamicStateCreateInfo{};
         VkPipelineDynamicStateCreateInfo *info =
-            &m_dynamicStateCreateInfos[deviceIdx][renderpassIdx][subpassIdx];
+            &m_dynamicStateCreateInfos[deviceIdx][renderpassIdx]
+                 .insert(VkPipelineDynamicStateCreateInfo{}, subpassIdx);
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
         info->dynamicStateCount = dynamicStates.size();
-        if (dynamicStates.size() == 0)
-            info->pDynamicStates = VK_NULL_HANDLE;
-        else
-            info->pDynamicStates = dynamicStates.data();
+        info->pDynamicStates = dynamicStates.empty() ? VK_NULL_HANDLE : dynamicStates.data();
         return info;
     }
 
@@ -451,8 +368,8 @@ namespace vkn
         std::vector<VkDescriptorSetLayoutBinding> bindings,
         VkDescriptorSetLayoutCreateFlags flags)
     {
-        m_descriptorSetLayoutCreateInfos.push_back(VkDescriptorSetLayoutCreateInfo{});
-        VkDescriptorSetLayoutCreateInfo &info = m_descriptorSetLayoutCreateInfos.back();
+        VkDescriptorSetLayoutCreateInfo &info =
+            m_descriptorSetLayoutCreateInfos.append(VkDescriptorSetLayoutCreateInfo{});
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         info.pNext = nullptr;
         info.flags = flags;
@@ -469,26 +386,16 @@ namespace vkn
         std::vector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {
-        this->initVectors(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), m_layoutCreateInfos);
-        m_layoutCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()] =
-            VkPipelineLayoutCreateInfo{};
         VkPipelineLayoutCreateInfo *info =
-            &m_layoutCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()];
+            &m_layoutCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkPipelineLayoutCreateInfo{}, relIdxs.get<VkPipeline>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = flags;
         info->setLayoutCount = setLayouts.size();
-        if (setLayouts.size() == 0)
-            info->pSetLayouts = VK_NULL_HANDLE;
-        else
-            info->pSetLayouts = setLayouts.data();
+        info->pSetLayouts = setLayouts.empty() ? VK_NULL_HANDLE : setLayouts.data();
         info->pushConstantRangeCount = pushConstantRanges.size();
-        if (pushConstantRanges.size() == 0)
-            info->pPushConstantRanges = VK_NULL_HANDLE;
-        else
-            info->pPushConstantRanges = pushConstantRanges.data();
-
+        info->pPushConstantRanges = pushConstantRanges.empty() ? VK_NULL_HANDLE : pushConstantRanges.data();
         return info;
     }
 
@@ -497,8 +404,7 @@ namespace vkn
         const void *pInitialData,
         VkPipelineCacheCreateFlags flags)
     {
-        m_cacheCreateInfos.push_back(VkPipelineCacheCreateInfo{});
-        VkPipelineCacheCreateInfo &info = m_cacheCreateInfos.back();
+        VkPipelineCacheCreateInfo &info = m_cacheCreateInfos.append(VkPipelineCacheCreateInfo{});
         info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         info.pNext = nullptr;
         info.flags = flags;
@@ -618,10 +524,9 @@ namespace vkn
                                              uint32_t queueCount,
                                              VkDeviceQueueCreateFlags flags)
     {
-        this->initVectors<VkDeviceQueueCreateInfo>(
-            relIdxs.get<VkDevice>(), queueFamilyIdx, m_queueCreateInfos);
-        m_queueCreateInfos[relIdxs.get<VkDevice>()][queueFamilyIdx] = VkDeviceQueueCreateInfo{};
-        VkDeviceQueueCreateInfo &info = m_queueCreateInfos[relIdxs.get<VkDevice>()][queueFamilyIdx];
+        VkDeviceQueueCreateInfo &info =
+            m_queueCreateInfos[relIdxs.get<VkDevice>()]
+                .insert(VkDeviceQueueCreateInfo{}, queueFamilyIdx);
         info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         info.queueFamilyIndex = queueFamilyIdx;
         info.queueCount = queueCount;
@@ -629,23 +534,22 @@ namespace vkn
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
         if (!m_deviceQueuePrioritiesFilled)
             throw std::runtime_error("Queue priorities not filled before filling device queue create info.");
-        info.pQueuePriorities = m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].data();
+        info.pQueuePriorities = m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].getData();
         m_filledDeviceQueueCreateInfo = true;
     }
 
     VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(uint32_t deviceIdx)
     {
-        this->initVectors<VkDeviceCreateInfo>(deviceIdx, m_deviceCreateInfos);
-        if (m_queueCreateInfos[deviceIdx].size() == 0) // filled function?
+        if (m_queueCreateInfos[deviceIdx].getDataSize() == 0) // filled function?
             throw std::runtime_error("Queues not selected before filling device create info.");
-        m_deviceCreateInfos[deviceIdx] = VkDeviceCreateInfo{};
-        VkDeviceCreateInfo &info = m_deviceCreateInfos[deviceIdx];
+        VkDeviceCreateInfo &info =
+            m_deviceCreateInfos.insert(deviceIdx, VkDeviceCreateInfo{});
         // default
         info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = 0; // flags reserved, must = 0
-        info.queueCreateInfoCount = m_queueCreateInfos[deviceIdx].size();
-        info.pQueueCreateInfos = m_queueCreateInfos[deviceIdx].data();
+        info.queueCreateInfoCount = m_queueCreateInfos[deviceIdx].getDataSize();
+        info.pQueueCreateInfos = m_queueCreateInfos[deviceIdx].getData();
         // enabledLayerCount is deprecated and should not be used
         info.enabledLayerCount = 0; // ignored, value doesn't matter
         // ppEnabledLayerNames is deprecated and should not be used
@@ -669,10 +573,9 @@ namespace vkn
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
         VkSwapchainKHR oldSwapchain)
     {
-        this->initVectors<VkSwapchainCreateInfoKHR>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkSwapchainKHR>(), m_swapchainCreateInfos);
-        m_swapchainCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()] = VkSwapchainCreateInfoKHR{};
-        VkSwapchainCreateInfoKHR &swapchainInfo = m_swapchainCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()];
+        VkSwapchainCreateInfoKHR &swapchainInfo =
+            m_swapchainCreateInfos[relIdxs.get<VkDevice>()]
+                .insert(VkSwapchainCreateInfoKHR{}, relIdxs.get<VkSwapchainKHR>());
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainInfo.surface = *surface;                 // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain
@@ -698,11 +601,10 @@ namespace vkn
         VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
         VkImageLayout finalLayout, VkAttachmentDescriptionFlags flags)
     {
-        this->initVectors<VkAttachmentDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), attachIdx, m_attachmentDescriptions);
-        m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][attachIdx] = VkAttachmentDescription{};
         VkAttachmentDescription &description =
-            m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][attachIdx];
+            m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                .insert(VkAttachmentDescription{}, attachIdx);
+
         description.format = format; // Set to your swapchain image format
         description.samples = samples;
         description.loadOp = loadOp;
@@ -721,58 +623,47 @@ namespace vkn
         uint32_t refIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
         VkImageLayout layout)
     {
-
-        this->initVectors<VkAttachmentReference>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), subpassIdx, attachmentType,
-            refIdx, m_attachmentReferences);
-        this->initVectors<uint32_t>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), subpassIdx,
-            refIdx, m_preserveAttachments);
         if (attachmentType == PRESERVE_ATTACHMENT)
-            m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][refIdx] = attachmentIdx;
+            m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
+                .insert(attachmentIdx, refIdx);
         else
-            m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][attachmentType][refIdx] = VkAttachmentReference{};
-        VkAttachmentReference &ref = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][attachmentType][refIdx];
-        ref.attachment = attachmentIdx;
-        ref.layout = layout;
+        {
+            VkAttachmentReference &ref =
+                m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][attachmentType]
+                    .insert(VkAttachmentReference{}, refIdx);
+            ref.attachment = attachmentIdx;
+            ref.layout = layout;
+        }
     }
 
     // Subpass>RefType>Refs
     VknSpace<VkAttachmentReference> *VknInfos::getRenderpassAttachmentReferences(
         VknIdxs &relIdxs)
     {
-        this->initVectors<VkAttachmentReference>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
         return &m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
     }
 
-    std::vector<VkAttachmentDescription> *VknInfos::getRenderpassAttachmentDescriptions(
+    VknSpace<VkAttachmentDescription> *VknInfos::getRenderpassAttachmentDescriptions(
         VknIdxs &relIdxs)
     {
-        this->initVectors<VkAttachmentDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0, m_attachmentDescriptions);
         return &m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
     }
 
-    std::vector<std::vector<VkAttachmentReference>> *VknInfos::getSubpassAttachmentReferences(
+    VknSpace<VkAttachmentReference> *VknInfos::getSubpassAttachmentReferences(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
     {
-        this->initVectors<VkAttachmentReference>(
-            deviceIdx, renderpassIdx, subpassIdx, NUM_ATTACHMENT_TYPES - 1, 0, m_attachmentReferences);
         return &m_attachmentReferences[deviceIdx][renderpassIdx][subpassIdx];
     }
 
-    std::vector<uint32_t> *VknInfos::getSubpassPreserveAttachments(
+    VknSpace<uint32_t> *VknInfos::getSubpassPreserveAttachments(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
     {
-        this->initVectors<uint32_t>(deviceIdx, renderpassIdx, subpassIdx, 0, m_preserveAttachments);
         return &m_preserveAttachments[deviceIdx][renderpassIdx][subpassIdx];
     }
 
-    std::vector<std::vector<uint32_t>> *VknInfos::getRenderpassPreserveAttachments(
+    VknSpace<uint32_t> *VknInfos::getRenderpassPreserveAttachments(
         uint32_t deviceIdx, uint32_t renderpassIdx)
     {
-        this->initVectors<uint32_t>(deviceIdx, renderpassIdx, 0, 0, m_preserveAttachments);
         return &m_preserveAttachments[deviceIdx][renderpassIdx];
     }
 
@@ -781,60 +672,34 @@ namespace vkn
         uint32_t numPreserve, VknIdxs &relIdxs, uint32_t subpassIdx,
         VkPipelineBindPoint pipelineBindPoint, VkSubpassDescriptionFlags flags)
     {
-        this->initVectors<VkSubpassDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), subpassIdx, m_subpassDescriptions);
-        m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx] = VkSubpassDescription{};
-        VkSubpassDescription &description = m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx];
+        m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].insert(VkSubpassDescription{}, subpassIdx);
+        VkSubpassDescription &description = m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](subpassIdx);
 
         description.flags = flags;
         description.pipelineBindPoint = pipelineBindPoint;
-        std::vector<VkAttachmentReference> &inputAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][INPUT_ATTACHMENT];
-        std::vector<VkAttachmentReference> &colorAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][COLOR_ATTACHMENT];
-        std::vector<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][RESOLVE_ATTACHMENT];
-        std::vector<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][DEPTH_STENCIL_ATTACHMENT];
-        std::vector<uint32_t> &preserveAttachments = m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx];
-        if (numInput == 0)
-        {
-            description.inputAttachmentCount = 0;
-            description.pInputAttachments = VK_NULL_HANDLE;
-        }
-        else
-        {
-            description.inputAttachmentCount = numInput;
-            description.pInputAttachments = inputAttachments.data();
-        }
-        if (numColor == 0)
-        {
-            description.colorAttachmentCount = 0;
-            description.pColorAttachments = VK_NULL_HANDLE;
-        }
-        else
-        {
-            description.colorAttachmentCount = numColor;
-            description.pColorAttachments = colorAttachments.data();
-        }
-        if (numPreserve == 0)
-        {
-            description.colorAttachmentCount = 0;
-            description.pPreserveAttachments = VK_NULL_HANDLE;
-        }
-        else
-        {
-            description.preserveAttachmentCount = numPreserve;
-            description.pPreserveAttachments = preserveAttachments.data();
-        }
+        VknSpace<VkAttachmentReference> &inputAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][INPUT_ATTACHMENT];
+        VknSpace<VkAttachmentReference> &colorAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][COLOR_ATTACHMENT];
+        VknSpace<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][RESOLVE_ATTACHMENT];
+        VknSpace<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][DEPTH_STENCIL_ATTACHMENT];
+        VknSpace<uint32_t> &preserveAttachments = m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx];
+
+        description.inputAttachmentCount = numInput;
+        description.pInputAttachments = inputAttachments.getData();
+
+        description.colorAttachmentCount = numColor;
+        description.pColorAttachments = colorAttachments.getData();
+
+        description.preserveAttachmentCount = numPreserve;
+        description.pPreserveAttachments = preserveAttachments.getData();
+
         if (numResolve > numColor)
             throw std::runtime_error("Resolve attachments must be less than or equal to color attachments.");
-        else if (numResolve == 0)
-            description.pResolveAttachments = VK_NULL_HANDLE;
-        else
-            description.pResolveAttachments = resolveAttachments.data();
+
+        description.pResolveAttachments = resolveAttachments.getData();
         if (numDepthStencil > 1)
             throw std::runtime_error("Too many depth stencil attachments in subpass description.");
-        if (numDepthStencil == 0)
-            description.pDepthStencilAttachment = VK_NULL_HANDLE;
-        else
-            description.pDepthStencilAttachment = &depthStencilAttachments[0];
+
+        description.pDepthStencilAttachment = &depthStencilAttachments(0);
 
         return &description;
     }
@@ -844,11 +709,9 @@ namespace vkn
         uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
         VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
-        this->initVectors<VkSubpassDependency>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), 0,
-            m_subpassDependencies);
-        m_subpassDependencies[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].push_back(VkSubpassDependency{});
-        VkSubpassDependency &dependency = m_subpassDependencies[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].back();
+        VkSubpassDependency &dependency =
+            m_subpassDependencies[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                .append(VkSubpassDependency{});
         dependency.srcSubpass = srcSubpass;
         dependency.dstSubpass = dstSubpass;
         dependency.srcStageMask = srcStageMask;
@@ -864,12 +727,10 @@ namespace vkn
         uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
 
     {
-        this->initVectors<VkVertexInputBindingDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), bindIdx, m_vertexInputBindings);
-        m_vertexInputBindings[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][bindIdx] =
-            VkVertexInputBindingDescription{};
         VkVertexInputBindingDescription *description =
-            &m_vertexInputBindings[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][bindIdx];
+            &m_vertexInputBindings[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
+                 .insert(VkVertexInputBindingDescription{}, bindIdx);
+
         description->binding = binding;
         description->stride = stride;
         description->inputRate = inputRate;
@@ -880,12 +741,10 @@ namespace vkn
         VknIdxs &relIdxs, uint32_t attributeIdx, uint32_t binding,
         uint32_t location, VkFormat format, uint32_t offset)
     {
-        this->initVectors<VkVertexInputAttributeDescription>(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkPipeline>(), attributeIdx, m_vertexInputAttributes);
-        m_vertexInputAttributes[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][attributeIdx] =
-            VkVertexInputAttributeDescription{};
         VkVertexInputAttributeDescription *description =
-            &m_vertexInputAttributes[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()][attributeIdx];
+            &m_vertexInputAttributes[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
+                 .insert(VkVertexInputAttributeDescription{}, attributeIdx);
+
         description->binding = binding;
         description->location = location;
         description->format = format;
@@ -893,13 +752,13 @@ namespace vkn
         return description;
     }
 
-    std::vector<VkVertexInputBindingDescription> *VknInfos::getVertexInputBindings(
+    VknSpace<VkVertexInputBindingDescription> *VknInfos::getVertexInputBindings(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
     {
         return &m_vertexInputBindings[deviceIdx][renderpassIdx][subpassIdx];
     }
 
-    std::vector<VkVertexInputAttributeDescription> *VknInfos::getVertexInputAttributes(
+    VknSpace<VkVertexInputAttributeDescription> *VknInfos::getVertexInputAttributes(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx)
     {
         return &m_vertexInputAttributes[deviceIdx][renderpassIdx][subpassIdx];
@@ -907,17 +766,17 @@ namespace vkn
 
     VkImageViewCreateInfo *VknInfos::getImageViewCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()][relIdxs.get<VkImageView>()];
+        return &m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()](relIdxs.get<VkImageView>());
     }
 
     VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_swapchainCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()];
+        return &m_swapchainCreateInfos[relIdxs.get<VkDevice>()](relIdxs.get<VkSwapchainKHR>());
     }
 
     VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkFramebuffer>()];
+        return &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkFramebuffer>());
     }
 
     VkFramebufferCreateInfo *VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
@@ -925,25 +784,19 @@ namespace vkn
                                                                  uint32_t width, uint32_t height, uint32_t numLayers,
                                                                  VkFramebufferCreateFlags &flags)
     {
-        this->initVectors(
-            relIdxs.get<VkDevice>(), relIdxs.get<VkRenderPass>(), relIdxs.get<VkFramebuffer>(),
-            m_framebufferCreateInfos);
-        m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkFramebuffer>()] = VkFramebufferCreateInfo{};
-        VkFramebufferCreateInfo &info =
-            m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkFramebuffer>()];
-        info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        info.pNext = VK_NULL_HANDLE;
-        info.renderPass = *renderpass;
-        info.attachmentCount = attachments.size();
-        if (info.attachmentCount == 0)
-            info.pAttachments = VK_NULL_HANDLE;
-        else
-            info.pAttachments = attachments.data();
-        info.width = width;
-        info.height = height;
-        info.layers = numLayers;
-        info.flags = flags;
-        return &info;
+        VkFramebufferCreateInfo *info =
+            &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
+                 .insert(VkFramebufferCreateInfo{}, relIdxs.get<VkFramebuffer>());
+        info->sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        info->pNext = VK_NULL_HANDLE;
+        info->renderPass = *renderpass;
+        info->attachmentCount = attachments.size();
+        info->pAttachments = attachments.empty() ? VK_NULL_HANDLE : attachments.data();
+        info->width = width;
+        info->height = height;
+        info->layers = numLayers;
+        info->flags = flags;
+        return info;
     }
 
     VkImageCreateInfo *VknInfos::fillImageCreateInfo(
@@ -978,10 +831,9 @@ namespace vkn
                                                              VkImageViewCreateFlags &flags)
 
     {
-        this->initVectors(relIdxs.get<VkDevice>(), relIdxs.get<VkSwapchainKHR>(),
-                          relIdxs.get<VkImageView>(), m_imageViewCreateInfos);
-        m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()][relIdxs.get<VkImageView>()] = VkImageViewCreateInfo{};
-        VkImageViewCreateInfo &info = m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()][relIdxs.get<VkImageView>()];
+        VkImageViewCreateInfo &info =
+            m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()]
+                .insert(VkImageViewCreateInfo{}, relIdxs.get<VkImageView>());
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.image = image;

@@ -144,7 +144,7 @@ namespace vkn
             return *result;
         }
 
-        void append(DataType newElement)
+        DataType &append(DataType newElement)
         {
             if (data == nullptr)
             {
@@ -154,10 +154,11 @@ namespace vkn
             else
                 this->resize(size + 1);
             positions[size] = this->getNextPosition();
-            data[size++] = newElement;
+            data[size] = newElement;
+            return data[size++];
         }
 
-        void append(VknVector<DataType> &newElements)
+        DataType append(VknVector<DataType> &newElements)
         {
             SizeType newSize = size + newElements.size;
             if (data == nullptr)
@@ -177,12 +178,15 @@ namespace vkn
         DataType *get(SizeType position)
         {
             if (size == 0)
-                throw std::runtime_error("Cannot get(). Vector is empty!")
-                    SizeType idx{0} for (SizeType i = 0; i < size; ++i) if (positions[i] == position) return &data[i];
+                throw std::runtime_error("Cannot get(). Vector is empty!");
+            SizeType idx{0};
+            for (SizeType i = 0; i < size; ++i)
+                if (positions[i] == position)
+                    return &data[i];
             return nullptr;
         }
 
-        void insert(SizeType position, DataType newElement)
+        DataType &insert(SizeType position, DataType newElement)
         {
             DataType *element = this->get(position);
             if (!element)
@@ -192,6 +196,7 @@ namespace vkn
             }
             else
                 (*element) = newElement;
+            return *element;
         }
 
         void swap(SizeType position1, SizeType position2)
@@ -214,14 +219,12 @@ namespace vkn
 
         DataType *getData()
         {
-            if (size == 0)
-                throw std::runtime_error("Called getData on VknSpace with no data.");
             return data;
         }
 
         bool isEmpty() { return size == 0; }
-        bool notEmpty() { return size > 0; }
-        SizeType size() { return size; }
+        bool isNotEmpty() { return size > 0; }
+        SizeType getSize() { return size; }
     };
 
     template <typename DataType, typename SizeType = uint8_t>
@@ -230,26 +233,26 @@ namespace vkn
         VknVector<DataType, SizeType> data{};
         VknSpace<DataType, SizeType> subspaces{};
         uint8_t maxDimensions{8};
+        uint8_t depth{0};
 
     public:
-        VknTree() = default;
+        VknSpace() = default;
+        VknSpace(uint8_t depth) : depth = depth {}
 
         VknSpace &operator[](uint8_t position)
         {
             if (position >= maxDimensions)
                 throw std::runtime_error("Position given is out of range.");
             VknSpace *subspace = subspaces.get(position);
-            subspaces.insert(position, VknSpace{}) return subspaces[position];
+            if (!subspace)
+                subspaces.insert(position, VknSpace{depth + 1});
+            return subspaces[position];
         }
 
-        DataType &operator()(SizeType position)
-        {
-            return data(position);
-        }
-
+        DataType &operator()(SizeType position) { return data(position); }
         DataType *getData() { return data.getData(); }
-
-        void append(DataType element) { data.append(element); }
-        void insert(DataType element, SizeType position) { data.insert(position, element); }
+        DataType &append(DataType element) { return data.append(element); }
+        DataType &insert(DataType element, SizeType position) { data.insert(position, element); }
+        SizeType getDataSize() { return data.getSize(); }
     };
 }
