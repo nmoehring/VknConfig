@@ -60,7 +60,7 @@
 
 namespace vkn
 {
-    enum VknAttachmentType
+    enum VknAttachmentType : uint8_t
     {
         COLOR_ATTACHMENT = 0,
         DEPTH_STENCIL_ATTACHMENT = 1,
@@ -195,7 +195,7 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t patchControlPoints);
         VkPipelineViewportStateCreateInfo *fillViewportStateCreateInfo(
             VknIdxs &relIdxs,
-            std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors);
+            VknVector<VkViewport> *viewports, VknVector<VkRect2D> *scissors);
         VkPipelineRasterizationStateCreateInfo *fillRasterizationStateCreateInfo(
             VknIdxs &relIdxs,
             VkPolygonMode polygonMode, VkCullModeFlags cullMode, VkFrontFace frontFace,
@@ -218,11 +218,12 @@ namespace vkn
             VkBool32 depthBoundsTestEnable, VkBool32 stencilTestEnable);
         VkPipelineColorBlendStateCreateInfo *fillColorBlendStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-            VkLogicOp logicOp, std::vector<VkPipelineColorBlendAttachmentState> attachments,
+            VkLogicOp logicOp, VknVector<VkPipelineColorBlendAttachmentState> attachments,
             float blendConstants[4], VkBool32 logicOpEnable,
             VkPipelineColorBlendStateCreateFlags flags);
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(
-            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, std::vector<VkDynamicState> dynamicStates);
+            uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
+            VknVector<VkDynamicState> dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
             VknIdxs &relIdxs, VkRenderPass &renderpass,
             VkPipelineLayout *layout,
@@ -231,7 +232,7 @@ namespace vkn
         VkPipelineLayoutCreateInfo *fillPipelineLayoutCreateInfo(
             VknIdxs &relIdxs,
             std::span<VkDescriptorSetLayout> setLayouts,
-            std::vector<VkPushConstantRange> pushConstantRanges,
+            VknVector<VkPushConstantRange> pushConstantRanges,
             VkPipelineLayoutCreateFlags flags);
         VkPipelineCacheCreateInfo *fillPipelineCacheCreateInfo(
             size_t initialDataSize,
@@ -287,7 +288,7 @@ namespace vkn
             VkPipelineStageFlags dstStageMask,
             VkAccessFlags dstAccessMask);
         VkDescriptorSetLayoutCreateInfo *fillDescriptorSetLayoutCreateInfo(
-            std::vector<VkDescriptorSetLayoutBinding> bindings,
+            VknVector<VkDescriptorSetLayoutBinding> bindings,
             VkDescriptorSetLayoutCreateFlags flags);
         VkVertexInputBindingDescription *fillVertexInputBindingDescription(
             VknIdxs &relIdxs,

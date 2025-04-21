@@ -111,8 +111,8 @@ namespace vkn
         // Members
         std::list<VknPipeline> m_pipelines{};
         std::list<VknFramebuffer> m_framebuffers{};
-        std::vector<std::vector<uint32_t>> m_numAttachRefs{};
-        std::vector<uint32_t> m_numPreserveRefs{};
+        VknSpace<uint32_t> m_numAttachRefs{};
+        VknVector<uint32_t> m_numPreserveRefs{};
 
         // State
         bool m_addedDevices{false};

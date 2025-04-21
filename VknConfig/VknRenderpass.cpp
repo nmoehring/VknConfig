@@ -10,8 +10,6 @@ namespace vkn
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
         s_editable = this;
-        // Move to create function
-        m_infos->initRenderpass(relIdxs);
     }
 
     VknFramebuffer *VknRenderpass::addFramebuffer(uint32_t framebufferIdx)
@@ -92,12 +90,10 @@ namespace vkn
             stencilStoreOp, initialLayout, finalLayout, flags);
 
         uint32_t refIdx{0};
-        m_infos->initVectors<uint32_t>(subpassIdx, m_numPreserveRefs);
-        m_infos->initVectors<uint32_t>(subpassIdx, NUM_ATTACHMENT_TYPES - 1, m_numAttachRefs);
         if (attachmentType == PRESERVE_ATTACHMENT)
-            refIdx = m_numPreserveRefs[subpassIdx]++;
+            refIdx = m_numPreserveRefs(subpassIdx)++;
         else
-            refIdx = m_numAttachRefs[subpassIdx][attachmentType]++;
+            refIdx = m_numAttachRefs[subpassIdx](attachmentType)++;
 
         if (attachmentType == COLOR_ATTACHMENT)
             m_filledColorAttachment = true;
@@ -123,12 +119,12 @@ namespace vkn
                 m_pipelineStartIdx, m_pipelines.size())};
         for (auto &pipeline : m_pipelines)
             pipeline._fillPipelineCreateInfo();
-        std::vector<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
+        VknSpace<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
         VknResult res{vkCreateGraphicsPipelines(
                           m_engine->getObject<VkDevice>(m_absIdxs),
                           VK_NULL_HANDLE, m_numSubpasses,
-                          pipelineCreateInfos->data(), nullptr,
+                          pipelineCreateInfos->getData(), nullptr,
                           pipelines.data()),
                       "Create pipeline."};
         m_createdPipelines = true;
@@ -142,11 +138,11 @@ namespace vkn
         if (!isCompute && !m_filledColorAttachment)
             throw std::runtime_error("No attachment created before creating subpass.");
         m_infos->fillSubpassDescription(
-            m_numAttachRefs[subpassIdx][COLOR_ATTACHMENT],
-            m_numAttachRefs[subpassIdx][INPUT_ATTACHMENT],
-            m_numAttachRefs[subpassIdx][RESOLVE_ATTACHMENT],
-            m_numAttachRefs[subpassIdx][DEPTH_STENCIL_ATTACHMENT],
-            m_numPreserveRefs[subpassIdx], m_relIdxs,
+            m_numAttachRefs[subpassIdx](COLOR_ATTACHMENT),
+            m_numAttachRefs[subpassIdx](INPUT_ATTACHMENT),
+            m_numAttachRefs[subpassIdx](RESOLVE_ATTACHMENT),
+            m_numAttachRefs[subpassIdx](DEPTH_STENCIL_ATTACHMENT),
+            m_numPreserveRefs(subpassIdx), m_relIdxs,
             m_numSubpasses++, pipelineBindPoint, flags);
         this->addPipeline(subpassIdx);
     }

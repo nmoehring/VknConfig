@@ -233,7 +233,7 @@ namespace vkn
 
     VkPipelineViewportStateCreateInfo *VknInfos::fillViewportStateCreateInfo(
         VknIdxs &relIdxs,
-        std::vector<VkViewport> *viewports, std::vector<VkRect2D> *scissors)
+        VknVector<VkViewport> *viewports, VknVector<VkRect2D> *scissors)
     {
         VkPipelineViewportStateCreateInfo *info =
             &m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()]
@@ -241,16 +241,10 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
-        info->viewportCount = viewports->size();
-        if (viewports->size() == 0)
-            info->pViewports = VK_NULL_HANDLE;
-        else
-            info->pViewports = viewports->data();
-        info->scissorCount = scissors->size();
-        if (scissors->size() == 0)
-            info->pScissors = VK_NULL_HANDLE;
-        else
-            info->pScissors = scissors->data();
+        info->viewportCount = viewports->getSize();
+        info->pViewports = viewports->getData();
+        info->scissorCount = scissors->getSize();
+        info->pScissors = scissors->getData();
         m_filledViewportStateInfo = true;
         return info;
     }
@@ -332,7 +326,7 @@ namespace vkn
 
     VkPipelineColorBlendStateCreateInfo *VknInfos::fillColorBlendStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VkLogicOp logicOp,
-        std::vector<VkPipelineColorBlendAttachmentState> attachments,
+        VknVector<VkPipelineColorBlendAttachmentState> attachments,
         float blendConstants[4], VkBool32 logicOpEnable,
         VkPipelineColorBlendStateCreateFlags flags)
     {
@@ -344,14 +338,14 @@ namespace vkn
         info->flags = flags;
         info->logicOpEnable = logicOpEnable;
         info->logicOp = logicOp;
-        info->attachmentCount = attachments.size();
-        info->pAttachments = attachments.empty() ? VK_NULL_HANDLE : attachments.data();
+        info->attachmentCount = attachments.getSize();
+        info->pAttachments = attachments.getData();
         std::copy(&blendConstants[0], &blendConstants[4], info->blendConstants);
         return info;
     }
 
     VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, std::vector<VkDynamicState> dynamicStates)
+        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VknVector<VkDynamicState> dynamicStates)
     {
         VkPipelineDynamicStateCreateInfo *info =
             &m_dynamicStateCreateInfos[deviceIdx][renderpassIdx]
@@ -359,13 +353,13 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0; // reserved for future use
-        info->dynamicStateCount = dynamicStates.size();
-        info->pDynamicStates = dynamicStates.empty() ? VK_NULL_HANDLE : dynamicStates.data();
+        info->dynamicStateCount = dynamicStates.getSize();
+        info->pDynamicStates = dynamicStates.getData();
         return info;
     }
 
     VkDescriptorSetLayoutCreateInfo *VknInfos::fillDescriptorSetLayoutCreateInfo(
-        std::vector<VkDescriptorSetLayoutBinding> bindings,
+        VknVector<VkDescriptorSetLayoutBinding> bindings,
         VkDescriptorSetLayoutCreateFlags flags)
     {
         VkDescriptorSetLayoutCreateInfo &info =
@@ -373,17 +367,14 @@ namespace vkn
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         info.pNext = nullptr;
         info.flags = flags;
-        info.bindingCount = bindings.size();
-        if (bindings.size() == 0)
-            info.pBindings = VK_NULL_HANDLE;
-        else
-            info.pBindings = bindings.data();
+        info.bindingCount = bindings.getSize();
+        info.pBindings = bindings.getData();
         return &info;
     }
 
     VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
         VknIdxs &relIdxs, std::span<VkDescriptorSetLayout> setLayouts,
-        std::vector<VkPushConstantRange> pushConstantRanges,
+        VknVector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {
         VkPipelineLayoutCreateInfo *info =
@@ -394,8 +385,8 @@ namespace vkn
         info->flags = flags;
         info->setLayoutCount = setLayouts.size();
         info->pSetLayouts = setLayouts.empty() ? VK_NULL_HANDLE : setLayouts.data();
-        info->pushConstantRangeCount = pushConstantRanges.size();
-        info->pPushConstantRanges = pushConstantRanges.empty() ? VK_NULL_HANDLE : pushConstantRanges.data();
+        info->pushConstantRangeCount = pushConstantRanges.getSize();
+        info->pPushConstantRanges = pushConstantRanges.getData();
         return info;
     }
 

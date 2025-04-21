@@ -133,7 +133,7 @@ namespace vkn
             delete[] other.data;
             other.positions = nullptr;
             other.data = nullptr;
-            others.size = 0;
+            other.size = 0;
         }
 
         DataType &operator()(SizeType position)
@@ -158,7 +158,7 @@ namespace vkn
             return data[size++];
         }
 
-        DataType append(VknVector<DataType> &newElements)
+        DataType append(VknVector<DataType, SizeType> &newElements)
         {
             SizeType newSize = size + newElements.size;
             if (data == nullptr)
@@ -167,15 +167,18 @@ namespace vkn
                 data = new DataType[newElements.size];
             }
             else
-                this->resize(newSize) for (int i = 0; i < newElements.size(); ++i)
+            {
+                this->resize(newSize);
+                for (SizeType i = 0; i < newElements.size(); ++i)
                 {
                     positions[size + i] = this->getNextPosition();
                     data[size + i] = newElements[i];
                 }
+            }
             size = newSize;
         }
 
-        DataType *get(SizeType position)
+        DataType *getElement(SizeType position)
         {
             if (size == 0)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
@@ -191,7 +194,7 @@ namespace vkn
             DataType *element = this->get(position);
             if (!element)
             {
-                this->append(element);
+                this->append(newElement);
                 positions[size - 1] = position;
             }
             else
@@ -206,10 +209,12 @@ namespace vkn
             SizeType *idx1{nullptr};
             SizeType *idx2{nullptr};
             for (SizeType i = 0; i < size; ++i)
+            {
                 if (positions[i] == position1)
                     idx1 = &positions[i];
-            if (positions[i] == position2)
-                idx2 = &positions[i];
+                else if (positions[i] == position2)
+                    idx2 = &positions[i];
+            }
             if (!idx1 || !idx2)
                 throw std::runtime_error("Elements for swap not found!");
             SizeType temp{positions[*idx1]};
@@ -231,28 +236,29 @@ namespace vkn
     class VknSpace
     {
         VknVector<DataType, SizeType> data{};
-        VknSpace<DataType, SizeType> subspaces{};
+        VknVector<VknSpace<DataType, SizeType>> subspaces{};
         uint8_t maxDimensions{8};
         uint8_t depth{0};
 
     public:
         VknSpace() = default;
-        VknSpace(uint8_t depth) : depth = depth {}
+        VknSpace(uint8_t depth) : depth(depth) {}
 
-        VknSpace &operator[](uint8_t position)
+        VknSpace &getSubspace(uint8_t position)
         {
             if (position >= maxDimensions)
                 throw std::runtime_error("Position given is out of range.");
-            VknSpace *subspace = subspaces.get(position);
+            VknSpace *subspace = subspaces.getElement(position);
             if (!subspace)
-                subspaces.insert(position, VknSpace{depth + 1});
-            return subspaces[position];
+                subspaces.insert(position, std::make_unique<VknSpace>(depth + 1));
+            return *subspace;
         }
 
+        VknSpace &operator[](uint8_t position) { this->getSubspace(position); }
         DataType &operator()(SizeType position) { return data(position); }
         DataType *getData() { return data.getData(); }
         DataType &append(DataType element) { return data.append(element); }
         DataType &insert(DataType element, SizeType position) { data.insert(position, element); }
         SizeType getDataSize() { return data.getSize(); }
     };
-}
+} // namespace vkn
