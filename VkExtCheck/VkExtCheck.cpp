@@ -1,15 +1,16 @@
 // TODO: Use VulkanCore for all of this
 #include <vulkan/vulkan.h>
 #include <iostream>
-#include <vector>
+
 #include <cstring>
 #include <memory>
 #include <fstream>
 #include <algorithm>
+#include "../VknConfig/include/VknCommon.hpp"
 
-std::vector<std::string> getExtensionList()
+vkn::VknVector<std::string> getExtensionList()
 {
-    std::vector<std::string> extList = std::vector<std::string>(2);
+    vkn::VknVector<std::string> extList = vkn::VknVector<std::string>{};
     std::unique_ptr<std::ifstream> file = std::make_unique<std::ifstream>();
     file->open("resources/extensionList.txt", std::ios::in);
     if (!file->is_open())
@@ -24,7 +25,7 @@ std::vector<std::string> getExtensionList()
             *file >> extension;
             if (extension != "")
             {
-                extList.push_back(extension);
+                extList.append(extension);
             }
         }
     }
@@ -32,17 +33,19 @@ std::vector<std::string> getExtensionList()
     return extList;
 }
 
-std::vector<VkExtensionProperties> enumerateExtensions()
+vkn::VknVector<VkExtensionProperties> enumerateExtensions()
 {
     // TODO: Enumerate device extensions
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-    std::vector<VkExtensionProperties> extensions(extensionCount);
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+    vkn::VknVector<VkExtensionProperties> extensions{};
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.getData());
     return extensions;
 }
 
-bool isExtensionSupported(const char *extensionName, std::vector<VkExtensionProperties> extensions)
+bool isExtensionSupported(
+    const char *extensionName,
+    vkn::VknVector<VkExtensionProperties> extensions)
 {
 
     for (const auto &extension : extensions)
@@ -57,8 +60,8 @@ bool isExtensionSupported(const char *extensionName, std::vector<VkExtensionProp
 
 int main()
 {
-    std::vector<VkExtensionProperties> enumExt{enumerateExtensions()};
-    std::vector<std::string> extToSearch{getExtensionList()};
+    vkn::VknVector<VkExtensionProperties> enumExt{enumerateExtensions()};
+    vkn::VknVector<std::string> extToSearch{getExtensionList()};
     std::ranges::for_each(extToSearch, [enumExt](std::string ext)
                           { 
         const char *extensionToCheck = ext.c_str();

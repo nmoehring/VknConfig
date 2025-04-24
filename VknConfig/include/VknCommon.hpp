@@ -5,15 +5,11 @@
 #include <fstream> //todo: some of my includes are only used in the cpp, so it may not be obvious, maybe comment as such
 #include <string>
 
-#include "VknEngine.hpp"
-
 namespace vkn
 {
     // Forward declarations to avoid circular dependencies
     class VknIdxs;
     class VknInfos;
-
-    std::vector<char> readBinaryFile(std::filesystem::path filename);
 
     template <typename T>
     T *getListElement(uint32_t idx, std::list<T> &objList)
@@ -25,28 +21,22 @@ namespace vkn
         return &(*it);
     }
 
-    template <typename VknT, typename VkT>
-    VknT &addNewVknObject(uint32_t idx, std::list<VknT> &objList, VknEngine *engine,
-                          VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
-    {
-        if (idx > objList.size())
-            throw std::runtime_error("List index out of range.");
-        VknIdxs newRelIdxs = relIdxs;
-        VknIdxs newAbsIdxs = absIdxs;
-        newAbsIdxs.add<VkT>(engine->push_back(VkT{}));
-        newRelIdxs.add<VkT>(objList.size());
-        return objList.emplace_back(engine, newRelIdxs, newAbsIdxs, infos);
-    }
-
     template <typename DataType, typename SizeType = std::uint8_t>
     class VknVector
     {
         SizeType *positions{nullptr};
         DataType *data{nullptr};
         SizeType size{0};
+        bool isView{false};
+        SizeType nextPosition{0};
+        static constexpr SizeType maxSize = ~SizeType{0u};
 
         void resize(SizeType newSize)
         {
+            if (isView)
+                throw std::runtime_error("Cannot resize a span-view VknVector.");
+            if (newSize > maxSize)
+                throw std::runtime_error("Overflow error. newSize of VknVector is greater than the maximum allowed by the SizeType.");
             DataType *newData = new DataType[newSize];
             SizeType *newPositions = new SizeType[newSize];
             for (SizeType i = 0; i < size; ++i)
@@ -54,32 +44,54 @@ namespace vkn
                 newData[i] = data[i];
                 newPositions[i] = positions[i];
             }
-            delete[] data;
-            delete[] positions;
+            this->deleteArrays();
             data = newData;
             positions = newPositions;
         }
 
         SizeType getNextPosition()
         {
-            if (size == 0)
-                return 0;
-            if (size == 1)
-                return positions[0] + 1;
-            SizeType max = positions[0];
-            for (SizeType i = 1; i < size; ++i)
-                if (positions[i] > max)
-                    max = positions[i];
-            return max + 1;
+            return nextPosition++;
+        }
+
+        SizeType determineNextPosition()
+        {
+            for (SizeType i = 0; i < size; ++i)
+            {
+                if (positions[i] > nextPosition)
+                    nextPosition = positions[i];
+            }
+            return ++nextPosition;
+        }
+
+        void setPosition(SizeType index, SizeType position)
+        {
+            if (position > nextPosition)
+                nextPosition = position;
+            positions[index] = position;
+        }
+
+        void deleteArrays()
+        {
+            if (data)
+                delete[] data;
+            if (positions)
+                delete[] positions;
         }
 
     public:
-        VknVector() = default;
+        VknVector()
+        {
+            if (maxSize < 0)
+                throw std::runtime_error("SizeType selected for VknVector should be unsigned.");
+        }
 
         ~VknVector()
         {
-            delete[] positions;
-            delete[] data;
+            if (!isView)
+            {
+                this->deleteArrays();
+            }
         }
 
         VknVector(const VknVector &other)
@@ -89,48 +101,49 @@ namespace vkn
             data = new DataType[size];
             for (SizeType i = 0; i < size; ++i)
             {
-                positions[i] = other.positions[i];
+                this->setPosition(i, other.positions[i]);
                 data[i] = other.data[i];
             }
         }
 
         VknVector &operator=(const VknVector &other)
         {
-            delete[] positions;
-            delete[] data;
+            this->deleteArrays();
             size = other.size;
             positions = new SizeType[size];
             data = new DataType[size];
             for (SizeType i = 0; i < size; ++i)
             {
-                positions[i] = other.positions[i];
+                this->setPosition(i, other.positions[i]);
                 data[i] = other.data[i];
             }
         }
 
-        VknVector(const VknVector &&other)
+        VknVector(VknVector &&other)
         {
             size = other.size;
             positions = other.positions;
             data = other.data;
+            nextPosition = other.nextPosition;
+            isView = other.isView;
 
-            delete[] other.positions;
-            delete[] other.data;
+            other.deleteArrays();
             other.positions = nullptr;
             other.data = nullptr;
             other.size = 0;
         }
 
-        VknVector &operator=(const VknVector &&other)
+        VknVector &operator=(VknVector &&other)
         {
+
+            this->deleteArrays();
             size = other.size;
-            delete[] positions;
-            delete[] data;
             positions = other.positions;
             data = other.data;
+            nextPosition = other.nextPosition;
+            isView = other.isView;
 
-            delete[] other.positions;
-            delete[] other.data;
+            other.deleteArrays();
             other.positions = nullptr;
             other.data = nullptr;
             other.size = 0;
@@ -138,44 +151,80 @@ namespace vkn
 
         DataType &operator()(SizeType position)
         {
-            DataType *result = this->get(position);
+            DataType *result = this->getElement(position);
             if (!result)
                 throw std::runtime_error("Element not found in vector!");
             return *result;
         }
 
+        VknVector *getSlice(SizeType startPos, SizeType length)
+        {
+            if (!data)
+                throw std::runtime_error("Cannot getSlice(). VknVector is empty!");
+            if (length == 0)
+                throw std::runtime_error("Cannot getSlice(). Length is 0");
+            if (startPos + length > size) // Also catches if startPos is too large
+                throw std::runtime_error("Slice range exceeds vector size.");
+
+            VknVector *result = new VknVector();
+            result->isView = true;
+            result->data = data + startPos;
+            result->positions = positions + startPos;
+            result->size = length;
+            result->determineNextPosition();
+            return result;
+        }
+
         DataType &append(DataType newElement)
         {
-            if (data == nullptr)
-            {
-                data = new DataType[1];
-                positions = new SizeType[1];
-            }
-            else
-                this->resize(size + 1);
+            this->resize(size + 1);
             positions[size] = this->getNextPosition();
             data[size] = newElement;
             return data[size++];
         }
 
-        DataType append(VknVector<DataType, SizeType> &newElements)
+        void append(VknVector<DataType, SizeType> &newElements)
         {
             SizeType newSize = size + newElements.size;
-            if (data == nullptr)
+            this->resize(newSize);
+
+            for (SizeType i = 0; i < newElements.size(); ++i)
             {
-                positions = new SizeType[newElements.size];
-                data = new DataType[newElements.size];
-            }
-            else
-            {
-                this->resize(newSize);
-                for (SizeType i = 0; i < newElements.size(); ++i)
-                {
-                    positions[size + i] = this->getNextPosition();
-                    data[size + i] = newElements[i];
-                }
+                positions[size + i] = this->getNextPosition();
+                data[size + i] = newElements[i];
             }
             size = newSize;
+        }
+
+        void append(DataType *arr, SizeType length)
+        {
+            this->resize(size + length);
+
+            for (SizeType i = 0; i < length; ++i)
+            {
+                data[size + i] = arr[i];
+                positions[size + i] = this->getNextPosition();
+                size = size + length;
+            }
+        }
+
+        void resizeView(SizeType newSize)
+        {
+            if (!isView)
+                throw std::runtime_error("Cannot resize a non-view VknVector.");
+            size = newSize;
+        }
+
+        DataType *append(DataType value, SizeType length)
+        {
+            SizeType oldSize{size};
+            this->resize(size + length);
+            for (SizeType i = oldSize; i < length; ++i)
+            {
+                data[i] = value;
+                positions[i] = this->getNextPosition();
+            }
+            return &data[oldSize];
         }
 
         DataType *getElement(SizeType position)
@@ -191,14 +240,14 @@ namespace vkn
 
         DataType &insert(SizeType position, DataType newElement)
         {
-            DataType *element = this->get(position);
+            DataType *element = this->getElement(position);
             if (!element)
             {
                 this->append(newElement);
-                positions[size - 1] = position;
+                this->setPosition(size - 1, position);
             }
             else
-                (*element) = newElement;
+                throw std::runtime_error("Tried to insert into a VknVector element that is already assigned.");
             return *element;
         }
 
@@ -222,10 +271,33 @@ namespace vkn
             positions[*idx2] = temp;
         }
 
-        DataType *getData()
+        DataType *getData(SizeType numNewElements = 0U)
         {
+            if (numNewElements != 0)
+            {
+                SizeType oldSize{size};
+                SizeType newSize{size + numNewElements};
+                this->resize(newSize);
+                for (SizeType i = oldSize; i < newSize; ++i)
+                {
+                    data[i] = DataType{};
+                    this->setPosition(i, nextPosition);
+                }
+                return data + oldSize;
+            }
             return data;
         }
+
+        // TODO: Custom iterator class for better STL stuff but mainly
+        //  need to iterate vector positions rather than array indices
+        DataType *begin() { return data; }
+        DataType *end() { return data + size; }
+        const DataType *begin() const { return data; }
+        const DataType *end() const { return data + size; }
+        DataType *rbegin() { return data + size - 1; }
+        DataType *rend() { return data - 1; }
+        const DataType *rbegin() const { return data + size - 1; }
+        const DataType *rend() const { return data - 1; }
 
         bool isEmpty() { return size == 0; }
         bool isNotEmpty() { return size > 0; }
@@ -236,7 +308,7 @@ namespace vkn
     class VknSpace
     {
         VknVector<DataType, SizeType> data{};
-        VknVector<VknSpace<DataType, SizeType>> subspaces{};
+        VknVector<VknSpace<DataType, SizeType>, SizeType> subspaces{};
         uint8_t maxDimensions{8};
         uint8_t depth{0};
 
@@ -244,21 +316,42 @@ namespace vkn
         VknSpace() = default;
         VknSpace(uint8_t depth) : depth(depth) {}
 
-        VknSpace &getSubspace(uint8_t position)
+        VknSpace<DataType, SizeType> &getSubspace(uint8_t position)
         {
             if (position >= maxDimensions)
                 throw std::runtime_error("Position given is out of range.");
             VknSpace *subspace = subspaces.getElement(position);
             if (!subspace)
-                subspaces.insert(position, std::make_unique<VknSpace>(depth + 1));
+                subspaces.insert(position, VknSpace{depth + 1u});
             return *subspace;
         }
 
-        VknSpace &operator[](uint8_t position) { this->getSubspace(position); }
+        VknVector<DataType, SizeType> getDataSlice(SizeType startPos, SizeType length)
+        {
+            return data.getSlice(startPos, length);
+        }
+
+        VknSpace<DataType, SizeType> getSubspaceSlice(SizeType startPos, SizeType length)
+        {
+            VknVector slice = subspaces.getSlice(startPos, length);
+            VknSpace<DataType, SizeType> result{};
+            result.subspaces = slice;
+        }
+
+        VknSpace<DataType, SizeType> &operator[](uint8_t position)
+        {
+            this->getSubspace(position);
+        }
+
+        uint8_t getNumSubspaces() { return subspaces.getSize(); }
         DataType &operator()(SizeType position) { return data(position); }
-        DataType *getData() { return data.getData(); }
+        DataType *getData(SizeType newSize = 0) { return data.getData(newSize); }
+        VknVector<DataType, SizeType> &getDataVector() { return data; }
+        VknVector<VknSpace<DataType, SizeType>, SizeType> &getSubspaceVector() { return subspaces; }
         DataType &append(DataType element) { return data.append(element); }
         DataType &insert(DataType element, SizeType position) { data.insert(position, element); }
         SizeType getDataSize() { return data.getSize(); }
     };
+
+    VknVector<char> readBinaryFile(std::filesystem::path filename);
 } // namespace vkn

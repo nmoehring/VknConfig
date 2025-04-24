@@ -82,7 +82,7 @@ namespace vkn
 
         // Members
         std::list<VknDescriptorSetLayout> m_descriptorSetLayouts{};
-        std::vector<VkPushConstantRange> m_pushConstantRanges{};
+        VknVector<VkPushConstantRange> m_pushConstantRanges{};
 
         // Params
         VkPipelineLayoutCreateFlags m_createFlags{0};

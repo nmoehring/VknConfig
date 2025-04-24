@@ -44,8 +44,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include "VknPipeline.hpp"
 #include "VknFramebuffer.hpp"
 #include "VknCommon.hpp"

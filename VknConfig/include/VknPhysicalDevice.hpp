@@ -63,13 +63,13 @@ namespace vkn
 
         VkPhysicalDevice *getVkPhysicalDevice();
         VkPhysicalDeviceProperties &getProperties();
-        std::vector<VkPhysicalDeviceProperties> &getAllProperties();
+        VknVector<VkPhysicalDeviceProperties> &getAllProperties();
         bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);
         VknResult enumeratePhysicalDevices();
         VknResult selectPhysicalDevice();
         VkPhysicalDeviceLimits *getLimits();
         void requestQueueFamilyProperties();
-        void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities);
+        void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities);
         void fillDeviceQueuePrioritiesDefault();
         void fillQueueCreateInfos();
         bool areQueuesSelected() { return m_selectedQueues; }
@@ -81,13 +81,12 @@ namespace vkn
     private:
         // Engine
         VknEngine *m_engine;
-        ; // external ptr
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
-        VknInfos *m_infos; // external ptr
+        VknInfos *m_infos;
 
         // Members
-        static std::vector<VkPhysicalDeviceProperties> s_properties;
+        static VknVector<VkPhysicalDeviceProperties> s_properties;
         std::list<VknQueueFamily> m_queues{}; // Vector fine, this shouldn't change.
 
         // State

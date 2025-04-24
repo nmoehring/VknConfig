@@ -1,19 +1,19 @@
+@echo off
+echo -- Config and Build Script running --
 set configCommand=cmake . --preset debug
 set buildCommand=cmake --build --preset debug
 
-IF "%1" == "-build-all" (
-    set configCommand=%configCommand% -DTARGET_SUBDIR=ALL
-) ELSE (
-    set configCommand=%configCommand% -DTARGET_SUBDIR=%1
+IF "%1" == "-log" (
+    echo -- Logging enabled --
+    set "configCommand=%configCommand% > logs\config.log"
+    set "buildCommand=%buildCommand% > logs\build.log"
+) ELSE IF "%1" == "-trace-log" (
+    echo -- Trace logging enabled --
+    set "configCommand=%configCommand% --trace > config.log"
+    set "buildCommand=%buildCommand% --trace > build.log"
 )
 
-IF "%2" == "-log" (
-    set configCommand=%configCommand% > config.log
-    set buildCommand=%buildCommand% > build.log
-) ELSE IF "%2" == "-trace-log" (
-    set configCommand=%configCommand% --trace > config.log
-    set buildCommand=%buildCommand% --trace > build.log
-)
-
+echo -- Configuring --
 %configCommand%
+echo -- Building --
 %buildCommand%

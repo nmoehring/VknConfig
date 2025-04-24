@@ -2,7 +2,7 @@
 
 namespace vkn
 {
-    std::vector<char> readBinaryFile(std::filesystem::path filename)
+    VknVector<char> readBinaryFile(std::filesystem::path filename)
     {
         std::ifstream file(filename.string(), std::ios::ate | std::ios::binary);
         if (!file.is_open())
@@ -10,9 +10,9 @@ namespace vkn
             throw std::runtime_error("Failed to open file!");
         }
         size_t fileSize = (size_t)file.tellg();
-        std::vector<char> buffer(fileSize);
+        VknVector<char> buffer{};
         file.seekg(0);
-        file.read(buffer.data(), fileSize);
+        file.read(buffer.getData(fileSize), fileSize);
         file.close();
         return buffer;
     }

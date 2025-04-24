@@ -1,4 +1,4 @@
-#include <vector>
+
 #include <iostream>
 #include <filesystem>
 
@@ -6,11 +6,12 @@
 
 #include "VknConfig/include/VknConfig.hpp"
 #include "VknConfig/include/VknEngine.hpp"
+#include "VknConfig/include/VknCommon.hpp"
 
-void printDevProps(std::vector<VkPhysicalDeviceProperties> devProps);
-void printFamProps(std::vector<VkQueueFamilyProperties> famProps);
-std::vector<char> readFile(const std::string &filename);
-std::vector<const char *> noNames{};
+void printDevProps(vkn::VknVector<VkPhysicalDeviceProperties> devProps);
+void printFamProps(vkn::VknVector<VkQueueFamilyProperties> famProps);
+vkn::VknVector<char> readFile(const std::string &filename);
+vkn::VknVector<const char *> noNames{};
 GLFWwindow *initWindow();
 
 // GLFW error callback

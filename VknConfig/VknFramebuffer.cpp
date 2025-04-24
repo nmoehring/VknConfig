@@ -57,16 +57,16 @@ namespace vkn
         testEditability();
 
         //>attachment_infos
-        std::vector<std::vector<std::vector<VkAttachmentReference>>> *refs = m_infos->getRenderpassAttachmentReferences(
+        VknSpace<VkAttachmentReference> *refs = m_infos->getRenderpassAttachmentReferences(
             m_relIdxs);
-        std::vector<VkAttachmentDescription> *descriptions = m_infos->getRenderpassAttachmentDescriptions(
+        VknSpace<VkAttachmentDescription> *descriptions = m_infos->getRenderpassAttachmentDescriptions(
             m_relIdxs);
 
         m_imageViewStartIdx = m_engine->getVectorSize<VkImageView>();
-        for (uint32_t i = 0; i < descriptions->size(); ++i)
-            for (auto &subPassVec : *refs)
-                for (uint32_t j = 0; j < subPassVec.size(); ++j)
-                    for (auto &attachmentRef : subPassVec[j])
+        for (uint32_t i = 0; i < descriptions->getDataSize(); ++i)
+            for (VknSpace<VkAttachmentReference> &subPassVec : refs->getSubspaceVector())
+                for (uint32_t j = 0; j < subPassVec.getNumSubspaces(); ++j)
+                    for (VkAttachmentReference &attachmentRef : subPassVec.getDataVector())
                         if (attachmentRef.attachment == i)
                         {
                             VknImage newImage{addNewVknObject<VknImage, VkImage>(m_attachImages.size(), m_attachImages,
@@ -76,9 +76,9 @@ namespace vkn
                                                                                             m_infos)};
                             newView.setImage(&newImage);
                             newImage.setExtent({m_width, m_height, 1});
-                            newImage.setFormat(descriptions->at(i).format);
-                            newView.setFormat(descriptions->at(i).format);
-                            newImage.setSamples(descriptions->at(i).samples);
+                            newImage.setFormat((*descriptions)(i).format);
+                            newView.setFormat((*descriptions)(i).format);
+                            newImage.setSamples((*descriptions)(i).samples);
                             switch (j)
                             {
                             case COLOR_ATTACHMENT:

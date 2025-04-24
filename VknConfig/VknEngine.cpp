@@ -41,6 +41,25 @@ namespace vkn
             vkDestroySurfaceKHR(VK_NULL_HANDLE, surface, VK_NULL_HANDLE);
         for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
+
+        // Maybe don't need to be in engine, idk
+        this->deleteVector<VkQueueFamilyProperties>();
+        this->deleteVector<VkPhysicalDevice>();
+
+        // These do
+        this->deleteVector<VkShaderModule>();
+        this->deleteVector<VkDescriptorSetLayout>();
+        this->deleteVector<VkPipelineLayout>();
+        this->deleteVector<VkPipelineCache>();
+        this->deleteVector<VkPipeline>();
+        this->deleteVector<VkFramebuffer>();
+        this->deleteVector<VkRenderPass>();
+        this->deleteVector<VkImageView>();
+        this->deleteVector<VkImage>();
+        this->deleteVector<VkSwapchainKHR>();
+        this->deleteVector<VkDevice>();
+        this->deleteVector<VkSurfaceKHR>();
+        this->deleteVector<VkInstance>();
         m_poweredOn = false;
     }
 }

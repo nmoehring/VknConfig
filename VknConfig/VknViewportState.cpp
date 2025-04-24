@@ -27,8 +27,7 @@ namespace vkn
 
     void VknViewportState::addViewportWithSwapchain(float x, float y, float minDepth, float maxDepth)
     {
-        m_viewports.push_back(VkViewport{});
-        VkViewport &viewport = m_viewports.back();
+        VkViewport &viewport = m_viewports.append(VkViewport{});
         viewport.x = x;
         viewport.y = y;
         viewport.width = static_cast<float>(m_swapchainExtent->width);
@@ -39,8 +38,7 @@ namespace vkn
 
     void VknViewportState::addViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
     {
-        m_viewports.push_back(VkViewport{});
-        VkViewport &viewport = m_viewports.back();
+        VkViewport &viewport = m_viewports.append(VkViewport{});
         viewport.x = x;
         viewport.y = y;
         viewport.width = static_cast<float>(width);
@@ -51,16 +49,14 @@ namespace vkn
 
     void VknViewportState::addScissorWithSwapchain(VkOffset2D offset)
     {
-        m_scissors.push_back(VkRect2D{});
-        VkRect2D &scissor = m_scissors.back();
+        VkRect2D &scissor = m_scissors.append(VkRect2D{});
         scissor.offset = offset;
         scissor.extent = *m_swapchainExtent;
     }
 
     void VknViewportState::addScissor(VkOffset2D offset, VkExtent2D extent)
     {
-        m_scissors.push_back(VkRect2D{});
-        VkRect2D &scissor = m_scissors.back();
+        VkRect2D &scissor = m_scissors.append(VkRect2D{});
         scissor.offset = offset;
         scissor.extent = extent;
     }

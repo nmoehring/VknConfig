@@ -26,12 +26,12 @@ namespace vkn
             throw std::runtime_error("Window passed to VknConfig is null. There may be a problem with window creation.");
     }
 
-    void VknConfig::enableExtensions(std::vector<std::string> extensions)
+    void VknConfig::enableExtensions(VknVector<std::string> extensions)
     {
         if (m_createdInstance)
             throw std::runtime_error("Can't enable extensions after instance is already created.");
         for (auto &name : extensions)
-            m_instanceExtensions.push_back(name);
+            m_instanceExtensions.append(name);
     }
 
     void VknConfig::deviceInfo(uint32_t deviceIdx)

@@ -44,7 +44,7 @@
 
 #pragma once
 #include <string>
-#include <vector>
+
 #include <iostream>
 #include <cstdint>
 #include <stdexcept>
@@ -148,11 +148,11 @@ namespace vkn
         VkSwapchainCreateInfoKHR *getSwapchainCreateInfo(VknIdxs &relIdxs);
         uint32_t getNumDeviceQueueFamilies(uint32_t deviceIdx)
         {
-            return m_numQueueFamilies[deviceIdx];
+            return m_numQueueFamilies(deviceIdx);
         }
         void setNumDeviceQueueFamilies(int num, uint32_t deviceIdx);
         void fillDeviceQueuePriorities(
-            VknIdxs &relIdxs, uint32_t queueFamilyIdx, std::vector<float> priorities);
+            VknIdxs &relIdxs, uint32_t queueFamilyIdx, VknVector<float> priorities);
 
         // ============FILL DEVICE INIT INFOS===============
         bool checkFill(checkFillFunctions functionName);
@@ -181,7 +181,7 @@ namespace vkn
 
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
-            VknIdxs &relIdxs, std::vector<char> *code);
+            VknIdxs &relIdxs, VknVector<char> *code);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
             VknIdxs &relIdxs, VkShaderModule *module, VkShaderStageFlagBits *stage,
             VkPipelineShaderStageCreateFlags *flags,
@@ -273,7 +273,7 @@ namespace vkn
                                                VkImageLayout initialLayout,
                                                VkImageCreateFlags flags);
         VknSpace<uint32_t> *getSubpassPreserveAttachments(uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
-        std::vector<std::vector<std::vector<uint32_t>>> *getDevicePreserveAttachments(uint32_t deviceIdx);
+        VknVector<VknVector<VknVector<uint32_t>>> *getDevicePreserveAttachments(uint32_t deviceIdx);
         VknSpace<uint32_t> *getRenderpassPreserveAttachments(uint32_t deviceIdx, uint32_t renderpassIdx);
         VkSubpassDescription *fillSubpassDescription(
             uint32_t numColor, uint32_t numInput, uint32_t numResolve, uint32_t numDepthStencil,
@@ -321,11 +321,11 @@ namespace vkn
         uint32_t m_enabledInstanceExtensionNamesSize{0};
         const char *const *m_enabledLayerNames;
         uint32_t m_enabledLayerNamesSize{0};
-        std::vector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
-        std::vector<const char *const *> m_enabledDeviceExtensionNames{}; // Device>char_arr
-        uint32_t m_enabledDeviceExtensionNamesSize{0};
-        VknSpace<float> m_queuePriorities{};        // Device>QueueFamily>QueuePriority
-        std::vector<uint32_t> m_numQueueFamilies{}; // Device>NumFamilies
+        VknVector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
+        VknVector<const char *const *> m_enabledDeviceExtensionNames{}; // Device>char_arr
+        VknVector<uint32_t> m_enabledDeviceExtensionNamesSize{};
+        VknSpace<float> m_queuePriorities{};      // Device>QueueFamily>QueuePriority
+        VknVector<uint32_t> m_numQueueFamilies{}; // Device>NumFamilies
 
         // Info's
         VkApplicationInfo m_appInfo{};
@@ -362,7 +362,7 @@ namespace vkn
 
         VknSpace<VkFramebufferCreateInfo> m_framebufferCreateInfos{}; // Device>Renderpass>Framebuffers
         VknSpace<VkImageViewCreateInfo> m_imageViewCreateInfos{};     // Device>Swapchain>ImageViews
-        std::vector<VkImageCreateInfo> m_imageCreateInfos{};          //>Image
+        VknVector<VkImageCreateInfo> m_imageCreateInfos{};            //>Image
         const char m_mainEntry[5] = "main";
 
         // Required fill checklist

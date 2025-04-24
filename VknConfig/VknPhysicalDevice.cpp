@@ -2,7 +2,7 @@
 
 namespace vkn
 {
-    std::vector<VkPhysicalDeviceProperties> VknPhysicalDevice::s_properties{};
+    VknVector<VkPhysicalDeviceProperties> VknPhysicalDevice::s_properties{};
     bool VknPhysicalDevice::s_enumeratedPhysicalDevices{false};
 
     VknPhysicalDevice::VknPhysicalDevice(
@@ -11,7 +11,7 @@ namespace vkn
     {
     }
 
-    void VknPhysicalDevice::fillDeviceQueuePriorities(uint32_t queueFamilyIdx, std::vector<float> priorities)
+    void VknPhysicalDevice::fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities)
     {
         if (!m_requestedQueues)
             throw std::runtime_error("Queue properties not requested before filling queue priorities.");
@@ -23,8 +23,12 @@ namespace vkn
         if (!m_requestedQueues)
             throw std::runtime_error("Queue properties not requested before filling queue priorities.");
         for (int i = 0; i < m_queues.size(); ++i)
+        {
+            VknVector<float> newVec{};
+            newVec.append(1.0f, getListElement<VknQueueFamily>(i, m_queues)->getNumSelected());
             m_infos->fillDeviceQueuePriorities(
-                m_relIdxs, i, std::vector<float>(getListElement<VknQueueFamily>(i, m_queues)->getNumSelected(), 1.0f));
+                m_relIdxs, i, newVec);
+        }
     }
 
     void VknPhysicalDevice::requestQueueFamilyProperties()
@@ -41,8 +45,8 @@ namespace vkn
         if (propertyCount == 0)
             throw std::runtime_error("No available queue families found.");
 
-        std::vector<VkQueueFamilyProperties> *engineQueues = &m_engine->getVector<VkQueueFamilyProperties>();
-        m_startAbsIdx = engineQueues->size();
+        VknVector<VkQueueFamilyProperties> *engineQueues = &m_engine->getVector<VkQueueFamilyProperties>();
+        m_startAbsIdx = engineQueues->getSize();
         for (int i = 0; i < propertyCount; ++i)
             addNewVknObject<VknQueueFamily, VkQueueFamilyProperties>(
                 i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);
@@ -50,7 +54,7 @@ namespace vkn
         vkGetPhysicalDeviceQueueFamilyProperties(
             *this->getVkPhysicalDevice(),
             &propertyCount,
-            engineQueues->data() + m_startAbsIdx);
+            engineQueues->getData() + m_startAbsIdx);
         m_requestedQueues = true;
     }
 
@@ -98,16 +102,16 @@ namespace vkn
             throw std::runtime_error("No GPU's supporting Vulkan found.");
         else if (deviceCount > 1)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
-        std::vector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
-        physDevices->resize(deviceCount);
+        VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
         VknResult res2{vkEnumeratePhysicalDevices(
-                           m_engine->getObject<VkInstance>(0), &deviceCount, physDevices->data()),
+                           m_engine->getObject<VkInstance>(0), &deviceCount,
+                           physDevices->getData(deviceCount)),
                        "Enum physical devices and store."};
 
-        s_properties.resize(deviceCount);
         for (auto &vkDevice : *physDevices)
             vkGetPhysicalDeviceProperties(
-                m_engine->getObject<VkPhysicalDevice>(0), s_properties.data());
+                m_engine->getObject<VkPhysicalDevice>(0),
+                s_properties.getData(deviceCount));
         s_enumeratedPhysicalDevices = true;
         return res2;
     }
@@ -144,7 +148,7 @@ namespace vkn
     {
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before getting device limits.");
-        return &s_properties[m_relIdxs.get<VkPhysicalDevice>()].limits;
+        return &s_properties(m_relIdxs.get<VkPhysicalDevice>()).limits;
     }
 
     VkPhysicalDevice *VknPhysicalDevice::getVkPhysicalDevice()
@@ -158,10 +162,10 @@ namespace vkn
     {
         if (!s_enumeratedPhysicalDevices)
             throw std::runtime_error("Physical devices not enumerated before getting physical device properties.");
-        return s_properties[m_relIdxs.get<VkPhysicalDevice>()];
+        return s_properties(m_relIdxs.get<VkPhysicalDevice>());
     }
 
-    std::vector<VkPhysicalDeviceProperties> &VknPhysicalDevice::getAllProperties()
+    VknVector<VkPhysicalDeviceProperties> &VknPhysicalDevice::getAllProperties()
     {
         if (!s_enumeratedPhysicalDevices)
             throw std::runtime_error("Physical device not enumerated before getting physical device properties vector.");

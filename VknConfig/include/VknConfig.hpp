@@ -48,7 +48,7 @@
 #pragma once
 
 #include <list>
-#include <vector>
+
 #include <memory>
 #include <functional>
 #include <stdexcept>
@@ -92,7 +92,7 @@ namespace vkn
                                     const char *const *enabledExtensionNames,
                                     uint32_t enabledExtensionNamesSize,
                                     VkInstanceCreateFlags flags = 0);
-        void enableExtensions(std::vector<std::string> extensions);
+        void enableExtensions(VknVector<std::string> extensions);
 
         // Create
         VknResult createInstance();
@@ -112,7 +112,7 @@ namespace vkn
         VknInfos *m_infos;
 
         // Params
-        std::vector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
+        VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
         GLFWwindow *m_window{nullptr};
 
         // Members

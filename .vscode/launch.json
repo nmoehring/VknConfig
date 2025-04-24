@@ -10,16 +10,6 @@
             "console": "externalTerminal"
         },
         {
-            "name": "Build and debug CURRENT file (MSVC)",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
-            "stopAtEntry": false,
-            "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build this subdirectory"
-        },
-        {
             "name": "Build ALL and debug CURRENT file (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
@@ -30,16 +20,6 @@
             "preLaunchTask": "(Debug) CMake configure and build all"
         },
         {
-            "name": "Build and debug CURRENT file w/ LOGS (MSVC)",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
-            "stopAtEntry": false,
-            "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build this subdirectory w/ logs"
-        },
-        {
             "name": "Build ALL and debug CURRENT file w/ LOGS (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
@@ -48,16 +28,6 @@
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ logs"
-        },
-        {
-            "name": "Build and debug CURRENT file w/ TRACE logs (MSVC)",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
-            "stopAtEntry": false,
-            "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build this subdirectory w/ trace"
         },
         {
             "name": "Build ALL and debug CURRENT file w/ TRACE logs (MSVC)",

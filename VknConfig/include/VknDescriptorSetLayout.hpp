@@ -80,7 +80,7 @@ namespace vkn
         VknInfos *m_infos;
 
         // Params
-        std::vector<VkDescriptorSetLayoutBinding> m_bindings{};
+        VknVector<VkDescriptorSetLayoutBinding> m_bindings{};
         VkDescriptorSetLayoutCreateFlags m_createFlags{0};
 
         // State

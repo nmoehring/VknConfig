@@ -7,7 +7,7 @@ namespace vkn
     }
 
     void VknInfos::fillDeviceQueuePriorities(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
-                                             std::vector<float> priorities)
+                                             VknVector<float> priorities)
     {
         for (auto &priority : priorities)
             m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].append(priority);
@@ -16,9 +16,7 @@ namespace vkn
 
     void VknInfos::setNumDeviceQueueFamilies(int num, uint32_t deviceIdx)
     {
-        if (m_numQueueFamilies.size() < deviceIdx + 1)
-            m_numQueueFamilies.resize(deviceIdx + 1);
-        m_numQueueFamilies[deviceIdx] = num;
+        m_numQueueFamilies.insert(deviceIdx, num);
     }
 
     VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
@@ -144,7 +142,7 @@ namespace vkn
     }
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
-        VknIdxs &relIdxs, std::vector<char> *code)
+        VknIdxs &relIdxs, VknVector<char> *code)
     {
         VkShaderModuleCreateInfo *info =
             &m_shaderModuleCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
@@ -152,8 +150,8 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0;
-        info->codeSize = code->size();
-        info->pCode = reinterpret_cast<const uint32_t *>(code->data());
+        info->codeSize = code->getSize();
+        info->pCode = reinterpret_cast<const uint32_t *>(code->getData());
         return info;
     }
 
@@ -450,10 +448,8 @@ namespace vkn
 
     void VknInfos::fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size)
     {
-        if (m_enabledDeviceExtensionNames.size() < deviceIdx + 1)
-            m_enabledDeviceExtensionNames.resize(deviceIdx + 1);
-        m_enabledDeviceExtensionNames[deviceIdx] = names;
-        m_enabledDeviceExtensionNamesSize = size;
+        m_enabledDeviceExtensionNames.insert(deviceIdx, names);
+        m_enabledDeviceExtensionNamesSize.insert(deviceIdx, size);
     }
 
     void VknInfos::fillEnabledLayerNames(const char *const *names, uint32_t size)
@@ -465,7 +461,7 @@ namespace vkn
 
     void VknInfos::fillDeviceFeatures(VknFeatures features)
     {
-        m_enabledFeatures.push_back(features.createInfo());
+        m_enabledFeatures.append(features.createInfo());
     }
 
     void VknInfos::fillAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion)
@@ -545,12 +541,12 @@ namespace vkn
         info.enabledLayerCount = 0; // ignored, value doesn't matter
         // ppEnabledLayerNames is deprecated and should not be used
         info.ppEnabledLayerNames = VK_NULL_HANDLE; // ignored, value doesn't matter
-        info.enabledExtensionCount = m_enabledDeviceExtensionNamesSize;
-        if (m_enabledDeviceExtensionNamesSize == 0)
+        info.enabledExtensionCount = m_enabledDeviceExtensionNamesSize(deviceIdx);
+        if (m_enabledDeviceExtensionNamesSize(deviceIdx) == 0)
             info.ppEnabledExtensionNames = VK_NULL_HANDLE;
         else
-            info.ppEnabledExtensionNames = m_enabledDeviceExtensionNames[deviceIdx];
-        info.pEnabledFeatures = &m_enabledFeatures[deviceIdx];
+            info.ppEnabledExtensionNames = m_enabledDeviceExtensionNames(deviceIdx);
+        info.pEnabledFeatures = &m_enabledFeatures(deviceIdx);
 
         m_filledDeviceCreateInfo = true;
         return &info;
@@ -796,8 +792,8 @@ namespace vkn
         VkImageUsageFlags usage, VkImageLayout initialLayout,
         VkImageCreateFlags flags)
     {
-        m_imageCreateInfos.push_back(VkImageCreateInfo{});
-        VkImageCreateInfo *info = &m_imageCreateInfos.back();
+        VkImageCreateInfo *info =
+            &m_imageCreateInfos.append(VkImageCreateInfo{});
         info->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = flags;

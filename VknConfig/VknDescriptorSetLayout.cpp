@@ -17,12 +17,13 @@ namespace vkn
         VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers)
     {
         testEditability();
-        m_bindings.push_back(VkDescriptorSetLayoutBinding{});
-        m_bindings.back().binding = binding;
-        m_bindings.back().descriptorType = descriptorType;
-        m_bindings.back().descriptorCount = descriptorCount;
-        m_bindings.back().stageFlags = stageFlags;
-        m_bindings.back().pImmutableSamplers = pImmutableSamplers;
+        VkDescriptorSetLayoutBinding &descSetLayoutBinding =
+            m_bindings.append(VkDescriptorSetLayoutBinding{});
+        descSetLayoutBinding.binding = binding;
+        descSetLayoutBinding.descriptorType = descriptorType;
+        descSetLayoutBinding.descriptorCount = descriptorCount;
+        descSetLayoutBinding.stageFlags = stageFlags;
+        descSetLayoutBinding.pImmutableSamplers = pImmutableSamplers;
     }
 
     // Create

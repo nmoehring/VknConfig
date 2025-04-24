@@ -88,8 +88,8 @@ namespace vkn
         VkRect2D m_defaultScissor{
             .offset = m_defaultOffset,
             .extent = m_defaultExtent};
-        std::vector<VkViewport> m_viewports{};
-        std::vector<VkRect2D> m_scissors{};
+        VknVector<VkViewport> m_viewports{};
+        VknVector<VkRect2D> m_scissors{};
 
         // State
         bool m_filledCreateInfo{false};

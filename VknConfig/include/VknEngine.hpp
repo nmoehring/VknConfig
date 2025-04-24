@@ -46,11 +46,12 @@
 
 #include <string>
 #include <vulkan/vulkan.h>
-#include <vector>
+
 #include <unordered_map>
 #include <optional>
 #include <span> // For std::span
 #include <stdexcept>
+#include "VknCommon.hpp"
 
 namespace vkn
 {
@@ -142,7 +143,7 @@ namespace vkn
         template <typename T>
         uint32_t push_back(T val)
         {
-            std::vector<T> &vec{this->getVector<T>()};
+            VknVector<T> &vec{this->getVector<T>()};
             uint32_t idx = vec.size();
             this->getVector<T>().push_back(val);
             return idx;
@@ -167,47 +168,67 @@ namespace vkn
         }
 
         template <typename T>
-        std::vector<T> &getVector()
+        VknVector<T> &getVector()
         {
             std::string vkTypeStr = typeToStr<T>();
             if (m_objectVectors.find(vkTypeStr) == m_objectVectors.end())
 
-                m_objectVectors[vkTypeStr] = new std::vector<T>();
-            return *static_cast<std::vector<T> *>(m_objectVectors[vkTypeStr]);
+                m_objectVectors[vkTypeStr] = new VknVector<T>();
+            return *static_cast<VknVector<T> *>(m_objectVectors[vkTypeStr]);
         }
 
         template <typename T>
-        std::span<T> getVectorSlice(uint32_t startIdx, uint32_t length)
+        VknVector<T> &getVectorSlice(uint32_t startIdx, uint32_t length)
         {
-            std::vector<T> &vec = this->getVector<T>();
+            VknVector<T> &vec = this->getVector<T>();
             if (startIdx + length > vec.size())
                 throw std::out_of_range("Slice range exceeds vector size.");
-            return std::span<T>(vec.data() + startIdx, length);
+            return *vec[vec.data() + startIdx, length];
         }
 
         template <typename T>
         uint32_t getVectorSize()
         {
-            return this->getVector<T>().size();
+            return this->getVector<T>().getSize();
         }
 
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
         bool m_poweredOn{true};
-        /*std::vector<VkInstance> instances{};
-        std::vector<VkDevice> devices{};
-        std::vector<VkSurfaceKHR> surfaces{};
-        std::vector<VkRenderPass> renderpasses{};
-        std::vector<VkPipeline> pipelines{};
-        std::vector<VkSwapchainKHR> swapchains{};
-        std::vector<VkImage> images{};
-        std::vector<VkFramebuffer> framebuffers{};
-        std::vector<VkImageView> imageViews{};
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
-        std::vector<VkPipelineLayout> pipelineLayouts{};
-        std::vector<VkPhysicalDevice> physicalDevices{};
-        std::vector<VkShaderModule> shaderModules{};
-        std::vector<VkPipelineCache> pipelineCaches{};*/
+        /*VknVector<VkInstance> instances{};
+        VknVector<VkDevice> devices{};
+        VknVector<VkSurfaceKHR> surfaces{};
+        VknVector<VkRenderPass> renderpasses{};
+        VknVector<VkPipeline> pipelines{};
+        VknVector<VkSwapchainKHR> swapchains{};
+        VknVector<VkImage> images{};
+        VknVector<VkFramebuffer> framebuffers{};
+        VknVector<VkImageView> imageViews{};
+        VknVector<VkDescriptorSetLayout> descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
+        VknVector<VkPipelineLayout> pipelineLayouts{};
+        VknVector<VkPhysicalDevice> physicalDevices{};
+        VknVector<VkShaderModule> shaderModules{};
+        VknVector<VkPipelineCache> pipelineCaches{};*/
+
+        template <typename T>
+        void deleteVector()
+        {
+            std::string vkTypeStr = typeToStr<T>();
+            if (m_objectVectors.find(vkTypeStr) != m_objectVectors.end())
+                delete static_cast<VknVector<T> *>(m_objectVectors[vkTypeStr]);
+        }
     }; // VknEngine
 
+    template <typename VknT, typename VkT>
+    VknT &addNewVknObject(uint32_t idx, std::list<VknT> &objList, VknEngine *engine,
+                          VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+    {
+        if (idx > objList.size())
+            throw std::runtime_error("List index out of range.");
+        VknIdxs newRelIdxs = relIdxs;
+        VknIdxs newAbsIdxs = absIdxs;
+        newAbsIdxs.add<VkT>(engine->push_back(VkT{}));
+        newRelIdxs.add<VkT>(objList.size());
+        return objList.emplace_back(engine, newRelIdxs, newAbsIdxs, infos);
+    }
 } // namespace vkn

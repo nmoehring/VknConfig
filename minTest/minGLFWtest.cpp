@@ -3,7 +3,7 @@
 #include <GLFW/glfw3native.h>
 #include <vulkan/vulkan.h>
 #include <iostream>
-#include <vector>
+#include "../VknConfig/include/VknCommon.hpp"
 
 // GLFW error callback
 void glfwErrorCallback(int error, const char *description)
@@ -12,16 +12,17 @@ void glfwErrorCallback(int error, const char *description)
 }
 
 // Vulkan validation layer
-const std::vector<const char *> validationLayers = {
+const vkn::VknVector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
 
 // Vulkan extensions required by GLFW
-std::vector<const char *> getRequiredExtensions()
+vkn::VknVector<const char *> getRequiredExtensions()
 {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-    extensions.push_back("VK_KHR_win32_surface");
+    vkn::VknVector<const char *> extensions{};
+    extensions.append(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    extensions.append("VK_KHR_win32_surface");
     return extensions;
 }
 

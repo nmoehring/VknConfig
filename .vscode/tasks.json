@@ -2,53 +2,20 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "(Debug) CMake configure and build this subdirectory",
-            "command": "${workspaceFolder}\\build_debug.bat",
-            "args": [
-                "${relativeFileDirname}"
-            ],
-            "options": {},
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": "build",
-            "detail": "Call CMake to configure and build current subdirectory in debug mode."
-        },
-        {
-            "type": "shell",
             "label": "(Debug) CMake configure and build all",
             "command": "${workspaceFolder}\\build_debug.bat",
-            "args": [
-                "-build-all"
-            ],
             "options": {},
             "problemMatcher": [
                 "$msCompile"
             ],
             "group": "build",
             "detail": "Call CMake to configure and build entire project in debug mode."
-        },
-        {
-            "type": "shell",
-            "label": "(Debug) CMake configure and build this subdirectory w/ logs",
-            "command": "${workspaceFolder}\\build_debug.bat",
-            "args": [
-                "${relativeFileDirname}",
-                "-log"
-            ],
-            "options": {},
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": "build",
-            "detail": "Call CMake to configure and build current subdirectory in debug mode."
         },
         {
             "type": "shell",
             "label": "(Debug) CMake configure and build all w/ logs",
             "command": "${workspaceFolder}\\build_debug.bat",
             "args": [
-                "-build-all",
                 "-log"
             ],
             "options": {},
@@ -60,25 +27,9 @@
         },
         {
             "type": "shell",
-            "label": "(Debug) CMake configure and build this subdirectory w/ trace",
-            "command": "${workspaceFolder}\\build_debug.bat",
-            "args": [
-                "${relativeFileDirname}",
-                "-trace-log"
-            ],
-            "options": {},
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": "build",
-            "detail": "Call CMake to configure and build current subdirectory in debug mode."
-        },
-        {
-            "type": "shell",
             "label": "(Debug) CMake configure and build all w/ trace",
             "command": "${workspaceFolder}\\build_debug.bat",
             "args": [
-                "-build-all",
                 "trace-log"
             ],
             "options": {},

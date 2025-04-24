@@ -7,3 +7,4 @@ CMakeCache.txt
 # Ignore temporary files 
 *.log 
 *.tmp
+/logs/
