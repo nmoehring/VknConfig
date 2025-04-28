@@ -46,7 +46,7 @@ namespace vkn
             m_infos->getFramebufferCreateInfo(m_relIdxs);
         vkCreateFramebuffer(
             m_engine->getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
-            &m_engine->getObject<VkFramebuffer>(m_absIdxs));
+            m_engine->getVector<VkFramebuffer>().getData(1));
         m_createdFramebuffer = true;
     }
 

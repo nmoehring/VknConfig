@@ -103,7 +103,6 @@ namespace vkn
 
     VkSwapchainKHR *VknSwapchain::getVkSwapchain()
     {
-        this->testEditability();
         return &m_engine->getObject<VkSwapchainKHR>(m_absIdxs);
     }
 
@@ -138,7 +137,7 @@ namespace vkn
         VknResult res{
             vkCreateSwapchainKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                  createInfo, nullptr,
-                                 this->getVkSwapchain()),
+                                 m_engine->getVector<VkSwapchainKHR>().getData(1)),
             "Create swapchain"};
 
         m_createdSwapchain = true;
@@ -158,7 +157,7 @@ namespace vkn
             throw std::runtime_error("Swapchain imageCount does not equal what should have been set.");
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                 m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
-                                &imageCount, engineImages->getData(m_imageCount) + m_imageStartIdx);
+                                &imageCount, engineImages->getData(m_imageCount));
         this->addImageViews();
         this->createImageViews();
         return &m_imageViews;

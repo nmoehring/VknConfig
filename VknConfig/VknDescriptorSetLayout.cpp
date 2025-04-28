@@ -36,7 +36,7 @@ namespace vkn
             vkCreateDescriptorSetLayout(
                 m_engine->getObject<VkDevice>(m_absIdxs),
                 createInfo, nullptr,
-                &m_engine->getObject<VkDescriptorSetLayout>(m_absIdxs)),
+                m_engine->getVector<VkDescriptorSetLayout>().getData(1)),
             "Create descriptor set layout."};
     }
 

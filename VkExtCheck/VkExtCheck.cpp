@@ -36,7 +36,7 @@ vkn::VknVector<std::string> getExtensionList()
 vkn::VknVector<VkExtensionProperties> enumerateExtensions()
 {
     // TODO: Enumerate device extensions
-    uint32_t extensionCount = 0;
+    uint32_t extensionCount = 0u;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
     vkn::VknVector<VkExtensionProperties> extensions{};
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.getData());

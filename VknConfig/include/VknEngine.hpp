@@ -144,9 +144,9 @@ namespace vkn
         uint32_t push_back(T val)
         {
             VknVector<T> &vec{this->getVector<T>()};
-            uint32_t idx = vec.size();
-            this->getVector<T>().push_back(val);
-            return idx;
+            uint32_t pos = vec.getNumElements();
+            vec.append(val);
+            return pos;
         }
 
         template <typename T>
@@ -158,13 +158,13 @@ namespace vkn
         template <typename T>
         T &getObject(uint32_t idx)
         {
-            return this->getVector<T>()[idx];
+            return this->getVector<T>()(idx);
         }
 
         template <typename T>
         T &getObject(VknIdxs &absIdxs)
         {
-            return this->getVector<T>()[absIdxs.get<T>()];
+            return this->getVector<T>()(absIdxs.get<T>());
         }
 
         template <typename T>
@@ -181,9 +181,9 @@ namespace vkn
         VknVector<T> &getVectorSlice(uint32_t startIdx, uint32_t length)
         {
             VknVector<T> &vec = this->getVector<T>();
-            if (startIdx + length > vec.size())
+            if (startIdx + length > vec.getSize())
                 throw std::out_of_range("Slice range exceeds vector size.");
-            return *vec[vec.data() + startIdx, length];
+            return *vec.getSlice(startIdx, length);
         }
 
         template <typename T>

@@ -60,7 +60,7 @@
 
 namespace vkn
 {
-    enum VknAttachmentType : uint8_t
+    enum VknAttachmentType : uint32_t
     {
         COLOR_ATTACHMENT = 0,
         DEPTH_STENCIL_ATTACHMENT = 1,

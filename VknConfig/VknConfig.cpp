@@ -170,7 +170,7 @@ namespace vkn
         VknResult res{
             vkCreateInstance(
                 m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE,
-                &m_engine->getObject<VkInstance>(0)),
+                m_engine->getVector<VkInstance>().getData(1)),
             "Create instance."};
 
         m_createdInstance = true;
@@ -193,6 +193,6 @@ namespace vkn
         VknResult res{"Create window surface."};
         res = glfwCreateWindowSurface(
             m_engine->getObject<VkInstance>(0), m_window, nullptr,
-            &m_engine->getObject<VkSurfaceKHR>(surfaceIdx));
+            m_engine->getVector<VkSurfaceKHR>().getData(1));
     }
 }

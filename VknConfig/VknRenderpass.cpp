@@ -45,7 +45,7 @@ namespace vkn
         VknResult res{vkCreateRenderPass(
                           m_engine->getObject<VkDevice>(m_absIdxs),
                           createInfo, VK_NULL_HANDLE,
-                          &m_engine->getObject<VkRenderPass>(m_absIdxs)),
+                          m_engine->getVector<VkRenderPass>().getData(1)),
                       "Create renderpass."};
         m_createdRenderpass = true;
     }
@@ -114,9 +114,8 @@ namespace vkn
                 if (!shaderStage.isShaderModuleCreated())
                     throw std::runtime_error("Shader module in shader stage not created before pipelines created.");
 
-        std::span<VkPipeline> pipelines{
-            m_engine->getVectorSlice<VkPipeline>(
-                m_pipelineStartIdx, m_pipelines.size())};
+        VkPipeline *vkPipelines =
+            m_engine->getVector<VkPipeline>().getData(m_pipelines.size());
         for (auto &pipeline : m_pipelines)
             pipeline._fillPipelineCreateInfo();
         VknSpace<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
@@ -125,7 +124,7 @@ namespace vkn
                           m_engine->getObject<VkDevice>(m_absIdxs),
                           VK_NULL_HANDLE, m_numSubpasses,
                           pipelineCreateInfos->getData(), nullptr,
-                          pipelines.data()),
+                          vkPipelines),
                       "Create pipeline."};
         m_createdPipelines = true;
     }

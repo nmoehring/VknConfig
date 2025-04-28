@@ -46,7 +46,7 @@ namespace vkn
             throw std::runtime_error("No available queue families found.");
 
         VknVector<VkQueueFamilyProperties> *engineQueues = &m_engine->getVector<VkQueueFamilyProperties>();
-        m_startAbsIdx = engineQueues->getSize();
+        m_startAbsIdx = engineQueues->getNumElements();
         for (int i = 0; i < propertyCount; ++i)
             addNewVknObject<VknQueueFamily, VkQueueFamilyProperties>(
                 i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);
@@ -54,7 +54,7 @@ namespace vkn
         vkGetPhysicalDeviceQueueFamilyProperties(
             *this->getVkPhysicalDevice(),
             &propertyCount,
-            engineQueues->getData() + m_startAbsIdx);
+            engineQueues->getData(propertyCount));
         m_requestedQueues = true;
     }
 
@@ -94,17 +94,17 @@ namespace vkn
             throw std::runtime_error("Already enumerated physical devices.");
         uint32_t deviceCount{};
         VknResult res1{vkEnumeratePhysicalDevices(
-                           m_engine->getObject<VkInstance>(0), &deviceCount, nullptr),
+                           m_engine->getObject<VkInstance>(0u), &deviceCount, nullptr),
                        "Enumerate physical devices."};
 
         // What I'm doing : get the vector of physdevices, query the properties at the end.
-        if (deviceCount == 0)
+        if (deviceCount == 0u)
             throw std::runtime_error("No GPU's supporting Vulkan found.");
-        else if (deviceCount > 1)
+        else if (deviceCount > 1u)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
         VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
         VknResult res2{vkEnumeratePhysicalDevices(
-                           m_engine->getObject<VkInstance>(0), &deviceCount,
+                           m_engine->getObject<VkInstance>(0u), &deviceCount,
                            physDevices->getData(deviceCount)),
                        "Enum physical devices and store."};
 

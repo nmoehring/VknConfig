@@ -11,7 +11,7 @@ namespace vkn
     // Config
     VknDescriptorSetLayout *VknPipelineLayout::addDescriptorSetLayout()
     {
-        m_descriptorSetLayoutStartIdx = m_engine->getVector<VkDescriptorSetLayout>().size();
+        m_descriptorSetLayoutStartIdx = m_engine->getVectorSize<VkDescriptorSetLayout>();
         return &addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout>(
             uint32_t{0}, m_descriptorSetLayouts, m_engine,
             m_relIdxs, m_absIdxs, m_infos);
@@ -20,10 +20,10 @@ namespace vkn
     void VknPipelineLayout::addPushConstantRange(VkShaderStageFlags stageFlags,
                                                  uint32_t offset, uint32_t size)
     {
-        m_pushConstantRanges.push_back(VkPushConstantRange{});
-        m_pushConstantRanges.back().stageFlags = stageFlags;
-        m_pushConstantRanges.back().offset = offset;
-        m_pushConstantRanges.back().size = size;
+        VkPushConstantRange &element = m_pushConstantRanges.append(VkPushConstantRange{});
+        element.stageFlags = stageFlags;
+        element.offset = offset;
+        element.size = size;
     }
 
     // Create
@@ -38,7 +38,7 @@ namespace vkn
             m_pushConstantRanges, m_createFlags);
         vkCreatePipelineLayout(
             m_engine->getObject<VkDevice>(m_absIdxs), createInfo,
-            nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs));
+            nullptr, m_engine->getVector<VkPipelineLayout>().getData(1));
         m_createdPipelineLayout = true;
     }
 
