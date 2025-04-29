@@ -623,7 +623,12 @@ namespace vkn
 
         bool operator==(const VknVectorIterator &other) const
         {
-            return m_currentPos == other.m_currentPos;
+            if (!m_atBegin && !m_atEnd)
+                return m_currentPos == other.m_currentPos;
+            else if (m_atBegin)
+                return m_atBegin == other.m_atBegin;
+            else if (m_atEnd)
+                return m_atEnd == other.m_atEnd;
         }
 
         bool operator!=(const VknVectorIterator &other) const
@@ -633,27 +638,53 @@ namespace vkn
 
         bool operator<(const VknVectorIterator &other) const
         {
-            return m_currentPos < other.m_currentPos;
+            if (m_atBegin)
+                return !other.m_atBegin;
+            else if (other.m_atEnd)
+                return !m_atEnd;
+            else if (m_atEnd || other.m_atBegin)
+                return false;
+            else
+                return m_currentPos < other.m_currentPos;
         }
 
         bool operator>(const VknVectorIterator &other) const
         {
-            return m_currentPos > other.m_currentPos;
+            return !(*this < other);
         }
 
         bool operator<=(const VknVectorIterator &other) const
         {
-            return m_currentPos <= other.m_currentPos;
+            if (m_atBegin || other.m_atEnd)
+                return true;
+            else if (m_atEnd)
+                return other.m_atEnd;
+            else if (other.m_atBegin)
+                return m_atBegin;
+            else
+                return m_currentPos <= other.m_currentPos;
         }
 
         bool operator>=(const VknVectorIterator &other) const
         {
-            return m_currentPos >= other.m_currentPos;
+            if (m_atEnd || other.m_atBegin)
+                return true;
+            else if (m_atBegin)
+                return other.m_atBegin;
+            else if (other.m_atEnd)
+                return m_atEnd;
+            else
+                return m_currentPos >= other.m_currentPos;
         }
 
         difference_type operator-(const VknVectorIterator &other) const
         {
-            return m_currentPos - other.m_currentPos;
+            return *this - other.m_currentPos;
+        }
+
+        difference_type operator+(const VknVectorIterator &other) calloc
+        {
+            return *this + other.m_currentPos;
         }
 
         VknVectorIterator operator+(difference_type nArg) const
