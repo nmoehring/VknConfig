@@ -1,16 +1,17 @@
 #pragma once
 
+#include <iterator>
+#include <vector>
 #include <filesystem>
 #include <list>
-#include <fstream> //todo: some of my includes are only used in the cpp, so it may not be obvious, maybe comment as such
+#include <fstream>
 #include <string>
 
 namespace vkn
 {
-    template <typename SizeType>
     struct PosSearchResult
     {
-        SizeType pos{0};
+        size_t pos{0};
         bool found{false};
     };
 
@@ -37,167 +38,156 @@ namespace vkn
     {
         SizeType *m_positions{nullptr};
         DataType *m_data{nullptr};
-        SizeType *m_endIdx{nullptr};
-        SizeType *m_endPos{nullptr};
-        static constexpr SizeType s_maxPos = ~static_cast<SizeType>(0u);
+        size_t m_lastIdx{0};
+        size_t m_lastPos{0};
+        static constexpr size_t s_maxSizeTypeNum = ~static_cast<SizeType>(0u);
 
         void resize(size_t newSize)
         {
-            if (newSize > static_cast<size_t>(maxPos))
+            if (newSize - 1 > s_maxSizeTypeNum)
                 throw std::runtime_error("Overflow error. newSize of VknVector is greater than the maximum allowed by the SizeType.");
             DataType *newData = new DataType[newSize];
             SizeType *newPositions = new SizeType[newSize];
-            for (size_t i = 0; i < static_cast<size_t>(m_endIdx + 1); i = static_cast<SizeType>(i + 1u))
+            for (size_t i = 0; i < this->getSize(); ++i)
             {
-                newData[i] = data[i];
-                newPositions[i] = positions[i];
+                newData[i] = m_data[i];
+                newPositions[i] = m_positions[i];
             }
             this->deleteArrays();
-            data = newData;
-            positions = newPositions;
+            m_data = newData;
+            m_positions = newPositions;
+            m_lastIdx = newSize - 1u;
         }
 
-        SizeType getNextPosition()
+        size_t getNextPosition()
         {
-            SizeType result = endPosition;
-            endPosition = static_cast<SizeType>(endPosition + 1u);
-            return result;
+            if (m_lastPos == s_maxSizeTypeNum)
+                throw std::runtime_error("Overflow error. VknVector is full.");
+            return m_lastPos++;
         }
 
-        SizeType findNextPosition(SizeType inputIdx)
+        void setPosition(size_t index, size_t position)
         {
-            SizeType minNext{maxPos};
-            SizeType nextIdx{inputIdx};
-            for (SizeType i = 0; i < size; ++i)
-                if (positions[i] > positions[inputIdx] && positions[i] < minNext)
-                {
-                    minNext = positions[i];
-                    nextIdx = i;
-                }
-            return nextIdx;
-        }
-
-        SizeType determineNextPosition()
-        {
-            for (SizeType i = 0; i < size; i = static_cast<SizeType>(i + 1u))
-            {
-                if (positions[i] > endPosition)
-                    endPosition = positions[i];
-            }
-            return static_cast<SizeType>(endPosition + 1u);
-        }
-
-        void setPosition(SizeType index, SizeType position)
-        {
-            if (position >= endPosition)
-                endPosition = static_cast<SizeType>(position + 1u);
-            positions[index] = position;
+            if (position > m_lastPos)
+                m_lastPos = position + 1u;
+            m_positions[index] = position;
         }
 
         void deleteArrays()
         {
-            if (data)
-                delete[] data;
-            if (positions)
-                delete[] positions;
+            if (m_data)
+            {
+                delete[] m_data;
+                m_data = nullptr;
+            }
+            if (m_positions)
+            {
+                delete[] m_positions;
+                m_positions = nullptr;
+            }
         }
 
-        PosSearchResult<SizeType> getIdxOfSmallestPos(size_t minPos)
+        PosSearchResult getIdxOfSmallestPos(size_t minPos)
         {
-            PosSearchResult<SizeType> result{};
+            PosSearchResult result{};
 
-            if (m_endIdx == nullptr)
+            if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
-            if (minPos > m_endPos)
+            if (minPos > m_lastPos)
                 throw std::runtime_error("Cannot get(). Position out of range.");
-            SizeType smallestPos{s_maxPos};
-            SizeType smallestPosIdx{0};
-            for (size_t i = 0u; i < *m_endIdx + 1u; ++i)
-                if (m_positions[i] > position && m_positions[i] < smallestPos)
+            size_t smallestPos{s_maxSizeTypeNum};
+            size_t smallestPosIdx{0};
+            for (size_t i = 0u; i < this->getSize(); ++i)
+                if (m_positions[i] == minPos)
+                {
+                    result.pos = i;
+                    result.found = true;
+                    return result;
+                }
+                else if (m_positions[i] > minPos && m_positions[i] < smallestPos)
                 {
                     smallestPos = m_positions[i];
                     smallestPosIdx = i;
                     result.pos = true;
                 }
-                else if (m_positions[i] == position)
-                {
-                    result.pos = i;
-                    result.found = true;
-                    return result;
-                }
             result.pos = smallestPosIdx;
             return result;
         }
 
-        PosSearchResult<SizeType> getIdxOfLargestPos(size_t maxPos)
+        PosSearchResult getIdxOfLargestPos(size_t maxPos)
         {
-            PosSearchResult<SizeType> result;
+            PosSearchResult result;
 
-            if (m_endIdx == nullptr)
+            if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
-            SizeType largestPos{0};
-            SizeType largestPosIdx{0};
-            for (size_t i = *m_endIdx + 1u; i > 0; --i)
-                if (m_positions[i - 1u] < position && m_positions[i - 1u] > largestPosIdx)
-                {
-                    largestPos = positions[i];
-                    largestPosIdx = i;
-                    result.found = true;
-                }
-                else if (m_positions[i - 1u] == position)
+            if (maxPos > m_lastPos)
+                throw std::runtime_error("Cannot get(). Position out of range.");
+
+            size_t largestPos{0};
+            size_t largestPosIdx{0};
+            for (size_t i = m_lastIdx + 1u; i > 0; --i) // These values are unsigned, so...
+                if (m_positions[i - 1u] == maxPos)
                 {
                     result.pos = i;
                     result.found = true;
                     return result;
+                }
+                else if (m_positions[i - 1u] < maxPos && m_positions[i - 1u] > largestPosIdx)
+                {
+                    largestPos = m_positions[i - 1u];
+                    largestPosIdx = i - 1u;
+                    result.found = true;
                 }
             result.pos = largestPosIdx;
             return largestPosIdx;
         }
 
-        PosSearchResult<SizeType> getSmallestPos(size_t minPos)
+        PosSearchResult getSmallestPos(size_t minPos)
         {
-            PosSearchResult<SizeType> result{};
+            PosSearchResult result{};
 
-            if (m_endIdx == nullptr)
+            if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
-            if (minPos > m_endPos)
+            if (minPos > m_lastPos)
                 throw std::runtime_error("Cannot get(). Position out of range.");
-            SizeType smallestPos{s_maxPos};
+            size_t smallestPos{s_maxSizeTypeNum};
             for (auto &position : m_positions)
-                if (position < smallestPos)
-                {
-                    result.found = true;
-                    smallestPos = position;
-                }
-                else if (position == minPos)
+                if (position == minPos)
                 {
                     result.pos = position;
                     result.found = true;
                     return result;
+                }
+                else if (position < smallestPos)
+                {
+                    result.found = true;
+                    smallestPos = position;
                 }
             result.pos = smallestPos;
             return result;
         }
 
-        PosSearchResult<SizeType> getLargestPos(size_t maxPos)
+        PosSearchResult getLargestPos(size_t maxPos)
         {
-            PosSearchResult<SizeType> result{};
+            PosSearchResult result{};
 
-            if (m_endIdx == nullptr)
+            if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
-            SizeType largestPos{0};
-            bool anyPosFound{false};
+            if (maxPos > m_lastPos)
+                throw std::runtime_error("Cannot get(). Position out of range.");
+
+            size_t largestPos{0};
             for (auto &position : m_positions)
-                if (position > largestPos)
-                {
-                    largestPos = position;
-                    result.found = true;
-                }
-                else if (position == minPos)
+                if (position == maxPos)
                 {
                     result.found = true;
                     result.pos = position;
                     return result;
+                }
+                else if (position > largestPos)
+                {
+                    largestPos = position;
+                    result.found = true;
                 }
             result.pos = largestPos;
             return largestPos;
@@ -208,72 +198,69 @@ namespace vkn
 
         VknVector()
         {
-            if (maxPos < 0)
+            if (s_maxSizeTypeNum < 0)
                 throw std::runtime_error("SizeType selected for VknVector should be unsigned.");
         }
 
         ~VknVector()
         {
-            if (!isView)
-            {
-                this->deleteArrays();
-            }
+            this->deleteArrays();
         }
 
         VknVector(const VknVector &other)
         {
-            size = other.size;
-            positions = new SizeType[size];
-            data = new DataType[size];
-            for (SizeType i = 0; i < size; i = static_cast<SizeType>(i + 1u))
+            size_t otherSize{other.getSize()};
+            m_lastIdx = other.m_lastIdx;
+            m_lastPos = other.m_lastPos;
+            m_positions = new SizeType[otherSize];
+            m_data = new DataType[otherSize];
+            for (size_t i = 0; i < this->getSize(); ++i)
             {
-                this->setPosition(i, other.positions[i]);
-                data[i] = other.data[i];
+                this->setPosition(i, other.m_positions[i]);
+                m_data[i] = other.m_data[i];
             }
         }
 
         VknVector &operator=(const VknVector &other)
         {
+            size_t otherSize{other.getSize()};
             this->deleteArrays();
-            size = other.size;
-            positions = new SizeType[size];
-            data = new DataType[size];
-            for (SizeType i = 0; i < size; i = static_cast<SizeType>(i + 1u))
+            m_lastIdx = other.m_lastIdx;
+            m_lastPos = other.m_lastPos;
+            m_positions = new SizeType[otherSize];
+            m_data = new DataType[otherSize];
+            for (size_t i = 0; i < otherSize; ++i)
             {
-                this->setPosition(i, other.positions[i]);
-                data[i] = other.data[i];
+                m_positions[i] = other.m_positions[i];
+                m_data[i] = other.m_data[i];
             }
             return *this; // Return a reference to the current object
         }
 
         VknVector(VknVector &&other)
         {
-            size = other.size;
-            positions = other.positions;
-            data = other.data;
-            endPosition = other.endPosition;
-            isView = other.isView;
+            m_lastIdx = other.m_lastIdx;
+            m_positions = other.m_positions;
+            m_data = other.m_data;
+            m_lastPos = other.m_lastPos;
 
             other.deleteArrays();
-            other.positions = nullptr;
-            other.data = nullptr;
-            other.size = 0;
+            other.m_lastIdx = 0;
+            other.m_lastPos = 0;
         }
 
         VknVector &operator=(VknVector &&other)
         {
 
             this->deleteArrays();
-            size = other.size;
-            positions = other.positions;
-            data = other.data;
-            endPosition = other.endPosition;
-            isView = other.isView;
+            m_lastIdx = other.m_lastIdx;
+            m_positions = other.m_positions;
+            m_data = other.m_data;
+            m_lastIdx = other.m_lastIdx;
 
             other.deleteArrays();
-            other.positions = nullptr;
-            other.data = nullptr;
-            other.size = 0;
+            other.m_lastIdx = 0;
+            other.m_lastPos = 0;
             return *this;
         }
 
@@ -285,163 +272,149 @@ namespace vkn
             return *result;
         }
 
-        VknVector *getSlice(SizeType startPos, SizeType length)
+        VknVectorIterator<DataType, SizeType> getSlice(size_t startPos, size_t length)
         {
-            if (!data)
+            if (!m_data)
                 throw std::runtime_error("Cannot getSlice(). VknVector is empty!");
             if (length == 0)
                 throw std::runtime_error("Cannot getSlice(). Length is 0");
-            if (static_cast<SizeType>(startPos + length) > size) // Also catches if startPos is too large
+            if (startPos > m_lastIdx - length) // Also catches if startPos is too large
                 throw std::runtime_error("Slice range exceeds vector size.");
 
-            VknVector *result = new VknVector();
-            result->isView = true;
-            result->data = data + startPos;
-            result->positions = positions + startPos;
-            result->size = length;
-            result->determineNextPosition();
-            return result;
+            return VknVectorIterator<DataType, SizeType>{
+                this, startPos, startPos + length - 1u};
         }
 
         DataType &append(DataType newElement)
         {
-            this->resize(static_cast<SizeType>(size + 1u));
-            positions[size] = this->getNextPosition();
-            data[size] = newElement;
-            return data[static_cast<SizeType>(size + 1u)];
+            this->resize(this->getSize());
+            m_positions[m_lastIdx] = this->getNextPosition();
+            m_data[m_lastIdx] = newElement;
+            return m_data[m_lastIdx];
         }
 
-        void append(VknVector<DataType, SizeType> &newElements)
+        VknVectorIterator<DataType, SizeType> append(VknVector<DataType, SizeType> &newElements)
         {
-            SizeType newSize = static_cast<SizeType>(size + newElements.size);
+            size_t oldSize{this->getSize()};
+            size_t otherSize{newElements.getSize()};
+            size_t newSize = oldSize + otherSize;
             this->resize(newSize);
 
-            for (SizeType i = 0; i < newElements.size(); i = static_cast<SizeType>(i + 1u))
+            for (size_t i = 0; i < otherSize; ++i)
             {
-                positions[static_cast<SizeType>(size + i)] = this->getNextPosition();
-                data[static_cast<SizeType>(size + i)] = newElements[i];
+                m_positions[oldSize + i] = this->getNextPosition();
+                m_data[oldSize + i] = newElements[i];
             }
-            size = newSize;
+            return VknVectorIterator(this, oldSize, m_lastIdx);
         }
 
-        void append(DataType *arr, SizeType length)
+        DataType *append(DataType *arr, size_t length)
         {
-            this->resize(static_cast<SizeType>(size + length));
+            size_t oldSize{this->getSize()};
+            this->resize(oldSize + length);
 
-            for (SizeType i = 0; i < length; i = static_cast<SizeType>(i + 1u))
+            for (size_t i = 0; i < length; ++i)
             {
-                data[static_cast<SizeType>(size + i)] = arr[i];
-                positions[static_cast<SizeType>(size + i)] = this->getNextPosition();
-                size = static_cast<SizeType>(size + length);
+                m_data[oldSize + i] = arr[i];
+                m_positions[oldSize + i] = this->getNextPosition();
             }
+            return &m_data[oldSize];
         }
 
-        DataType *append(DataType value, SizeType length)
+        DataType *append(DataType value, size_t length)
         {
-            SizeType oldSize{size};
-            this->resize(size + length);
-            for (SizeType i = oldSize; i < length; i = static_cast<SizeType>(i + 1u))
+            size_t oldSize{this->getSize()};
+            this->resize(oldSize + length);
+            for (size_t i = oldSize; i < this->getSize(); ++i)
             {
-                data[i] = value;
-                positions[i] = this->getNextPosition();
+                m_data[i] = value;
+                m_positions[i] = this->getNextPosition();
             }
-            return &data[oldSize];
+            return &m_data[oldSize];
         }
 
-        DataType *getElement(SizeType position)
+        DataType *getElement(size_t position)
         {
-            if (size == 0)
+            if (this->getSize() == 0)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
-            SizeType idx{0};
-            for (SizeType i = 0; i < size; i = static_cast<SizeType>(i + 1u))
-                if (positions[i] == position)
-                    return &data[i];
+            for (size_t i = 0; i < this->getSize(); ++i)
+            {
+                if (m_positions[i] == position)
+                    return &m_data[i];
+            }
             return nullptr;
         }
 
-        DataType &insert(SizeType position, DataType newElement)
+        DataType &insert(size_t position, DataType newElement)
         {
             DataType *element = this->getElement(position);
             if (!element)
             {
-                this->append(newElement);
-                this->setPosition(static_cast<SizeType>(size - 1u), position);
+                this->resize(this->getSize());
+                this->setPosition(m_lastIdx, position);
+                m_data[m_lastIdx] = newElement;
             }
             else
                 throw std::runtime_error("Tried to insert into a VknVector element that is already assigned.");
             return *element;
         }
 
-        void swap(SizeType position1, SizeType position2)
+        void swap(size_t position1, size_t position2)
         {
-            if (size == 0)
+            if (!m_data || m_lastIdx == 0)
                 throw std::runtime_error("Vector too small (0 or 1) for swap.");
             SizeType *idx1{nullptr};
             SizeType *idx2{nullptr};
-            for (SizeType i = 0; i < size; i = static_cast<SizeType>(i + 1u))
+            for (size_t i = 0; i < this->getSize(); ++i)
             {
-                if (positions[i] == position1)
-                    idx1 = &positions[i];
-                else if (positions[i] == position2)
-                    idx2 = &positions[i];
+                if (m_positions[i] == position1)
+                    idx1 = &m_positions[i];
+                else if (m_positions[i] == position2)
+                    idx2 = &m_positions[i];
             }
             if (!idx1 || !idx2)
                 throw std::runtime_error("Elements for swap not found!");
-            SizeType temp{positions[*idx1]};
-            positions[*idx1] = positions[*idx2];
-            positions[*idx2] = temp;
+            size_t temp{m_positions[*idx1]};
+            m_positions[*idx1] = m_positions[*idx2];
+            m_positions[*idx2] = temp;
         }
 
-        DataType *getData(SizeType numNewElements = 0u)
+        DataType *getData(size_t numNewElements = 0u)
         {
-            if (maxPos - size < numNewElements)
+            size_t oldSize{this->getSize()};
+            size_t newSize{oldSize + numNewElements};
+            if (newSize > s_maxSizeTypeNum)
                 throw std::runtime_error("Resizing of internal array causes an overflow error.");
             if (numNewElements != 0u)
             {
-                SizeType oldSize{size};
-                SizeType newSize{static_cast<SizeType>(size + numNewElements)};
                 this->resize(newSize);
-                for (SizeType i = oldSize; i < newSize; i = static_cast<SizeType>(i + 1u))
+                for (size_t i = oldSize; i < newSize; ++i)
                 {
-                    data[i] = DataType{};
-                    this->setPosition(i, endPosition);
+                    m_data[i] = DataType{};
+                    this->setPosition(i, this->getNextPosition());
                 }
-                return static_cast<SizeType>(data + oldSize);
+                return m_data + oldSize;
             }
-            return data;
+            return m_data;
         }
 
-        // TODO: Custom iterator class for better STL stuff but mainly
-        //  need to iterate vector positions rather than array indices
-        DataType *begin()
-        {
-            return VknVectorIterator{
-                this, this->getIdxOfSmaller(0), this->getIdxOfLarger(s_maxPos)};
-        }
-        DataType *end()
-        {
-            return VknVectorIterator
-            {
-                this, this->getIdxOfSmaller(0), this->getIdxOfLarger(s_maxPos)
-            }
-        }
-        const DataType *begin() const { return data; }
-        const DataType *end() const { return data + size; }
-        DataType *rbegin() { data + size - 1u; }
-        DataType *rend() { return data - 1u; }
-        const DataType *rbegin() const { return data + size - 1u; }
-        const DataType *rend() const { return data - 1u; }
+        DataType *begin() { return m_data; }
+        DataType *end() { return m_data + this->getSize(); }
+        const DataType *begin() const { return m_data; }
+        const DataType *end() const { return m_data + this->getSize(); }
+        DataType *rbegin() { m_data + this->getSize() - 1u; }
+        DataType *rend() { return m_data - 1u; }
+        const DataType *rbegin() const { return m_data + this->getSize() - 1u; }
+        const DataType *rend() const { return m_data - 1u; }
 
-        bool isEmpty() { return size == 0; }
-        bool isNotEmpty() { return size > 0; }
-        SizeType getSize() { return size; }
-        SizeType getNumPositions() { return endPosition; }
+        bool isEmpty() { return this->getSize == 0u; }
+        bool isNotEmpty() { return this->getSize() > 0u; }
+        const size_t getSize() const { return m_lastIdx + 1u; }
+        size_t size() { return m_lastIdx + 1u; }
+        size_t getNumPositions() { return m_lastPos + 1u; }
     };
 
-#include <iterator>
-#include <vector>
-
-    template <typename DataType, typename SizeType>
+    template <typename DataType, typename SizeType = uint32_t>
     class VknVectorIterator
     {
     public:
@@ -450,37 +423,59 @@ namespace vkn
         using difference_type = std::ptrdiff_t;
         using pointer = DataType *;
         using reference = DataType &;
-        using vknVector = VknVector<DataType, SizeType> *;
 
     private:
-        vknVector *m_vec;
-        SizeType m_startPos;
-        SizeType m_endPos;
-        SizeType m_currentIdx;
-        SizeType m_currentPos;
+        VknVector<DataType, SizeType> *m_vec;
+        SizeType m_firstPos{0};
+        SizeType m_lastPos{0};
+        SizeType m_currentIdx{0};
+        SizeType m_currentPos{0};
 
         bool m_isInvalid{false};
         bool m_atEnd{false};
         bool m_atBegin{false};
         bool m_iterFilled{true};
+        bool m_isEmpty{false};
 
     public:
         // TODO: Find out what explicit keyword does
-        explicit VknVectorIterator(vknVector *theVector, SizeType startPos, SizeType endPos, bool iterFilled = true)
-            : m_vec{&theVector}, m_startPos{startPos}, m_endPos{endPos}
+        explicit VknVectorIterator(VknVector<DataType, SizeType> *vknVector,
+                                   size_t firstPos = 0, size_t endPos = 0, // Todo
+                                   bool iterFilled = true)
+            : m_vec{vknVector}, m_iterFilled{iterFilled}
         {
-            if (endPos > startPos)
+            if (!vknVector->m_data || firstPos == endPos)
             {
-                m_currentIdx{theVector->getIdxOfSmallestPos(startPos)};
-                if (m_iterFilled)
-                    m_currentPos{m_vec->positions[m_currentIdx]};
-                else
-                    m_currentPos{startPos};
+                m_isEmpty = true;
+                m_firstPos = firstPos;
+                m_lastPos = 0;
+                m_currentIdx = 0;
+                m_currentPos = firstPos;
+                m_isInvalid = true;
+                return;
             }
-            else if (startPos > endPos)
+            else if (endPos > firstPos)
+            {
+                m_lastPos = endPos - 1u;
+                m_firstPos = firstPos;
+                m_isEmpty = false;
+                m_isInvalid = false;
+
+                PosSearchResult posSearch{vknVector->getIdxOfSmallestPos(firstPos)};
+                if (posSearch.found)
+                    m_currentIdx = posSearch.pos;
+                else
+                    m_isEmpty = true;
+
+                if (!m_isEmpty && m_iterFilled)
+                    m_currentPos = m_vec->m_positions[m_currentIdx];
+                else
+                    m_currentPos = firstPos;
+            }
+            else if (firstPos > endPos)
                 throw std::runtime_error("Invalid VknVectorIterator range (startPos > endPos).");
-            else // startPos == endPos
-                throw std::runtime_error("Invalid VknVectorIterator range (startPos == endPos).");
+            else //  ¯\_(ツ)_/¯
+                throw std::runtime_error("Invalid VknVectorIterator range.");
         }
 
         reference operator*() const
@@ -488,7 +483,7 @@ namespace vkn
             if (m_currentPos != m_vec->m_positions[m_currentIdx])
                 throw std::runtime_error("Trying to dereference a null element.");
             if (!m_atEnd && !m_atBegin)
-                return m_vec->m_data[m_currentIdx]; // Access the current element directly
+                return m_vec->m_m_data[m_currentIdx]; // Access the current element directly
             throw std::runtime_error("Trying to dereference an out-of-range vector element.");
         }
 
@@ -499,9 +494,9 @@ namespace vkn
             if (!m_atEnd && !m_atBegin)
                 return &m_vec->m_data[m_currentIdx]; // Access the current element directly
             if (m_atEnd)
-                return &m_vec->m_data[m_endIdx + 1u];
+                return &m_vec->m_data[m_vec->m_lastIdx + 1u];
             if (m_atBegin)
-                return &m_vec->m_data[m_endIdx - 1u];
+                return &m_vec->m_data[m_vec->m_data - 1u];
         }
 
         // Pre-increment
@@ -515,7 +510,7 @@ namespace vkn
                 return *this;
             }
 
-            if (m_currentPos == m_endPos)
+            if (m_currentPos == m_lastPos)
             {
                 m_atEnd = true;
                 return *this;
@@ -526,22 +521,22 @@ namespace vkn
                 return *this;
             }
 
-            PosSearchResult<SizeType> nextIdxRes{m_currentIdx};
-            if (m_currentIdx == VknVector<DataType, SizeType>.s_maxPos)
-                nextIdxRes = m_vec->getIdxOfSmallestPos(currentPos + 1u);
-            else if (m_vec->positions[m_currentIdx + 1u] == static_cast<SizeType>(currentPos + 1u))
+            PosSearchResult nextIdxResult{};
+            if (m_currentIdx == VknVector<DataType, SizeType>::s_maxSizeTypeNum)
+                nextIdxResult = m_vec->getIdxOfSmallestPos(m_currentPos + 1u);
+            else if (m_vec->m_positions[m_currentIdx + 1u] == m_currentPos + 1u)
             {
-                nextIdxRes.pos = static_cast<SizeType>(m_currentIdx + 1u);
-                nextIdxRes.found = true;
+                nextIdxResult.pos = m_currentIdx + 1u;
+                nextIdxResult.found = true;
             }
             else
-                nextIdxRes = vec->findIdxOfSmallestPos(currentPos + 1u);
+                nextIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos + 1u);
 
-            if (nextIdxRes.found)
+            if (nextIdxResult.found)
             {
-                m_currentIdx = nextIdxRes.pos;
+                m_currentIdx = nextIdxResult.pos;
                 if (m_iterFilled)
-                    m_currentPos = m_vec->positions[m_currentIdx];
+                    m_currentPos = m_vec->m_positions[m_currentIdx];
                 else
                     ++m_currentPos;
             }
@@ -574,7 +569,7 @@ namespace vkn
                 return *this;
             }
 
-            if (m_position == m_beginPos)
+            if (m_currentPos == m_firstPos)
             {
                 m_atBegin = true;
                 return *this;
@@ -585,22 +580,22 @@ namespace vkn
                 return *this;
             }
 
-            PosSearchResult<SizeType> nextIdxRes{m_currentIdx};
-            if (m_currentIdx == VknVector<DataType, SizeType>.s_maxPos)
-                nextIdxRes = m_vec->getIdxOfLargestPos(currentPos - 1u);
-            else if (m_vec->positions[m_currentIdx - 1u] == static_cast<SizeType>(currentPos - 1u))
+            PosSearchResult nextIdxResult{};
+            if (m_currentIdx == VknVector<DataType, SizeType>::s_maxSizeTypeNum)
+                nextIdxResult = m_vec->getIdxOfLargestPos(m_currentPos - 1u);
+            else if (m_vec->m_positions[m_currentIdx - 1u] == m_currentPos - 1u)
             {
-                nextIdxRes.pos = static_cast<SizeType>(m_currentIdx - 1u);
-                nextIdxRes.found = true;
+                nextIdxResult.pos = m_currentIdx - 1u;
+                nextIdxResult.found = true;
             }
             else
-                nextIdxRes = vec->findIdxOfLargestPos(currentPos - 1u);
+                nextIdxResult = m_vec->findIdxOfLargestPos(m_currentPos - 1u);
 
-            if (nextIdxRes.found)
+            if (nextIdxResult.found)
             {
-                m_currentIdx = nextIdxRes.pos;
+                m_currentIdx = nextIdxResult.pos;
                 if (m_iterFilled)
-                    m_currentPos = m_vec->positions[m_currentIdx];
+                    m_currentPos = m_vec->m_positions[m_currentIdx];
                 else
                     --m_currentPos;
             }
@@ -616,7 +611,7 @@ namespace vkn
         // Post-decrement
         VknVectorIterator operator--(int)
         {
-            DynamicOrderIterator temp = *this;
+            VknVectorIterator temp = *this;
             --(*this);
             return temp;
         }
@@ -682,7 +677,7 @@ namespace vkn
             return *this - other.m_currentPos;
         }
 
-        difference_type operator+(const VknVectorIterator &other) calloc
+        difference_type operator+(const VknVectorIterator &other) const
         {
             return *this + other.m_currentPos;
         }
@@ -697,32 +692,32 @@ namespace vkn
                 m_atBegin = false;
                 n -= 1u;
             }
-            if (m_endPos - m_currentPos < n)
+            if (m_lastPos - m_currentPos < n)
             {
                 m_atEnd = true;
-                m_currentPos = m_endPos;
-                PosSearchResult<SizeType> previousIdxRes = m_vec->findIdxOfLargestPos(m_currentPos);
+                m_currentPos = m_lastPos;
+                PosSearchResult previousIdxRes = m_vec->findIdxOfLargestPos(m_currentPos);
                 m_currentIdx = previousIdxRes.pos;
                 return *this;
             }
             else if (m_vec->m_positions[m_currentIdx + n] == m_currentPos + n)
             {
-                m_currentIdx = static_cast<SizeType>(m_currentIdx + n);
-                m_currentPos = static_cast<SizeType>(m_currentPos + n);
+                m_currentIdx = m_currentIdx + n;
+                m_currentPos = m_currentPos + n;
                 return *this;
             }
             else
             {
                 m_currentPos = m_currentPos + n;
-                PosSearchResult<SizeType> nextIdxRes = m_vec->findIdxOfSmallestPos(m_currentPos);
-                if (!nextIdxRes.found)
-                    nextIdxRes = m_vec->findIdxOfLargestPos(m_currentPos);
-                m_currentIdx = nextIdxRes.pos;
+                PosSearchResult nextIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos);
+                if (!nextIdxResult.found)
+                    nextIdxResult = m_vec->findIdxOfLargestPos(m_currentPos);
+                m_currentIdx = nextIdxResult.pos;
                 return *this;
             }
         }
 
-        VknVectorIterator operator-(difference_type n) const
+        VknVectorIterator operator-(difference_type nArg) const
         {
             if (m_atBegin)
                 throw std::runtime_error("Accessing out-of-range vector element.");
@@ -732,36 +727,69 @@ namespace vkn
                 m_atEnd = false;
                 n -= 1u;
             }
-            if (m_currentPos - m_beginPos < n)
+
+            if (m_currentPos - m_firstPos < n)
             {
                 m_atBegin = true;
-                m_currentPos = m_beginPos;
-                PosSearchResult<SizeType> previousIdxRes = m_vec->findIdxOfSmallestPos(m_currentPos);
-                m_currentIdx = previousIdxRes.pos;
+                m_currentPos = m_firstPos;
+                PosSearchResult previousIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos);
+                m_currentIdx = previousIdxResult.pos;
                 return *this;
             }
             else if (m_vec->m_positions[m_currentIdx - n] == m_currentPos - n)
             {
-                m_currentIdx = static_cast<SizeType>(m_currentIdx - n);
-                m_currentPos = static_cast<SizeType>(m_currentPos - n);
+                m_currentIdx = m_currentIdx - n;
+                m_currentPos = m_currentPos - n;
                 return *this;
             }
             else
             {
                 m_currentPos = m_currentPos - n;
-                PosSearchResult<SizeType> nextIdxRes = m_vec->findIdxOfLargestPos(m_currentPos);
-                if (!nextIdxRes.found)
-                    nextIdxRes = m_vec->findIdxOfSmallestPos(m_currentPos);
-                m_currentIdx = nextIdxRes.pos;
+                PosSearchResult nextIdxResult = m_vec->findIdxOfLargestPos(m_currentPos);
+                if (!nextIdxResult.found)
+                    nextIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos);
+                m_currentIdx = nextIdxResult.pos;
                 return *this;
             }
+        }
+
+        size_t getSize()
+        {
+            if (m_isEmpty)
+                return 0;
+            size_t size{0};
+            for (size_t posIdx{0}; posIdx < m_vec->getSize(); ++posIdx)
+                if (m_vec->m_positions[posIdx] >= m_firstPos && m_vec->m_positions[posIdx] <= m_lastPos)
+                    ++size;
+            return size;
+        }
+
+        bool isEmpty() { return m_isEmpty; }
+
+        DataType *getData()
+        {
+            if (m_isEmpty)
+                return nullptr;
+            PosSearchResult posSearch{m_vec->getIdxOfSmallestPos(m_firstPos)};
+            size_t idx{};
+            if (posSearch.found)
+                idx = posSearch.pos;
+            else
+                return nullptr;
+
+            if (m_vec->m_positions[idx] != m_firstPos)
+                throw std::runtime_error("Cannot getData(). Iterator range is not obviously contiguous.");
+            for (size_t i = idx; m_vec->m_positions[i] < m_lastPos; ++i)
+                if (m_vec->m_positions[i + 1u] != m_vec->m_positions[i] + 1)
+                    throw std::runtime_error("Cannot getData(). Iterator range is not obviously contiguous.");
+            return &m_vec->m_data[idx];
         }
     };
 
     template <typename DataType, typename SizeType = uint32_t>
     class VknSpace
     {
-        VknVector<DataType, SizeType> data{};
+        VknVector<DataType, SizeType> m_data{};
         VknVector<VknSpace<DataType, SizeType>, SizeType> subspaces{};
         uint32_t maxDimensions{8};
         uint32_t depth{0};
@@ -776,13 +804,8 @@ namespace vkn
                 throw std::runtime_error("Position given is out of range.");
             VknSpace *subspace = subspaces.getElement(position);
             if (!subspace)
-                subspaces.insert(position, VknSpace{depth + static_cast<SizeType>(1u)});
+                subspaces.insert(position, VknSpace{depth + 1u});
             return *subspace;
-        }
-
-        VknVector<DataType, SizeType> getDataSlice(SizeType startPos, SizeType length)
-        {
-            return data.getSlice(startPos, length);
         }
 
         VknSpace<DataType, SizeType> getSubspaceSlice(SizeType startPos, SizeType length)
@@ -799,13 +822,13 @@ namespace vkn
         }
 
         uint8_t getNumSubspaces() { return subspaces.getSize(); }
-        DataType &operator()(SizeType position) { return data(position); }
-        DataType *getData(SizeType newSize = 0) { return data.getData(newSize); }
-        VknVector<DataType, SizeType> &getDataVector() { return data; }
+        DataType &operator()(SizeType position) { return m_data(position); }
+        DataType *getData(SizeType newSize = 0) { return m_data.getData(newSize); }
+        VknVector<DataType, SizeType> &getDataVector() { return m_data; }
         VknVector<VknSpace<DataType, SizeType>, SizeType> &getSubspaceVector() { return subspaces; }
-        DataType &append(DataType element) { return data.append(element); }
-        DataType &insert(DataType element, SizeType position) { return data.insert(position, element); }
-        SizeType getDataSize() { return data.getSize(); }
+        DataType &append(DataType element) { return m_data.append(element); }
+        DataType &insert(DataType element, SizeType position) { return m_data.insert(position, element); }
+        SizeType getDataSize() { return m_data.getSize(); }
     };
 
     VknVector<char> readBinaryFile(std::filesystem::path filename);

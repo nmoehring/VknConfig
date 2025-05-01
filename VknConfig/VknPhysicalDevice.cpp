@@ -46,7 +46,7 @@ namespace vkn
             throw std::runtime_error("No available queue families found.");
 
         VknVector<VkQueueFamilyProperties> *engineQueues = &m_engine->getVector<VkQueueFamilyProperties>();
-        m_startAbsIdx = engineQueues->getNumElements();
+        m_startAbsIdx = engineQueues->getSize();
         for (int i = 0; i < propertyCount; ++i)
             addNewVknObject<VknQueueFamily, VkQueueFamilyProperties>(
                 i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);

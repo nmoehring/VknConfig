@@ -64,9 +64,9 @@ namespace vkn
 
         m_imageViewStartIdx = m_engine->getVectorSize<VkImageView>();
         for (uint32_t i = 0; i < descriptions->getDataSize(); ++i)
-            for (VknSpace<VkAttachmentReference> &subPassVec : refs->getSubspaceVector())
-                for (uint32_t j = 0; j < subPassVec.getNumSubspaces(); ++j)
-                    for (VkAttachmentReference &attachmentRef : subPassVec.getDataVector())
+            for (VknSpace<VkAttachmentReference> &subPassSpace : refs->getSubspaceVector())
+                for (uint32_t j = 0; j < subPassSpace.getNumSubspaces(); ++j)
+                    for (VkAttachmentReference &attachmentRef : subPassSpace[j].getDataVector())
                         if (attachmentRef.attachment == i)
                         {
                             VknImage newImage{addNewVknObject<VknImage, VkImage>(m_attachImages.size(), m_attachImages,
@@ -114,7 +114,7 @@ namespace vkn
         m_swapchainVkImage = &m_engine->getObject<VkImage>(engineImageIdx);
     }
 
-    std::span<VkImageView> VknFramebuffer::getAttachmentImageViews()
+    VknVectorIterator<VkImageView> VknFramebuffer::getAttachmentImageViews()
     {
         if (!m_setAttachments)
             throw std::runtime_error("Attachments not set before trying to get() them.");

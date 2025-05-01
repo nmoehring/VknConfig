@@ -231,7 +231,7 @@ namespace vkn
             VkPipelineCreateFlags flags);
         VkPipelineLayoutCreateInfo *fillPipelineLayoutCreateInfo(
             VknIdxs &relIdxs,
-            std::span<VkDescriptorSetLayout> setLayouts,
+            VknVectorIterator<VkDescriptorSetLayout> setLayouts,
             VknVector<VkPushConstantRange> pushConstantRanges,
             VkPipelineLayoutCreateFlags flags);
         VkPipelineCacheCreateInfo *fillPipelineCacheCreateInfo(
@@ -307,7 +307,7 @@ namespace vkn
         VkFramebufferCreateInfo *getFramebufferCreateInfo(VknIdxs &relIdxs);
 
         VkFramebufferCreateInfo *fillFramebufferCreateInfo(VknIdxs &relIdxs, VkRenderPass *renderpass,
-                                                           std::span<VkImageView> attachments, uint32_t width,
+                                                           VknVectorIterator<VkImageView> attachments, uint32_t width,
                                                            uint32_t height, uint32_t numLayers, VkFramebufferCreateFlags &flags);
         VkImageViewCreateInfo *fillImageViewCreateInfo(VknIdxs &relIdxs, VkImage &image,
                                                        VkImageViewType &viewType,

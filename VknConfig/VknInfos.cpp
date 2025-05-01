@@ -371,7 +371,7 @@ namespace vkn
     }
 
     VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
-        VknIdxs &relIdxs, std::span<VkDescriptorSetLayout> setLayouts,
+        VknIdxs &relIdxs, VknVectorIterator<VkDescriptorSetLayout> setLayouts,
         VknVector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
     {
@@ -381,8 +381,8 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = flags;
-        info->setLayoutCount = setLayouts.size();
-        info->pSetLayouts = setLayouts.empty() ? VK_NULL_HANDLE : setLayouts.data();
+        info->setLayoutCount = setLayouts.getSize();
+        info->pSetLayouts = setLayouts.getData();
         info->pushConstantRangeCount = pushConstantRanges.getSize();
         info->pPushConstantRanges = pushConstantRanges.getData();
         return info;
@@ -767,7 +767,8 @@ namespace vkn
     }
 
     VkFramebufferCreateInfo *VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
-                                                                 VkRenderPass *renderpass, std::span<VkImageView> attachments,
+                                                                 VkRenderPass *renderpass,
+                                                                 VknVectorIterator<VkImageView> attachments,
                                                                  uint32_t width, uint32_t height, uint32_t numLayers,
                                                                  VkFramebufferCreateFlags &flags)
     {
@@ -777,8 +778,8 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->renderPass = *renderpass;
-        info->attachmentCount = attachments.size();
-        info->pAttachments = attachments.empty() ? VK_NULL_HANDLE : attachments.data();
+        info->attachmentCount = attachments.getSize();
+        info->pAttachments = attachments.getData();
         info->width = width;
         info->height = height;
         info->layers = numLayers;

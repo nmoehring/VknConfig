@@ -76,7 +76,7 @@ namespace vkn
         void createFramebuffer();
 
         // Get
-        std::span<VkImageView> getAttachmentImageViews();
+        VknVectorIterator<VkImageView> getAttachmentImageViews();
 
     private:
         // Engine
