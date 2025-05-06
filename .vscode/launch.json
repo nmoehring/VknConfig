@@ -5,7 +5,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
             "stopAtEntry": false,
             "console": "externalTerminal"
         },
@@ -14,7 +14,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all"
@@ -24,7 +24,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ logs"
@@ -34,7 +34,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}\\..\\${workspaceFolderBasename}_build\\${relativeFileDirname}\\Debug\\${relativeFileDirname}.exe",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ trace"

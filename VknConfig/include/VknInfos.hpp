@@ -324,45 +324,45 @@ namespace vkn
         VknVector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
         VknVector<const char *const *> m_enabledDeviceExtensionNames{}; // Device>char_arr
         VknVector<uint32_t> m_enabledDeviceExtensionNamesSize{};
-        VknSpace<float> m_queuePriorities{};      // Device>QueueFamily>QueuePriority
-        VknVector<uint32_t> m_numQueueFamilies{}; // Device>NumFamilies
+        VknSpace<float> m_queuePriorities{2u};    // Device>QueueFamily>Queue#QueuePriority
+        VknVector<uint32_t> m_numQueueFamilies{}; // Device#NumQueueFamilies
 
         // Info's
         VkApplicationInfo m_appInfo{};
         VkInstanceCreateInfo m_instanceCreateInfo{};
-        VknSpace<VkDeviceQueueCreateInfo> m_queueCreateInfos{}; // Device>QueueFamilyInfos
-        VknVector<VkDeviceCreateInfo> m_deviceCreateInfos{};    //>Infos
+        VknSpace<VkDeviceQueueCreateInfo> m_queueCreateInfos{1u}; // Device>QueueFamily#Infos
+        VknVector<VkDeviceCreateInfo> m_deviceCreateInfos{};      // Device#Info
 
-        VknSpace<VkPipelineLayoutCreateInfo> m_layoutCreateInfos{}; // Device>Renderpass>Subpass>infos
-        VknSpace<VkPipelineCacheCreateInfo> m_cacheCreateInfos{};
-        VknSpace<VkShaderModuleCreateInfo> m_shaderModuleCreateInfos{};                     // Device>Renderpass>Subpass>infos
-        VknSpace<VkPipelineShaderStageCreateInfo> m_shaderStageCreateInfos{};               // Device>Renderpass>Subpass>infos
-        VknSpace<VkPipelineVertexInputStateCreateInfo> m_vertexInputStateCreateInfos{};     // Device>Renderpass>Subpass>infos
-        VknSpace<VkPipelineInputAssemblyStateCreateInfo> m_inputAssemblyStateCreateInfos{}; // Device>Renderpass>Subpass>infos
-        VknSpace<VkPipelineTessellationStateCreateInfo> m_tessellationStateCreateInfos{};
-        VknSpace<VkPipelineViewportStateCreateInfo> m_viewportStateCreateInfos{};
-        VknSpace<VkPipelineRasterizationStateCreateInfo> m_rasterizationStateCreateInfos{};
-        VknSpace<VkPipelineMultisampleStateCreateInfo> m_multisampleStateCreateInfos{};
-        VknSpace<VkPipelineDepthStencilStateCreateInfo> m_depthStencilStateCreateInfos{};
-        VknSpace<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos{};
-        VknSpace<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos{};
-        VknSpace<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos{}; // Device>Renderpass>Subpass,Pipeline
-        VknSpace<VkSwapchainCreateInfoKHR> m_swapchainCreateInfos{};
+        VknSpace<VkPipelineLayoutCreateInfo> m_layoutCreateInfos{2u};                         // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineCacheCreateInfo> m_cacheCreateInfos{2u};                           // Device>Renderpass>Subpass#info
+        VknSpace<VkShaderModuleCreateInfo> m_shaderModuleCreateInfos{3u};                     // Device>Renderpass>Subpass>Shader#info
+        VknSpace<VkPipelineShaderStageCreateInfo> m_shaderStageCreateInfos{3u};               // Device>Renderpass>Subpass>Shader#info
+        VknSpace<VkPipelineVertexInputStateCreateInfo> m_vertexInputStateCreateInfos{2u};     // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineInputAssemblyStateCreateInfo> m_inputAssemblyStateCreateInfos{2u}; // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineTessellationStateCreateInfo> m_tessellationStateCreateInfos{2u};   // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineViewportStateCreateInfo> m_viewportStateCreateInfos{2u};           // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineRasterizationStateCreateInfo> m_rasterizationStateCreateInfos{2u}; // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineMultisampleStateCreateInfo> m_multisampleStateCreateInfos{2u};     // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineDepthStencilStateCreateInfo> m_depthStencilStateCreateInfos{2u};   // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos{2u};       // Device>Renderpass>Subpass#info
+        VknSpace<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos{2u};             // Device>Renderpass>Subpass#info
+        VknSpace<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos{2u};                  // Device>Renderpass>Subpass#info
+        VknVector<VkSwapchainCreateInfoKHR> m_swapchainCreateInfos{};                         // >info (as many as needed, e.g. multiple windows)
 
-        VknSpace<VkRenderPassCreateInfo> m_renderpassCreateInfos{};   // Device>infos
-        VknSpace<VkAttachmentDescription> m_attachmentDescriptions{}; // Device>Renderpass>infos
-        VknSpace<VkAttachmentReference> m_attachmentReferences{};     // Device>Renderpass>Subpass>AttachmentType>RefInfos
-        VknSpace<uint32_t> m_preserveAttachments{};                   // Device>Renderpass>Subpass>infos
-        VknSpace<VkSubpassDescription> m_subpassDescriptions{};       // Device>Renderpass>infos
-        VknSpace<VkSubpassDependency> m_subpassDependencies{};        // Device>Renderpass>infos
-        VknSpace<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos{};
+        VknSpace<VkRenderPassCreateInfo> m_renderpassCreateInfos{1u};                   // Device>Renderpass#info (multi, some per device)
+        VknSpace<VkAttachmentDescription> m_attachmentDescriptions{2u};                 // Device>Renderpass>Attachment#description
+        VknSpace<VkAttachmentReference> m_attachmentReferences{4u};                     // Device>Renderpass>Subpass>AttachmentType>Attachment#ref
+        VknSpace<uint32_t> m_preserveAttachments{3u};                                   // Device>Renderpass>Subpass>Attachment#ref
+        VknSpace<VkSubpassDescription> m_subpassDescriptions{2u};                       // Device>Renderpass>Subpass#info
+        VknSpace<VkSubpassDependency> m_subpassDependencies{3u};                        // Device>Renderpass>Subpass>Dependency#description
+        VknSpace<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos{3u}; // Device>Renderpass>PipelineLayout>DescriptorSetlayout#info
 
-        VknSpace<VkVertexInputBindingDescription> m_vertexInputBindings{};     // Device>Renderpass>Subpass>Infos
-        VknSpace<VkVertexInputAttributeDescription> m_vertexInputAttributes{}; // Device>Renderpass>Subpass>Infos
+        VknSpace<VkVertexInputBindingDescription> m_vertexInputBindings{3u};     // Device>Renderpass>Subpass>Infos
+        VknSpace<VkVertexInputAttributeDescription> m_vertexInputAttributes{3u}; // Device>Renderpass>Subpass>Infos
 
-        VknSpace<VkFramebufferCreateInfo> m_framebufferCreateInfos{}; // Device>Renderpass>Framebuffers
-        VknSpace<VkImageViewCreateInfo> m_imageViewCreateInfos{};     // Device>Swapchain>ImageViews
-        VknVector<VkImageCreateInfo> m_imageCreateInfos{};            //>Image
+        VknSpace<VkFramebufferCreateInfo> m_framebufferCreateInfos{2u}; // Device>Renderpass>Framebuffers
+        VknVector<VkImageViewCreateInfo> m_imageViewCreateInfos{};      // >ImageViews
+        VknVector<VkImageCreateInfo> m_imageCreateInfos{};              //>Image
         const char m_mainEntry[5] = "main";
 
         // Required fill checklist

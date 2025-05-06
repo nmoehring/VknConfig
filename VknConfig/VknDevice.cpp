@@ -60,7 +60,7 @@ namespace vkn
                 *(getListElement(0, m_physicalDevices)->getVkPhysicalDevice()),
                 m_infos->getDeviceCreateInfo(m_relIdxs.get<VkDevice>()),
                 nullptr,
-                m_engine->getVector<VkDevice>().getData(1)),
+                &m_engine->getObject<VkDevice>(m_absIdxs)),
             "Create device"};
         m_createdVkDevice = true;
         return res;

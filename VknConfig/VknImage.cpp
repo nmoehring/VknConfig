@@ -15,7 +15,7 @@ namespace vkn
 
         VknResult res{vkCreateImage(m_engine->getObject<VkDevice>(m_absIdxs),
                                     imageInfo, VK_NULL_HANDLE,
-                                    m_engine->getVector<VkImage>().getData(1)),
+                                    &m_engine->getObject<VkImage>(m_absIdxs)),
                       "Create image."};
 
         m_createdVkImage = true;

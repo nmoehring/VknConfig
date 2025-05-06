@@ -144,7 +144,7 @@ namespace vkn
         uint32_t push_back(T val)
         {
             VknVector<T> &vec{this->getVector<T>()};
-            uint32_t pos = vec.getSize();
+            size_t pos = vec.getSize();
             vec.append(val);
             return pos;
         }

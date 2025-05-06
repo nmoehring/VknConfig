@@ -64,7 +64,7 @@ namespace vkn
         // Config
         void setCreateFlags(VkImageViewCreateFlags);
         void setImage(uint32_t idx);
-        void setImage(VknImage *image);
+        void setImage(VkImage *image);
         void setViewType(VkImageViewType viewType);
         void setFormat(VkFormat format);
         void setComponents(VkComponentMapping components);
@@ -87,7 +87,7 @@ namespace vkn
 
         // Members
         uint32_t m_vkImageIdx{0};
-        VknImage *m_image{nullptr};
+        VkImage *m_image{nullptr};
 
         // Params
         VkImageViewCreateFlags m_createFlags{0};

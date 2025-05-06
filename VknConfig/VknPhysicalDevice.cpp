@@ -38,6 +38,7 @@ namespace vkn
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before requesting queue properties.");
 
+        size_t oldVectorSize{m_engine->getVectorSize<VkQueueFamilyProperties>()};
         uint32_t propertyCount{0};
         vkGetPhysicalDeviceQueueFamilyProperties(
             m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
@@ -45,16 +46,17 @@ namespace vkn
         if (propertyCount == 0)
             throw std::runtime_error("No available queue families found.");
 
-        VknVector<VkQueueFamilyProperties> *engineQueues = &m_engine->getVector<VkQueueFamilyProperties>();
-        m_startAbsIdx = engineQueues->getSize();
         for (int i = 0; i < propertyCount; ++i)
             addNewVknObject<VknQueueFamily, VkQueueFamilyProperties>(
                 i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);
 
+        VknVectorIterator<VkQueueFamilyProperties> queuesIterator{
+            m_engine->getVectorSlice<VkQueueFamilyProperties>(oldVectorSize, propertyCount)};
+
         vkGetPhysicalDeviceQueueFamilyProperties(
             *this->getVkPhysicalDevice(),
             &propertyCount,
-            engineQueues->getData(propertyCount));
+            queuesIterator.getData());
         m_requestedQueues = true;
     }
 
@@ -105,7 +107,7 @@ namespace vkn
         VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
         VknResult res2{vkEnumeratePhysicalDevices(
                            m_engine->getObject<VkInstance>(0u), &deviceCount,
-                           physDevices->getData(deviceCount)),
+                           physDevices->getData()),
                        "Enum physical devices and store."};
 
         for (auto &vkDevice : *physDevices)

@@ -73,7 +73,7 @@ namespace vkn
         VknResult res{
             vkCreateShaderModule(m_engine->getObject<VkDevice>(m_absIdxs),
                                  shaderModuleCreateInfo, VK_NULL_HANDLE,
-                                 m_engine->getVector<VkShaderModule>().getData(1)),
+                                 &m_engine->getObject<VkShaderModule>(m_absIdxs)),
             "Create shader module."};
         m_createdShaderModule = true;
     }

@@ -46,7 +46,7 @@ namespace vkn
             m_infos->getFramebufferCreateInfo(m_relIdxs);
         vkCreateFramebuffer(
             m_engine->getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
-            m_engine->getVector<VkFramebuffer>().getData(1));
+            &m_engine->getObject<VkFramebuffer>(m_absIdxs));
         m_createdFramebuffer = true;
     }
 
@@ -74,7 +74,7 @@ namespace vkn
                             VknImageView newView{addNewVknObject<VknImageView, VkImageView>(m_attachViews.size(), m_attachViews,
                                                                                             m_engine, m_relIdxs, m_absIdxs,
                                                                                             m_infos)};
-                            newView.setImage(&newImage);
+                            newView.setImage(newImage.getVkImage());
                             newImage.setExtent({m_width, m_height, 1});
                             newImage.setFormat((*descriptions)(i).format);
                             newView.setFormat((*descriptions)(i).format);

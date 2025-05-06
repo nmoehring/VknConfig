@@ -561,8 +561,7 @@ namespace vkn
         VkSwapchainKHR oldSwapchain)
     {
         VkSwapchainCreateInfoKHR &swapchainInfo =
-            m_swapchainCreateInfos[relIdxs.get<VkDevice>()]
-                .insert(VkSwapchainCreateInfoKHR{}, relIdxs.get<VkSwapchainKHR>());
+            m_swapchainCreateInfos.insert(relIdxs.get<VkSwapchainKHR>(), VkSwapchainCreateInfoKHR{});
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainInfo.surface = *surface;                 // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain
@@ -753,12 +752,12 @@ namespace vkn
 
     VkImageViewCreateInfo *VknInfos::getImageViewCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()](relIdxs.get<VkImageView>());
+        return &m_imageViewCreateInfos(relIdxs.get<VkImageView>());
     }
 
     VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_swapchainCreateInfos[relIdxs.get<VkDevice>()](relIdxs.get<VkSwapchainKHR>());
+        return &m_swapchainCreateInfos(relIdxs.get<VkSwapchainKHR>());
     }
 
     VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(VknIdxs &relIdxs)
@@ -820,8 +819,7 @@ namespace vkn
 
     {
         VkImageViewCreateInfo &info =
-            m_imageViewCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkSwapchainKHR>()]
-                .insert(VkImageViewCreateInfo{}, relIdxs.get<VkImageView>());
+            m_imageViewCreateInfos.insert(relIdxs.get<VkImageView>(), VkImageViewCreateInfo{});
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.image = image;

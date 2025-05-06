@@ -166,7 +166,6 @@ namespace vkn
             throw std::runtime_error("Instance already created.");
         if (!m_filledInstanceCreateInfo)
             throw std::runtime_error("Creating instance without filling instance create info.");
-        m_engine->push_back(VkInstance{});
         VknResult res{
             vkCreateInstance(
                 m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE,
@@ -189,7 +188,6 @@ namespace vkn
         if (m_window == nullptr)
             throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
 
-        m_engine->push_back(VkSurfaceKHR{});
         VknResult res{"Create window surface."};
         res = glfwCreateWindowSurface(
             m_engine->getObject<VkInstance>(0), m_window, nullptr,

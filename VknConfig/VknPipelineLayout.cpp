@@ -38,7 +38,7 @@ namespace vkn
             m_pushConstantRanges, m_createFlags);
         vkCreatePipelineLayout(
             m_engine->getObject<VkDevice>(m_absIdxs), createInfo,
-            nullptr, m_engine->getVector<VkPipelineLayout>().getData(1));
+            nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs));
         m_createdPipelineLayout = true;
     }
 

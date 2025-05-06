@@ -85,13 +85,13 @@ namespace vkn
     private:
         // Engine
         VknEngine *m_engine;
-
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         VknInfos *m_infos;
 
         // Members
         std::list<VknImageView> m_imageViews{};
+        VknVector<VkImage> m_vkSwapchainImages{};
 
         // Params
         VkExtent2D m_dimensions{VkExtent2D{640, 480}};
@@ -113,7 +113,6 @@ namespace vkn
         bool m_setSurface{false};
         bool m_setImageCount{false};
         uint32_t m_imageViewStartIdx{0};
-        uint32_t m_imageStartIdx{0};
         VknSwapchain *s_editable;
 
         void testEditability();

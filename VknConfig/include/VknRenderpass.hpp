@@ -109,8 +109,8 @@ namespace vkn
         // Members
         std::list<VknPipeline> m_pipelines{};
         std::list<VknFramebuffer> m_framebuffers{};
-        VknSpace<uint32_t> m_numAttachRefs{};
-        VknVector<uint32_t> m_numPreserveRefs{};
+        VknSpace<uint32_t> m_numAttachRefs{1u};  // Subpass > AttachmentType#AttachCount
+        VknVector<uint32_t> m_numPreserveRefs{}; // Subpass#PreserveRefCount
 
         // State
         bool m_addedDevices{false};
@@ -120,7 +120,7 @@ namespace vkn
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
-        uint32_t m_pipelineStartIdx{3123123123};
+        size_t m_pipelineStartAbsIdx{0};
         static VknRenderpass *s_editable;
 
         VknPipeline *addPipeline(uint32_t subpassIdx);

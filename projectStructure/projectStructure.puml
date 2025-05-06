@@ -1,43 +1,55 @@
 @startuml
-'left to right direction
-class VknConfig {}
-class VknDevice {}
-class VknPhysicalDevice {}
-class VknQueueFamily {}
-class VknSwapchain {}
-class VknImageView {}
-class VknRenderpass {}
-class VknFramebuffer {}
-class VknPipeline {}
-package "Pipeline States" {
-class VknVertexInputState {}
-class VknInputAssemblyState {}
-class VknMultisampleState {}
-class VknRasterizationState {}
-class VknShaderStage {}
-class VknViewportState {}
-}
-class VknEngine {}
-class VknInfos {}
-class VknResult {}
-class VknDescriptorSetLayout{}
-class VknPipelineLayout{}
+' Enforce left-to-right layout for better organization
+left to right direction
 
-VknConfig -- VknDevice
-VknDevice -- VknPhysicalDevice
-VknPhysicalDevice -- VknQueueFamily
-VknDevice -- VknSwapchain
-VknSwapchain -- VknImageView
-VknDevice -- VknRenderpass
-VknRenderpass -- VknPipeline
-VknRenderpass -- VknFramebuffer
-VknPipeline -- "Pipeline States"
-'VknPipeline -- VknVertexInputState
-'VknPipeline -- VknInputAssemblyState
-'VknPipeline -- VknMultisampleState
-'VknPipeline -- VknRasterizationState
-'VknPipeline -- VknShaderStage
-'VknPipeline -- VknViewportState
-VknPipeline -- VknPipelineLayout
-VknPipelineLayout -- VknDescriptorSetLayout
+' Grouping Helpers logically
+package "Helpers" {
+    class VknEngine
+    class VknInfos
+    class VknResult
+}
+
+' Main core classes
+'class VknConfig
+'class VknDevice
+'class VknRenderpass
+class VknPipeline
+
+' Supporting device-specific structures
+class VknPhysicalDevice
+class VknQueueFamily
+
+' Swapchain-related components
+class VknSwapchain
+class VknImage
+class VknImageView
+class VknFramebuffer
+
+' Pipeline States grouped explicitly
+package "Pipeline States" {
+    class VknVertexInputState
+    class VknInputAssemblyState
+    class VknMultisampleState
+    class VknRasterizationState
+    class VknShaderStage
+    class VknViewportState
+}
+
+' Additional pipeline layout configurations
+class VknPipelineLayout
+class VknDescriptorSetLayout
+
+' Logical associations and dependencies
+VknConfig --> VknDevice
+VknConfig --> VknSwapchain
+VknConfig --> VknImageView
+VknConfig --> VknImage
+VknDevice --> VknPhysicalDevice
+VknPhysicalDevice --> VknQueueFamily
+VknDevice --> VknRenderpass
+VknRenderpass --> VknPipeline
+VknRenderpass --> VknFramebuffer
+VknPipeline --> VknPipelineLayout
+VknPipeline --> "Pipeline States"
+VknPipelineLayout --> VknDescriptorSetLayout
 @enduml

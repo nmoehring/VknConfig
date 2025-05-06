@@ -24,7 +24,7 @@ namespace vkn
         m_setVkImage = true;
     }
 
-    void VknImageView::setImage(VknImage *image)
+    void VknImageView::setImage(VkImage *image)
     {
         if (m_setVkImage)
             throw std::runtime_error("VkImage was set directly. Can't set VknImage.");
@@ -72,7 +72,7 @@ namespace vkn
         if (m_setVkImage)
             return &m_engine->getObject<VkImage>(m_vkImageIdx);
         else
-            return m_image->getVkImage();
+            return m_image;
     }
 
     void VknImageView::fillImageViewCreateInfo()
@@ -91,7 +91,7 @@ namespace vkn
                                               m_viewType, m_format, m_components, m_subresourceRange, m_createFlags);
         vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs),
                           ci, VK_NULL_HANDLE,
-                          m_engine->getVector<VkImageView>().getData(1));
+                          &m_engine->getObject<VkImageView>(m_absIdxs));
         m_createdImageView = true;
     }
 }

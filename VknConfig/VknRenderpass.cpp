@@ -10,6 +10,7 @@ namespace vkn
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
         s_editable = this;
+        m_pipelineStartAbsIdx = m_engine->getVectorSize<VkPipeline>();
     }
 
     VknFramebuffer *VknRenderpass::addFramebuffer(uint32_t framebufferIdx)
@@ -29,8 +30,6 @@ namespace vkn
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
 
-        if (m_pipelineStartIdx == 3123123123)
-            m_pipelineStartIdx = m_engine->getVectorSize<VkPipeline>();
         return &addNewVknObject<VknPipeline, VkPipeline>(subpassIdx, m_pipelines,
                                                          m_engine, m_relIdxs, m_absIdxs, m_infos);
     }
@@ -45,7 +44,7 @@ namespace vkn
         VknResult res{vkCreateRenderPass(
                           m_engine->getObject<VkDevice>(m_absIdxs),
                           createInfo, VK_NULL_HANDLE,
-                          m_engine->getVector<VkRenderPass>().getData(1)),
+                          &m_engine->getObject<VkRenderPass>(m_absIdxs)),
                       "Create renderpass."};
         m_createdRenderpass = true;
     }
@@ -89,6 +88,12 @@ namespace vkn
             m_relIdxs, attachIdx, format, samples, loadOp, storeOp, stencilLoadOp,
             stencilStoreOp, initialLayout, finalLayout, flags);
 
+        if (!m_numPreserveRefs.exists(subpassIdx))
+            m_numPreserveRefs.insert(subpassIdx, 0u);
+        if (m_numAttachRefs[subpassIdx].getDataSize() == 0)
+            for (size_t i = 0; i < NUM_ATTACHMENT_TYPES; ++i)
+                m_numAttachRefs[subpassIdx].insert(i, 0u);
+
         uint32_t refIdx{0};
         if (attachmentType == PRESERVE_ATTACHMENT)
             refIdx = m_numPreserveRefs(subpassIdx)++;
@@ -115,7 +120,7 @@ namespace vkn
                     throw std::runtime_error("Shader module in shader stage not created before pipelines created.");
 
         VkPipeline *vkPipelines =
-            m_engine->getVector<VkPipeline>().getData(m_pipelines.size());
+            m_engine->getVectorSlice<VkPipeline>(m_pipelineStartAbsIdx, m_numSubpasses).getData();
         for (auto &pipeline : m_pipelines)
             pipeline._fillPipelineCreateInfo();
         VknSpace<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
@@ -134,8 +139,9 @@ namespace vkn
         VkSubpassDescriptionFlags flags)
     {
         testEditability();
+        // Check for color attachment *before* trying to access counts
         if (!isCompute && !m_filledColorAttachment)
-            throw std::runtime_error("No attachment created before creating subpass.");
+            throw std::runtime_error("No color attachment created before creating subpass.");
         m_infos->fillSubpassDescription(
             m_numAttachRefs[subpassIdx](COLOR_ATTACHMENT),
             m_numAttachRefs[subpassIdx](INPUT_ATTACHMENT),
