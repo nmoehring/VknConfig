@@ -140,60 +140,78 @@ namespace vkn
 
         void shutdown();
 
-        template <typename T>
-        uint32_t push_back(T val)
+        template <typename ObjectType, typename ParentType>
+        uint32_t push_back(ObjectType val, ParentType *parent)
         {
-            VknVector<T> &vec{this->getVector<T>()};
-            size_t pos = vec.getSize();
+            VknVector<ObjectType> &vec{this->getVector<ObjectType>()};
+            VknVector<ParentType> &parentVec{this->getParentVector<ObjectType>()} size_t pos = vec.getSize();
             vec.append(val);
+            parentVec.append(parent);
             return pos;
         }
 
-        template <typename T>
-        uint32_t push_back()
+        template <typename ObjectType, typename ParentType>
+        uint32_t push_back(ParentType *parent)
         {
-            return this->push_back<T>(T{});
+            return this->push_back<ObjectType, ParentType>(ObjectType{});
         }
 
-        template <typename T>
-        T &getObject(uint32_t idx)
+        template <typename ObjectType>
+        ObjectType &getObject(uint32_t idx)
         {
-            return this->getVector<T>()(idx);
+            return this->getVector<ObjectType>()(idx);
         }
 
-        template <typename T>
-        T &getObject(VknIdxs &absIdxs)
+        template <typename ObjectType>
+        ObjectType &getObject(VknIdxs &absIdxs)
         {
-            return this->getVector<T>()(absIdxs.get<T>());
+            return this->getVector<ObjectType>()(absIdxs.get<ObjectType>());
         }
 
-        template <typename T>
-        VknVector<T> &getVector()
+        template <typename ObjectType>
+        VknVector<ObjectType> &getVector()
         {
-            std::string vkTypeStr = typeToStr<T>();
+            std::string vkTypeStr = typeToStr<ObjectType>();
             if (m_objectVectors.find(vkTypeStr) == m_objectVectors.end())
 
-                m_objectVectors[vkTypeStr] = new VknVector<T>();
-            return *static_cast<VknVector<T> *>(m_objectVectors[vkTypeStr]);
+                m_objectVectors[vkTypeStr] = new VknVector<ObjectType>{};
+            return *static_cast<VknVector<ObjectType> *>(m_objectVectors[vkTypeStr]);
         }
 
-        template <typename T>
-        VknVectorIterator<T> getVectorSlice(uint32_t startIdx, uint32_t length)
+        template <typename ObjectType, typename ParentType>
+        VknVector<ParentType> &getParentVector()
         {
-            VknVector<T> &vec = this->getVector<T>();
+            std::string vkObjectTypeStr = typeToStr<ObjectType>();
+            std::string vkParentTypeStr = typeToStr<ParentType>();
+            if (m_parentVectors.find(vkObjectTypeStr) == m_parentVectors.end())
+                m_parentVectors[vkObjectTypeStr] = new VknVector<ParentType *>{};
+            return *static_cast<VknVector<ParentType *> *>(m_parentVectors[vkObjectTypeStr]);
+        }
+
+        template <typename ObjectType, typename ParentType>
+        ParentType *getParentPointer(size_t idx)
+        {
+            return this->getParentVector<ObjectType, ParentType>()(idx);
+        }
+
+        template <typename ObjectType>
+        VknVectorIterator<ObjectType> getVectorSlice(uint32_t startIdx, uint32_t length)
+        {
+            VknVector<ObjectType> &vec = this->getVector<ObjectType>();
             if (startIdx + length > vec.getSize())
                 throw std::out_of_range("Slice range exceeds vector size.");
             return vec.getSlice(startIdx, length);
         }
 
-        template <typename T>
+        template <typename ObjectType>
         uint32_t getVectorSize()
         {
-            return this->getVector<T>().getSize();
+            return this->getVector<ObjectType>().getSize();
         }
 
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
+        std::unordered_map<std::string, void *> m_parentVectors{};
         bool m_poweredOn{true};
         /*VknVector<VkInstance> instances{};
         VknVector<VkDevice> devices{};

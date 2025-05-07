@@ -824,7 +824,7 @@ namespace vkn
         uint32_t m_maxDepth{0};
 
     public:
-        VknSpace() = default;
+        // VknSpace() = default;
         VknSpace(uint32_t maxDepth = 255, uint32_t depth = 0) : m_depth(depth), m_maxDepth(maxDepth) {}
         ~VknSpace() = default;
 
@@ -888,10 +888,10 @@ namespace vkn
         void dive(SizeType position)
         {
             if (m_depth + 1u > m_maxDepth)
-                throw std::runtime_error("Trying to dive to deep into VknSpace. New depth > max depth.");
+                throw std::runtime_error("Trying to dive too deep into VknSpace. New depth > max depth.");
             m_subspaces.insert(position, VknSpace<DataType, SizeType>{
                                              m_maxDepth,
-                                             m_depth});
+                                             m_depth + 1u});
         }
 
         VknVector<DataType, SizeType> getSubspaceSlice(SizeType startPos, SizeType length)

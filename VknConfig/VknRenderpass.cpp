@@ -92,7 +92,7 @@ namespace vkn
             m_numPreserveRefs.insert(subpassIdx, 0u);
         if (m_numAttachRefs[subpassIdx].getDataSize() == 0)
             for (size_t i = 0; i < NUM_ATTACHMENT_TYPES; ++i)
-                m_numAttachRefs[subpassIdx].insert(i, 0u);
+                m_numAttachRefs[subpassIdx].insert(0u, i);
 
         uint32_t refIdx{0};
         if (attachmentType == PRESERVE_ATTACHMENT)
