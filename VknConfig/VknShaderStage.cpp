@@ -65,9 +65,7 @@ namespace vkn
         if (m_createdShaderModule)
             throw std::runtime_error("Shader module already created.");
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
-        VknVector<char> code{readBinaryFile(shaderDir / m_filename)};
-        for (auto &c : code)
-            m_code.append(c);
+        m_code = readBinaryFile(shaderDir / m_filename);
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(m_relIdxs, &m_code);
         VknResult res{

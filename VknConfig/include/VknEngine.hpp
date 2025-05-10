@@ -144,7 +144,8 @@ namespace vkn
         uint32_t push_back(ObjectType val, ParentType *parent)
         {
             VknVector<ObjectType> &vec{this->getVector<ObjectType>()};
-            VknVector<ParentType> &parentVec{this->getParentVector<ObjectType>()} size_t pos = vec.getSize();
+            VknVector<ParentType> &parentVec{this->getParentVector<ObjectType>()};
+            size_t pos = vec.getSize();
             vec.append(val);
             parentVec.append(parent);
             return pos;
@@ -209,6 +210,33 @@ namespace vkn
             return this->getVector<ObjectType>().getSize();
         }
 
+        template <typename VknObjectType, typename VkObjectType, typename VkParentType>
+        VknObjectType &addNewVknObject(uint32_t idx, std::list<VknObjectType> &objList,
+                                       VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+        {
+            if (idx != objList.size())
+                throw std::runtime_error("List index out of range or incorrect.");
+            VknIdxs newRelIdxs = relIdxs;
+            VknIdxs newAbsIdxs = absIdxs;
+            VkParentType *parent = this->getObject<VkObjectType>(absIdxs);
+            newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
+            newRelIdxs.add<VkObjectType>(objList.size());
+            return objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+        }
+
+        VkInstance *addVkInstance(VknIdxs &relIdxs, VknIdxs &absIdxs)
+        {
+            VknVector<VkInstance> &vec{this->getVector<VkInstance>()};
+            size_t pos = vec.getSize();
+            if (pos != 0)
+                throw std::runtime_error("VkInstance already added.");
+            vec.append(VkInstance{});
+
+            absIdxs.add<VkInstance>(pos);
+            relIdxs.add<VkInstance>(pos);
+            return &vec(pos);
+        }
+
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
         std::unordered_map<std::string, void *> m_parentVectors{};
@@ -228,25 +256,23 @@ namespace vkn
         VknVector<VkShaderModule> shaderModules{};
         VknVector<VkPipelineCache> pipelineCaches{};*/
 
-        template <typename T>
+        template <typename ObjectType, typename ParentType>
+        void deleteVectors()
+        {
+            std::string vkTypeStr = typeToStr<ObjectType>();
+            if (m_objectVectors.find(vkTypeStr) != m_objectVectors.end())
+                delete static_cast<VknVector<ObjectType> *>(m_objectVectors[vkTypeStr]);
+            if (m_parentVectors.find(vkTypeStr) != m_parentVectors.end())
+                delete static_cast<VknVector<ParentType *> *>(m_parentVectors[vkTypeStr]);
+        }
+
+        template <typename ObjectType>
         void deleteVector()
         {
-            std::string vkTypeStr = typeToStr<T>();
+            std::string vkTypeStr = typeToStr<ObjectType>();
             if (m_objectVectors.find(vkTypeStr) != m_objectVectors.end())
-                delete static_cast<VknVector<T> *>(m_objectVectors[vkTypeStr]);
+                delete static_cast<VknVector<ObjectType> *>(m_objectVectors[vkTypeStr]);
         }
     }; // VknEngine
 
-    template <typename VknT, typename VkT>
-    VknT &addNewVknObject(uint32_t idx, std::list<VknT> &objList, VknEngine *engine,
-                          VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
-    {
-        if (idx > objList.size())
-            throw std::runtime_error("List index out of range.");
-        VknIdxs newRelIdxs = relIdxs;
-        VknIdxs newAbsIdxs = absIdxs;
-        newAbsIdxs.add<VkT>(engine->push_back(VkT{}));
-        newRelIdxs.add<VkT>(objList.size());
-        return objList.emplace_back(engine, newRelIdxs, newAbsIdxs, infos);
-    }
 } // namespace vkn

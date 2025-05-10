@@ -9,17 +9,15 @@ namespace vkn
     }
 
     VknResult::VknResult(VkResult result, std::string opDesc)
-        : m_result{result}, m_opDesc{opDesc}
+        : m_opDesc{opDesc}
     {
-        if (m_result != VK_SUCCESS)
-            throw std::runtime_error(this->toErr("Error: "));
-
-        m_evaluatedErrorState = true;
-        s_archive.store(*this);
+        this->evaluate(result);
     }
 
     void VknResult::evaluate(VkResult result)
     {
+        if (result != VK_SUCCESS)
+            throw std::runtime_error(this->toErr("Error: "));
         m_result = result;
         m_evaluatedErrorState = true;
         s_archive.store(*this);

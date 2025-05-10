@@ -74,6 +74,7 @@ namespace vkn
 
         // Get
         VkImage *getVkImage();
+        VkImageUsageFlags &getUsage() { return m_usage; }
 
     private:
         // Engine

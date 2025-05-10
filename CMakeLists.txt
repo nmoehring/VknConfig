@@ -123,6 +123,7 @@ target_sources(vma INTERFACE single-headers/vma.cpp)
 
 # --- subdir ---
 add_subdirectory(VknConfig)
+add_subdirectory(tests)
 
 # add_subdirectory(tests)
 

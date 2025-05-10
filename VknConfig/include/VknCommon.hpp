@@ -42,26 +42,6 @@ namespace vkn
         size_t m_posSize{0};
         static constexpr size_t s_maxSizeTypeNum = ~static_cast<SizeType>(0u);
 
-        void resize(size_t newSize)
-        {
-            if (newSize - 1 > s_maxSizeTypeNum)
-                throw std::runtime_error("Overflow error. newSize of VknVector is greater than the maximum allowed by the SizeType.");
-            DataType *newData = new DataType[newSize];
-            SizeType *newPositions = new SizeType[newSize];
-            if (m_data)
-            {
-                for (size_t i = 0; i < this->getSize(); ++i)
-                {
-                    newData[i] = m_data[i];
-                    newPositions[i] = m_positions[i];
-                }
-                this->deleteArrays();
-            }
-            m_data = newData;
-            m_positions = newPositions;
-            m_dataSize = newSize;
-        }
-
         size_t getNextPosition()
         {
             if (m_posSize > s_maxSizeTypeNum)
@@ -93,6 +73,7 @@ namespace vkn
         PosSearchResult getIdxOfSmallestPos(size_t minPos)
         {
             PosSearchResult result{};
+            result.found = false;
 
             if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
@@ -111,7 +92,7 @@ namespace vkn
                 {
                     smallestPos = m_positions[i];
                     smallestPosIdx = i;
-                    result.pos = true;
+                    result.found = true;
                 }
             result.pos = smallestPosIdx;
             return result;
@@ -120,6 +101,7 @@ namespace vkn
         PosSearchResult getIdxOfLargestPos(size_t maxPos)
         {
             PosSearchResult result;
+            result.found = false;
 
             if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
@@ -131,30 +113,33 @@ namespace vkn
             for (size_t i = m_dataSize; i > 0; --i)
                 if (m_positions[i - 1u] == maxPos)
                 {
-                    result.pos = i;
+                    result.pos = i - 1u;
                     result.found = true;
                     return result;
                 }
-                else if (m_positions[i - 1u] < maxPos && m_positions[i - 1u] > largestPosIdx)
+                else if (m_positions[i - 1u] < maxPos && m_positions[i - 1u] > largestPos)
                 {
                     largestPos = m_positions[i - 1u];
                     largestPosIdx = i - 1u;
                     result.found = true;
                 }
             result.pos = largestPosIdx;
-            return largestPosIdx;
+            return result;
         }
 
         PosSearchResult getSmallestPos(size_t minPos)
         {
             PosSearchResult result{};
+            result.found = false;
 
             if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
             if (minPos >= m_posSize)
                 throw std::runtime_error("Cannot get(). Position out of range.");
             size_t smallestPos{s_maxSizeTypeNum};
-            for (auto &position : m_positions)
+            for (size_t i = 0; i < m_dataSize; ++i)
+            {
+                size_t position = m_positions[i];
                 if (position == minPos)
                 {
                     result.pos = position;
@@ -166,6 +151,7 @@ namespace vkn
                     result.found = true;
                     smallestPos = position;
                 }
+            }
             result.pos = smallestPos;
             return result;
         }
@@ -173,6 +159,7 @@ namespace vkn
         PosSearchResult getLargestPos(size_t maxPos)
         {
             PosSearchResult result{};
+            result.found = false;
 
             if (!m_data)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
@@ -180,7 +167,9 @@ namespace vkn
                 throw std::runtime_error("Cannot get(). Position out of range.");
 
             size_t largestPos{0};
-            for (auto &position : m_positions)
+            for (sie_t i = 0; i < m_dataSize; ++i)
+            {
+                size_t position{m_positions[i]};
                 if (position == maxPos)
                 {
                     result.found = true;
@@ -192,12 +181,40 @@ namespace vkn
                     largestPos = position;
                     result.found = true;
                 }
+            }
             result.pos = largestPos;
             return largestPos;
         }
 
     public:
         friend class VknVectorIterator<DataType, SizeType>;
+
+        void resize(size_t newSize)
+        {
+            if (newSize == 0 || newSize - 1 > s_maxSizeTypeNum)
+                throw std::runtime_error("Invalid size for VknVector.");
+            DataType *newData = new DataType[newSize];
+            SizeType *newPositions = new SizeType[newSize];
+            if (m_data)
+            {
+                for (size_t i = 0; i < this->getSize(); ++i)
+                {
+                    newData[i] = m_data[i];
+                    newPositions[i] = m_positions[i];
+                }
+                this->deleteArrays();
+            }
+            m_data = newData;
+            m_positions = newPositions;
+            m_dataSize = newSize;
+        }
+
+        void clear()
+        {
+            this->deleteArrays();
+            m_dataSize = 0;
+            m_posSize = 0;
+        }
 
         VknVector()
         {
@@ -301,7 +318,7 @@ namespace vkn
                 throw std::runtime_error("Slice range exceeds vector size.");
 
             return VknVectorIterator<DataType, SizeType>{
-                this, startPos, startPos + length - 1u};
+                this, startPos, length};
         }
 
         DataType &append(DataType newElement)
@@ -324,7 +341,7 @@ namespace vkn
                 m_positions[oldSize + i] = this->getNextPosition();
                 m_data[oldSize + i] = newElements[i];
             }
-            return VknVectorIterator(this, oldSize, newSize);
+            return VknVectorIterator(this, oldSize, newSize - oldSize);
         }
 
         DataType *append(DataType *arr, size_t length)
@@ -468,23 +485,25 @@ namespace vkn
     public:
         // TODO: Find out what explicit keyword does
         explicit VknVectorIterator(VknVector<DataType, SizeType> *vknVector,
-                                   size_t firstPos = 0, size_t endPos = 0, // Todo
+                                   size_t firstPos = 0, size_t length = 0, // Todo
                                    bool iterFilled = true)
             : m_vec{vknVector}, m_iterFilled{iterFilled}
         {
-            if (!vknVector->m_data || firstPos == endPos)
+            if (!vknVector->m_data || length == 0)
             {
                 m_isEmpty = true;
                 m_firstPos = firstPos;
-                m_lastPos = 0;
+                m_lastPos = firstPos;
                 m_currentIdx = 0;
                 m_currentPos = firstPos;
                 m_isInvalid = true;
                 return;
             }
-            else if (endPos > firstPos)
+            else if (firstPos + length >= vknVector->getSize())
+                throw std::runtime_error("Invalid VknVectorIterator range.");
+            else
             {
-                m_lastPos = endPos - 1u;
+                m_lastPos = firstPos + length - 1u;
                 m_firstPos = firstPos;
                 m_isEmpty = false;
                 m_isInvalid = false;
@@ -500,10 +519,6 @@ namespace vkn
                 else
                     m_currentPos = firstPos;
             }
-            else if (firstPos > endPos)
-                throw std::runtime_error("Invalid VknVectorIterator range (startPos > endPos).");
-            else //  ¯\_(ツ)_/¯
-                throw std::runtime_error("Invalid VknVectorIterator range.");
         }
 
         reference operator*() const
@@ -558,7 +573,7 @@ namespace vkn
                 nextIdxResult.found = true;
             }
             else
-                nextIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos + 1u);
+                nextIdxResult = m_vec->getIdxOfSmallestPos(m_currentPos + 1u);
 
             if (nextIdxResult.found)
             {
@@ -617,7 +632,7 @@ namespace vkn
                 nextIdxResult.found = true;
             }
             else
-                nextIdxResult = m_vec->findIdxOfLargestPos(m_currentPos - 1u);
+                nextIdxResult = m_vec->getIdxOfLargestPos(m_currentPos - 1u);
 
             if (nextIdxResult.found)
             {
@@ -724,7 +739,7 @@ namespace vkn
             {
                 m_atEnd = true;
                 m_currentPos = m_lastPos;
-                PosSearchResult previousIdxRes = m_vec->findIdxOfLargestPos(m_currentPos);
+                PosSearchResult previousIdxRes = m_vec->getIdxOfLargestPos(m_currentPos);
                 m_currentIdx = previousIdxRes.pos;
                 return *this;
             }
@@ -737,9 +752,9 @@ namespace vkn
             else
             {
                 m_currentPos = m_currentPos + n;
-                PosSearchResult nextIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos);
+                PosSearchResult nextIdxResult = m_vec->getIdxOfSmallestPos(m_currentPos);
                 if (!nextIdxResult.found)
-                    nextIdxResult = m_vec->findIdxOfLargestPos(m_currentPos);
+                    nextIdxResult = m_vec->getIdxOfLargestPos(m_currentPos);
                 m_currentIdx = nextIdxResult.pos;
                 return *this;
             }
@@ -760,7 +775,7 @@ namespace vkn
             {
                 m_atBegin = true;
                 m_currentPos = m_firstPos;
-                PosSearchResult previousIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos);
+                PosSearchResult previousIdxResult = m_vec->getIdxOfSmallestPos(m_currentPos);
                 m_currentIdx = previousIdxResult.pos;
                 return *this;
             }
@@ -773,9 +788,9 @@ namespace vkn
             else
             {
                 m_currentPos = m_currentPos - n;
-                PosSearchResult nextIdxResult = m_vec->findIdxOfLargestPos(m_currentPos);
+                PosSearchResult nextIdxResult = m_vec->getIdxOfLargestPos(m_currentPos);
                 if (!nextIdxResult.found)
-                    nextIdxResult = m_vec->findIdxOfSmallestPos(m_currentPos);
+                    nextIdxResult = m_vec->getIdxOfSmallestPos(m_currentPos);
                 m_currentIdx = nextIdxResult.pos;
                 return *this;
             }

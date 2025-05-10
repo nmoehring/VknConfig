@@ -81,6 +81,9 @@ namespace vkn
             VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             VkImageLayout attachmentRefLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             VkAttachmentDescriptionFlags flags = 0);
+        void addAttachmentRef(
+            uint32_t subpassIdx, VknAttachmentType attachmentType,
+            uint32_t attachIdx, VkImageLayout layout, VkImageLayout attachmentRefLayout);
         void addSubpassDependency(uint32_t dependencyIdx,
                                   uint32_t srcSubpass = VK_SUBPASS_EXTERNAL, uint32_t dstSubpass = 0,
                                   VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,

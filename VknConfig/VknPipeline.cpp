@@ -9,8 +9,8 @@ namespace vkn
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
         s_editable = this;
-        addNewVknObject<VknPipelineLayout, VkPipelineLayout>(
-            0, m_layouts, m_engine, m_relIdxs, m_absIdxs, m_infos);
+        m_engine->addNewVknObject<VknPipelineLayout, VkPipelineLayout, VkDevice>(
+            0, m_layouts, m_relIdxs, m_absIdxs, m_infos);
         m_vertexInputState = VknVertexInputState{engine, relIdxs, absIdxs, infos};
         m_inputAssemblyState = VknInputAssemblyState{engine, relIdxs, absIdxs, infos};
         m_multisampleState = VknMultisampleState{engine, relIdxs, absIdxs, infos};
@@ -23,8 +23,8 @@ namespace vkn
                                                 std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
         testEditability();
-        VknShaderStage &shaderStage = addNewVknObject<VknShaderStage, VkShaderModule>(
-            shaderIdx, m_shaderStages, m_engine, m_relIdxs, m_absIdxs, m_infos);
+        VknShaderStage &shaderStage = m_engine->addNewVknObject<VknShaderStage, VkShaderModule, VkDevice>(
+            shaderIdx, m_shaderStages, m_relIdxs, m_absIdxs, m_infos);
         shaderStage.setFilename(filename);
         shaderStage.setShaderStageType(stageType);
         shaderStage.setFlags(flags);

@@ -276,8 +276,7 @@ namespace vkn
         VknVector<VknVector<VknVector<uint32_t>>> *getDevicePreserveAttachments(uint32_t deviceIdx);
         VknSpace<uint32_t> *getRenderpassPreserveAttachments(uint32_t deviceIdx, uint32_t renderpassIdx);
         VkSubpassDescription *fillSubpassDescription(
-            uint32_t numColor, uint32_t numInput, uint32_t numResolve, uint32_t numDepthStencil,
-            uint32_t numPreserve, VknIdxs &relIdxs, uint32_t subpassIdx,
+            VknIdxs &relIdxs, uint32_t subpassIdx,
             VkPipelineBindPoint pipelineBindPoint,
             VkSubpassDescriptionFlags flags);
         VkSubpassDependency *fillSubpassDependency(

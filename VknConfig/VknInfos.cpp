@@ -654,12 +654,11 @@ namespace vkn
     }
 
     VkSubpassDescription *VknInfos::fillSubpassDescription(
-        uint32_t numColor, uint32_t numInput, uint32_t numResolve, uint32_t numDepthStencil,
-        uint32_t numPreserve, VknIdxs &relIdxs, uint32_t subpassIdx,
+        VknIdxs &relIdxs, uint32_t subpassIdx,
         VkPipelineBindPoint pipelineBindPoint, VkSubpassDescriptionFlags flags)
     {
-        m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].insert(VkSubpassDescription{}, subpassIdx);
-        VkSubpassDescription &description = m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](subpassIdx);
+        VkSubpassDescription &description =
+            m_subpassDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].insert(VkSubpassDescription{}, subpassIdx);
 
         description.flags = flags;
         description.pipelineBindPoint = pipelineBindPoint;
@@ -669,23 +668,23 @@ namespace vkn
         VknSpace<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][DEPTH_STENCIL_ATTACHMENT];
         VknSpace<uint32_t> &preserveAttachments = m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx];
 
-        description.inputAttachmentCount = numInput;
+        description.inputAttachmentCount = inputAttachments.getDataSize();
         description.pInputAttachments = inputAttachments.getData();
 
-        description.colorAttachmentCount = numColor;
+        description.colorAttachmentCount = colorAttachments.getDataSize();
         description.pColorAttachments = colorAttachments.getData();
 
-        description.preserveAttachmentCount = numPreserve;
+        description.preserveAttachmentCount = preserveAttachments.getDataSize();
         description.pPreserveAttachments = preserveAttachments.getData();
 
-        if (numResolve > numColor)
+        if (resolveAttachments.getDataSize() > colorAttachments.getDataSize())
             throw std::runtime_error("Resolve attachments must be less than or equal to color attachments.");
 
         description.pResolveAttachments = resolveAttachments.getData();
-        if (numDepthStencil > 1)
+        if (depthStencilAttachments.getDataSize() > 1)
             throw std::runtime_error("Too many depth stencil attachments in subpass description.");
 
-        description.pDepthStencilAttachment = &depthStencilAttachments(0);
+        description.pDepthStencilAttachment = depthStencilAttachments.getData();
 
         return &description;
     }

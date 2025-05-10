@@ -171,8 +171,8 @@ namespace vkn
         m_imageViewStartIdx = engineImageViews.getSize();
         for (uint32_t i = 0; i < m_imageCount; ++i)
         {
-            addNewVknObject<VknImageView, VkImageView>(
-                i, m_imageViews, m_engine, m_relIdxs, m_absIdxs, m_infos);
+            m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
+                i, m_imageViews, m_relIdxs, m_absIdxs, m_infos);
             m_imageViews.back().setImage(&m_vkSwapchainImages(i));
             m_imageViews.back().setFormat(m_surfaceFormat.format);
         }

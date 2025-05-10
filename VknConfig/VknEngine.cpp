@@ -77,18 +77,18 @@ namespace vkn
         this->deleteVector<VkPhysicalDevice>();
 
         // These do
-        this->deleteVector<VkShaderModule>();
-        this->deleteVector<VkDescriptorSetLayout>();
-        this->deleteVector<VkPipelineLayout>();
-        this->deleteVector<VkPipelineCache>();
-        this->deleteVector<VkPipeline>();
-        this->deleteVector<VkFramebuffer>();
-        this->deleteVector<VkRenderPass>();
-        this->deleteVector<VkImageView>();
-        this->deleteVector<VkImage>();
-        this->deleteVector<VkSwapchainKHR>();
-        this->deleteVector<VkDevice>();
-        this->deleteVector<VkSurfaceKHR>();
+        this->deleteVectors<VkShaderModule, VkDevice>();
+        this->deleteVectors<VkDescriptorSetLayout, VkDevice>();
+        this->deleteVectors<VkPipelineLayout, VkDevice>();
+        this->deleteVectors<VkPipelineCache, VkDevice>();
+        this->deleteVectors<VkPipeline, VkDevice>();
+        this->deleteVectors<VkFramebuffer, VkDevice>();
+        this->deleteVectors<VkRenderPass, VkDevice>();
+        this->deleteVectors<VkImageView, VkDevice>();
+        this->deleteVectors<VkImage, VkDevice>();
+        this->deleteVectors<VkSwapchainKHR, VkDevice>();
+        this->deleteVectors<VkDevice, VkInstance>();
+        this->deleteVectors<VkSurfaceKHR, VkInstance>();
         this->deleteVector<VkInstance>();
         m_poweredOn = false;
     }

@@ -12,8 +12,8 @@ namespace vkn
     VknDescriptorSetLayout *VknPipelineLayout::addDescriptorSetLayout()
     {
         m_descriptorSetLayoutStartIdx = m_engine->getVectorSize<VkDescriptorSetLayout>();
-        return &addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout>(
-            uint32_t{0}, m_descriptorSetLayouts, m_engine,
+        return &m_engine->addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout, VkDevice>(
+            uint32_t{0}, m_descriptorSetLayouts,
             m_relIdxs, m_absIdxs, m_infos);
     }
 

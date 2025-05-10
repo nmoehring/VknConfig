@@ -11,8 +11,8 @@ namespace vkn
     {
         if (!m_createdInstance)
             throw std::runtime_error("Can't add a device until an instance is created.");
-        return &addNewVknObject<VknDevice, VkDevice>(
-            deviceIdx, m_devices, m_engine, m_relIdxs, m_absIdxs, m_infos);
+        return &m_engine->addNewVknObject<VknDevice, VkDevice, VkInstance>(
+            deviceIdx, m_devices, m_relIdxs, m_absIdxs, m_infos);
     }
 
     void VknConfig::addWindow(GLFWwindow *window)
@@ -99,6 +99,7 @@ namespace vkn
         {
             VknFramebuffer *framebuffer = getListElement(i, *framebuffers);
             framebuffer->addSwapchainVkImage(swapchain->getImageViewStartIdx() + i);
+            framebuffer->setSwapchainAttachmentDescriptionIndex(0);
             framebuffer->addAttachments();
         }
         renderpass->createFramebuffers();
@@ -166,10 +167,11 @@ namespace vkn
             throw std::runtime_error("Instance already created.");
         if (!m_filledInstanceCreateInfo)
             throw std::runtime_error("Creating instance without filling instance create info.");
+        m_engine->addVkInstance(m_relIdxs, m_absIdxs);
         VknResult res{
             vkCreateInstance(
                 m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE,
-                m_engine->getVector<VkInstance>().getData(1)),
+                m_engine->getVector<VkInstance>().getData()),
             "Create instance."};
 
         m_createdInstance = true;

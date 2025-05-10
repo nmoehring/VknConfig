@@ -47,8 +47,8 @@ namespace vkn
             throw std::runtime_error("No available queue families found.");
 
         for (int i = 0; i < propertyCount; ++i)
-            addNewVknObject<VknQueueFamily, VkQueueFamilyProperties>(
-                i, m_queues, m_engine, m_relIdxs, m_absIdxs, m_infos);
+            m_engine->addNewVknObject<VknQueueFamily, VkQueueFamilyProperties, VkDevice>(
+                i, m_queues, m_relIdxs, m_absIdxs, m_infos);
 
         VknVectorIterator<VkQueueFamilyProperties> queuesIterator{
             m_engine->getVectorSlice<VkQueueFamilyProperties>(oldVectorSize, propertyCount)};
@@ -105,15 +105,15 @@ namespace vkn
         else if (deviceCount > 1u)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
         VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
+        physDevices->resize(deviceCount);
         VknResult res2{vkEnumeratePhysicalDevices(
                            m_engine->getObject<VkInstance>(0u), &deviceCount,
                            physDevices->getData()),
                        "Enum physical devices and store."};
 
+        s_properties.clear();
         for (auto &vkDevice : *physDevices)
-            vkGetPhysicalDeviceProperties(
-                m_engine->getObject<VkPhysicalDevice>(0),
-                s_properties.getData(deviceCount));
+            vkGetPhysicalDeviceProperties(vkDevice, s_properties.getData(1));
         s_enumeratedPhysicalDevices = true;
         return res2;
     }

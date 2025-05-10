@@ -20,8 +20,8 @@ namespace vkn
             throw std::runtime_error("FramebufferIdx invalid. Should be next index.");
         if (!m_createdRenderpass)
             throw std::runtime_error("Renderpass not created before adding framebuffer.");
-        return &addNewVknObject<VknFramebuffer, VkFramebuffer>(
-            framebufferIdx, m_framebuffers, m_engine, m_relIdxs, m_absIdxs, m_infos);
+        return &m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
+            framebufferIdx, m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
     }
 
     VknPipeline *VknRenderpass::addPipeline(uint32_t subpassIdx)
@@ -30,8 +30,9 @@ namespace vkn
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
 
-        return &addNewVknObject<VknPipeline, VkPipeline>(subpassIdx, m_pipelines,
-                                                         m_engine, m_relIdxs, m_absIdxs, m_infos);
+        return &m_engine->addNewVknObject<VknPipeline, VkPipeline, VkDevice>(
+            subpassIdx, m_pipelines,
+            m_relIdxs, m_absIdxs, m_infos);
     }
 
     void VknRenderpass::createRenderpass()
@@ -82,12 +83,24 @@ namespace vkn
         VkAttachmentDescriptionFlags flags)
     {
         testEditability();
+
+        if (attachmentType == INPUT_ATTACHMENT || attachmentType == PRESERVE_ATTACHMENT)
+            throw std::runtime_error("Added attachment type requires an existing attachment (input or preserve attachment) and can only be added as an attachment reference.");
+
         uint32_t attachIdx = m_numAttachments++;
 
         m_infos->fillAttachmentDescription(
             m_relIdxs, attachIdx, format, samples, loadOp, storeOp, stencilLoadOp,
             stencilStoreOp, initialLayout, finalLayout, flags);
 
+        if (attachmentType == COLOR_ATTACHMENT)
+            m_filledColorAttachment = true;
+    }
+
+    void VknRenderpass::addAttachmentRef(
+        uint32_t subpassIdx, VknAttachmentType attachmentType,
+        uint32_t attachIdx, VkImageLayout layout, VkImageLayout attachmentRefLayout)
+    {
         if (!m_numPreserveRefs.exists(subpassIdx))
             m_numPreserveRefs.insert(subpassIdx, 0u);
         if (m_numAttachRefs[subpassIdx].getDataSize() == 0)
@@ -99,9 +112,6 @@ namespace vkn
             refIdx = m_numPreserveRefs(subpassIdx)++;
         else
             refIdx = m_numAttachRefs[subpassIdx](attachmentType)++;
-
-        if (attachmentType == COLOR_ATTACHMENT)
-            m_filledColorAttachment = true;
 
         m_infos->fillAttachmentReference(m_relIdxs, subpassIdx, refIdx,
                                          attachmentType, attachIdx, attachmentRefLayout);
@@ -142,13 +152,7 @@ namespace vkn
         // Check for color attachment *before* trying to access counts
         if (!isCompute && !m_filledColorAttachment)
             throw std::runtime_error("No color attachment created before creating subpass.");
-        m_infos->fillSubpassDescription(
-            m_numAttachRefs[subpassIdx](COLOR_ATTACHMENT),
-            m_numAttachRefs[subpassIdx](INPUT_ATTACHMENT),
-            m_numAttachRefs[subpassIdx](RESOLVE_ATTACHMENT),
-            m_numAttachRefs[subpassIdx](DEPTH_STENCIL_ATTACHMENT),
-            m_numPreserveRefs(subpassIdx), m_relIdxs,
-            m_numSubpasses++, pipelineBindPoint, flags);
+        m_infos->fillSubpassDescription(m_relIdxs, m_numSubpasses++, pipelineBindPoint, flags);
         this->addPipeline(subpassIdx);
     }
 
@@ -158,8 +162,8 @@ namespace vkn
         testEditability();
         for (uint32_t i = 0; i < imageCount; ++i)
         {
-            addNewVknObject<VknFramebuffer, VkFramebuffer>(
-                i, m_framebuffers, m_engine, m_relIdxs, m_absIdxs, m_infos);
+            m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
+                i, m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
             m_framebuffers.back().addSwapchainVkImage(imageStartIdx + i);
         }
         return &m_framebuffers;

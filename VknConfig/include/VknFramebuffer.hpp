@@ -71,6 +71,7 @@ namespace vkn
         void setDimensions(uint32_t width, uint32_t height);
         void setNumLayers(uint32_t numLayers);
         void setCreateFlags(VkFramebufferCreateFlags createFlags);
+        void setSwapchainAttachmentDescriptionIndex(uint32_t descriptionIndex);
 
         // Create
         void createFramebuffer();
@@ -102,6 +103,7 @@ namespace vkn
         uint32_t m_imageStartIdx{0};
         uint32_t m_imageViewStartIdx{0};
         static VknFramebuffer *s_editable;
+        std::optional<uint32_t> m_swapchainAttachmentDescIndex; // Index of the VkAttachmentDescription for the swapchain
 
         void testEditability();
 
