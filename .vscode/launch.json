@@ -20,6 +20,16 @@
             "preLaunchTask": "(Debug) CMake configure and build all"
         },
         {
+            "name": "Build ALL and run tests (MSVC)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/tests/Debug/VknVectorTests.exe",
+            "stopAtEntry": false,
+            "console": "externalTerminal",
+            "preLaunchTask": "(Debug) CMake configure and build all"
+        },
+        {
             "name": "Build ALL and debug CURRENT file w/ LOGS (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",

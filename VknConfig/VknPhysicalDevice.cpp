@@ -105,7 +105,7 @@ namespace vkn
         else if (deviceCount > 1u)
             std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
         VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
-        physDevices->resize(deviceCount);
+        physDevices->grow(deviceCount);
         VknResult res2{vkEnumeratePhysicalDevices(
                            m_engine->getObject<VkInstance>(0u), &deviceCount,
                            physDevices->getData()),

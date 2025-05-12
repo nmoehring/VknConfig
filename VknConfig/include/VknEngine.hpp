@@ -144,7 +144,7 @@ namespace vkn
         uint32_t push_back(ObjectType val, ParentType *parent)
         {
             VknVector<ObjectType> &vec{this->getVector<ObjectType>()};
-            VknVector<ParentType> &parentVec{this->getParentVector<ObjectType>()};
+            VknVector<ParentType *> &parentVec = this->getParentVector<ObjectType, ParentType>();
             size_t pos = vec.getSize();
             vec.append(val);
             parentVec.append(parent);
@@ -154,7 +154,7 @@ namespace vkn
         template <typename ObjectType, typename ParentType>
         uint32_t push_back(ParentType *parent)
         {
-            return this->push_back<ObjectType, ParentType>(ObjectType{});
+            return this->push_back<ObjectType, ParentType>(ObjectType{}, parent);
         }
 
         template <typename ObjectType>
@@ -180,7 +180,7 @@ namespace vkn
         }
 
         template <typename ObjectType, typename ParentType>
-        VknVector<ParentType> &getParentVector()
+        VknVector<ParentType *> &getParentVector()
         {
             std::string vkObjectTypeStr = typeToStr<ObjectType>();
             std::string vkParentTypeStr = typeToStr<ParentType>();
@@ -218,7 +218,7 @@ namespace vkn
                 throw std::runtime_error("List index out of range or incorrect.");
             VknIdxs newRelIdxs = relIdxs;
             VknIdxs newAbsIdxs = absIdxs;
-            VkParentType *parent = this->getObject<VkObjectType>(absIdxs);
+            VkParentType *parent = &this->getObject<VkParentType>(absIdxs);
             newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
             newRelIdxs.add<VkObjectType>(objList.size());
             return objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);

@@ -75,10 +75,8 @@ namespace vkn
             PosSearchResult result{};
             result.found = false;
 
-            if (!m_data)
-                throw std::runtime_error("Cannot get(). Vector is empty!");
-            if (minPos >= m_posSize)
-                throw std::runtime_error("Cannot get(). Position out of range.");
+            if (!m_data || minPos >= m_posSize)
+                return result;
             size_t smallestPos{s_maxSizeTypeNum};
             size_t smallestPosIdx{0};
             for (size_t i = 0u; i < this->getSize(); ++i)
@@ -103,10 +101,8 @@ namespace vkn
             PosSearchResult result;
             result.found = false;
 
-            if (!m_data)
-                throw std::runtime_error("Cannot get(). Vector is empty!");
-            if (maxPos >= m_posSize)
-                throw std::runtime_error("Cannot get(). Position out of range.");
+            if (!m_data || maxPos >= m_posSize)
+                return result;
 
             size_t largestPos{0};
             size_t largestPosIdx{0};
@@ -132,10 +128,8 @@ namespace vkn
             PosSearchResult result{};
             result.found = false;
 
-            if (!m_data)
-                throw std::runtime_error("Cannot get(). Vector is empty!");
-            if (minPos >= m_posSize)
-                throw std::runtime_error("Cannot get(). Position out of range.");
+            if (!m_data || minPos >= m_posSize)
+                return result;
             size_t smallestPos{s_maxSizeTypeNum};
             for (size_t i = 0; i < m_dataSize; ++i)
             {
@@ -146,7 +140,7 @@ namespace vkn
                     result.found = true;
                     return result;
                 }
-                else if (position < smallestPos)
+                else if (position > minPos && position < smallestPos)
                 {
                     result.found = true;
                     smallestPos = position;
@@ -161,13 +155,11 @@ namespace vkn
             PosSearchResult result{};
             result.found = false;
 
-            if (!m_data)
-                throw std::runtime_error("Cannot get(). Vector is empty!");
-            if (maxPos >= m_posSize)
-                throw std::runtime_error("Cannot get(). Position out of range.");
+            if (!m_data || maxPos >= m_posSize)
+                return result;
 
             size_t largestPos{0};
-            for (sie_t i = 0; i < m_dataSize; ++i)
+            for (size_t i = 0; i < m_dataSize; ++i)
             {
                 size_t position{m_positions[i]};
                 if (position == maxPos)
@@ -176,22 +168,22 @@ namespace vkn
                     result.pos = position;
                     return result;
                 }
-                else if (position > largestPos)
+                else if (position < maxPos && position > largestPos)
                 {
                     largestPos = position;
                     result.found = true;
                 }
             }
             result.pos = largestPos;
-            return largestPos;
+            return result;
         }
 
     public:
         friend class VknVectorIterator<DataType, SizeType>;
 
-        void resize(size_t newSize)
+        void grow(size_t newSize)
         {
-            if (newSize == 0 || newSize - 1 > s_maxSizeTypeNum)
+            if (newSize < this->getSize() || newSize - 1 > s_maxSizeTypeNum)
                 throw std::runtime_error("Invalid size for VknVector.");
             DataType *newData = new DataType[newSize];
             SizeType *newPositions = new SizeType[newSize];
@@ -229,15 +221,23 @@ namespace vkn
 
         VknVector(const VknVector &other)
         {
-            size_t otherSize{other.getSize()};
             m_dataSize = other.m_dataSize;
             m_posSize = other.m_posSize;
-            m_positions = new SizeType[otherSize];
-            m_data = new DataType[otherSize];
-            for (size_t i = 0; i < this->getSize(); ++i)
+            if (!other.m_data)
             {
-                this->setPosition(i, other.m_positions[i]);
-                m_data[i] = other.m_data[i];
+                m_data = nullptr;
+                m_positions = nullptr;
+            }
+            else
+            {
+                m_positions = new SizeType[m_dataSize];
+                m_data = new DataType[m_dataSize];
+
+                for (size_t i = 0; i < this->getSize(); ++i)
+                {
+                    this->setPosition(i, other.m_positions[i]);
+                    m_data[i] = other.m_data[i];
+                }
             }
         }
 
@@ -247,12 +247,20 @@ namespace vkn
             this->deleteArrays();
             m_dataSize = other.m_dataSize;
             m_posSize = other.m_posSize;
-            m_positions = new SizeType[otherSize];
-            m_data = new DataType[otherSize];
-            for (size_t i = 0; i < otherSize; ++i)
+            if (!other.m_data)
             {
-                m_positions[i] = other.m_positions[i];
-                m_data[i] = other.m_data[i];
+                m_data = nullptr;
+                m_positions = nullptr;
+            }
+            else
+            {
+                m_positions = new SizeType[otherSize];
+                m_data = new DataType[otherSize];
+                for (size_t i = 0; i < otherSize; ++i)
+                {
+                    m_positions[i] = other.m_positions[i];
+                    m_data[i] = other.m_data[i];
+                }
             }
             return *this; // Return a reference to the current object
         }
@@ -323,7 +331,7 @@ namespace vkn
 
         DataType &append(DataType newElement)
         {
-            this->resize(this->getSize() + 1u);
+            this->grow(this->getSize() + 1u);
             m_positions[m_dataSize - 1u] = this->getNextPosition();
             m_data[m_dataSize - 1u] = newElement;
             return m_data[m_dataSize - 1u];
@@ -334,7 +342,7 @@ namespace vkn
             size_t oldSize{this->getSize()};
             size_t otherSize{newElements.getSize()};
             size_t newSize = oldSize + otherSize;
-            this->resize(newSize);
+            this->grow(newSize);
 
             for (size_t i = 0; i < otherSize; ++i)
             {
@@ -347,7 +355,7 @@ namespace vkn
         DataType *append(DataType *arr, size_t length)
         {
             size_t oldSize{this->getSize()};
-            this->resize(oldSize + length);
+            this->grow(oldSize + length);
 
             for (size_t i = 0; i < length; ++i)
             {
@@ -360,7 +368,7 @@ namespace vkn
         DataType *append(DataType value, size_t length)
         {
             size_t oldSize{this->getSize()};
-            this->resize(oldSize + length);
+            this->grow(oldSize + length);
             for (size_t i = oldSize; i < this->getSize(); ++i)
             {
                 m_data[i] = value;
@@ -395,7 +403,7 @@ namespace vkn
         {
             if (!m_data || !this->exists(position))
             {
-                this->resize(m_dataSize + 1u);
+                this->grow(m_dataSize + 1u);
                 this->setPosition(m_dataSize - 1u, position);
                 m_data[m_dataSize - 1u] = newElement;
             }
@@ -408,31 +416,31 @@ namespace vkn
         {
             if (m_dataSize <= 1)
                 throw std::runtime_error("Vector too small (0 or 1) for swap.");
-            SizeType *idx1{nullptr};
-            SizeType *idx2{nullptr};
+            std::optional<size_t> idx1{};
+            std::optional<size_t> idx2{};
             for (size_t i = 0; i < this->getSize(); ++i)
             {
                 if (m_positions[i] == position1)
-                    idx1 = &m_positions[i];
+                    idx1 = i;
                 else if (m_positions[i] == position2)
-                    idx2 = &m_positions[i];
+                    idx2 = i;
             }
-            if (!idx1 || !idx2)
+            if (!idx1.has_value() || !idx2.has_value())
                 throw std::runtime_error("Elements for swap not found!");
-            size_t temp{m_positions[*idx1]};
-            m_positions[*idx1] = m_positions[*idx2];
-            m_positions[*idx2] = temp;
+            size_t temp{m_positions[idx1.value()]};
+            m_positions[idx1.value()] = m_positions[idx2.value()];
+            m_positions[idx2.value()] = temp;
         }
 
         DataType *getData(size_t numNewElements = 0u)
         {
-            size_t oldSize{this->getSize()};
-            size_t newSize{oldSize + numNewElements};
-            if (newSize > s_maxSizeTypeNum)
-                throw std::runtime_error("Resizing of internal array causes an overflow error.");
             if (numNewElements != 0u)
             {
-                this->resize(newSize);
+                size_t oldSize{this->getSize()};
+                size_t newSize{oldSize + numNewElements};
+                if (newSize > s_maxSizeTypeNum)
+                    throw std::runtime_error("Resizing of internal array causes an overflow error.");
+                this->grow(newSize);
                 for (size_t i = oldSize; i < newSize; ++i)
                 {
                     m_data[i] = DataType{};
@@ -452,11 +460,10 @@ namespace vkn
         const DataType *rbegin() const { return m_data + this->getSize() - 1u; }
         const DataType *rend() const { return m_data - 1u; }
 
-        bool isEmpty() { return !m_data; }
-        bool isNotEmpty() { return m_data; }
+        bool isEmpty() const { return !m_data; }
         const size_t getSize() const { return m_dataSize; }
-        size_t size() { return this->getSize(); }
-        size_t getNumPositions() { return m_posSize; }
+        size_t size() const { return this->getSize(); }
+        size_t getNumPositions() const { return m_posSize; }
     };
 
     template <typename DataType, typename SizeType = uint32_t>
