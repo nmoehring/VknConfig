@@ -117,6 +117,8 @@ else()
     message("Unknown build type.")
 endif()
 
+enable_testing()
+
 # --- Single-header libraries
 add_library(vma INTERFACE)
 target_sources(vma INTERFACE single-headers/vma.cpp)

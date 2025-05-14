@@ -1,20 +1,20 @@
 {
     "configurations": [
         {
-            "name": "Debug CURRENT file (MSVC)",
+            "name": "Debug minTest (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
+            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal"
         },
         {
-            "name": "Build ALL and debug CURRENT file (MSVC)",
+            "name": "Build ALL and debug minTest (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
+            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all"
@@ -24,7 +24,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/",
-            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/tests/Debug/VknVectorTests.exe",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/tests/DEBUG/VknConfigUnitTests.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all"
@@ -33,8 +33,8 @@
             "name": "Build ALL and debug CURRENT file w/ LOGS (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
+            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ logs"
@@ -43,8 +43,8 @@
             "name": "Build ALL and debug CURRENT file w/ TRACE logs (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug",
-            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/${relativeFileDirname}/Debug/${relativeFileDirname}.exe",
+            "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
+            "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
             "preLaunchTask": "(Debug) CMake configure and build all w/ trace"
