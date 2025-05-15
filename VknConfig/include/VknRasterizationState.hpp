@@ -44,7 +44,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 #include "VknInfos.hpp"
 
 namespace vkn

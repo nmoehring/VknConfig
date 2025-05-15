@@ -56,7 +56,7 @@
 #include "VknResult.hpp"
 #include "VknInfos.hpp"
 #include "VknFeatures.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 
 namespace vkn
 {
@@ -239,8 +239,7 @@ namespace vkn
             const void *pInitialData,
             VkPipelineCacheCreateFlags flags);
         VkRenderPassCreateInfo *fillRenderpassCreateInfo(
-            VknIdxs &relIdxs, uint32_t numAttachments,
-            uint32_t numSubpasses, uint32_t numSubpassDeps, VkRenderPassCreateFlags flags);
+            VknIdxs &relIdxs, VkRenderPassCreateFlags flags);
         VkAttachmentDescription *fillAttachmentDescription(
             VknIdxs &relIdxs, uint32_t attachIdx,
             VkFormat format,
@@ -254,7 +253,7 @@ namespace vkn
             VkAttachmentDescriptionFlags flags);
         void fillAttachmentReference(
             VknIdxs &relIdxs, uint32_t subpassIdx,
-            uint32_t attachIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
+            uint32_t refIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
             VkImageLayout layout);
         VknSpace<VkAttachmentReference> *getRenderpassAttachmentReferences(
             VknIdxs &relIdxs);

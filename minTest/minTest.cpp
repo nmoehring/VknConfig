@@ -6,7 +6,7 @@
 
 #include "VknConfig/include/VknConfig.hpp"
 #include "VknConfig/include/VknEngine.hpp"
-#include "VknConfig/include/VknCommon.hpp"
+#include "VknConfig/include/VknData.hpp"
 
 void printDevProps(vkn::VknVector<VkPhysicalDeviceProperties> devProps);
 void printFamProps(vkn::VknVector<VkQueueFamilyProperties> famProps);

@@ -1,6 +1,6 @@
 // tests/test_vknvectoriterator.cpp
 #include "gtest/gtest.h"
-#include "../VknConfig/include/VknCommon.hpp" // Adjust path as necessary
+#include "../VknConfig/include/VknData.hpp" // Adjust path as necessary
 
 // No need for friend class declaration if testing public API only.
 

@@ -6,7 +6,7 @@
 #include <memory>
 #include <fstream>
 #include <algorithm>
-#include "../VknConfig/include/VknCommon.hpp"
+#include "../VknConfig/include/VknData.hpp"
 
 vkn::VknVector<std::string> getExtensionList()
 {

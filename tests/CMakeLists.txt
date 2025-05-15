@@ -3,12 +3,13 @@ project(VknConfigTests)
 
 set(TEST_SOURCES
     test_vknvector.cpp
-    test_vknvectoriterator.cpp)
+    test_vknvectoriterator.cpp
+    test_vknspace.cpp)
 
 add_executable(VknConfigUnitTests ${TEST_SOURCES})
 
 # Link your VknConfig library (replace VknConfigLib with your actual library target name)
-# If VknCommon.hpp is header-only and included directly, you might not need to link a separate lib
+# If VknData.hpp is header-only and included directly, you might not need to link a separate lib
 # target_link_libraries(VknVectorTests PRIVATE VknConfigLib) # If VknConfig is a library
 
 # Link Google Test

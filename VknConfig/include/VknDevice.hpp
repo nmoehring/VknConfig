@@ -50,7 +50,7 @@
 #include "VknRenderpass.hpp"
 #include "VknPhysicalDevice.hpp"
 #include "VknSwapchain.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 
 namespace vkn
 {

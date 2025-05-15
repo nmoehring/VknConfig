@@ -51,7 +51,7 @@
 #include <optional>
 #include <span> // For std::span
 #include <stdexcept>
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 
 namespace vkn
 {

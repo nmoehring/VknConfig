@@ -54,7 +54,7 @@
 #include <filesystem>
 #include <iterator>
 
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
 #include "VknMultisampleState.hpp"

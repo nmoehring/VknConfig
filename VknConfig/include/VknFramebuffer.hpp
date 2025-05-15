@@ -49,7 +49,7 @@
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
 #include "VknEngine.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 #include "VknFramebuffer.hpp"
 #include "VknImage.hpp"
 #include "VknImageView.hpp"
@@ -66,6 +66,7 @@ namespace vkn
         // Members
         void addSwapchainVkImage(uint32_t engineImageIdx);
         void addAttachments();
+        void addSwapchainImageView(VknImageView *swapchainImageView);
 
         // Config
         void setDimensions(uint32_t width, uint32_t height);
@@ -90,6 +91,7 @@ namespace vkn
         std::list<VknImage> m_attachImages{};
         std::list<VknImageView> m_attachViews{};
         VkImage *m_swapchainVkImage{nullptr};
+        VknImageView *m_swapchainImageView{nullptr};
 
         // Params
         uint32_t m_width{800};

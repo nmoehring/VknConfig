@@ -113,9 +113,6 @@ namespace vkn
     }
 
     VkRenderPassCreateInfo *VknInfos::fillRenderpassCreateInfo(VknIdxs &relIdxs,
-                                                               uint32_t numAttachments,
-                                                               uint32_t numSubpasses,
-                                                               uint32_t numSubpassDeps,
                                                                VkRenderPassCreateFlags flags)
     {
         VkRenderPassCreateInfo &renderpassInfo =
@@ -131,12 +128,12 @@ namespace vkn
         renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderpassInfo.pNext = VK_NULL_HANDLE;
         renderpassInfo.flags = flags;
-        renderpassInfo.attachmentCount = numAttachments;
-        renderpassInfo.pAttachments = numAttachments == 0 ? VK_NULL_HANDLE : attachmentDescriptions.getData();
-        renderpassInfo.subpassCount = numSubpasses;
-        renderpassInfo.pSubpasses = numSubpasses == 0 ? VK_NULL_HANDLE : subpassDescriptions.getData();
-        renderpassInfo.dependencyCount = numSubpassDeps;
-        renderpassInfo.pDependencies = numSubpassDeps == 0 ? VK_NULL_HANDLE : subpassDependencies.getData();
+        renderpassInfo.attachmentCount = attachmentDescriptions.getDataSize();
+        renderpassInfo.pAttachments = attachmentDescriptions.getData();
+        renderpassInfo.subpassCount = subpassDescriptions.getDataSize();
+        renderpassInfo.pSubpasses = subpassDescriptions.getData();
+        renderpassInfo.dependencyCount = subpassDependencies.getDataSize();
+        renderpassInfo.pDependencies = subpassDependencies.getData();
 
         return &renderpassInfo;
     }
@@ -609,8 +606,18 @@ namespace vkn
         uint32_t refIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
         VkImageLayout layout)
     {
+        VknSpace<VkAttachmentDescription> &descriptions =
+            m_attachmentDescriptions[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()];
+
+        bool attachmentFound{false};
+        for (size_t i = 0; i < descriptions.getDataSize(); ++i)
+            if (i == attachmentIdx)
+                attachmentFound = true;
+        if (!attachmentFound)
+            throw std::runtime_error("No attachment found for attachment reference with that attachmentIdx.");
+
         if (attachmentType == PRESERVE_ATTACHMENT)
-            m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
+            m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx]
                 .insert(attachmentIdx, refIdx);
         else
         {
@@ -662,29 +669,28 @@ namespace vkn
 
         description.flags = flags;
         description.pipelineBindPoint = pipelineBindPoint;
-        VknSpace<VkAttachmentReference> &inputAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][INPUT_ATTACHMENT];
-        VknSpace<VkAttachmentReference> &colorAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][COLOR_ATTACHMENT];
-        VknSpace<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][RESOLVE_ATTACHMENT];
-        VknSpace<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][DEPTH_STENCIL_ATTACHMENT];
-        VknSpace<uint32_t> &preserveAttachments = m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx];
 
+        VknSpace<VkAttachmentReference> &inputAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][INPUT_ATTACHMENT];
         description.inputAttachmentCount = inputAttachments.getDataSize();
         description.pInputAttachments = inputAttachments.getData();
 
+        VknSpace<VkAttachmentReference> &colorAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][COLOR_ATTACHMENT];
         description.colorAttachmentCount = colorAttachments.getDataSize();
         description.pColorAttachments = colorAttachments.getData();
 
-        description.preserveAttachmentCount = preserveAttachments.getDataSize();
-        description.pPreserveAttachments = preserveAttachments.getData();
-
-        if (resolveAttachments.getDataSize() > colorAttachments.getDataSize())
+        VknSpace<VkAttachmentReference> &resolveAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][RESOLVE_ATTACHMENT];
+        if (resolveAttachments.getDataSize() > description.colorAttachmentCount)
             throw std::runtime_error("Resolve attachments must be less than or equal to color attachments.");
-
         description.pResolveAttachments = resolveAttachments.getData();
+
+        VknSpace<VkAttachmentReference> &depthStencilAttachments = m_attachmentReferences[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx][DEPTH_STENCIL_ATTACHMENT];
         if (depthStencilAttachments.getDataSize() > 1)
             throw std::runtime_error("Too many depth stencil attachments in subpass description.");
-
         description.pDepthStencilAttachment = depthStencilAttachments.getData();
+
+        VknSpace<uint32_t> &preserveAttachments = m_preserveAttachments[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][subpassIdx];
+        description.preserveAttachmentCount = preserveAttachments.getDataSize();
+        description.pPreserveAttachments = preserveAttachments.getData();
 
         return &description;
     }
@@ -811,14 +817,14 @@ namespace vkn
         return info;
     }
 
-    VkImageViewCreateInfo *VknInfos::fillImageViewCreateInfo(VknIdxs &relIdxs,
+    VkImageViewCreateInfo *VknInfos::fillImageViewCreateInfo(VknIdxs &absIdxs,
                                                              VkImage &image, VkImageViewType &viewType, VkFormat &format,
                                                              VkComponentMapping &components, VkImageSubresourceRange &subresourceRange,
                                                              VkImageViewCreateFlags &flags)
 
     {
         VkImageViewCreateInfo &info =
-            m_imageViewCreateInfos.insert(relIdxs.get<VkImageView>(), VkImageViewCreateInfo{});
+            m_imageViewCreateInfos.insert(absIdxs.get<VkImageView>(), VkImageViewCreateInfo{});
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.image = image;

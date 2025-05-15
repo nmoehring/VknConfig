@@ -58,7 +58,7 @@
 #include <GLFW/glfw3native.h>
 
 #include "VknDevice.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 
 namespace vkn
 {

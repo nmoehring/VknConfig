@@ -40,8 +40,7 @@ namespace vkn
         testEditability();
         if (m_createdRenderpass)
             throw std::runtime_error("Renderpass already created.");
-        VkRenderPassCreateInfo *createInfo = m_infos->fillRenderpassCreateInfo(m_relIdxs, m_numAttachments,
-                                                                               m_numSubpasses, m_numSubpassDeps, 0); // Flags not used ever
+        VkRenderPassCreateInfo *createInfo = m_infos->fillRenderpassCreateInfo(m_relIdxs, 0); // Flags not used ever
         VknResult res{vkCreateRenderPass(
                           m_engine->getObject<VkDevice>(m_absIdxs),
                           createInfo, VK_NULL_HANDLE,
@@ -75,37 +74,34 @@ namespace vkn
     }
 
     void VknRenderpass::addAttachment(
-        uint32_t subpassIdx, VknAttachmentType attachmentType,
+        uint32_t attachIdx,
         VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
         VkAttachmentStoreOp stencilStoreOp, VkImageLayout initialLayout,
-        VkImageLayout finalLayout, VkImageLayout attachmentRefLayout,
+        VkImageLayout finalLayout,
         VkAttachmentDescriptionFlags flags)
     {
         testEditability();
 
-        if (attachmentType == INPUT_ATTACHMENT || attachmentType == PRESERVE_ATTACHMENT)
-            throw std::runtime_error("Added attachment type requires an existing attachment (input or preserve attachment) and can only be added as an attachment reference.");
-
-        uint32_t attachIdx = m_numAttachments++;
-
         m_infos->fillAttachmentDescription(
             m_relIdxs, attachIdx, format, samples, loadOp, storeOp, stencilLoadOp,
             stencilStoreOp, initialLayout, finalLayout, flags);
-
-        if (attachmentType == COLOR_ATTACHMENT)
-            m_filledColorAttachment = true;
     }
 
     void VknRenderpass::addAttachmentRef(
-        uint32_t subpassIdx, VknAttachmentType attachmentType,
-        uint32_t attachIdx, VkImageLayout layout, VkImageLayout attachmentRefLayout)
+        uint32_t subpassIdx, uint32_t attachIdx, VknAttachmentType attachmentType,
+        VkImageLayout attachmentRefLayout)
     {
+        auto *subpassRefs = m_infos->getSubpassAttachmentReferences(
+            m_relIdxs.get<VkDevice>(), m_relIdxs.get<VkRenderPass>(), subpassIdx);
         if (!m_numPreserveRefs.exists(subpassIdx))
             m_numPreserveRefs.insert(subpassIdx, 0u);
         if (m_numAttachRefs[subpassIdx].getDataSize() == 0)
             for (size_t i = 0; i < NUM_ATTACHMENT_TYPES; ++i)
+            {
                 m_numAttachRefs[subpassIdx].insert(0u, i);
+                subpassRefs->getSubspace(i);
+            }
 
         uint32_t refIdx{0};
         if (attachmentType == PRESERVE_ATTACHMENT)
@@ -115,6 +111,8 @@ namespace vkn
 
         m_infos->fillAttachmentReference(m_relIdxs, subpassIdx, refIdx,
                                          attachmentType, attachIdx, attachmentRefLayout);
+        if (attachmentType == COLOR_ATTACHMENT)
+            m_filledColorAttachment = true;
     }
 
     void VknRenderpass::createPipelines()
@@ -156,15 +154,17 @@ namespace vkn
         this->addPipeline(subpassIdx);
     }
 
-    std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(
-        uint32_t imageStartIdx, uint32_t imageCount)
+    std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(std::list<VknImageView> *swapchainImageViews)
     {
         testEditability();
-        for (uint32_t i = 0; i < imageCount; ++i)
+        for (uint32_t i = 0; i < swapchainImageViews->size(); ++i)
         {
             m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
                 i, m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
-            m_framebuffers.back().addSwapchainVkImage(imageStartIdx + i);
+
+            m_framebuffers.back().addSwapchainImageView(getListElement(i, *swapchainImageViews));
+            m_framebuffers.back().setSwapchainAttachmentDescriptionIndex(0);
+            m_framebuffers.back().addAttachments();
         }
         return &m_framebuffers;
     }

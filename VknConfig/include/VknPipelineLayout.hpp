@@ -46,7 +46,7 @@
 
 #pragma once
 
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 #include "VknEngine.hpp"
 #include "VknInfos.hpp"
 #include "VknDescriptorSetLayout.hpp"

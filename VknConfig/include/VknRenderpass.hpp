@@ -46,7 +46,7 @@
 
 #include "VknPipeline.hpp"
 #include "VknFramebuffer.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 #include "VknSwapchain.hpp"
 
 namespace vkn
@@ -64,13 +64,11 @@ namespace vkn
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         VknFramebuffer *addFramebuffer(uint32_t framebufferIdx);
-        std::list<VknFramebuffer> *addFramebuffers(
-            uint32_t imageViewStartIdx = 0, uint32_t imageCount = 0);
+        std::list<VknFramebuffer> *addFramebuffers(std::list<VknImageView> *swapchainImageViews);
 
         // Config
         void addAttachment(
-            uint32_t subpassIdx,
-            VknAttachmentType attachmentType = COLOR_ATTACHMENT,
+            uint32_t attachIdx,
             VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
             VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT,
             VkAttachmentLoadOp loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -79,11 +77,11 @@ namespace vkn
             VkAttachmentStoreOp stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
             VkImageLayout initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-            VkImageLayout attachmentRefLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             VkAttachmentDescriptionFlags flags = 0);
         void addAttachmentRef(
-            uint32_t subpassIdx, VknAttachmentType attachmentType,
-            uint32_t attachIdx, VkImageLayout layout, VkImageLayout attachmentRefLayout);
+            uint32_t subpassIdx, uint32_t attachIdx,
+            VknAttachmentType attachmentType = COLOR_ATTACHMENT,
+            VkImageLayout attachmentRefLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         void addSubpassDependency(uint32_t dependencyIdx,
                                   uint32_t srcSubpass = VK_SUBPASS_EXTERNAL, uint32_t dstSubpass = 0,
                                   VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,

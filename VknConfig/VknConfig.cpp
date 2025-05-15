@@ -84,24 +84,17 @@ namespace vkn
         swapchain->setSurface(0);
         swapchain->setImageCount(1);
         swapchain->createSwapchain();
-        auto *imageViews = swapchain->createImages();
+        auto *swapchainImageViews = swapchain->createImages();
 
         // Config=>Device=>Renderpass
         auto *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
+        renderpass->addAttachmentRef(0, 0);
         renderpass->addSubpass(0);
         renderpass->createRenderpass();
 
         // Config=>Device=>Renderpass=>Framebuffer
-        std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(
-            swapchain->getImageViewStartIdx(), swapchain->getNumImages());
-        for (uint32_t i = 0; i < swapchain->getNumImages(); ++i)
-        {
-            VknFramebuffer *framebuffer = getListElement(i, *framebuffers);
-            framebuffer->addSwapchainVkImage(swapchain->getImageViewStartIdx() + i);
-            framebuffer->setSwapchainAttachmentDescriptionIndex(0);
-            framebuffer->addAttachments();
-        }
+        std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(swapchainImageViews);
         renderpass->createFramebuffers();
 
         // Config=>Device=>Pipeline (subpass creates a pipeline)

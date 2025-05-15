@@ -50,7 +50,7 @@
 
 #include <vulkan/vulkan.h>
 #include "VknQueueFamily.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 
 namespace vkn
 {

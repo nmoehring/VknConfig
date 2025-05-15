@@ -184,6 +184,12 @@ namespace vkn
         m_swapchainVkImage = &m_engine->getObject<VkImage>(engineImageIdx);
     }
 
+    void VknFramebuffer::addSwapchainImageView(VknImageView *swapchainImageView)
+    {
+        testEditability();
+        m_swapchainImageView = swapchainImageView;
+    }
+
     VknVectorIterator<VkImageView> VknFramebuffer::getAttachmentImageViews()
     {
         if (!m_setAttachments)

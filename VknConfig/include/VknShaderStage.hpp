@@ -48,7 +48,7 @@
 
 #include "VknInfos.hpp"
 #include "VknResult.hpp"
-#include "VknCommon.hpp"
+#include "VknData.hpp"
 
 namespace vkn
 {

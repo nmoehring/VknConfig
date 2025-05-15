@@ -20,7 +20,7 @@ namespace vkn
     class VknInfos;
 
     // Forward declaration for template friend class
-    template <typename DataType, typename SizeType>
+    template <typename IterDataType, typename IterSizeType>
     class VknVectorIterator;
 
     template <typename T>
@@ -33,14 +33,14 @@ namespace vkn
         return &(*it);
     }
 
-    template <typename DataType, typename SizeType = uint32_t>
+    template <typename VecDataType, typename VecSizeType = uint32_t>
     class VknVector
     {
-        SizeType *m_positions{nullptr};
-        DataType *m_data{nullptr};
+        VecSizeType *m_positions{nullptr};
+        VecDataType *m_data{nullptr};
         size_t m_dataSize{0};
         size_t m_posSize{0};
-        static constexpr size_t s_maxSizeTypeNum = ~static_cast<SizeType>(0u);
+        static constexpr size_t s_maxSizeTypeNum = ~static_cast<VecSizeType>(0u);
 
         size_t getNextPosition()
         {
@@ -179,14 +179,14 @@ namespace vkn
         }
 
     public:
-        friend class VknVectorIterator<DataType, SizeType>;
+        friend class VknVectorIterator<VecDataType, VecSizeType>;
 
         void grow(size_t newSize)
         {
             if (newSize < this->getSize() || newSize - 1 > s_maxSizeTypeNum)
                 throw std::runtime_error("Invalid size for VknVector.");
-            DataType *newData = new DataType[newSize];
-            SizeType *newPositions = new SizeType[newSize];
+            VecDataType *newData = new VecDataType[newSize];
+            VecSizeType *newPositions = new VecSizeType[newSize];
             if (m_data)
             {
                 for (size_t i = 0; i < this->getSize(); ++i)
@@ -230,8 +230,8 @@ namespace vkn
             }
             else
             {
-                m_positions = new SizeType[m_dataSize];
-                m_data = new DataType[m_dataSize];
+                m_positions = new VecSizeType[m_dataSize];
+                m_data = new VecDataType[m_dataSize];
 
                 for (size_t i = 0; i < this->getSize(); ++i)
                 {
@@ -254,8 +254,8 @@ namespace vkn
             }
             else
             {
-                m_positions = new SizeType[otherSize];
-                m_data = new DataType[otherSize];
+                m_positions = new VecSizeType[otherSize];
+                m_data = new VecDataType[otherSize];
                 for (size_t i = 0; i < otherSize; ++i)
                 {
                     m_positions[i] = other.m_positions[i];
@@ -308,24 +308,24 @@ namespace vkn
             return *this;
         }
 
-        DataType &operator()(SizeType position)
+        VecDataType &operator()(VecSizeType position)
         {
-            DataType *result = this->getElement(position);
+            VecDataType *result = this->getElement(position);
             if (!result)
                 throw std::runtime_error("Element not found in vector!");
             return *result;
         }
 
-        VknVectorIterator<DataType, SizeType> getSlice(size_t startPos, size_t length)
+        VknVectorIterator<VecDataType, VecSizeType> getSlice(size_t startPos, size_t length)
         {
             if (startPos + length > m_posSize) // Also catches if startPos is too large
                 throw std::runtime_error("Slice range exceeds logical vector size.");
 
-            return VknVectorIterator<DataType, SizeType>{
+            return VknVectorIterator<VecDataType, VecSizeType>{
                 this, startPos, length};
         }
 
-        DataType &append(DataType newElement)
+        VecDataType &append(VecDataType newElement)
         {
             this->grow(this->getSize() + 1u);
             m_positions[m_dataSize - 1u] = this->getNextPosition();
@@ -333,7 +333,7 @@ namespace vkn
             return m_data[m_dataSize - 1u];
         }
 
-        VknVectorIterator<DataType, SizeType> append(VknVector<DataType, SizeType> &newElements)
+        VknVectorIterator<VecDataType, VecSizeType> append(VknVector<VecDataType, VecSizeType> &newElements)
         {
             size_t oldSize{this->getSize()};
             size_t otherSize{newElements.getSize()};
@@ -348,7 +348,7 @@ namespace vkn
             return VknVectorIterator(this, oldSize, newSize - oldSize);
         }
 
-        DataType *append(DataType *arr, size_t length)
+        VecDataType *append(VecDataType *arr, size_t length)
         {
             size_t oldSize{this->getSize()};
             this->grow(oldSize + length);
@@ -361,7 +361,7 @@ namespace vkn
             return &m_data[oldSize];
         }
 
-        DataType *append(DataType value, size_t length)
+        VecDataType *append(VecDataType value, size_t length)
         {
             size_t oldSize{this->getSize()};
             this->grow(oldSize + length);
@@ -373,7 +373,7 @@ namespace vkn
             return &m_data[oldSize];
         }
 
-        DataType *getElement(size_t position)
+        VecDataType *getElement(size_t position)
         {
             if (this->getSize() == 0)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
@@ -395,7 +395,7 @@ namespace vkn
             return false;
         }
 
-        DataType &insert(size_t position, DataType newElement)
+        VecDataType &insert(size_t position, VecDataType newElement)
         {
             if (!m_data || !this->exists(position))
             {
@@ -428,7 +428,7 @@ namespace vkn
             m_positions[idx2.value()] = temp;
         }
 
-        DataType *getData(size_t numNewElements = 0u)
+        VecDataType *getData(size_t numNewElements = 0u)
         {
             if (numNewElements != 0u)
             {
@@ -439,7 +439,7 @@ namespace vkn
                 this->grow(newSize);
                 for (size_t i = oldSize; i < newSize; ++i)
                 {
-                    m_data[i] = DataType{};
+                    m_data[i] = VecDataType{};
                     this->setPosition(i, this->getNextPosition());
                 }
                 return m_data + oldSize;
@@ -447,14 +447,14 @@ namespace vkn
             return m_data;
         }
 
-        DataType *begin() { return m_data; }
-        DataType *end() { return m_data + this->getSize(); }
-        const DataType *begin() const { return m_data; }
-        const DataType *end() const { return m_data + this->getSize(); }
-        DataType *rbegin() { m_data + this->getSize() - 1u; }
-        DataType *rend() { return m_data - 1u; }
-        const DataType *rbegin() const { return m_data + this->getSize() - 1u; }
-        const DataType *rend() const { return m_data - 1u; }
+        VecDataType *begin() { return m_data; }
+        VecDataType *end() { return m_data + this->getSize(); }
+        const VecDataType *begin() const { return m_data; }
+        const VecDataType *end() const { return m_data + this->getSize(); }
+        VecDataType *rbegin() { m_data + this->getSize() - 1u; }
+        VecDataType *rend() { return m_data - 1u; }
+        const VecDataType *rbegin() const { return m_data + this->getSize() - 1u; }
+        const VecDataType *rend() const { return m_data - 1u; }
 
         bool isEmpty() const { return !m_data; }
         const size_t getSize() const { return m_dataSize; }
@@ -462,22 +462,22 @@ namespace vkn
         size_t getNumPositions() const { return m_posSize; }
     };
 
-    template <typename DataType, typename SizeType = uint32_t>
+    template <typename IterDataType, typename IterSizeType = uint32_t>
     class VknVectorIterator
     {
     public:
         using iterator_category = std::random_access_iterator_tag; // Or use bidirectional if needed
-        using value_type = DataType;
+        using value_type = IterDataType;
         using difference_type = std::ptrdiff_t;
-        using pointer = DataType *;
-        using reference = DataType &;
+        using pointer = IterDataType *;
+        using reference = IterDataType &;
 
     private:
-        VknVector<DataType, SizeType> *m_vec;
-        SizeType m_firstPos{0};
-        SizeType m_lastPos{0};
-        SizeType m_currentIdx{0};
-        SizeType m_currentPos{0};
+        VknVector<IterDataType, IterSizeType> *m_vec;
+        IterSizeType m_firstPos{0};
+        IterSizeType m_lastPos{0};
+        IterSizeType m_currentIdx{0};
+        IterSizeType m_currentPos{0};
 
         bool m_isInvalid{false};
         bool m_atEnd{false};
@@ -487,7 +487,7 @@ namespace vkn
 
     public:
         // TODO: Find out what explicit keyword does
-        explicit VknVectorIterator(VknVector<DataType, SizeType> *vknVector,
+        explicit VknVectorIterator(VknVector<IterDataType, IterSizeType> *vknVector,
                                    size_t firstPos = 0, size_t length = 0, // Todo
                                    bool iterateFilledElementsOnly = true)
             : m_vec(vknVector),
@@ -576,7 +576,7 @@ namespace vkn
             }
 
             PosSearchResult nextIdxResult{};
-            if (m_currentIdx == VknVector<DataType, SizeType>::s_maxSizeTypeNum)
+            if (m_currentIdx == VknVector<IterDataType, IterSizeType>::s_maxSizeTypeNum)
                 nextIdxResult = m_vec->getIdxOfSmallestPos(m_currentPos + 1u, m_lastPos);
             else if (m_vec->m_positions[m_currentIdx + 1u] == m_currentPos + 1u)
             {
@@ -633,7 +633,7 @@ namespace vkn
             }
 
             PosSearchResult nextIdxResult{};
-            if (m_currentIdx == VknVector<DataType, SizeType>::s_maxSizeTypeNum)
+            if (m_currentIdx == VknVector<IterDataType, IterSizeType>::s_maxSizeTypeNum)
                 nextIdxResult = m_vec->getIdxOfLargestPos(m_currentPos - 1u, m_firstPos);
             else if (m_vec->m_positions[m_currentIdx - 1u] == m_currentPos - 1u)
             {
@@ -744,7 +744,7 @@ namespace vkn
 
         VknVectorIterator operator+(difference_type diff)
         {
-            VknVectorIterator<DataType, SizeType> temp{*this};
+            VknVectorIterator<IterDataType, IterSizeType> temp{*this};
             if (m_atEnd)
                 throw std::runtime_error("Accessing out-of-range vector element.");
             if (m_currentPos > m_vec->s_maxSizeTypeNum - diff) // same as m_currentPos + diff > maxSizeTypeNum
@@ -780,7 +780,7 @@ namespace vkn
 
         VknVectorIterator operator-(difference_type diff)
         {
-            VknVectorIterator<DataType, SizeType> temp{*this};
+            VknVectorIterator<IterDataType, IterSizeType> temp{*this};
             if (m_atBegin)
                 throw std::runtime_error("Accessing out-of-range vector element.");
             if (m_currentPos < diff) // same as m_currentPos - diff < 0
@@ -833,7 +833,7 @@ namespace vkn
 
         bool isEmpty() { return m_isEmpty; }
 
-        DataType *getData()
+        IterDataType *getData()
         {
             if (m_isEmpty)
                 return nullptr;
@@ -863,11 +863,11 @@ namespace vkn
         bool isInvalid() { return m_isInvalid; }
     };
 
-    template <typename DataType, typename SizeType = uint32_t>
+    template <typename SpaceDataType, typename SpaceSizeType = uint32_t>
     class VknSpace
     {
-        VknVector<DataType, SizeType> m_data{};
-        VknVector<VknSpace<DataType, SizeType>, SizeType> m_subspaces{};
+        VknVector<SpaceDataType, SpaceSizeType> m_data{};
+        VknVector<VknSpace<SpaceDataType, SpaceSizeType>, SpaceSizeType> m_subspaces{};
         static constexpr uint32_t s_maxDimensions{8};
         uint32_t m_depth{0};
         uint32_t m_maxDepth{0};
@@ -901,7 +901,7 @@ namespace vkn
         // Move Constructor
         VknSpace(VknSpace &&other) noexcept : m_data(std::move(other.m_data)),           // Relies on VknVector's move constructor
                                               m_subspaces(std::move(other.m_subspaces)), // Relies on VknVector's move constructor
-                                              m_depth(other.m_depth)
+                                              m_maxDepth(other.m_maxDepth)
         {
             // Optional: Reset other's state if necessary, though VknVector move should handle it
             other.m_depth = 0;
@@ -925,7 +925,7 @@ namespace vkn
             return *this;
         }
 
-        VknSpace<DataType, SizeType> &getSubspace(SizeType position)
+        VknSpace<SpaceDataType, SpaceSizeType> &getSubspace(SpaceSizeType position)
         {
             if (position >= s_maxDimensions)
                 throw std::runtime_error("Position given is out of range.");
@@ -934,33 +934,36 @@ namespace vkn
             return *m_subspaces.getElement(position);
         }
 
-        void dive(SizeType position)
+        void dive(SpaceSizeType position)
         {
             if (m_depth + 1u > m_maxDepth)
                 throw std::runtime_error("Trying to dive too deep into VknSpace. New depth > max depth.");
-            m_subspaces.insert(position, VknSpace<DataType, SizeType>{
+            m_subspaces.insert(position, VknSpace<SpaceDataType, SpaceSizeType>{
                                              m_maxDepth,
                                              m_depth + 1u});
         }
 
-        VknVector<DataType, SizeType> getSubspaceSlice(SizeType startPos, SizeType length)
+        VknVectorIterator<VknSpace<SpaceDataType, SpaceSizeType>, SpaceSizeType> getSubspaceSlice(
+            SpaceSizeType startPos, SpaceSizeType length)
         {
             return m_subspaces.getSlice(startPos, length);
         }
 
-        VknSpace<DataType, SizeType> &operator[](uint8_t position)
+        VknSpace<SpaceDataType, SpaceSizeType> &operator[](uint8_t position)
         {
             return this->getSubspace(position);
         }
 
         uint8_t getNumSubspaces() { return m_subspaces.getSize(); }
-        DataType &operator()(SizeType position) { return m_data(position); }
-        DataType *getData(SizeType newSize = 0) { return m_data.getData(newSize); }
-        VknVector<DataType, SizeType> &getDataVector() { return m_data; }
-        VknVector<VknSpace<DataType, SizeType>, SizeType> &getSubspaceVector() { return m_subspaces; }
-        DataType &append(DataType element) { return m_data.append(element); }
-        DataType &insert(DataType element, SizeType position) { return m_data.insert(position, element); }
-        SizeType getDataSize() { return m_data.getSize(); }
+        SpaceDataType &operator()(SpaceSizeType position) { return m_data(position); }
+        SpaceDataType *getData(SpaceSizeType newSize = 0) { return m_data.getData(newSize); }
+        VknVector<SpaceDataType, SpaceSizeType> &getDataVector() { return m_data; }
+        VknVector<VknSpace<SpaceDataType, SpaceSizeType>, SpaceSizeType> &getSubspaceVector() { return m_subspaces; }
+        SpaceDataType &append(SpaceDataType element) { return m_data.append(element); }
+        SpaceDataType &insert(SpaceDataType element, SpaceSizeType position) { return m_data.insert(position, element); }
+        SpaceSizeType getDataSize() { return m_data.getSize(); }
+        SpaceSizeType getDepth() { return m_depth; }
+        SpaceSizeType getMaxDepth() { return m_maxDepth; }
     };
 
     VknVector<char> readBinaryFile(std::filesystem::path filename);
