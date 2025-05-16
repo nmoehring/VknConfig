@@ -88,6 +88,8 @@ namespace vkn
             return "surface";
         else if constexpr (std::is_same_v<T, VkQueueFamilyProperties>)
             return "qFamilyProperties";
+        else if constexpr (std::is_same_v<T, VkDeviceMemory>)
+            return "deviceMemory";
         else
             throw std::runtime_error("Invalid object type passed to typeToStr().");
     } // typeToStr<T>()
@@ -222,6 +224,14 @@ namespace vkn
             newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
             newRelIdxs.add<VkObjectType>(objList.size());
             return objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+        }
+
+        template <typename VkObjectType, typename VkParentType>
+        VkObjectType &addNewObject(VknIdxs &absIdxs)
+        {
+            VkParentType *parent = &this->getObject<VkParentType>(absIdxs);
+            absIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
+            return this->getObject<VkObjectType>(absIdxs);
         }
 
         VkInstance *addVkInstance(VknIdxs &relIdxs, VknIdxs &absIdxs)

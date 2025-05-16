@@ -303,6 +303,10 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
         VkImageViewCreateInfo *getImageViewCreateInfo(VknIdxs &relIdxs);
         VkFramebufferCreateInfo *getFramebufferCreateInfo(VknIdxs &relIdxs);
+        VkSwapchainCreateInfoKHR *getSwapchainCreateInfoKHR(uint32_t swapchainIdx)
+        {
+            return &m_swapchainCreateInfos(swapchainIdx);
+        }
 
         VkFramebufferCreateInfo *fillFramebufferCreateInfo(VknIdxs &relIdxs, VkRenderPass *renderpass,
                                                            VknVectorIterator<VkImageView> attachments, uint32_t width,

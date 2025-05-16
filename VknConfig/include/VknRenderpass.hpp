@@ -75,7 +75,7 @@ namespace vkn
             VkAttachmentStoreOp storeOp = VK_ATTACHMENT_STORE_OP_STORE,
             VkAttachmentLoadOp stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
             VkAttachmentStoreOp stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            VkImageLayout initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
             VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
             VkAttachmentDescriptionFlags flags = 0);
         void addAttachmentRef(

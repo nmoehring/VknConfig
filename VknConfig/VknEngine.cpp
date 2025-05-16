@@ -49,6 +49,9 @@ namespace vkn
                 this->getObject<VkRenderPass>(i),
                 VK_NULL_HANDLE);
 
+        for (size_t i = 0; i < this->getVectorSize<VkDeviceMemory>(); ++i)
+            vkFreeMemory(*this->getParentPointer<VkDeviceMemory, VkDevice>(i),
+                         this->getObject<VkDeviceMemory>(i), VK_NULL_HANDLE);
         for (size_t i = 0; i < this->getVectorSize<VkImageView>(); ++i)
             vkDestroyImageView(
                 *this->getParentPointer<VkImageView, VkDevice>(i),
@@ -84,6 +87,7 @@ namespace vkn
         this->deleteVectors<VkPipeline, VkDevice>();
         this->deleteVectors<VkFramebuffer, VkDevice>();
         this->deleteVectors<VkRenderPass, VkDevice>();
+        this->deleteVectors<VkDeviceMemory, VkDevice>();
         this->deleteVectors<VkImageView, VkDevice>();
         this->deleteVectors<VkImage, VkDevice>();
         this->deleteVectors<VkSwapchainKHR, VkDevice>();

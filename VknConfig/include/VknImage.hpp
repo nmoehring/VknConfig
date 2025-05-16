@@ -59,6 +59,8 @@ namespace vkn
 
         // Create
         void createImage();
+        void allocateAndBindMemory(VkMemoryPropertyFlags requiredMemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
         // Config
         void setImageType(VkImageType imageType);
@@ -97,5 +99,6 @@ namespace vkn
 
         // State
         bool m_createdVkImage{false};
+        bool m_memoryBound{false};
     };
 }

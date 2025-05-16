@@ -79,12 +79,13 @@ namespace vkn
             VknImage *vknImageManagedByThisFramebuffer{nullptr}; // Points to an image in m_attachImages if we create one
             VkImage *targetVkImageHandleForView{nullptr};        // The actual VkImage the VknImageView will wrap
 
-            bool isThisDescriptionTheSwapchainOutput = m_swapchainVkImage &&
+            bool isThisDescriptionTheSwapchainOutput = m_swapchainImageView &&
                                                        m_swapchainAttachmentDescIndex.has_value() &&
                                                        m_swapchainAttachmentDescIndex.value() == i;
+
             if (isThisDescriptionTheSwapchainOutput)
             {
-                targetVkImageHandleForView = m_swapchainVkImage;
+                targetVkImageHandleForView = m_swapchainImageView->getVkImage();
                 // No new VknImage is added to m_attachImages for this description.
             }
             else
@@ -113,14 +114,18 @@ namespace vkn
 
             // Always create a VknImageView for this attachment description 'i'.
             // This view is added to this framebuffer's m_attachViews list.
-            VknImageView &view = m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
-                m_attachViews.size(), m_attachViews,
-                m_relIdxs, m_absIdxs, m_infos);
+            VknImageView *view{nullptr};
+            if (isThisDescriptionTheSwapchainOutput)
+            {
+                view = &m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
+                    m_attachViews.size(), m_attachViews,
+                    m_relIdxs, m_absIdxs, m_infos);
 
-            view.setImage(targetVkImageHandleForView);
-            view.setFormat((*descriptions)(i).format); // Format from the attachment description
-            // Set other VknImageView properties if necessary (e.g., viewType, components, subresourceRange)
-            // Default subresource range in VknImageView is usually fine for color/depth.
+                view->setImage(targetVkImageHandleForView);
+                view->setFormat((*descriptions)(i).format); // Format from the attachment description
+                // Set other VknImageView properties if necessary (e.g., viewType, components, subresourceRange)
+                // Default subresource range in VknImageView is usually fine for color/depth.
+            }
 
             // Accumulate usage flags ONLY for images managed by this framebuffer (i.e., not swapchain images).
             if (vknImageManagedByThisFramebuffer)
@@ -159,10 +164,15 @@ namespace vkn
                 } // for subpasses (ref)
 
                 vknImageManagedByThisFramebuffer->setUsage(accumulatedUsage);
-                vknImageManagedByThisFramebuffer->createImage();
+                if (isThisDescriptionTheSwapchainOutput)
+                {
+                    vknImageManagedByThisFramebuffer->createImage();
+                    vknImageManagedByThisFramebuffer->allocateAndBindMemory(); // Allocate and bind memory for the VknImage
+                }
             } // if vknImageManagedByThisFramebuffer
 
-            view.createImageView();
+            if (view)
+                view->createImageView();
         } // for descriptions
 
         if (descriptions->getDataSize() > 0)

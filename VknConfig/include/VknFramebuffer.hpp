@@ -94,8 +94,8 @@ namespace vkn
         VknImageView *m_swapchainImageView{nullptr};
 
         // Params
-        uint32_t m_width{800};
-        uint32_t m_height{600};
+        uint32_t m_width{640};
+        uint32_t m_height{480};
         uint32_t m_numLayers{1};
         VkFramebufferCreateFlags m_createFlags{0};
 
