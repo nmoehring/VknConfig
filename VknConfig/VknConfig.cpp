@@ -2,6 +2,36 @@
 
 namespace vkn
 {
+    // Debug callback function
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+        void *pUserData)
+    {
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE; // Return VK_FALSE to indicate that the Vulkan call should not be aborted.
+    }
+
+    // Helper function to set up the debug messenger create info
+    VkDebugUtilsMessengerCreateInfoEXT populateDebugMessengerCreateInfo()
+    {
+        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+        createInfo.pUserData = nullptr; // Optional user data
+        return createInfo;
+    }
+
+    // Helper functions to get extension function pointers
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger)
+    {
+        auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+        return func ? func(instance, pCreateInfo, pAllocator, pDebugMessenger) : VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+
     VknConfig::VknConfig(VknEngine *engine, VknInfos *infos)
         : m_engine{engine}, m_infos{infos}
     {
@@ -41,92 +71,6 @@ namespace vkn
         this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
         this->createInstance();
         this->getDevice(deviceIdx)->createDevice();
-    }
-
-    void VknConfig::testNoInputs()
-    {
-        if (m_createdInstance)
-            throw std::runtime_error("Can't create a test instance after an instance is already created.");
-
-        // Shallow Config members
-        std::string appName{"NoInputsTest"};
-        std::string engineName{"MinVknConfig"};
-        this->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
-        const uint32_t instanceExtensionsSize{2};
-        const char *instanceExtensions[instanceExtensionsSize] = {
-            // VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-            // VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-            VK_KHR_SURFACE_EXTENSION_NAME,
-            VK_KHR_WIN32_SURFACE_EXTENSION_NAME};
-        const uint32_t layersSize{0};
-        const char *layers[]{nullptr};
-        this->fillInstanceCreateInfo(
-            layers, layersSize, instanceExtensions, instanceExtensionsSize);
-        this->createInstance();
-        this->createWindowSurface(0);
-
-        // Config=>Devices
-        auto *device = this->addDevice(0);
-        VknPhysicalDevice *physDev = device->getPhysicalDevice();
-        const uint32_t numExtensions{1};
-        const char *deviceExtensions[numExtensions] = {
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-        device->addExtensions(deviceExtensions, numExtensions);
-        // Config->Device->PhysicalDevice
-        physDev->selectPhysicalDevice();
-        physDev->requestQueueFamilyProperties();
-        physDev->selectQueues(false);
-        physDev->fillDeviceQueuePrioritiesDefault();
-        device->createDevice();
-
-        // Config=>Device=>Swapchain
-        auto *swapchain = device->addSwapchain(0);
-        swapchain->setSurface(0);
-        swapchain->setImageCount(1);
-        swapchain->createSwapchain();
-        auto *swapchainImageViews = swapchain->createImages();
-
-        // Config=>Device=>Renderpass
-        auto *renderpass = device->addRenderpass(0);
-        renderpass->addAttachment(0);
-        renderpass->addAttachmentRef(0, 0);
-        renderpass->addSubpass(0);
-        renderpass->createRenderpass();
-
-        // Config=>Device=>Renderpass=>Framebuffer
-        std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(swapchainImageViews);
-        renderpass->createFramebuffers();
-
-        // Config=>Device=>Pipeline (subpass creates a pipeline)
-        auto *pipeline = renderpass->getPipeline(0);
-
-        // Config=>Device=>Pipeline=>ShaderStage
-        VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
-        vertShader->createShaderModule();
-        vertShader->fillShaderStageCreateInfo();
-        VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
-        fragShader->createShaderModule();
-        fragShader->fillShaderStageCreateInfo();
-
-        // Config=>Device=>Pipeline=>[Various Pipeline States]
-        vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
-        vertexInputState->fillVertexInputStateCreateInfo();
-        vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
-        inputAssemblyState->fillInputAssemblyStateCreateInfo();
-        vkn::VknMultisampleState *multisampleState = pipeline->getMultisampleState();
-        multisampleState->fillMultisampleStateCreateInfo();
-        vkn::VknRasterizationState *rasterizationState = pipeline->getRasterizationState();
-        rasterizationState->fillRasterizationStateCreateInfo();
-        vkn::VknViewportState *viewportState = pipeline->getViewportState();
-        viewportState->addViewport();
-        viewportState->addScissor();
-        viewportState->fillViewportStateCreateInfo();
-
-        // Config=>Device=>Pipeline=>PipelineLayout
-        auto *layout = pipeline->getLayout();
-        layout->createPipelineLayout();
-
-        renderpass->createPipelines();
     }
 
     void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
@@ -171,6 +115,17 @@ namespace vkn
         return res;
     }
 
+    void VknConfig::setupDebugMessenger()
+    {
+        if (!m_createdInstance)
+            throw std::runtime_error("Instance not created before setting up debug messenger.");
+        m_engine->addNewObject<VkDebugUtilsMessengerEXT, VkInstance>(m_absIdxs);
+        VknResult res{CreateDebugUtilsMessengerEXT(
+                          m_engine->getObject<VkInstance>(0), &populateDebugMessengerCreateInfo(),
+                          nullptr, &m_engine->getObject<VkDebugUtilsMessengerEXT>(m_absIdxs)),
+                      "Create debug messenger"};
+    }
+
     VknDevice *VknConfig::getDevice(uint32_t deviceIdx)
     {
         return getListElement(deviceIdx, m_devices);
@@ -188,4 +143,10 @@ namespace vkn
             m_engine->getObject<VkInstance>(0), m_window, nullptr,
             m_engine->getVector<VkSurfaceKHR>().getData(1));
     }
+    /*
+    void VknConfig::addInstanceExtension(std::string extension)
+    {
+        m_infos->addInstanceExtension(extension);
+    }
+    */
 }

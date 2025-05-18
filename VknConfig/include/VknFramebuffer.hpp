@@ -66,6 +66,7 @@ namespace vkn
         // Members
         void addSwapchainVkImage(uint32_t engineImageIdx);
         void addAttachments();
+        void createAttachments();
         void addSwapchainImageView(VknImageView *swapchainImageView);
 
         // Config
@@ -78,6 +79,7 @@ namespace vkn
         void createFramebuffer();
 
         // Get
+        VkFramebuffer *getVkFramebuffer() { return &m_engine->getObject<VkFramebuffer>(m_absIdxs); } // Add getter
         VknVectorIterator<VkImageView> getAttachmentImageViews();
 
     private:

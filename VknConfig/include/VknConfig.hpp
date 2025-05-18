@@ -67,7 +67,6 @@ namespace vkn
     public:
         // Config
         void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
-        void testNoInputs();
 
         // Overloads
         VknConfig() = delete;
@@ -77,7 +76,7 @@ namespace vkn
         VknConfig(VknConfig &&) = delete;
         VknConfig &operator=(VknConfig &&) = delete;
 
-        // Add
+        // Members
         VknDevice *addDevice(uint32_t deviceIdx);
         void addWindow(GLFWwindow *window);
 
@@ -93,6 +92,10 @@ namespace vkn
                                     uint32_t enabledExtensionNamesSize,
                                     VkInstanceCreateFlags flags = 0);
         void enableExtensions(VknVector<std::string> extensions);
+        void setupDebugMessenger();
+        void addInstanceExtensions(const char *ext[], uint32_t size);
+        void addInstanceExtensions(VknVector<std::string> extensions);
+        void addInstanceExtension(std::string extension);
 
         // Create
         VknResult createInstance();
@@ -102,11 +105,13 @@ namespace vkn
         VkInstance *getInstance() { return &m_engine->getObject<VkInstance>(0); }
         bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
+        std::list<VknDevice> &getDevices() { return m_devices; }
+
+        VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
     private:
         // Engine
         VknEngine *m_engine;
-
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         VknInfos *m_infos;
@@ -117,6 +122,7 @@ namespace vkn
 
         // Members
         std::list<VknDevice> m_devices;
+        std::list<VknSwapchain> m_swapchains;
 
         // State
         bool m_selectedQueues{false};
@@ -124,4 +130,18 @@ namespace vkn
         bool m_createdInstance{false};
         bool m_filledAppInfo{false};
     };
+
+    // Helper function to set up the debug messenger create info
+    VkDebugUtilsMessengerCreateInfoEXT populateDebugMessengerCreateInfo();
+
+    // Debug callback function
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+        void *pUserData);
+
+    // Helper functions to get extension function pointers
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
+
 }

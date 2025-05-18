@@ -62,6 +62,17 @@ namespace vkn
                 *this->getParentPointer<VkImage, VkDevice>(i),
                 this->getObject<VkImage>(i),
                 VK_NULL_HANDLE);
+        for (size_t i = 0; i < this->getVectorSize<VkCommandBuffer>(); ++i)
+            vkFreeCommandBuffers(
+                *this->getParentPointer<VkCommandPool, VkDevice>(i),
+                this->getObject<VkCommandPool>(i),
+                this->getObject<uint32_t>(i),
+                this->getObject<VkCommandBuffer *>(i));
+        for (size_t i = 0; i < this->getVectorSize<VkCommandPool>(); ++i)
+            vkDestroyCommandPool(
+                *this->getParentPointer<VkCommandPool, VkDevice>(i),
+                this->getObject<VkCommandPool>(i),
+                nullptr);
         for (size_t i = 0; i < this->getVectorSize<VkSwapchainKHR>(); ++i)
             vkDestroySwapchainKHR(
                 *this->getParentPointer<VkSwapchainKHR, VkDevice>(i),
@@ -72,14 +83,16 @@ namespace vkn
             vkDestroyDevice(device, VK_NULL_HANDLE);
         for (auto &surface : this->getVector<VkSurfaceKHR>())
             vkDestroySurfaceKHR(this->getObject<VkInstance>(0), surface, VK_NULL_HANDLE);
+        for (auto &debugMsgr : this->getVector<VkDebugUtilsMessengerEXT>())
+            vkDestroyDebugUtilsMessengerEXT(this->getObject<VkInstance>(0), *m_debugMsgr, nullptr);
         for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
 
-        // Maybe don't need to be in engine, idk
+        // Destroy synchronization objects (semaphores and fences)
+        // Need to iterate through all devices and destroy their sync objects
         this->deleteVector<VkQueueFamilyProperties>();
         this->deleteVector<VkPhysicalDevice>();
 
-        // These do
         this->deleteVectors<VkShaderModule, VkDevice>();
         this->deleteVectors<VkDescriptorSetLayout, VkDevice>();
         this->deleteVectors<VkPipelineLayout, VkDevice>();
@@ -90,9 +103,13 @@ namespace vkn
         this->deleteVectors<VkDeviceMemory, VkDevice>();
         this->deleteVectors<VkImageView, VkDevice>();
         this->deleteVectors<VkImage, VkDevice>();
+        this->deleteVectors<VkCommandBuffer *, VkDevice>();
+        this->deleteVector<uint32_t>();
+        this->deleteVectors<VkCommandPool, VkDevice>();
         this->deleteVectors<VkSwapchainKHR, VkDevice>();
         this->deleteVectors<VkDevice, VkInstance>();
         this->deleteVectors<VkSurfaceKHR, VkInstance>();
+        this->deleteVectors<VkDebugUtilsMessengerEXT, VkInstance>();
         this->deleteVector<VkInstance>();
         m_poweredOn = false;
     }

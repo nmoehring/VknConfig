@@ -90,8 +90,14 @@ namespace vkn
             return "qFamilyProperties";
         else if constexpr (std::is_same_v<T, VkDeviceMemory>)
             return "deviceMemory";
-        else
-            throw std::runtime_error("Invalid object type passed to typeToStr().");
+        else if constexpr (std::is_same_v<T, VkDebugUtilsMessengerEXT>)
+            return "dbgmsgr";
+        else if constexpr (std::is_same_v<T, VkCommandPool>)
+            return "CommandPool";
+        else if constexpr (std::is_same_v<T, VkCommandBuffer *>)
+            return "commandBuffer";
+        else if constexpr (std::is_same_v<T, uint32_t>)
+            return "NumCmdBuffers" else throw std::runtime_error("Invalid object type passed to typeToStr().");
     } // typeToStr<T>()
 
     class VknIdxs
@@ -247,25 +253,23 @@ namespace vkn
             return &vec(pos);
         }
 
+        VkCommandBuffer *addVkCommandBuffers(VknIdxs &absIdxs, uint32_t numCommandBuffers)
+        {
+            VknVector<VkCommandBuffer *> &cmdBufferVec{this->getVector<VkCommandBuffer *>()};
+            VknVector<uint32_t> &numBuffersVec{this->getVector<uint32_t>()};
+            uint32_t poolIdx{absIdxs.get<VkCommandPool>()};
+            numBuffersVec.insert(poolIdx, numCommandBuffers);
+            cmdBufferVec.insert(poolIdx, new VkCommandBuffer[numCommandBuffers]);
+            return cmdBufferVec(poolIdx);
+        }
+
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
         std::unordered_map<std::string, void *> m_parentVectors{};
-        bool m_poweredOn{true};
-        /*VknVector<VkInstance> instances{};
-        VknVector<VkDevice> devices{};
-        VknVector<VkSurfaceKHR> surfaces{};
-        VknVector<VkRenderPass> renderpasses{};
-        VknVector<VkPipeline> pipelines{};
-        VknVector<VkSwapchainKHR> swapchains{};
-        VknVector<VkImage> images{};
-        VknVector<VkFramebuffer> framebuffers{};
-        VknVector<VkImageView> imageViews{};
-        VknVector<VkDescriptorSetLayout> descriptorSetLayouts{}; // Takes bindings and push constant ranges ^
-        VknVector<VkPipelineLayout> pipelineLayouts{};
-        VknVector<VkPhysicalDevice> physicalDevices{};
-        VknVector<VkShaderModule> shaderModules{};
-        VknVector<VkPipelineCache> pipelineCaches{};*/
+        bool m_poweredOn{true}; // State to track if shutdown has been called
+        /*VknVector<VkPipelineCache> pipelineCaches{};*/
 
+        VkDebugUtilsMessengerEXT *m_debugMsgr = nullptr; // Add back-pointer to VknConfig
         template <typename ObjectType, typename ParentType>
         void deleteVectors()
         {

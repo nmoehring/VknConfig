@@ -2,6 +2,21 @@
 
 namespace vkn
 {
+    // Helper function (moved from VknImage.cpp)
+    uint32_t findSuitableMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+        throw std::runtime_error("VknInfos: Failed to find suitable memory type!");
+    }
     VknInfos::VknInfos()
     {
     }
@@ -321,13 +336,14 @@ namespace vkn
 
     VkPipelineColorBlendStateCreateInfo *VknInfos::fillColorBlendStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VkLogicOp logicOp,
-        VknVector<VkPipelineColorBlendAttachmentState> attachments,
+        VknVector<VkPipelineColorBlendAttachmentState> &attachments, // Pass by reference
         float blendConstants[4], VkBool32 logicOpEnable,
         VkPipelineColorBlendStateCreateFlags flags)
     {
         VkPipelineColorBlendStateCreateInfo *info =
             &m_colorBlendStateCreateInfos[deviceIdx][renderpassIdx]
                  .insert(VkPipelineColorBlendStateCreateInfo{}, subpassIdx);
+        info->pNext = VK_NULL_HANDLE; // Ensure pNext is initialized
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = flags;
@@ -336,6 +352,7 @@ namespace vkn
         info->attachmentCount = attachments.getSize();
         info->pAttachments = attachments.getData();
         std::copy(&blendConstants[0], &blendConstants[4], info->blendConstants);
+        m_filledColorBlendStateInfo = true; // Set the flag
         return info;
     }
 
@@ -434,6 +451,28 @@ namespace vkn
     {
         m_engineName = name;
         m_filledEngineName = true;
+    }
+
+    void VknInfos::addInstanceExtension(std::string extension)
+    {
+        bool terminatedNull{false};
+        bool nulledEarly{false};
+        for (uint32_t i = 0; i < extension.size(); ++i)
+        {
+            if (extension[i] == '\0' && i < extension.size() - 1u)
+            {
+                nulledEarly = true;
+                continue;
+            }
+            else if (extension[i] == '\0' && i == extension.size() - 1u)
+                terminatedNull = true;
+            m_instanceExtensions.append(extension[i]);
+        }
+        if (nulledEarly && !terminatedNull)
+            throw std::runtime_error("Instance extension string has invalid termination. Early null not carried through to end of string.");
+        else if (!nulledEarly && !terminatedNull)
+            m_instanceExtensions.append('\0');
+        m_filledInstanceExtensionNames = true;
     }
 
     void VknInfos::fillInstanceExtensionNames(const char *const *names, uint32_t size)

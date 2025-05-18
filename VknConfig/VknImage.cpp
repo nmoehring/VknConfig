@@ -93,6 +93,7 @@ namespace vkn
         throw std::runtime_error("Failed to find suitable memory type!");
     }
 
+    // Helper function (moved outside the class)
     void VknImage::allocateAndBindMemory(VkMemoryPropertyFlags requiredMemoryProperties)
     {
         if (!m_createdVkImage)

@@ -81,6 +81,7 @@ namespace vkn
         std::list<VknImageView> *getImageViews();
         uint32_t getImageViewStartIdx();
         uint32_t getNumImages();
+        VkExtent2D getActualExtent() { return m_dimensions; }
 
     private:
         // Engine

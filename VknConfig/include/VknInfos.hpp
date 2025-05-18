@@ -218,7 +218,7 @@ namespace vkn
             VkBool32 depthBoundsTestEnable, VkBool32 stencilTestEnable);
         VkPipelineColorBlendStateCreateInfo *fillColorBlendStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-            VkLogicOp logicOp, VknVector<VkPipelineColorBlendAttachmentState> attachments,
+            VkLogicOp logicOp, VknVector<VkPipelineColorBlendAttachmentState> &attachments, // Pass by reference
             float blendConstants[4], VkBool32 logicOpEnable,
             VkPipelineColorBlendStateCreateFlags flags);
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(
@@ -316,9 +316,12 @@ namespace vkn
                                                        VkFormat &format, VkComponentMapping &components,
                                                        VkImageSubresourceRange &subresourceRange, VkImageViewCreateFlags &flags);
 
+        void addInstanceExtension(std::string extension);
+
     private:
         std::string m_appName{};
         std::string m_engineName{};
+        VknVector<char> m_instanceExtensions;
         const char *const *m_enabledInstanceExtensionNames;
         uint32_t m_enabledInstanceExtensionNamesSize{0};
         const char *const *m_enabledLayerNames;

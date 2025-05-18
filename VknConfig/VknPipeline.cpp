@@ -15,6 +15,7 @@ namespace vkn
         m_inputAssemblyState = VknInputAssemblyState{engine, relIdxs, absIdxs, infos};
         m_multisampleState = VknMultisampleState{engine, relIdxs, absIdxs, infos};
         m_rasterizationState = VknRasterizationState{engine, relIdxs, absIdxs, infos};
+        m_colorBlendState = VknColorBlendState{engine, relIdxs, absIdxs, infos}; // Initialize
         m_viewportState = VknViewportState{engine, relIdxs, absIdxs, infos};
     }
 

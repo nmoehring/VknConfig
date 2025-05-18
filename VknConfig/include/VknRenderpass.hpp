@@ -98,6 +98,7 @@ namespace vkn
         VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
+        VknIdxs &getRelIdxs() { return m_relIdxs; }
 
     private:
         // Engine
