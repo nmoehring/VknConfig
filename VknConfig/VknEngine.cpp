@@ -12,6 +12,9 @@ namespace vkn
 
     void VknEngine::shutdown()
     {
+        // Wait for each device to idle before destroying resources
+        for (auto &device : this->getVector<VkDevice>())
+            vkDeviceWaitIdle(device);
         for (size_t i = 0; i < this->getVectorSize<VkShaderModule>(); ++i)
             vkDestroyShaderModule(
                 *this->getParentPointer<VkShaderModule, VkDevice>(i),
@@ -78,6 +81,16 @@ namespace vkn
                 *this->getParentPointer<VkSwapchainKHR, VkDevice>(i),
                 this->getObject<VkSwapchainKHR>(i),
                 VK_NULL_HANDLE);
+        for (size_t i = 0; i < this->getVectorSize<VkSemaphore>(); ++i)
+            vkDestroySemaphore(
+                *this->getParentPointer<VkSemaphore, VkDevice>(i),
+                this->getObject<VkSemaphore>(i),
+                VK_NULL_HANDLE);
+        for (size_t i = 0; i < this->getVectorSize<VkFence>(); ++i)
+            vkDestroyFence(
+                *this->getParentPointer<VkFence, VkDevice>(i),
+                this->getObject<VkFence>(i),
+                VK_NULL_HANDLE);
 
         for (auto &device : this->getVector<VkDevice>())
             vkDestroyDevice(device, VK_NULL_HANDLE);
@@ -107,6 +120,8 @@ namespace vkn
         this->deleteVector<uint32_t>();
         this->deleteVectors<VkCommandPool, VkDevice>();
         this->deleteVectors<VkSwapchainKHR, VkDevice>();
+        this->deleteVectors<VkSemaphore, VkDevice>();
+        this->deleteVectors<VkFence, VkDevice>();
         this->deleteVectors<VkDevice, VkInstance>();
         this->deleteVectors<VkSurfaceKHR, VkInstance>();
         this->deleteVectors<VkDebugUtilsMessengerEXT, VkInstance>();

@@ -78,7 +78,7 @@ namespace vkn
     }
 
     // Helper function (could be in VknPhysicalDevice or a utility header)
-    uint32_t VknImage::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    uint32_t VknImage::findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
     {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(m_engine->getObject<VkPhysicalDevice>(m_absIdxs), &memProperties);
@@ -122,7 +122,7 @@ namespace vkn
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.pNext = nullptr;
         allocInfo.allocationSize = memoryRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
+        allocInfo.memoryTypeIndex = findSuitableMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
 
         VknResult resAlloc{vkAllocateMemory(device, &allocInfo, nullptr, deviceMemory), "VknImage vkAllocateMemory"};
         VknResult resBind{vkBindImageMemory(device, image, *deviceMemory, 0), "VknImage vkBindImageMemory"};

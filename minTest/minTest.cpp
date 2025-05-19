@@ -4,8 +4,7 @@
 
 // #define GLFW_INCLUDE_VULKAN
 
-#include "VknConfig/include/VknConfig.hpp"
-#include "VknConfig/include/VknEngine.hpp"
+#include "VknConfig/include/VknApp.hpp"
 #include "VknConfig/include/VknData.hpp"
 
 void printDevProps(vkn::VknVector<VkPhysicalDeviceProperties> devProps);
@@ -35,37 +34,15 @@ int main()
     GLFWwindow *window = initWindow();
     if (!glfwVulkanSupported())
         throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
-    vkn::VknEngine engine{};
-    vkn::VknInfos infos{};
-    vkn::VknConfig config{&engine, &infos};
-    config.addWindow(window);
-    config.testNoInputs();
-    auto device = config.getDevice(0);
-    auto renderpass = device->getRenderpass(0);
-    auto pipeline = renderpass->getPipeline(0);
-
-    auto limits = device->getPhysicalDevice()->getLimits();
-    std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;
-    std::cout << "maxVertexInputAttributes=" << limits->maxVertexInputAttributes << std::endl;
-
-    int idx = 0;
-    for (auto &queue : device->getPhysicalDevice()->getQueues())
-    {
-        std::cout << "Queue " << idx << ": " << std::endl;
-        std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;
-        std::cout << "Compute: " << queue.supportsCompute() << std::endl;
-        std::cout << "Transfer: " << queue.supportsTransfer() << std::endl;
-        std::cout << "Sparse Binding: " << queue.supportsSparseBinding() << std::endl;
-        std::cout << "Mem Protection: " << queue.supportsMemoryProtection() << std::endl;
-        ++idx;
-    }
+    vkn::VknApp app{};
 
     while (!glfwWindowShouldClose(window))
     {
         // Poll for and process events
         glfwPollEvents();
+        app.cycleEngine();
     }
-    engine.shutdown();
+    app.exit();
     glfwDestroyWindow(window);
     glfwTerminate();
 }

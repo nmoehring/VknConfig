@@ -61,7 +61,6 @@ namespace vkn
         // Overloads
         VknDevice() = default;
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
-        ~VknDevice(); // Add destructor
 
         // Features
         VknFeatures features{};
@@ -92,6 +91,9 @@ namespace vkn
         std::vector<VkSemaphore> &getRenderFinishedSemaphores() { return m_renderFinishedSemaphores; } // Add getter
         std::vector<VkFence> &getInFlightFences() { return m_inFlightFences; }                         // Add getter
         VknIdxs &getRelIdxs() { return m_relIdxs; }
+        VkSemaphore &getImageAvailableSemaphore(uint32_t frameInFlight);
+        VkSemaphore &getRenderFinishedSemaphore(uint32_t frameInFlight);
+        VkFence &getFence(uint32_t frameInFlight);
 
     private:
         // Engine

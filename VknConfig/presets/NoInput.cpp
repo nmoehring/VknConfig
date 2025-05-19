@@ -8,20 +8,11 @@ VknConfig noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
     std::string appName{"NoInputsTest"};
     std::string engineName{"MinVknConfig"};
     config->fillAppInfo(VK_API_VERSION_1_1, appName, engineName);
-    const uint32_t instanceExtensionsSize{3}; // Add debug utils
-    const char *instanceExtensions[instanceExtensionsSize] = {
-        VK_EXT_DEBUG_UTILS_EXTENSION_NAME, // Uncomment
-        VK_KHR_SURFACE_EXTENSION_NAME,
-        VK_KHR_WIN32_SURFACE_EXTENSION_NAME};
-    const uint32_t layersSize{1};                           // Add validation layer
-    const char *layers[] = {"VK_LAYER_KHRONOS_validation"}; // Add layer name
-    config->fillInstanceCreateInfo(
-        layers, layersSize, instanceExtensions, instanceExtensionsSize);
+    config->fillInstanceCreateInfo();
 
     config->createInstance();
     // Setup debug messenger after instance creation
-    config->setupDebugMessenger();
-    config->createWindowSurface(0);
+    config->createSurface(0);
 
     // Config=>Devices
     auto *device = config->addDevice(0);

@@ -316,16 +316,19 @@ namespace vkn
                                                        VkFormat &format, VkComponentMapping &components,
                                                        VkImageSubresourceRange &subresourceRange, VkImageViewCreateFlags &flags);
 
-        void addInstanceExtension(std::string extension);
+        void addInstanceExtension(const char *name, uint32_t nameLength);
+        void addLayer(const char *name, uint32_t nameLength);
 
     private:
         std::string m_appName{};
         std::string m_engineName{};
-        VknVector<char> m_instanceExtensions;
-        const char *const *m_enabledInstanceExtensionNames;
-        uint32_t m_enabledInstanceExtensionNamesSize{0};
-        const char *const *m_enabledLayerNames;
-        uint32_t m_enabledLayerNamesSize{0};
+        VknVector<char> m_instanceExtensions_Store{};
+        VknVector<char *> m_instanceExtensions_NamePointers{};
+        VknVector<char> m_layers_Store{};
+        VknVector<char *> m_layers_NamePointers{};
+        // const char *const *m_enabledInstanceExtensionNames;
+        // const char *const *m_enabledLayerNames;
+        // uint32_t m_enabledLayerNamesSize{0};
         VknVector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
         VknVector<const char *const *> m_enabledDeviceExtensionNames{}; // Device>char_arr
         VknVector<uint32_t> m_enabledDeviceExtensionNamesSize{};

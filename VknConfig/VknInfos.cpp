@@ -453,46 +453,56 @@ namespace vkn
         m_filledEngineName = true;
     }
 
-    void VknInfos::addInstanceExtension(std::string extension)
+    void VknInfos::addInstanceExtension(const char *name, uint32_t nameLength)
     {
+        uint32_t firstStoreIdx = m_instanceExtensions_Store.getSize();
         bool terminatedNull{false};
         bool nulledEarly{false};
-        for (uint32_t i = 0; i < extension.size(); ++i)
+        for (uint32_t i = 0; i < nameLength; ++i)
         {
-            if (extension[i] == '\0' && i < extension.size() - 1u)
+            if (name[i] == '\0' && i < nameLength - 1u)
             {
                 nulledEarly = true;
                 continue;
             }
-            else if (extension[i] == '\0' && i == extension.size() - 1u)
+            else if (name[i] == '\0' && i == nameLength - 1u)
                 terminatedNull = true;
-            m_instanceExtensions.append(extension[i]);
+            m_instanceExtensions_Store.append(name[i]);
         }
         if (nulledEarly && !terminatedNull)
             throw std::runtime_error("Instance extension string has invalid termination. Early null not carried through to end of string.");
         else if (!nulledEarly && !terminatedNull)
-            m_instanceExtensions.append('\0');
+            m_instanceExtensions_Store.append('\0');
         m_filledInstanceExtensionNames = true;
     }
 
-    void VknInfos::fillInstanceExtensionNames(const char *const *names, uint32_t size)
+    void VknInfos::addInstanceExtension(const char *name, uint32_t nameLength)
     {
-        m_enabledInstanceExtensionNames = names;
-        m_enabledInstanceExtensionNamesSize = size;
-        m_filledInstanceExtensionNames = true;
+        uint32_t firstStoreIdx = m_layers_Store.getSize();
+        bool terminatedNull{false};
+        bool nulledEarly{false};
+        for (uint32_t i = 0; i < nameLength; ++i)
+        {
+            if (name[i] == '\0' && i < nameLength - 1u)
+            {
+                nulledEarly = true;
+                continue;
+            }
+            else if (name[i] == '\0' && i == nameLength - 1u)
+                terminatedNull = true;
+            m_layers_Store.append(name[i]);
+        }
+        if (nulledEarly && !terminatedNull)
+            throw std::runtime_error("Instance extension string has invalid termination. Early null not carried through to end of string.");
+        else if (!nulledEarly && !terminatedNull)
+            m_layers_Store.append('\0');
+        m_filledLayerNames = true;
     }
 
     void VknInfos::fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size)
     {
         m_enabledDeviceExtensionNames.insert(deviceIdx, names);
         m_enabledDeviceExtensionNamesSize.insert(deviceIdx, size);
-    }
-
-    void VknInfos::fillEnabledLayerNames(const char *const *names, uint32_t size)
-    {
-        m_enabledLayerNames = names;
-        m_enabledLayerNamesSize = size;
-        m_filledLayerNames = true;
     }
 
     void VknInfos::fillDeviceFeatures(VknFeatures features)
@@ -526,20 +536,33 @@ namespace vkn
         if (!m_filledAppInfo)
             throw std::runtime_error("AppInfo not filled before InstanceCreateInfo.");
 
+        bool foundNull{true};
+        for (auto &letter : m_instanceExtensions_Store)
+            if (foundNull)
+            {
+                m_instanceExtensions_NamePointers.append(&letter);
+                foundNull = false;
+            }
+            else if (letter == '\0')
+                foundNull = true;
+        foundNull = true;
+        for (auto &letter : m_layers_Store)
+            if (foundNull)
+            {
+                m_layers_NamePointers.append(&letter);
+                foundNull = false;
+            }
+            else if (letter == '\0')
+                foundNull = true;
+
         m_instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        m_instanceCreateInfo.pNext = VK_NULL_HANDLE;
+        m_instanceCreateInfo.pNext = nullptr;
         m_instanceCreateInfo.flags = flags;
         m_instanceCreateInfo.pApplicationInfo = &m_appInfo;
-        m_instanceCreateInfo.enabledLayerCount = m_enabledLayerNamesSize;
-        if (m_enabledLayerNamesSize == 0)
-            m_instanceCreateInfo.ppEnabledLayerNames = VK_NULL_HANDLE;
-        else
-            m_instanceCreateInfo.ppEnabledLayerNames = m_enabledLayerNames;
-        m_instanceCreateInfo.enabledExtensionCount = m_enabledInstanceExtensionNamesSize;
-        if (m_enabledInstanceExtensionNamesSize == 0)
-            m_instanceCreateInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
-        else
-            m_instanceCreateInfo.ppEnabledExtensionNames = m_enabledInstanceExtensionNames;
+        m_instanceCreateInfo.enabledLayerCount = m_layers_NamePointers.getSize();
+        m_instanceCreateInfo.ppEnabledLayerNames = m_layers_NamePointers.getData();
+        m_instanceCreateInfo.enabledExtensionCount = m_instanceExtensions_NamePointers.getSize();
+        m_instanceCreateInfo.ppEnabledExtensionNames = m_instanceExtensions_NamePointers.getData();
         m_filledInstanceCreateInfo = true;
     }
 

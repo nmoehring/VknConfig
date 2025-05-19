@@ -33,11 +33,8 @@ namespace vkn
         // State
         uint32_t m_currentFrame = 0;
         uint32_t m_imageIndex;
-        std::vector<VkSemaphore> m_imageAvailableSemaphores{nullptr}; // Need getters in VknDevice
-        std::vector<VkSemaphore> m_renderFinishedSemaphores{nullptr}; // Need getters in VknDevice
         std::vector<VkSemaphore> m_signalSemaphores;
-        std::vector<VkFence> m_inFlightFences{nullptr};
-        std::vector<VkFence> *m_imagesInFlight{nullptr}; // Fence for each swapchain image
+        std::vector<VkFence *> m_imagesInFlight{nullptr}; // Fence for each swapchain image
         VknIdxs m_devRelIdxs;
     };
 }

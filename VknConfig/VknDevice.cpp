@@ -10,23 +10,6 @@ namespace vkn
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    VknDevice::~VknDevice()
-    {
-        if (m_createdVkDevice)
-        {
-            // Wait for device idle before destroying resources
-            vkDeviceWaitIdle(*getVkDevice());
-
-            // Destroy synchronization objects
-            for (auto &fence : m_inFlightFences)
-                vkDestroyFence(*getVkDevice(), fence, nullptr);
-            for (auto &semaphore : m_renderFinishedSemaphores)
-                vkDestroySemaphore(*getVkDevice(), semaphore, nullptr);
-            for (auto &semaphore : m_imageAvailableSemaphores)
-                vkDestroySemaphore(*getVkDevice(), semaphore, nullptr);
-        }
-    }
-
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
     {
         VknSwapchain &swapchain = m_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
@@ -96,9 +79,12 @@ namespace vkn
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before creating sync objects.");
 
-        m_imageAvailableSemaphores.resize(maxFramesInFlight);
-        m_renderFinishedSemaphores.resize(maxFramesInFlight);
-        m_inFlightFences.resize(maxFramesInFlight, VK_NULL_HANDLE); // Initialize fences to VK_NULL_HANDLE
+        for (uint32_t i = 0; i < maxFramesInFlight; ++i)
+        {
+            m_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            m_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            m_engine->addNewObject<VkFence, VkDevice>(m_absIdxs);
+        }
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -109,11 +95,34 @@ namespace vkn
 
         for (size_t i = 0; i < maxFramesInFlight; ++i)
         {
-            VknResult res1{vkCreateSemaphore(*getVkDevice(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]), "Create image available semaphore"};
-            VknResult res2{vkCreateSemaphore(*getVkDevice(), &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]), "Create render finished semaphore"};
-            VknResult res3{vkCreateFence(*getVkDevice(), &fenceInfo, nullptr, &m_inFlightFences[i]), "Create in flight fence"};
+            VknResult res1{vkCreateSemaphore(
+                               *getVkDevice(), &semaphoreInfo, nullptr, &this->getImageAvailableSemaphore(i)),
+                           "Create image available semaphore"};
+            VknResult res2{vkCreateSemaphore(
+                               *getVkDevice(), &semaphoreInfo, nullptr, &this->getRenderFinishedSemaphore(i)),
+                           "Create render finished semaphore"};
+            VknResult res3{vkCreateFence(
+                               *getVkDevice(), &fenceInfo, nullptr, &this->getFence(i)),
+                           "Create in flight fence"};
         }
         m_syncObjectsCreated = true;
+    }
+
+    VkSemaphore &VknDevice::getImageAvailableSemaphore(uint32_t frameInFlight)
+    {
+        uint32_t startIdx = m_absIdxs.get<VkSemaphore>();
+        m_engine->getObject<VkSemaphore>(m_absIdxs.get<VkSemaphore>() - (frameInFlight * 2u));
+    }
+
+    VkSemaphore &VknDevice::getRenderFinishedSemaphore(uint32_t frameInFlight)
+    {
+        uint32_t startIdx = m_absIdxs.get<VkSemaphore>() - 1u;
+        m_engine->getObject<VkSemaphore>(m_absIdxs.get<VkSemaphore>() - (frameInFlight * 2u));
+    }
+
+    VkFence &VknDevice::getFence(uint32_t frameInFlight)
+    {
+        m_engine->getObject<VkFence>(m_absIdxs.get<VkFence>() - frameInFlight);
     }
 
     VknResult VknDevice::createDevice()

@@ -97,7 +97,13 @@ namespace vkn
         else if constexpr (std::is_same_v<T, VkCommandBuffer *>)
             return "commandBuffer";
         else if constexpr (std::is_same_v<T, uint32_t>)
-            return "NumCmdBuffers" else throw std::runtime_error("Invalid object type passed to typeToStr().");
+            return "NumCmdBuffers";
+        else if constexpr (std::is_same_v<T, VkSemaphore>)
+            return "semaphore";
+        else if constexpr (std::is_same_v<T, VkFence>)
+            return "fence";
+        else
+            throw std::runtime_error("Invalid object type passed to typeToStr().");
     } // typeToStr<T>()
 
     class VknIdxs
@@ -162,7 +168,7 @@ namespace vkn
         template <typename ObjectType, typename ParentType>
         uint32_t push_back(ParentType *parent)
         {
-            return this->push_back<ObjectType, ParentType>(ObjectType{}, parent);
+            return this->push_back<ObjectType, ParentType>(ObjectType{VK_NULL_HANDLE}, parent);
         }
 
         template <typename ObjectType>
@@ -246,7 +252,7 @@ namespace vkn
             size_t pos = vec.getSize();
             if (pos != 0)
                 throw std::runtime_error("VkInstance already added.");
-            vec.append(VkInstance{});
+            vec.append(VkInstance{VK_NULL_HANDLE});
 
             absIdxs.add<VkInstance>(pos);
             relIdxs.add<VkInstance>(pos);
@@ -260,6 +266,8 @@ namespace vkn
             uint32_t poolIdx{absIdxs.get<VkCommandPool>()};
             numBuffersVec.insert(poolIdx, numCommandBuffers);
             cmdBufferVec.insert(poolIdx, new VkCommandBuffer[numCommandBuffers]);
+            for (uint32_t i = 0; i < numCommandBuffers; ++i)
+                cmdBufferVec(poolIdx)[i] = VK_NULL_HANDLE;
             return cmdBufferVec(poolIdx);
         }
 

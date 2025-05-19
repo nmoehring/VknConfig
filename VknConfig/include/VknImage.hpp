@@ -100,8 +100,8 @@ namespace vkn
         // State
         bool m_createdVkImage{false};
         bool m_memoryBound{false};
+
+        uint32_t findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     };
 
-    // Helper function (moved outside the class)
-    uint32_t findSuitableMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 }

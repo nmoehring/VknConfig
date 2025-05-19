@@ -11,11 +11,8 @@ namespace vkn
         m_renderpass = m_device->getRenderpass(0);
         m_pipeline = m_renderpass->getPipeline(0);
         m_commandPool = m_device->getCommandPool(0);
-        m_imageAvailableSemaphores = &m_device->getImageAvailableSemaphores();
-        m_renderFinishedSemaphores = &m_device->getRenderFinishedSemaphores();
-        m_inFlightFences = &m_device->getInFlightFences();
         for (uint32_t i = 0; i < m_swapchain->getNumImages(); ++i)
-            m_imagesInFlight->push_back(VK_NULL_HANDLE);
+            m_imagesInFlight.push_back(nullptr);
         m_devRelIdxs = m_device->getRelIdxs();
     }
 
@@ -23,7 +20,7 @@ namespace vkn
     {
         // 1. Wait for the previous frame to finish
         vkWaitForFences(
-            *m_device->getVkDevice(), 1u, &m_inFlightFences->at(m_currentFrame), VK_TRUE, uint64_t(0) - 1u);
+            *m_device->getVkDevice(), 1u, &m_device->getFence(m_currentFrame), VK_TRUE, uint64_t(0) - 1u);
 
         //*device->getVkDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
     }
@@ -33,7 +30,7 @@ namespace vkn
         // 2. Acquire an image from the swapchain
         VkResult acquireResult = vkAcquireNextImageKHR(
             *m_device->getVkDevice(), *m_swapchain->getVkSwapchain(), uint64_t(0) - 1u,
-            m_imageAvailableSemaphores->at(m_currentFrame), VK_NULL_HANDLE, &m_imageIndex);
+            m_device->getImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &m_imageIndex);
 
         if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -47,12 +44,12 @@ namespace vkn
         }
 
         // Check if a previous frame is using this image
-        if (m_imagesInFlight->at(m_imageIndex) != VK_NULL_HANDLE)
+        if (m_imagesInFlight[m_imageIndex] != nullptr)
         {
-            vkWaitForFences(*m_device->getVkDevice(), 1, &m_imagesInFlight->at(m_imageIndex), VK_TRUE, uint64_t(0) - 1u);
+            vkWaitForFences(*m_device->getVkDevice(), 1, m_imagesInFlight[m_imageIndex], VK_TRUE, uint64_t(0) - 1u);
         }
         // Mark the image as being in use by this frame
-        m_imagesInFlight[m_imageIndex] = m_inFlightFences[m_currentFrame];
+        m_imagesInFlight[m_imageIndex] = &m_device->getFence(m_currentFrame);
     }
 
     void VknCycle::recordCommandBuffer()
@@ -97,7 +94,7 @@ namespace vkn
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores->at(m_currentFrame)};
+        VkSemaphore waitSemaphores[] = {m_device->getImageAvailableSemaphore(m_currentFrame)};
         VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
@@ -106,13 +103,13 @@ namespace vkn
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = m_currentCommandBuffer;
 
-        m_signalSemaphores.push_back(m_renderFinishedSemaphores->at(m_currentFrame));
+        m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrame));
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = m_signalSemaphores.data();
 
-        vkResetFences(*m_device->getVkDevice(), 1, &m_inFlightFences->at(m_currentFrame)); // Reset the fence before submitting
+        vkResetFences(*m_device->getVkDevice(), 1, &m_device->getFence(m_currentFrame)); // Reset the fence before submitting
         VknResult resSubmit{
-            vkQueueSubmit(m_device->getGraphicsQueue(), 1, &submitInfo, m_inFlightFences->at(m_currentFrame)),
+            vkQueueSubmit(m_device->getGraphicsQueue(), 1, &submitInfo, m_device->getFence(m_currentFrame)),
             "Submit command buffer"};
     }
 

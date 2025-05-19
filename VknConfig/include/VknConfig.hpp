@@ -78,7 +78,7 @@ namespace vkn
 
         // Members
         VknDevice *addDevice(uint32_t deviceIdx);
-        void addWindow(GLFWwindow *window);
+        void addWindow_GLFW(GLFWwindow *window);
 
         // Config
         void fillAppInfo(uint32_t apiVersion, std::string appName,
@@ -86,20 +86,19 @@ namespace vkn
                          VkApplicationInfo *pNext = nullptr,
                          uint32_t applicationVersion = 0,
                          uint32_t engineVersion = 0);
-        void fillInstanceCreateInfo(const char *const *enabledLayerNames,
-                                    uint32_t enabledLayerNamesSize,
-                                    const char *const *enabledExtensionNames,
-                                    uint32_t enabledExtensionNamesSize,
-                                    VkInstanceCreateFlags flags = 0);
+        void fillInstanceCreateInfo(VkInstanceCreateFlags flags = 0);
         void enableExtensions(VknVector<std::string> extensions);
         void setupDebugMessenger();
-        void addInstanceExtensions(const char *ext[], uint32_t size);
-        void addInstanceExtensions(VknVector<std::string> extensions);
-        void addInstanceExtension(std::string extension);
+        void addInstanceExtension(std::string &extension);
+        void addInstanceExtension(VknVector<char> &chars);
+        void addLayer(std::string &layer);
+        void addLayer(VknVector<char> &chars);
+        VkSurfaceKHR *createSurface(uint32_t surfaceIdx);
+        VkSurfaceKHR *createWindowSurface_GLFW(uint32_t surfaceIdx);
+        void setValidationEnabled() { m_validationLayerAdded = true; }
 
         // Create
         VknResult createInstance();
-        void createWindowSurface(uint32_t surfaceIdx);
 
         // Getters
         VkInstance *getInstance() { return &m_engine->getObject<VkInstance>(0); }
@@ -118,7 +117,7 @@ namespace vkn
 
         // Params
         VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
-        GLFWwindow *m_window{nullptr};
+        GLFWwindow *m_GLFWwindow{nullptr};
 
         // Members
         std::list<VknDevice> m_devices;
@@ -129,6 +128,7 @@ namespace vkn
         bool m_filledInstanceCreateInfo{false};
         bool m_createdInstance{false};
         bool m_filledAppInfo{false};
+        bool m_validationLayerAdded{false};
     };
 
     // Helper function to set up the debug messenger create info

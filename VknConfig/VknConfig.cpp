@@ -45,17 +45,6 @@ namespace vkn
             deviceIdx, m_devices, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    void VknConfig::addWindow(GLFWwindow *window)
-    {
-        uint32_t count;
-        const char **extensions = glfwGetRequiredInstanceExtensions(&count);
-        if (count == 0 | extensions == nullptr)
-            throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
-        m_window = window;
-        if (m_window == nullptr)
-            throw std::runtime_error("Window passed to VknConfig is null. There may be a problem with window creation.");
-    }
-
     void VknConfig::enableExtensions(VknVector<std::string> extensions)
     {
         if (m_createdInstance)
@@ -84,18 +73,32 @@ namespace vkn
         m_infos->fillAppInfo(apiVersion, appVersion, engineVersion);
     }
 
-    void VknConfig::fillInstanceCreateInfo(const char *const *enabledLayerNames,
-                                           uint32_t enabledLayerNamesSize,
-                                           const char *const *enabledExtensionNames,
-                                           uint32_t enabledExtensionNamesSize,
-                                           VkInstanceCreateFlags flags)
+    void VknConfig::fillInstanceCreateInfo(VkInstanceCreateFlags flags)
     {
         if (m_filledInstanceCreateInfo)
             throw std::runtime_error("Instance create info already filled.");
-        m_infos->fillEnabledLayerNames(enabledLayerNames, enabledLayerNamesSize);
-        m_infos->fillInstanceExtensionNames(enabledExtensionNames, enabledExtensionNamesSize);
         m_infos->fillInstanceCreateInfo(flags);
         m_filledInstanceCreateInfo = true;
+    }
+
+    void VknConfig::addInstanceExtension(std::string &extension)
+    {
+        m_infos->addInstanceExtension(extension.c_str(), extension.size());
+    }
+
+    void VknConfig::addInstanceExtension(VknVector<char> &chars)
+    {
+        m_infos->addInstanceExtension(chars.getData(), chars.getSize());
+    }
+
+    void VknConfig::addLayer(std::string &layer)
+    {
+        m_infos->addLayer(layer.c_str(), layer.size());
+    }
+
+    void VknConfig::addLayer(VknVector<char> &chars)
+    {
+        m_infos->addLayer(chars.getData(), chars.getSize());
     }
 
     VknResult VknConfig::createInstance()
@@ -110,6 +113,9 @@ namespace vkn
                 m_infos->getInstanceCreateInfo(), VK_NULL_HANDLE,
                 m_engine->getVector<VkInstance>().getData()),
             "Create instance."};
+
+        if (m_validationLayerAdded)
+            this->setupDebugMessenger();
 
         m_createdInstance = true;
         return res;
@@ -131,16 +137,29 @@ namespace vkn
         return getListElement(deviceIdx, m_devices);
     }
 
-    void VknConfig::createWindowSurface(uint32_t surfaceIdx)
+    void VknConfig::addWindow_GLFW(GLFWwindow *window)
+    {
+        m_GLFWwindow = window;
+    }
+
+    VkSurfaceKHR *VknConfig::createSurface(uint32_t surfaceIdx)
     {
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
-        if (m_window == nullptr)
+        if (m_GLFWwindow)
+            this->createWindowSurface_GLFW(surfaceIdx);
+        else
+            throw std::runtime_error("No window configured for VknConfig::createSurface()");
+    }
+
+    VkSurfaceKHR *VknConfig::createWindowSurface_GLFW(uint32_t surfaceIdx)
+    {
+        if (m_GLFWwindow == nullptr)
             throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
 
         VknResult res{"Create window surface."};
         res = glfwCreateWindowSurface(
-            m_engine->getObject<VkInstance>(0), m_window, nullptr,
+            m_engine->getObject<VkInstance>(0), m_GLFWwindow, nullptr,
             m_engine->getVector<VkSurfaceKHR>().getData(1));
     }
     /*
