@@ -5,13 +5,17 @@
 
 namespace vkn
 {
+    // Forward declarations for the presets
+    bool deviceInfo(VknConfig *config, VknEngine *engine, VknInfos *infos);
+    bool noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos);
+
     class VknApp
     {
     public:
         VknApp();
 
         // Setup
-        void configureWithPreset(std::function<void(VknConfig *, VknEngine *, VknInfos *)> func);
+        void configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> func);
         void addWindow_GLFW(GLFWwindow *window);
         void enableValidationLayer();
 

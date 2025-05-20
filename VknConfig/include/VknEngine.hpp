@@ -56,6 +56,20 @@
 namespace vkn
 {
     template <typename T>
+    class VknInstanceLock
+    {
+        static inline T *target = nullptr;
+
+    public:
+        T &operator=(T *newTarget) { target = newTarget; }
+        void operator()(T *possibleTarget)
+        {
+            if (possibleTarget != target)
+                throw std::runtimeError("Wrong instance locked! Can only edit the instance locked by VknInstanceLock.");
+        }
+    };
+
+    template <typename T>
     std::string typeToStr()
     {
         if constexpr (std::is_same_v<T, VkInstance>)
@@ -277,7 +291,6 @@ namespace vkn
         bool m_poweredOn{true}; // State to track if shutdown has been called
         /*VknVector<VkPipelineCache> pipelineCaches{};*/
 
-        VkDebugUtilsMessengerEXT *m_debugMsgr = nullptr; // Add back-pointer to VknConfig
         template <typename ObjectType, typename ParentType>
         void deleteVectors()
         {

@@ -1,9 +1,10 @@
 #include <iostream>
 #include "../include/VknConfig.hpp"
+#include "Presets.hpp"
 
 using namespace vkn;
 
-VknConfig deviceInfo(VknConfig *config, VknEngine *engine, VknInfos *infos)
+bool deviceInfo(VknConfig *config, VknEngine *engine, VknInfos *infos)
 {
     config->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
     config->createInstance();
@@ -32,4 +33,6 @@ VknConfig deviceInfo(VknConfig *config, VknEngine *engine, VknInfos *infos)
         std::cout << "Mem Protection: " << queue.supportsMemoryProtection() << std::endl;
         ++idx;
     }
+
+    return false;
 }

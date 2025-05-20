@@ -7,7 +7,7 @@ namespace vkn
     class VknCycle
     {
     public:
-        VknCycle(VknConfig *config, VknEngine *engine);
+        void loadConfig(VknConfig *config, VknEngine *engine);
         void wait();
         void acquireImage();
         void recordCommandBuffer();

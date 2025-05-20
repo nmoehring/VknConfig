@@ -6,11 +6,13 @@ namespace vkn
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
+        m_instanceLock = this;
     }
 
     // Config
     VknDescriptorSetLayout *VknPipelineLayout::addDescriptorSetLayout()
     {
+        m_instanceLock(this);
         m_descriptorSetLayoutStartIdx = m_engine->getVectorSize<VkDescriptorSetLayout>();
         return &m_engine->addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout, VkDevice>(
             uint32_t{0}, m_descriptorSetLayouts,

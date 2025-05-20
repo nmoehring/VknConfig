@@ -64,7 +64,6 @@ namespace vkn
         VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         // Members
-        void addSwapchainVkImage(uint32_t engineImageIdx);
         void addAttachments();
         void createAttachments();
         void addSwapchainImageView(VknImageView *swapchainImageView);
@@ -106,10 +105,8 @@ namespace vkn
         bool m_setAttachments{false};
         uint32_t m_imageStartIdx{0};
         uint32_t m_imageViewStartIdx{0};
-        static VknFramebuffer *s_editable;
+        VknInstanceLock<VknFramebuffer> m_instanceLock;
         std::optional<uint32_t> m_swapchainAttachmentDescIndex; // Index of the VkAttachmentDescription for the swapchain
-
-        void testEditability();
 
         void setAttachmentDimensions(uint32_t width, uint32_t height);
     };

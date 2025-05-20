@@ -2,8 +2,6 @@
 
 namespace vkn
 {
-    VknShaderStage *VknShaderStage::s_editable{nullptr};
-
     VknShaderStage::VknShaderStage(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
@@ -84,11 +82,5 @@ namespace vkn
     VkShaderModule *VknShaderStage::getShaderModule()
     {
         return &m_engine->getObject<VkShaderModule>(m_absIdxs);
-    }
-
-    void VknShaderStage::testEditability()
-    {
-        if (s_editable != this)
-            throw std::runtime_error("Members of a VknShaderStage must be added all at once so that they are stored contiguously.");
     }
 }

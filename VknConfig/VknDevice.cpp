@@ -6,12 +6,14 @@ namespace vkn
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
+        m_instanceLock = this;
         m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice, VkInstance>(
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
     }
 
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
     {
+        m_instanceLock(this);
         VknSwapchain &swapchain = m_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
             swapchainIdx, m_swapchains, m_relIdxs, m_absIdxs, m_infos);
         return &swapchain;
@@ -66,6 +68,7 @@ namespace vkn
 
     VknCommandPool *VknDevice::addCommandPool(uint32_t newCommandPoolIdx)
     {
+        m_instanceLock(this);
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before creating command pool.");
         return &m_engine->addNewVknObject<VknCommandPool, VkCommandPool, VkDevice>(
@@ -74,6 +77,7 @@ namespace vkn
 
     void VknDevice::createSyncObjects(uint32_t maxFramesInFlight)
     {
+        m_instanceLock(this);
         if (m_syncObjectsCreated)
             throw std::runtime_error("Synchronization objects already created.");
         if (!m_createdVkDevice)
@@ -166,6 +170,7 @@ namespace vkn
 
     VknRenderpass *VknDevice::addRenderpass(uint32_t renderpassIdx)
     {
+        m_instanceLock(this);
         return &m_engine->addNewVknObject<VknRenderpass, VkRenderPass, VkDevice>(
             renderpassIdx, m_renderpasses, m_relIdxs, m_absIdxs, m_infos);
     }

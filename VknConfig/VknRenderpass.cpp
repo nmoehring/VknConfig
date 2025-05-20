@@ -2,20 +2,17 @@
 
 namespace vkn
 {
-
-    VknRenderpass *VknRenderpass::s_editable{nullptr};
-
     VknRenderpass::VknRenderpass(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
-        s_editable = this;
+        m_instanceLock = this;
         m_pipelineStartAbsIdx = m_engine->getVectorSize<VkPipeline>();
     }
 
     VknFramebuffer *VknRenderpass::addFramebuffer(uint32_t framebufferIdx)
     {
-        testEditability();
+        m_instanceLock(this);
         if (framebufferIdx + 1 > m_framebuffers.size())
             throw std::runtime_error("FramebufferIdx invalid. Should be next index.");
         if (!m_createdRenderpass)
@@ -26,7 +23,7 @@ namespace vkn
 
     VknPipeline *VknRenderpass::addPipeline(uint32_t subpassIdx)
     {
-        testEditability();
+        m_instanceLock(this);
         if (subpassIdx != m_pipelines.size())
             throw std::runtime_error("SubpassIdx passed to addPipeline is invalid. Should be next idx.");
 
@@ -37,7 +34,6 @@ namespace vkn
 
     void VknRenderpass::createRenderpass()
     {
-        testEditability();
         if (m_createdRenderpass)
             throw std::runtime_error("Renderpass already created.");
         VkRenderPassCreateInfo *createInfo = m_infos->fillRenderpassCreateInfo(m_relIdxs, 0); // Flags not used ever
@@ -51,13 +47,13 @@ namespace vkn
 
     VknPipeline *VknRenderpass::getPipeline(uint32_t pipelineIdx)
     {
-        testEditability();
+        m_instanceLock(this);
         return getListElement(pipelineIdx, m_pipelines);
     }
 
     VknFramebuffer *VknRenderpass::getFramebuffer(uint32_t bufferIdx)
     {
-        testEditability();
+        m_instanceLock(this);
         return getListElement(bufferIdx, m_framebuffers);
     }
 
@@ -65,7 +61,7 @@ namespace vkn
                                              uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
                                              VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
-        testEditability();
+        m_instanceLock(this);
         if (dependencyIdx != m_numSubpassDeps++)
             throw std::runtime_error("DependencyIdx passed to addSubpassDependency is invalid. Should be next idx.");
 
@@ -81,7 +77,7 @@ namespace vkn
         VkImageLayout finalLayout,
         VkAttachmentDescriptionFlags flags)
     {
-        testEditability();
+        m_instanceLock(this);
 
         m_infos->fillAttachmentDescription(
             m_relIdxs, attachIdx, format, samples, loadOp, storeOp, stencilLoadOp,
@@ -117,7 +113,6 @@ namespace vkn
 
     void VknRenderpass::createPipelines()
     {
-        testEditability();
         if (!m_createdRenderpass)
             throw std::runtime_error("Renderpass not created before creating pipelines.");
         if (m_createdPipelines)
@@ -146,7 +141,6 @@ namespace vkn
         uint32_t subpassIdx, bool isCompute, VkPipelineBindPoint pipelineBindPoint,
         VkSubpassDescriptionFlags flags)
     {
-        testEditability();
         // Check for color attachment *before* trying to access counts
         if (!isCompute && !m_filledColorAttachment)
             throw std::runtime_error("No color attachment created before creating subpass.");
@@ -156,7 +150,7 @@ namespace vkn
 
     std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(std::list<VknImageView> *swapchainImageViews)
     {
-        testEditability();
+        m_instanceLock(this);
         for (uint32_t i = 0; i < swapchainImageViews->size(); ++i)
         {
             m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
@@ -171,16 +165,9 @@ namespace vkn
 
     void VknRenderpass::createFramebuffers()
     {
-        testEditability();
         if (m_framebuffers.size() == 0)
             throw std::runtime_error("No framebuffers to create.");
         for (auto &framebuffer : m_framebuffers)
             framebuffer.createFramebuffer();
-    }
-
-    void VknRenderpass::testEditability()
-    {
-        if (s_editable != this)
-            throw std::runtime_error("Members of VknRenderpass must be added all at once so that they are stored contiguously.");
     }
 }

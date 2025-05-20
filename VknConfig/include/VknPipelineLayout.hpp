@@ -90,5 +90,6 @@ namespace vkn
         // State
         bool m_createdPipelineLayout{false};
         uint32_t m_descriptorSetLayoutStartIdx{0};
+        VknInstanceLock<VknPipelineLayout> m_instanceLock;
     };
 }

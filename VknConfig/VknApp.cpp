@@ -2,7 +2,7 @@
 
 namespace vkn
 {
-    VknApp::VknApp() : m_config{&m_engine, &m_infos}, m_cycle{&m_config, &m_engine}
+    VknApp::VknApp() : m_config{&m_engine, &m_infos}, m_cycle{}
     {
     }
 
@@ -11,10 +11,12 @@ namespace vkn
         m_engine.shutdown();
     }
 
-    void VknApp::configureWithPreset(std::function<void(VknConfig *, VknEngine *, VknInfos *)> preset)
+    void VknApp::configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> preset)
     {
-        preset(&m_config, &m_engine, &m_infos);
+        bool readyToRun = preset(&m_config, &m_engine, &m_infos);
         m_configured = true;
+        if (readyToRun)
+            m_cycle.loadConfig(&m_config, &m_engine);
     }
 
     void VknApp::addWindow_GLFW(GLFWwindow *window)
@@ -32,20 +34,12 @@ namespace vkn
             std::string name = extensions[i];
             m_config.addInstanceExtension(name);
         }
-
-        VknResult res{"Create window surface."};
-        res = glfwCreateWindowSurface(
-            m_engine.getObject<VkInstance>(0), window, nullptr,
-            m_engine.getVector<VkSurfaceKHR>().getData(1));
     }
 
     void VknApp::enableValidationLayer()
     {
-        VknVector<char> name{};
-        for (const char *i = VK_EXT_DEBUG_UTILS_EXTENSION_NAME; i != '\0'; ++i)
-            name.append(*i);
-        name.append('\0');
-        m_config.addInstanceExtension(name);
+        std::string debugExtName = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+        m_config.addInstanceExtension(debugExtName);
 
         std::string name = "VK_LAYER_KHRONOS_validation";
         m_config.addLayer(name);
@@ -56,8 +50,8 @@ namespace vkn
     {
         m_cycle.wait();
         m_cycle.acquireImage();
-        m_cycle.presentImage();
         m_cycle.recordCommandBuffer();
         m_cycle.submitCommandBuffer();
+        m_cycle.presentImage();
     }
 }

@@ -45,23 +45,6 @@ namespace vkn
             deviceIdx, m_devices, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    void VknConfig::enableExtensions(VknVector<std::string> extensions)
-    {
-        if (m_createdInstance)
-            throw std::runtime_error("Can't enable extensions after instance is already created.");
-        for (auto &name : extensions)
-            m_instanceExtensions.append(name);
-    }
-
-    void VknConfig::deviceInfo(uint32_t deviceIdx)
-    {
-        if (m_createdInstance)
-            throw std::runtime_error("Can't create a new deviceInfo instance after an instance is already created.");
-        this->fillAppInfo(VK_API_VERSION_1_1, "DeviceInfo", "VknConfig");
-        this->createInstance();
-        this->getDevice(deviceIdx)->createDevice();
-    }
-
     void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
                                 std::string engineName, VkApplicationInfo *pNext,
                                 uint32_t appVersion, uint32_t engineVersion)
@@ -83,21 +66,29 @@ namespace vkn
 
     void VknConfig::addInstanceExtension(std::string &extension)
     {
+        if (m_createdInstance)
+            throw std::runtime_error("Can't enable extensions after instance is already created.");
         m_infos->addInstanceExtension(extension.c_str(), extension.size());
     }
 
     void VknConfig::addInstanceExtension(VknVector<char> &chars)
     {
+        if (m_createdInstance)
+            throw std::runtime_error("Can't enable extensions after instance is already created.");
         m_infos->addInstanceExtension(chars.getData(), chars.getSize());
     }
 
     void VknConfig::addLayer(std::string &layer)
     {
+        if (m_createdInstance)
+            throw std::runtime_error("Can't enable layers after instance is already created.");
         m_infos->addLayer(layer.c_str(), layer.size());
     }
 
     void VknConfig::addLayer(VknVector<char> &chars)
     {
+        if (m_createdInstance)
+            throw std::runtime_error("Can't enable layers after instance is already created.");
         m_infos->addLayer(chars.getData(), chars.getSize());
     }
 

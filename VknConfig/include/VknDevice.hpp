@@ -73,8 +73,6 @@ namespace vkn
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);
         uint32_t findGraphicsQueue();
-
-        // Getters for rendering loop
         void addExtensions(const char *ext[], uint32_t size);
 
         // Create
@@ -86,10 +84,10 @@ namespace vkn
         VknRenderpass *getRenderpass(uint32_t renderpassIdx);
         VknCommandPool *getCommandPool(uint32_t commandPoolIdx);
         VkDevice *getVkDevice();
-        VkQueue getGraphicsQueue() const;                                                              // Add getter for graphics queue
-        std::vector<VkSemaphore> &getImageAvailableSemaphores() { return m_imageAvailableSemaphores; } // Add getter
-        std::vector<VkSemaphore> &getRenderFinishedSemaphores() { return m_renderFinishedSemaphores; } // Add getter
-        std::vector<VkFence> &getInFlightFences() { return m_inFlightFences; }                         // Add getter
+        VkQueue getGraphicsQueue() const; // Add getter for graphics queue
+        VkSemaphore &getImageAvailableSemaphores(uint32_t frameInFlight);
+        VkSemaphore &getRenderFinishedSemaphores(uint32_t frameInFlight);
+        VkFence &getInFlightFences(uint32_t frameInFlight);
         VknIdxs &getRelIdxs() { return m_relIdxs; }
         VkSemaphore &getImageAvailableSemaphore(uint32_t frameInFlight);
         VkSemaphore &getRenderFinishedSemaphore(uint32_t frameInFlight);
@@ -114,14 +112,12 @@ namespace vkn
         uint32_t m_extensionsSize{0};
 
         // State
-        std::vector<VkSemaphore> m_imageAvailableSemaphores;
-        std::vector<VkSemaphore> m_renderFinishedSemaphores;
-        std::vector<VkFence> m_inFlightFences;
         bool m_createdVkDevice{false};
         bool m_commandPoolCreated{false};
         bool m_commandBuffersAllocated{false};
         bool m_syncObjectsCreated{false};
         VkQueue m_graphicsQueue = VK_NULL_HANDLE; // Store graphics queue handle
         bool m_filledQueueCreateInfos{false};
+        VknInstanceLock<VknDevice> m_instanceLock;
     };
 }

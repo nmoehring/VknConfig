@@ -114,9 +114,7 @@ namespace vkn
         bool m_setSurface{false};
         bool m_setImageCount{false};
         uint32_t m_imageViewStartIdx{0};
-        VknSwapchain *s_editable;
-
-        void testEditability();
+        VknInstanceLock<VknSwapchain> m_instanceLock;
 
         VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo();
         void addImageViews();

@@ -100,6 +100,7 @@ namespace vkn
         // State
         bool m_createdVkImage{false};
         bool m_memoryBound{false};
+        VknInstanceLock<VknImage> m_instanceLock;
 
         uint32_t findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     };

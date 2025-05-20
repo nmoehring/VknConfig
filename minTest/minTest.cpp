@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <filesystem>
 
@@ -35,6 +34,7 @@ int main()
     if (!glfwVulkanSupported())
         throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
     vkn::VknApp app{};
+    app.configureWithPreset(vkn::deviceInfo);
 
     while (!glfwWindowShouldClose(window))
     {

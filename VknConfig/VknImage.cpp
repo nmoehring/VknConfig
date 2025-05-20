@@ -5,6 +5,7 @@ namespace vkn
     VknImage::VknImage(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
+        m_instanceLock = this;
     }
 
     void VknImage::createImage()
@@ -96,6 +97,7 @@ namespace vkn
     // Helper function (moved outside the class)
     void VknImage::allocateAndBindMemory(VkMemoryPropertyFlags requiredMemoryProperties)
     {
+        m_instanceLock(this);
         if (!m_createdVkImage)
         {
             throw std::runtime_error("VknImage::allocateAndBindMemory called before createImage().");

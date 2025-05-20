@@ -85,9 +85,7 @@ namespace vkn
 
         // State
         bool m_createdDescriptorSetLayout{false};
-        static VknDescriptorSetLayout *s_editable;
 
-        void testEditability();
         uint32_t getStartIdx();
     };
 } // namespace vkn

@@ -2,13 +2,11 @@
 
 namespace vkn
 {
-    VknPipeline *VknPipeline::s_editable{nullptr};
-
     VknPipeline::VknPipeline(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
-        s_editable = this;
+        m_instanceLock = this;
         m_engine->addNewVknObject<VknPipelineLayout, VkPipelineLayout, VkDevice>(
             0, m_layouts, m_relIdxs, m_absIdxs, m_infos);
         m_vertexInputState = VknVertexInputState{engine, relIdxs, absIdxs, infos};
@@ -23,7 +21,7 @@ namespace vkn
                                                 VknShaderStageType stageType,
                                                 std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
-        testEditability();
+        m_instanceLock(this);
         VknShaderStage &shaderStage = m_engine->addNewVknObject<VknShaderStage, VkShaderModule, VkDevice>(
             shaderIdx, m_shaderStages, m_relIdxs, m_absIdxs, m_infos);
         shaderStage.setFilename(filename);
@@ -44,16 +42,9 @@ namespace vkn
 
     VkGraphicsPipelineCreateInfo *VknPipeline::_fillPipelineCreateInfo()
     {
-        testEditability();
         VkPipelineLayout *layout = this->getLayout()->getVkLayout();
         return m_infos->fillGfxPipelineCreateInfo(
             m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs),
             layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
-    }
-
-    void VknPipeline::testEditability()
-    {
-        if (s_editable != this)
-            throw std::runtime_error("Members of a VknPipeline must be added all at once so that they are stored contiguously.");
     }
 }

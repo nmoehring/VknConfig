@@ -6,7 +6,8 @@ add_library(VknConfig VknConfig.cpp VknDevice.cpp VknInfos.cpp
     VknViewportState.cpp VknSwapchain.cpp VknImageView.cpp
     VknFramebuffer.cpp VknEngine.cpp VknData.cpp VknPipelineLayout.cpp
     VknDescriptorSetLayout.cpp VknImage.cpp VknFeatures.cpp
-    VknColorBlendState.cpp VknCommandPool.cpp VknApp.cpp VknCycle.cpp)
+    VknColorBlendState.cpp VknCommandPool.cpp VknApp.cpp VknCycle.cpp
+    NoInput.cpp DeviceInfo.cpp)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
 # target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})

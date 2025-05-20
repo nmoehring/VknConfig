@@ -1,8 +1,9 @@
 #include "../include/VknConfig.hpp"
+#include "Presets.hpp"
 
 using namespace vkn;
 
-VknConfig noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
+bool noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
 {
     // Shallow Config members
     std::string appName{"NoInputsTest"};
@@ -85,4 +86,6 @@ VknConfig noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
     commandPool->createCommandPool(queueFamilyIdx);
     commandPool->createCommandBuffers(swapchain->getNumImages());
     device->createSyncObjects(2); // Use 2 frames in flight for a simple demo
+
+    return true;
 }

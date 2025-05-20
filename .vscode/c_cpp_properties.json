@@ -7,7 +7,8 @@
                 "${workspaceFolder}/",
                 "${workspaceFolder}/../VknConfig_build/vcpkg_installed/x64-windows/include",
                 "${env:VULKAN_SDK}/include",
-                "${env:VULKAN_SDK}/include/vulkan"
+                "${env:VULKAN_SDK}/include/vulkan",
+                "${workspaceFolder}/VknConfig/presets"
             ],
             "defines": [
                 "_DEBUG",

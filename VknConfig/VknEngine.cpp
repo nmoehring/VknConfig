@@ -97,7 +97,8 @@ namespace vkn
         for (auto &surface : this->getVector<VkSurfaceKHR>())
             vkDestroySurfaceKHR(this->getObject<VkInstance>(0), surface, VK_NULL_HANDLE);
         for (auto &debugMsgr : this->getVector<VkDebugUtilsMessengerEXT>())
-            vkDestroyDebugUtilsMessengerEXT(this->getObject<VkInstance>(0), *m_debugMsgr, nullptr);
+            vkDestroyDebugUtilsMessengerEXT(this->getObject<VkInstance>(0),
+                                            this->getObject<VkDebugUtilsMessengerEXT>(0), nullptr);
         for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
 
@@ -116,6 +117,8 @@ namespace vkn
         this->deleteVectors<VkDeviceMemory, VkDevice>();
         this->deleteVectors<VkImageView, VkDevice>();
         this->deleteVectors<VkImage, VkDevice>();
+        for (uint32_t i = 0; i < this->getVectorSize<VkCommandBuffer *>(); ++i)
+            delete[] this->getObject<VkCommandBuffer *>(i);
         this->deleteVectors<VkCommandBuffer *, VkDevice>();
         this->deleteVector<uint32_t>();
         this->deleteVectors<VkCommandPool, VkDevice>();

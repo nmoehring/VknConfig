@@ -2,7 +2,8 @@
 
 namespace vkn
 {
-    VknCycle::VknCycle(VknConfig *config, VknEngine *engine)
+
+    void VknCycle::loadConfig(VknConfig *config, VknEngine *engine)
     {
         m_config = config;
         m_engine = engine;
@@ -55,7 +56,7 @@ namespace vkn
     void VknCycle::recordCommandBuffer()
     {
         // 3. Record the command buffer
-        VkCommandBuffer *m_currentCommandBuffer = m_commandPool->getCommandBuffer(m_imageIndex);
+        m_currentCommandBuffer = m_commandPool->getCommandBuffer(m_imageIndex);
         vkResetCommandBuffer(*m_currentCommandBuffer, 0); // Optional: VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT allows this
 
         VkCommandBufferBeginInfo beginInfo{};
@@ -139,6 +140,8 @@ namespace vkn
         {
             throw std::runtime_error("Failed to present swapchain image!");
         }
+
+        m_signalSemaphores.clear();
 
         // Move to the next frame
         m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;

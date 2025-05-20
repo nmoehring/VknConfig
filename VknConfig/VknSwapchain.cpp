@@ -6,13 +6,11 @@ namespace vkn
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
-        s_editable = this;
+        m_instanceLock = this;
     }
 
     void VknSwapchain::setImageCount(uint32_t imageCount)
     {
-        this->testEditability();
-
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         if (m_setImageCount)
@@ -23,7 +21,6 @@ namespace vkn
 
     void VknSwapchain::setImageDimensions(uint32_t imageWidth, uint32_t imageHeight)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_dimensions = {imageWidth, imageHeight};
@@ -31,7 +28,6 @@ namespace vkn
 
     void VknSwapchain::setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_surfaceFormat = VkSurfaceFormatKHR{format, colorSpace};
@@ -39,7 +35,6 @@ namespace vkn
 
     void VknSwapchain::setNumImageLayers(uint32_t numImageLayers)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_numImageArrayLayers = numImageLayers;
@@ -47,7 +42,6 @@ namespace vkn
 
     void VknSwapchain::setUsage(VkImageUsageFlags usage)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_usage = usage;
@@ -55,7 +49,6 @@ namespace vkn
 
     void VknSwapchain::setSharingMode(VkSharingMode sharingMode)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_sharingMode = sharingMode;
@@ -63,7 +56,6 @@ namespace vkn
 
     void VknSwapchain::setPreTransform(VkSurfaceTransformFlagBitsKHR preTransform)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_preTransform = preTransform;
@@ -71,7 +63,6 @@ namespace vkn
 
     void VknSwapchain::setCompositeAlpha(VkCompositeAlphaFlagBitsKHR compositeAlpha)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_compositeAlpha = compositeAlpha;
@@ -79,7 +70,6 @@ namespace vkn
 
     void VknSwapchain::setPresentMode(VkPresentModeKHR presentMode)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_presentMode = presentMode;
@@ -87,7 +77,6 @@ namespace vkn
 
     void VknSwapchain::setClipped(bool clipped)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_clipped = clipped;
@@ -95,7 +84,6 @@ namespace vkn
 
     void VknSwapchain::setOldSwapchain(VkSwapchainKHR oldSwapchain)
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_oldSwapchain = oldSwapchain;
@@ -108,7 +96,6 @@ namespace vkn
 
     VkSwapchainCreateInfoKHR *VknSwapchain::fillSwapchainCreateInfo()
     {
-        this->testEditability();
         if (m_filledCreateInfo)
             throw std::runtime_error("Already filled swapchain create info.");
         if (!m_setSurface)
@@ -125,7 +112,6 @@ namespace vkn
 
     void VknSwapchain::createSwapchain()
     {
-        this->testEditability();
         if (!m_setSurface)
             throw std::runtime_error("Surface not set before trying to create swapchain.");
         if (m_createdSwapchain)
@@ -145,7 +131,6 @@ namespace vkn
 
     std::list<VknImageView> *VknSwapchain::createImages()
     {
-        this->testEditability();
         uint32_t imageCount{0};
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                 m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
@@ -163,7 +148,7 @@ namespace vkn
 
     void VknSwapchain::addImageViews()
     {
-        this->testEditability();
+        m_instanceLock(this);
         if (!m_createdSwapchain)
             throw std::runtime_error("Can't create image views before creating the swapchain.");
 
@@ -180,7 +165,6 @@ namespace vkn
 
     void VknSwapchain::createImageViews()
     {
-        this->testEditability();
         if (!m_createdSwapchain)
             throw std::runtime_error("Can't create image views before creating the swapchain.");
         if (m_imageViews.size() != m_imageCount)
@@ -191,7 +175,6 @@ namespace vkn
 
     void VknSwapchain::setSurface(uint32_t surfaceIdx)
     {
-        this->testEditability();
         if (m_setSurface)
             throw std::runtime_error("Surface already set on swapchain.");
 
@@ -212,11 +195,5 @@ namespace vkn
     uint32_t VknSwapchain::getNumImages()
     {
         return m_imageCount;
-    }
-
-    void VknSwapchain::testEditability()
-    {
-        if (s_editable != this)
-            throw std::runtime_error("Members of a VknSwapchain must be added all at once so that they are stored contiguously.");
     }
 }

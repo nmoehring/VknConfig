@@ -125,8 +125,6 @@ namespace vkn
 
         // State
         bool m_createdPipeline{false};
-        static VknPipeline *s_editable;
-
-        void testEditability();
+        VknInstanceLock<VknPipeline> m_instanceLock;
     };
 }

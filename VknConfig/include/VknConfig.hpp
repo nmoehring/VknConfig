@@ -65,9 +65,6 @@ namespace vkn
     class VknConfig
     {
     public:
-        // Config
-        void deviceInfo(uint32_t deviceIdx); // Create a simple program with just this call to get some device info
-
         // Overloads
         VknConfig() = delete;
         VknConfig(VknEngine *engine, VknInfos *infos);
