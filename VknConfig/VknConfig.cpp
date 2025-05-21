@@ -14,7 +14,7 @@ namespace vkn
     }
 
     // Helper function to set up the debug messenger create info
-    VkDebugUtilsMessengerCreateInfoEXT populateDebugMessengerCreateInfo()
+    VkDebugUtilsMessengerCreateInfoEXT &VknConfig::populateDebugMessengerCreateInfo()
     {
         VkDebugUtilsMessengerCreateInfoEXT createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -22,14 +22,16 @@ namespace vkn
         createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = debugCallback;
         createInfo.pUserData = nullptr; // Optional user data
-        return createInfo;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        return m_infos->setDebugMessengerCreateInfo(createInfo);
     }
 
     // Helper functions to get extension function pointers
-    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger)
+    VkResult VknConfig::createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger)
     {
-        auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-        return func ? func(instance, pCreateInfo, pAllocator, pDebugMessenger) : VK_ERROR_EXTENSION_NOT_PRESENT;
+        return ((PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"))(
+            instance, pCreateInfo, pAllocator, pDebugMessenger);
     }
 
     VknConfig::VknConfig(VknEngine *engine, VknInfos *infos)
@@ -45,22 +47,20 @@ namespace vkn
             deviceIdx, m_devices, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    void VknConfig::fillAppInfo(uint32_t apiVersion, std::string appName,
-                                std::string engineName, VkApplicationInfo *pNext,
-                                uint32_t appVersion, uint32_t engineVersion)
+    void VknConfig::fillAppInfo()
     {
         if (m_filledAppInfo)
             throw std::runtime_error("Already filled app info.");
-        m_infos->fillAppName(appName);
-        m_infos->fillEngineName(engineName);
-        m_infos->fillAppInfo(apiVersion, appVersion, engineVersion);
+        m_infos->fillAppName(m_appName);
+        m_infos->fillEngineName(m_engineName);
+        m_infos->fillAppInfo(m_apiVersion, m_appVersion, m_engineVersion);
     }
 
-    void VknConfig::fillInstanceCreateInfo(VkInstanceCreateFlags flags)
+    void VknConfig::fillInstanceCreateInfo()
     {
         if (m_filledInstanceCreateInfo)
             throw std::runtime_error("Instance create info already filled.");
-        m_infos->fillInstanceCreateInfo(flags);
+        m_infos->fillInstanceCreateInfo(m_flags);
         m_filledInstanceCreateInfo = true;
     }
 
@@ -68,36 +68,22 @@ namespace vkn
     {
         if (m_createdInstance)
             throw std::runtime_error("Can't enable extensions after instance is already created.");
-        m_infos->addInstanceExtension(extension.c_str(), extension.size());
-    }
-
-    void VknConfig::addInstanceExtension(VknVector<char> &chars)
-    {
-        if (m_createdInstance)
-            throw std::runtime_error("Can't enable extensions after instance is already created.");
-        m_infos->addInstanceExtension(chars.getData(), chars.getSize());
+        m_infos->addInstanceExtension(extension);
     }
 
     void VknConfig::addLayer(std::string &layer)
     {
         if (m_createdInstance)
             throw std::runtime_error("Can't enable layers after instance is already created.");
-        m_infos->addLayer(layer.c_str(), layer.size());
-    }
-
-    void VknConfig::addLayer(VknVector<char> &chars)
-    {
-        if (m_createdInstance)
-            throw std::runtime_error("Can't enable layers after instance is already created.");
-        m_infos->addLayer(chars.getData(), chars.getSize());
+        m_infos->addLayer(layer);
     }
 
     VknResult VknConfig::createInstance()
     {
         if (m_createdInstance)
             throw std::runtime_error("Instance already created.");
-        if (!m_filledInstanceCreateInfo)
-            throw std::runtime_error("Creating instance without filling instance create info.");
+        this->fillAppInfo();
+        this->fillInstanceCreateInfo();
         m_engine->addVkInstance(m_relIdxs, m_absIdxs);
         VknResult res{
             vkCreateInstance(
@@ -117,7 +103,7 @@ namespace vkn
         if (!m_createdInstance)
             throw std::runtime_error("Instance not created before setting up debug messenger.");
         m_engine->addNewObject<VkDebugUtilsMessengerEXT, VkInstance>(m_absIdxs);
-        VknResult res{CreateDebugUtilsMessengerEXT(
+        VknResult res{createDebugUtilsMessengerEXT(
                           m_engine->getObject<VkInstance>(0), &populateDebugMessengerCreateInfo(),
                           nullptr, &m_engine->getObject<VkDebugUtilsMessengerEXT>(m_absIdxs)),
                       "Create debug messenger"};
@@ -138,9 +124,8 @@ namespace vkn
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
         if (m_GLFWwindow)
-            this->createWindowSurface_GLFW(surfaceIdx);
-        else
-            throw std::runtime_error("No window configured for VknConfig::createSurface()");
+            return this->createWindowSurface_GLFW(surfaceIdx);
+        throw std::runtime_error("No window configured for VknConfig::createSurface()");
     }
 
     VkSurfaceKHR *VknConfig::createWindowSurface_GLFW(uint32_t surfaceIdx)
@@ -148,15 +133,32 @@ namespace vkn
         if (m_GLFWwindow == nullptr)
             throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
 
+        VkSurfaceKHR *surface = &m_engine->addNewObject<VkSurfaceKHR, VkInstance>(m_absIdxs);
+
         VknResult res{"Create window surface."};
         res = glfwCreateWindowSurface(
-            m_engine->getObject<VkInstance>(0), m_GLFWwindow, nullptr,
-            m_engine->getVector<VkSurfaceKHR>().getData(1));
+            m_engine->getObject<VkInstance>(0), m_GLFWwindow, nullptr, surface);
+
+        return surface;
     }
-    /*
-    void VknConfig::addInstanceExtension(std::string extension)
+
+    void VknConfig::setAppName(std::string appName)
     {
-        m_infos->addInstanceExtension(extension);
+        m_appName = appName;
     }
-    */
+
+    void VknConfig::setEngineName(std::string engineName)
+    {
+        m_engineName = engineName;
+    }
+
+    void VknConfig::setApiVersion(unsigned int apiVersion)
+    {
+        m_apiVersion = apiVersion;
+    }
+
+    void VknConfig::destroy()
+    {
+        m_devices.clear();
+    }
 }

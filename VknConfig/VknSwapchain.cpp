@@ -112,8 +112,10 @@ namespace vkn
 
     void VknSwapchain::createSwapchain()
     {
+        if (!m_setImageCount)
+            this->setImageCount(1);
         if (!m_setSurface)
-            throw std::runtime_error("Surface not set before trying to create swapchain.");
+            this->setSurface(0);
         if (m_createdSwapchain)
             throw std::runtime_error("Already created swapchain.");
 
@@ -129,8 +131,13 @@ namespace vkn
         m_createdSwapchain = true;
     }
 
-    std::list<VknImageView> *VknSwapchain::createImages()
+    std::list<VknImageView> *VknSwapchain::getSwapchainImageViews()
     {
+        if (m_createdImageViews)
+            return &m_imageViews;
+        if (!m_createdSwapchain)
+            throw std::runtime_error("Can't get swapchain image views before creating the swapchain.");
+
         uint32_t imageCount{0};
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                 m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
@@ -143,6 +150,7 @@ namespace vkn
                                 &imageCount, m_vkSwapchainImages.getData(m_imageCount));
         this->addImageViews();
         this->createImageViews();
+        m_createdImageViews = true;
         return &m_imageViews;
     }
 
@@ -180,11 +188,6 @@ namespace vkn
 
         m_surfaceIdx = surfaceIdx;
         m_setSurface = true;
-    }
-
-    std::list<VknImageView> *VknSwapchain::getImageViews()
-    {
-        return &m_imageViews;
     }
 
     uint32_t VknSwapchain::getImageViewStartIdx()

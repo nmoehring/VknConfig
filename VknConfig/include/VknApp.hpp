@@ -6,7 +6,7 @@
 namespace vkn
 {
     // Forward declarations for the presets
-    bool deviceInfo(VknConfig *config, VknEngine *engine, VknInfos *infos);
+    bool deviceInfoConfig(VknConfig *config, VknEngine *engine, VknInfos *infos);
     bool noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos);
 
     class VknApp
@@ -32,6 +32,7 @@ namespace vkn
 
         // State
         bool m_configured{false};
+        static uint32_t m_numApps;
     };
 
 } // namespace vkn

@@ -13,6 +13,8 @@ namespace vkn
 
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
     {
+        if (!m_swapchainExtensionEnabled)
+            throw std::runtime_error("Swapchain extension not enabled before adding swapchain.");
         m_instanceLock(this);
         VknSwapchain &swapchain = m_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
             swapchainIdx, m_swapchains, m_relIdxs, m_absIdxs, m_infos);
@@ -41,10 +43,11 @@ namespace vkn
         return getListElement(renderpassIdx, m_renderpasses);
     }
 
-    void VknDevice::addExtensions(const char *ext[], uint32_t size)
+    void VknDevice::addExtension(std::string extension)
     {
-        m_extensions = ext;
-        m_extensionsSize = size;
+        if (extension == VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+            m_swapchainExtensionEnabled = true;
+        m_infos->addDeviceExtension(extension, m_relIdxs);
     }
 
     uint32_t VknDevice::findGraphicsQueue()
@@ -115,29 +118,29 @@ namespace vkn
     VkSemaphore &VknDevice::getImageAvailableSemaphore(uint32_t frameInFlight)
     {
         uint32_t startIdx = m_absIdxs.get<VkSemaphore>();
-        m_engine->getObject<VkSemaphore>(m_absIdxs.get<VkSemaphore>() - (frameInFlight * 2u));
+        return m_engine->getObject<VkSemaphore>(m_absIdxs.get<VkSemaphore>() - (frameInFlight * 2u));
     }
 
     VkSemaphore &VknDevice::getRenderFinishedSemaphore(uint32_t frameInFlight)
     {
         uint32_t startIdx = m_absIdxs.get<VkSemaphore>() - 1u;
-        m_engine->getObject<VkSemaphore>(m_absIdxs.get<VkSemaphore>() - (frameInFlight * 2u));
+        return m_engine->getObject<VkSemaphore>(m_absIdxs.get<VkSemaphore>() - (frameInFlight * 2u));
     }
 
     VkFence &VknDevice::getFence(uint32_t frameInFlight)
     {
-        m_engine->getObject<VkFence>(m_absIdxs.get<VkFence>() - frameInFlight);
+        return m_engine->getObject<VkFence>(m_absIdxs.get<VkFence>() - frameInFlight);
     }
 
     VknResult VknDevice::createDevice()
     {
-        if (!getListElement(0, m_physicalDevices)->areQueuesSelected())
-            throw std::runtime_error("Queues not selected before trying to create device.");
+        VknPhysicalDevice *physicalDevice = getListElement(0, m_physicalDevices);
         if (m_createdVkDevice)
             throw std::runtime_error("Device already created.");
-        m_infos->fillDeviceExtensionNames(m_relIdxs.get<VkDevice>(), m_extensions, m_extensionsSize);
+        if (!physicalDevice->areQueuePrioritiesFilled())
+            physicalDevice->fillDeviceQueuePrioritiesDefault(); // Subtle initiation of chain-reaction default configurations
         m_infos->fillDeviceFeatures(features);
-        getListElement(0, m_physicalDevices)->fillQueueCreateInfos();
+        physicalDevice->fillQueueCreateInfos();
         m_infos->fillDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{
             vkCreateDevice(
@@ -147,13 +150,19 @@ namespace vkn
                 &m_engine->getObject<VkDevice>(m_absIdxs)),
             "Create device"};
 
+        m_createdVkDevice = true;
+        return res;
+    }
+
+    VkQueue *VknDevice::getGraphicsQueue(uint32_t queueIdx)
+    {
         // Get queue handles (assuming we selected at least one graphics queue)
         // In a real app, you'd store these handles based on queue family index and type.
         // For this demo, let's just get the first graphics queue.
         uint32_t graphicsQueueFamilyIndex = -1;
-        for (int i = 0; i < getPhysicalDevice()->getNumQueueFamilies(); ++i)
+        for (int i = 0; i < this->getPhysicalDevice()->getNumQueueFamilies(); ++i)
         {
-            if (getPhysicalDevice()->getQueue(i).supportsGraphics())
+            if (this->getPhysicalDevice()->getQueue(i).supportsGraphics())
             {
                 graphicsQueueFamilyIndex = i;
                 break;
@@ -162,10 +171,8 @@ namespace vkn
         if (graphicsQueueFamilyIndex == -1)
             throw std::runtime_error("Failed to find a graphics queue family after device creation.");
 
-        vkGetDeviceQueue(*getVkDevice(), graphicsQueueFamilyIndex, 0, &m_graphicsQueue); // Store the graphics queue handle
-
-        m_createdVkDevice = true;
-        return res;
+        vkGetDeviceQueue(*getVkDevice(), graphicsQueueFamilyIndex, queueIdx, &m_lastUsedGraphicsQueue); // Store the graphics queue handle
+        return &m_lastUsedGraphicsQueue;
     }
 
     VknRenderpass *VknDevice::addRenderpass(uint32_t renderpassIdx)
@@ -175,14 +182,10 @@ namespace vkn
             renderpassIdx, m_renderpasses, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    // Need a way to get the graphics queue handle
-    VkQueue VknDevice::getGraphicsQueue() const
+    VknCommandPool *VknDevice::getCommandPool(uint32_t commandPoolIdx)
     {
-        if (!m_createdVkDevice)
-            throw std::runtime_error("Logical device not created before getting graphics queue.");
-        // Ensure m_graphicsQueue was populated in createDevice
-        if (m_graphicsQueue == VK_NULL_HANDLE)
-            throw std::runtime_error("Graphics queue handle not stored.");
-        return m_graphicsQueue;
+        // getListElement is a template function, ensure it's accessible here
+        // (it's in VknData.hpp, which should be included by VknDevice.hpp or .cpp)
+        return getListElement(commandPoolIdx, m_commandPools);
     }
 } // namespace vkn

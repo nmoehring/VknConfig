@@ -11,17 +11,28 @@ namespace vkn
     {
     }
 
+    VknPhysicalDevice::~VknPhysicalDevice()
+    {
+        s_enumeratedPhysicalDevices = false;
+        s_properties.clear();
+    }
+
     void VknPhysicalDevice::fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities)
     {
-        if (!m_requestedQueues)
-            throw std::runtime_error("Queue properties not requested before filling queue priorities.");
+        if (m_filledQueuePriorities)
+            throw std::runtime_error("Already filled queue priorities.");
+        if (!m_selectedQueues)
+            this->selectQueues(false);
         m_infos->fillDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
+        m_filledQueuePriorities = true;
     }
 
     void VknPhysicalDevice::fillDeviceQueuePrioritiesDefault()
     {
-        if (!m_requestedQueues)
-            throw std::runtime_error("Queue properties not requested before filling queue priorities.");
+        if (m_filledQueuePriorities)
+            throw std::runtime_error("Already filled queue priorities.");
+        if (!m_selectedQueues)
+            this->selectQueues(false);
         for (int i = 0; i < m_queues.size(); ++i)
         {
             VknVector<float> newVec{};
@@ -29,14 +40,13 @@ namespace vkn
             m_infos->fillDeviceQueuePriorities(
                 m_relIdxs, i, newVec);
         }
+        m_filledQueuePriorities = true;
     }
 
     void VknPhysicalDevice::requestQueueFamilyProperties()
     {
         if (m_requestedQueues)
             throw std::runtime_error("Queue properties already requested.");
-        if (!m_selectedPhysicalDevice)
-            throw std::runtime_error("Physical device not selected before requesting queue properties.");
 
         size_t oldVectorSize{m_engine->getVectorSize<VkQueueFamilyProperties>()};
         uint32_t propertyCount{0};
@@ -77,8 +87,8 @@ namespace vkn
     {
         if (m_selectedQueues)
             throw std::runtime_error("Queues already selected.");
-        if (!m_requestedQueues)
-            throw std::runtime_error("Queue families not requested before trying to select queues.");
+        if (!m_selectedPhysicalDevice)
+            this->selectPhysicalDevice();
 
         for (int i = 0; i < m_queues.size(); ++i)
         {
@@ -90,46 +100,45 @@ namespace vkn
         m_selectedQueues = true;
     }
 
-    VknResult VknPhysicalDevice::enumeratePhysicalDevices()
+    void VknPhysicalDevice::enumeratePhysicalDevices()
     {
-        if (s_enumeratedPhysicalDevices)
-            throw std::runtime_error("Already enumerated physical devices.");
-        uint32_t deviceCount{};
-        VknResult res1{vkEnumeratePhysicalDevices(
-                           m_engine->getObject<VkInstance>(0u), &deviceCount, nullptr),
-                       "Enumerate physical devices."};
+        if (!s_enumeratedPhysicalDevices)
+        {
+            uint32_t deviceCount{};
+            VknResult res1{vkEnumeratePhysicalDevices(
+                               m_engine->getObject<VkInstance>(0u), &deviceCount, nullptr),
+                           "Enumerate physical devices."};
 
-        // What I'm doing : get the vector of physdevices, query the properties at the end.
-        if (deviceCount == 0u)
-            throw std::runtime_error("No GPU's supporting Vulkan found.");
-        else if (deviceCount > 1u)
-            std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
-        VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
-        physDevices->grow(deviceCount);
-        VknResult res2{vkEnumeratePhysicalDevices(
-                           m_engine->getObject<VkInstance>(0u), &deviceCount,
-                           physDevices->getData()),
-                       "Enum physical devices and store."};
-
-        s_properties.clear();
-        for (auto &vkDevice : *physDevices)
-            vkGetPhysicalDeviceProperties(vkDevice, s_properties.getData(1));
-        s_enumeratedPhysicalDevices = true;
-        return res2;
+            if (deviceCount == 0u)
+                throw std::runtime_error("No GPU's supporting Vulkan found.");
+            else if (deviceCount > 1u)
+                std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
+            VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
+            VknResult res2{vkEnumeratePhysicalDevices(
+                               m_engine->getObject<VkInstance>(0u), &deviceCount,
+                               physDevices->getData()),
+                           "Enum physical devices and store."};
+            for (auto &vkDevice : *physDevices)
+                vkGetPhysicalDeviceProperties(vkDevice, s_properties.getData(1));
+            s_enumeratedPhysicalDevices = true;
+        } // if (!s_enumeratedPhysicalDevices)
     }
 
-    VknResult VknPhysicalDevice::selectPhysicalDevice()
+    VkPhysicalDevice *VknPhysicalDevice::selectPhysicalDevice()
     {
         if (m_selectedPhysicalDevice)
             throw std::runtime_error("Already selected a physical device.");
+
         VknResult res("Enumerate physical devices.");
-        if (!s_enumeratedPhysicalDevices)
-            res = this->enumeratePhysicalDevices();
+        this->enumeratePhysicalDevices();
 
         m_relIdxs.add<VkPhysicalDevice>(0);
+        m_absIdxs.add<VkPhysicalDevice>(0);
         m_selectedPhysicalDevice = true;
 
-        return res;
+        this->requestQueueFamilyProperties();
+
+        return this->getVkPhysicalDevice();
     }
 
     bool VknPhysicalDevice::getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx)
@@ -174,4 +183,15 @@ namespace vkn
         return s_properties;
     }
 
+    VknQueueFamily &VknPhysicalDevice::getQueue(int idx)
+    {
+        if (!m_selectedQueues)
+            throw std::runtime_error("Queues not selected before getting queue.");
+        return *getListElement<VknQueueFamily>(idx, m_queues);
+    }
+
+    bool VknPhysicalDevice::areQueuePrioritiesFilled()
+    {
+        return m_filledQueuePriorities;
+    }
 }

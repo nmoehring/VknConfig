@@ -61,11 +61,11 @@ namespace vkn
         static inline T *target = nullptr;
 
     public:
-        T &operator=(T *newTarget) { target = newTarget; }
+        void operator=(T *newTarget) { target = newTarget; }
         void operator()(T *possibleTarget)
         {
             if (possibleTarget != target)
-                throw std::runtimeError("Wrong instance locked! Can only edit the instance locked by VknInstanceLock.");
+                throw std::runtime_error("Wrong instance locked! Can only edit the instance locked by VknInstanceLock.");
         }
     };
 
@@ -182,7 +182,8 @@ namespace vkn
         template <typename ObjectType, typename ParentType>
         uint32_t push_back(ParentType *parent)
         {
-            return this->push_back<ObjectType, ParentType>(ObjectType{VK_NULL_HANDLE}, parent);
+            ObjectType val{};
+            return this->push_back<ObjectType, ParentType>(val, parent);
         }
 
         template <typename ObjectType>
@@ -275,6 +276,7 @@ namespace vkn
 
         VkCommandBuffer *addVkCommandBuffers(VknIdxs &absIdxs, uint32_t numCommandBuffers)
         {
+            absIdxs.add<VkCommandBuffer *>(this->getVectorSize<VkCommandBuffer *>());
             VknVector<VkCommandBuffer *> &cmdBufferVec{this->getVector<VkCommandBuffer *>()};
             VknVector<uint32_t> &numBuffersVec{this->getVector<uint32_t>()};
             uint32_t poolIdx{absIdxs.get<VkCommandPool>()};
@@ -290,6 +292,10 @@ namespace vkn
         std::unordered_map<std::string, void *> m_parentVectors{};
         bool m_poweredOn{true}; // State to track if shutdown has been called
         /*VknVector<VkPipelineCache> pipelineCaches{};*/
+
+        // Helper functions to get extension function pointers
+        void destroyDebugUtilsMessengerEXT(
+            VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger, const VkAllocationCallbacks *pAllocator);
 
         template <typename ObjectType, typename ParentType>
         void deleteVectors()

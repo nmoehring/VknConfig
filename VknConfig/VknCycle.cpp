@@ -14,6 +14,17 @@ namespace vkn
         m_commandPool = m_device->getCommandPool(0);
         for (uint32_t i = 0; i < m_swapchain->getNumImages(); ++i)
             m_imagesInFlight.push_back(nullptr);
+
+        // Determine if the pipeline expects vertex inputs
+        VknVertexInputState *vertexInputState = m_pipeline->getVertexInputState();
+        if (vertexInputState && (vertexInputState->getNumBindings() > 0 || vertexInputState->getNumAttributes() > 0))
+        {
+            m_pipelineExpectsVertexInputs = true;
+        }
+        else
+        {
+            m_pipelineExpectsVertexInputs = false;
+        }
         m_devRelIdxs = m_device->getRelIdxs();
     }
 
@@ -82,7 +93,16 @@ namespace vkn
 
         vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline->getVkPipeline());
 
-        // Add drawing commands here (e.g., vkCmdDraw) - for a minimal demo, just clearing is enough to see something
+        if (m_pipelineExpectsVertexInputs)
+        {
+            // TODO: This is where you would bind your vertex buffers
+            // vkCmdBindVertexBuffers(*m_currentCommandBuffer, ...);
+            // And then draw based on the count from those buffers or an index buffer
+            // vkCmdDraw(*m_currentCommandBuffer, vertexCountFromBuffer, 1, 0, 0);
+            throw std::runtime_error("Pipeline expects vertex inputs, but VknCycle input binding is not yet implemented.");
+        }
+        else // No vertex inputs expected, draw hardcoded vertices (e.g., a triangle)
+            vkCmdDraw(*m_currentCommandBuffer, m_config->getNumHardCodedVertices(), 1, 0, 0);
 
         vkCmdEndRenderPass(*m_currentCommandBuffer);
 
@@ -110,7 +130,7 @@ namespace vkn
 
         vkResetFences(*m_device->getVkDevice(), 1, &m_device->getFence(m_currentFrame)); // Reset the fence before submitting
         VknResult resSubmit{
-            vkQueueSubmit(m_device->getGraphicsQueue(), 1, &submitInfo, m_device->getFence(m_currentFrame)),
+            vkQueueSubmit(*m_device->getGraphicsQueue(), 1, &submitInfo, m_device->getFence(m_currentFrame)),
             "Submit command buffer"};
     }
 
@@ -129,7 +149,7 @@ namespace vkn
         presentInfo.pImageIndices = &m_imageIndex;
         presentInfo.pResults = nullptr; // Optional: to check results per swapchain
 
-        VkResult presentResult = vkQueuePresentKHR(m_device->getGraphicsQueue(), &presentInfo);
+        VkResult presentResult = vkQueuePresentKHR(*m_device->getGraphicsQueue(), &presentInfo);
 
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
         {
@@ -146,4 +166,5 @@ namespace vkn
         // Move to the next frame
         m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
+
 } // namespace vkn

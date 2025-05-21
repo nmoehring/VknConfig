@@ -2,13 +2,21 @@
 
 namespace vkn
 {
+    uint32_t VknApp::m_numApps{0};
+
     VknApp::VknApp() : m_config{&m_engine, &m_infos}, m_cycle{}
     {
+        if (m_numApps > 0)
+            throw std::runtime_error("Previous VknApp() was not exited via VknApp::exit().");
+        else
+            ++m_numApps;
     }
 
     void VknApp::exit()
     {
         m_engine.shutdown();
+        m_config.destroy();
+        --m_numApps;
     }
 
     void VknApp::configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> preset)

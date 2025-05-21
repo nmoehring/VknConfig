@@ -78,30 +78,35 @@ namespace vkn
         void addWindow_GLFW(GLFWwindow *window);
 
         // Config
-        void fillAppInfo(uint32_t apiVersion, std::string appName,
-                         std::string engineName,
-                         VkApplicationInfo *pNext = nullptr,
-                         uint32_t applicationVersion = 0,
-                         uint32_t engineVersion = 0);
-        void fillInstanceCreateInfo(VkInstanceCreateFlags flags = 0);
-        void enableExtensions(VknVector<std::string> extensions);
         void setupDebugMessenger();
         void addInstanceExtension(std::string &extension);
-        void addInstanceExtension(VknVector<char> &chars);
         void addLayer(std::string &layer);
-        void addLayer(VknVector<char> &chars);
         VkSurfaceKHR *createSurface(uint32_t surfaceIdx);
         VkSurfaceKHR *createWindowSurface_GLFW(uint32_t surfaceIdx);
         void setValidationEnabled() { m_validationLayerAdded = true; }
+        VkDebugUtilsMessengerCreateInfoEXT &populateDebugMessengerCreateInfo();
+        void setInstanceCreateFlags(VkInstanceCreateFlags flags) { m_flags = flags; }
+        void setAppName(std::string appName);
+        void setEngineName(std::string engineName);
+        void setApiVersion(unsigned int apiVersion);
+        void setNumHardCodedVertices(uint32_t numVertices) { m_numHardCodedVertices = numVertices; }
 
         // Create
         VknResult createInstance();
+        VkResult createDebugUtilsMessengerEXT(
+            VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+            const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
+        void destroy();
 
         // Getters
-        VkInstance *getInstance() { return &m_engine->getObject<VkInstance>(0); }
+        VkInstance *getInstance()
+        {
+            return &m_engine->getObject<VkInstance>(0);
+        }
         bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
         std::list<VknDevice> &getDevices() { return m_devices; }
+        uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
@@ -115,10 +120,16 @@ namespace vkn
         // Params
         VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
         GLFWwindow *m_GLFWwindow{nullptr};
+        VkInstanceCreateFlags m_flags{0};
+        std::string m_appName{"My App"};
+        std::string m_engineName{"void* Engine"};
+        uint32_t m_apiVersion{VK_API_VERSION_1_1};
+        uint32_t m_appVersion{0};
+        uint32_t m_engineVersion{0};
+        uint32_t m_numHardCodedVertices{0};
 
         // Members
         std::list<VknDevice> m_devices;
-        std::list<VknSwapchain> m_swapchains;
 
         // State
         bool m_selectedQueues{false};
@@ -126,6 +137,9 @@ namespace vkn
         bool m_createdInstance{false};
         bool m_filledAppInfo{false};
         bool m_validationLayerAdded{false};
+
+        void fillAppInfo();
+        void fillInstanceCreateInfo();
     };
 
     // Helper function to set up the debug messenger create info
@@ -139,6 +153,5 @@ namespace vkn
         void *pUserData);
 
     // Helper functions to get extension function pointers
-    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
-
+    // VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo, const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
 }

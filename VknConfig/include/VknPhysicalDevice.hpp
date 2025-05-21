@@ -54,25 +54,28 @@
 
 namespace vkn
 {
+    class VknDevice;
+
     class VknPhysicalDevice
     {
     public:
+        friend VknDevice;
+
         VknPhysicalDevice() = default;
         VknPhysicalDevice(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        ~VknPhysicalDevice();
 
         VkPhysicalDevice *getVkPhysicalDevice();
         VkPhysicalDeviceProperties &getProperties();
         VknVector<VkPhysicalDeviceProperties> &getAllProperties();
         bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);
-        VknResult enumeratePhysicalDevices();
-        VknResult selectPhysicalDevice();
+        VkPhysicalDevice *selectPhysicalDevice();
         VkPhysicalDeviceLimits *getLimits();
-        void requestQueueFamilyProperties();
         void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities);
         void fillDeviceQueuePrioritiesDefault();
-        void fillQueueCreateInfos();
         bool areQueuesSelected() { return m_selectedQueues; }
+        bool areQueuePrioritiesFilled();
         void selectQueues(bool chooseAllAvailableQueues);
         int getNumQueueFamilies() { return m_queues.size(); }
         std::list<VknQueueFamily> &getQueues() { return m_queues; }
@@ -96,5 +99,10 @@ namespace vkn
         bool m_requestedQueues{false};
         bool m_selectedQueues{false};
         bool m_filledQueueCreateInfos{false};
+        bool m_filledQueuePriorities{false};
+
+        void enumeratePhysicalDevices();
+        void requestQueueFamilyProperties();
+        void fillQueueCreateInfos();
     };
 }

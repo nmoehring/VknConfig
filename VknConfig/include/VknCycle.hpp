@@ -14,6 +14,9 @@ namespace vkn
         void submitCommandBuffer();
         void presentImage();
 
+        // Setup
+        void addShaderHardcodedVertexCount(uint32_t numShaderHardCodedVertices);
+
     private:
         // Engine
         VknConfig *m_config{nullptr};
@@ -35,6 +38,8 @@ namespace vkn
         uint32_t m_imageIndex;
         std::vector<VkSemaphore> m_signalSemaphores;
         std::vector<VkFence *> m_imagesInFlight{nullptr}; // Fence for each swapchain image
+        bool m_pipelineExpectsVertexInputs{false};
         VknIdxs m_devRelIdxs;
+        uint32_t verticesDrawnLastFrame{0};
     };
 }

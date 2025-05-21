@@ -74,11 +74,10 @@ namespace vkn
 
         // Create
         void createSwapchain();
-        std::list<VknImageView> *createImages();
 
         // Getters
         VkSwapchainKHR *getVkSwapchain();
-        std::list<VknImageView> *getImageViews();
+        std::list<VknImageView> *getSwapchainImageViews();
         uint32_t getImageViewStartIdx();
         uint32_t getNumImages();
         VkExtent2D getActualExtent() { return m_dimensions; }
@@ -115,8 +114,10 @@ namespace vkn
         bool m_setImageCount{false};
         uint32_t m_imageViewStartIdx{0};
         VknInstanceLock<VknSwapchain> m_instanceLock;
+        bool m_createdImageViews{false};
 
-        VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo();
+        VkSwapchainCreateInfoKHR *
+        fillSwapchainCreateInfo();
         void addImageViews();
         void createImageViews();
     };

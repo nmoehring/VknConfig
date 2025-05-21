@@ -73,18 +73,18 @@ namespace vkn
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);
         uint32_t findGraphicsQueue();
-        void addExtensions(const char *ext[], uint32_t size);
+        void addExtension(std::string extension);
 
         // Create
         VknResult createDevice();
 
         // Getters
+        VkQueue *getGraphicsQueue(uint32_t index = 0);
         VknPhysicalDevice *getPhysicalDevice();
         VknSwapchain *getSwapchain(uint32_t swapchainIdx);
         VknRenderpass *getRenderpass(uint32_t renderpassIdx);
         VknCommandPool *getCommandPool(uint32_t commandPoolIdx);
         VkDevice *getVkDevice();
-        VkQueue getGraphicsQueue() const; // Add getter for graphics queue
         VkSemaphore &getImageAvailableSemaphores(uint32_t frameInFlight);
         VkSemaphore &getRenderFinishedSemaphores(uint32_t frameInFlight);
         VkFence &getInFlightFences(uint32_t frameInFlight);
@@ -105,7 +105,7 @@ namespace vkn
         std::list<VknSwapchain> m_swapchains{};           // Doesn't need to change after creation
         std::list<VknPhysicalDevice> m_physicalDevices{}; // List, because elements don't need to be together, refs could be invalidated
         std::list<VknCommandPool> m_commandPools{};
-        std::list<VknPhysicalDevice> m_physicalDevices{};
+        VkQueue m_lastUsedGraphicsQueue{}; // Store graphics queue handle
 
         // Params
         const char *const *m_extensions{nullptr};
@@ -116,8 +116,8 @@ namespace vkn
         bool m_commandPoolCreated{false};
         bool m_commandBuffersAllocated{false};
         bool m_syncObjectsCreated{false};
-        VkQueue m_graphicsQueue = VK_NULL_HANDLE; // Store graphics queue handle
         bool m_filledQueueCreateInfos{false};
         VknInstanceLock<VknDevice> m_instanceLock;
+        bool m_swapchainExtensionEnabled{false};
     };
 }

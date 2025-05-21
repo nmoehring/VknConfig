@@ -33,16 +33,21 @@ int main()
     GLFWwindow *window = initWindow();
     if (!glfwVulkanSupported())
         throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
-    vkn::VknApp app{};
-    app.configureWithPreset(vkn::deviceInfo);
+    vkn::VknApp info_app{};
+    info_app.configureWithPreset(vkn::deviceInfoConfig);
+    info_app.exit();
+
+    vkn::VknApp noInputTest{};
+    noInputTest.addWindow_GLFW(window);
+    noInputTest.configureWithPreset(vkn::noInputConfig);
 
     while (!glfwWindowShouldClose(window))
     {
         // Poll for and process events
         glfwPollEvents();
-        app.cycleEngine();
+        noInputTest.cycleEngine();
     }
-    app.exit();
+    noInputTest.exit();
     glfwDestroyWindow(window);
     glfwTerminate();
 }

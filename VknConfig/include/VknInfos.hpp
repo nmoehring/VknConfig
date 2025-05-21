@@ -316,24 +316,30 @@ namespace vkn
                                                        VkFormat &format, VkComponentMapping &components,
                                                        VkImageSubresourceRange &subresourceRange, VkImageViewCreateFlags &flags);
 
-        void addInstanceExtension(const char *name, uint32_t nameLength);
-        void addLayer(const char *name, uint32_t nameLength);
+        void addInstanceExtension(std::string name);
+        void addLayer(std::string name);
+        void addDeviceExtension(std::string name, VknIdxs relIdxs);
+        void storeName(std::string &name, std::list<std::string> &store, VknVector<const char *> &pointers);
+
+        VkDebugUtilsMessengerCreateInfoEXT &setDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT createInfo)
+        {
+            m_debugMessengerCreateInfo = createInfo;
+            return m_debugMessengerCreateInfo;
+        }
 
     private:
         std::string m_appName{};
         std::string m_engineName{};
-        VknVector<char> m_instanceExtensions_Store{};
-        VknVector<char *> m_instanceExtensions_NamePointers{};
-        VknVector<char> m_layers_Store{};
-        VknVector<char *> m_layers_NamePointers{};
-        // const char *const *m_enabledInstanceExtensionNames;
-        // const char *const *m_enabledLayerNames;
-        // uint32_t m_enabledLayerNamesSize{0};
+        std::list<std::string> m_instanceExtensions_Store{};
+        VknVector<const char *> m_instanceExtensions_NamePointers{};
+        std::list<std::string> m_deviceExtensions_Store{1};
+        VknSpace<const char *> m_deviceExtensions_NamePointers{};
+        std::list<std::string> m_layers_Store{};
+        VknVector<const char *> m_layers_NamePointers{};
         VknVector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
-        VknVector<const char *const *> m_enabledDeviceExtensionNames{}; // Device>char_arr
-        VknVector<uint32_t> m_enabledDeviceExtensionNamesSize{};
         VknSpace<float> m_queuePriorities{2u};    // Device>QueueFamily>Queue#QueuePriority
         VknVector<uint32_t> m_numQueueFamilies{}; // Device#NumQueueFamilies
+        VkDebugUtilsMessengerCreateInfoEXT m_debugMessengerCreateInfo{};
 
         // Info's
         VkApplicationInfo m_appInfo{};
@@ -382,6 +388,7 @@ namespace vkn
         bool m_filledEngineName{false};
         bool m_filledLayerNames{false};
         bool m_filledInstanceExtensionNames{false};
+        bool m_filledDeviceExtensionNames{false};
 
         bool m_filledVertexInputStateInfo{false};
         bool m_filledInputAssemblyStateInfo{false};

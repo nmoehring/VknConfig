@@ -2,6 +2,13 @@
 
 namespace vkn
 {
+    void VknEngine::destroyDebugUtilsMessengerEXT(
+        VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger, const VkAllocationCallbacks *pAllocator)
+    {
+        ((PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"))(
+            instance, debugMessenger, pAllocator);
+    }
+
     VknEngine::VknEngine() {}
 
     VknEngine::~VknEngine()
@@ -65,7 +72,7 @@ namespace vkn
                 *this->getParentPointer<VkImage, VkDevice>(i),
                 this->getObject<VkImage>(i),
                 VK_NULL_HANDLE);
-        for (size_t i = 0; i < this->getVectorSize<VkCommandBuffer>(); ++i)
+        for (size_t i = 0; i < this->getVectorSize<VkCommandBuffer *>(); ++i)
             vkFreeCommandBuffers(
                 *this->getParentPointer<VkCommandPool, VkDevice>(i),
                 this->getObject<VkCommandPool>(i),
@@ -97,8 +104,8 @@ namespace vkn
         for (auto &surface : this->getVector<VkSurfaceKHR>())
             vkDestroySurfaceKHR(this->getObject<VkInstance>(0), surface, VK_NULL_HANDLE);
         for (auto &debugMsgr : this->getVector<VkDebugUtilsMessengerEXT>())
-            vkDestroyDebugUtilsMessengerEXT(this->getObject<VkInstance>(0),
-                                            this->getObject<VkDebugUtilsMessengerEXT>(0), nullptr);
+            destroyDebugUtilsMessengerEXT(this->getObject<VkInstance>(0),
+                                          this->getObject<VkDebugUtilsMessengerEXT>(0), nullptr);
         for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
 

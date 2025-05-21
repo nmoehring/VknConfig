@@ -63,6 +63,10 @@ namespace vkn
                                             VkFormat format = VK_FORMAT_R32G32_SFLOAT, uint32_t offset = 0);
         void fillVertexInputStateCreateInfo();
 
+        // Getters
+        uint32_t getNumBindings() const { return m_numBindings; }
+        uint32_t getNumAttributes() const { return m_numAttributes; }
+
     private:
         // Engine
         VknEngine *m_engine;

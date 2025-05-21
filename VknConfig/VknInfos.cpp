@@ -453,56 +453,28 @@ namespace vkn
         m_filledEngineName = true;
     }
 
-    void VknInfos::addInstanceExtension(const char *name, uint32_t nameLength)
+    void VknInfos::addInstanceExtension(std::string name)
     {
-        uint32_t firstStoreIdx = m_instanceExtensions_Store.getSize();
-        bool terminatedNull{false};
-        bool nulledEarly{false};
-        for (uint32_t i = 0; i < nameLength; ++i)
-        {
-            if (name[i] == '\0' && i < nameLength - 1u)
-            {
-                nulledEarly = true;
-                continue;
-            }
-            else if (name[i] == '\0' && i == nameLength - 1u)
-                terminatedNull = true;
-            m_instanceExtensions_Store.append(name[i]);
-        }
-        if (nulledEarly && !terminatedNull)
-            throw std::runtime_error("Instance extension string has invalid termination. Early null not carried through to end of string.");
-        else if (!nulledEarly && !terminatedNull)
-            m_instanceExtensions_Store.append('\0');
+        this->storeName(name, m_instanceExtensions_Store, m_instanceExtensions_NamePointers);
         m_filledInstanceExtensionNames = true;
     }
 
-    void VknInfos::addInstanceExtension(const char *name, uint32_t nameLength)
+    void VknInfos::storeName(std::string &name, std::list<std::string> &store, VknVector<const char *> &pointers)
     {
-        uint32_t firstStoreIdx = m_layers_Store.getSize();
-        bool terminatedNull{false};
-        bool nulledEarly{false};
-        for (uint32_t i = 0; i < nameLength; ++i)
-        {
-            if (name[i] == '\0' && i < nameLength - 1u)
-            {
-                nulledEarly = true;
-                continue;
-            }
-            else if (name[i] == '\0' && i == nameLength - 1u)
-                terminatedNull = true;
-            m_layers_Store.append(name[i]);
-        }
-        if (nulledEarly && !terminatedNull)
-            throw std::runtime_error("Instance extension string has invalid termination. Early null not carried through to end of string.");
-        else if (!nulledEarly && !terminatedNull)
-            m_layers_Store.append('\0');
+        store.push_back(name);
+        pointers.append(store.back().c_str());
+    }
+
+    void VknInfos::addLayer(std::string name)
+    {
+        this->storeName(name, m_layers_Store, m_layers_NamePointers);
         m_filledLayerNames = true;
     }
 
-    void VknInfos::fillDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size)
+    void VknInfos::addDeviceExtension(std::string name, VknIdxs relIdxs)
     {
-        m_enabledDeviceExtensionNames.insert(deviceIdx, names);
-        m_enabledDeviceExtensionNamesSize.insert(deviceIdx, size);
+        this->storeName(name, m_deviceExtensions_Store, m_deviceExtensions_NamePointers[relIdxs.get<VkDevice>()].getDataVector());
+        m_filledDeviceExtensionNames = true;
     }
 
     void VknInfos::fillDeviceFeatures(VknFeatures features)
@@ -529,31 +501,8 @@ namespace vkn
 
     void VknInfos::fillInstanceCreateInfo(VkInstanceCreateFlags flags)
     {
-        if (!m_filledLayerNames)
-            throw std::runtime_error("Layer names not filled before filling instance create info.");
-        if (!m_filledInstanceExtensionNames)
-            throw std::runtime_error("Instance extension names not filled before filling instance create info.");
         if (!m_filledAppInfo)
             throw std::runtime_error("AppInfo not filled before InstanceCreateInfo.");
-
-        bool foundNull{true};
-        for (auto &letter : m_instanceExtensions_Store)
-            if (foundNull)
-            {
-                m_instanceExtensions_NamePointers.append(&letter);
-                foundNull = false;
-            }
-            else if (letter == '\0')
-                foundNull = true;
-        foundNull = true;
-        for (auto &letter : m_layers_Store)
-            if (foundNull)
-            {
-                m_layers_NamePointers.append(&letter);
-                foundNull = false;
-            }
-            else if (letter == '\0')
-                foundNull = true;
 
         m_instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         m_instanceCreateInfo.pNext = nullptr;
@@ -600,11 +549,8 @@ namespace vkn
         info.enabledLayerCount = 0; // ignored, value doesn't matter
         // ppEnabledLayerNames is deprecated and should not be used
         info.ppEnabledLayerNames = VK_NULL_HANDLE; // ignored, value doesn't matter
-        info.enabledExtensionCount = m_enabledDeviceExtensionNamesSize(deviceIdx);
-        if (m_enabledDeviceExtensionNamesSize(deviceIdx) == 0)
-            info.ppEnabledExtensionNames = VK_NULL_HANDLE;
-        else
-            info.ppEnabledExtensionNames = m_enabledDeviceExtensionNames(deviceIdx);
+        info.enabledExtensionCount = m_deviceExtensions_NamePointers[deviceIdx].getDataSize();
+        info.ppEnabledExtensionNames = m_deviceExtensions_NamePointers[deviceIdx].getData();
         info.pEnabledFeatures = &m_enabledFeatures(deviceIdx);
 
         m_filledDeviceCreateInfo = true;
