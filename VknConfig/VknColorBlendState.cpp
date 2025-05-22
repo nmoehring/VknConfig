@@ -46,7 +46,7 @@ namespace vkn
         m_attachmentBlendStates.append(defaultState);
     }
 
-    void VknColorBlendState::fillColorBlendStateCreateInfo()
+    void VknColorBlendState::_fillColorBlendStateCreateInfo()
     {
         if (m_filledCreateInfo)
             throw std::runtime_error("Color blend state create info already filled.");

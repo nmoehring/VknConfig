@@ -18,13 +18,9 @@ namespace vkn
         // Determine if the pipeline expects vertex inputs
         VknVertexInputState *vertexInputState = m_pipeline->getVertexInputState();
         if (vertexInputState && (vertexInputState->getNumBindings() > 0 || vertexInputState->getNumAttributes() > 0))
-        {
             m_pipelineExpectsVertexInputs = true;
-        }
         else
-        {
             m_pipelineExpectsVertexInputs = false;
-        }
         m_devRelIdxs = m_device->getRelIdxs();
     }
 
@@ -46,20 +42,16 @@ namespace vkn
 
         if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
         {
-            // Handle swapchain recreation (more complex, skip for this minimal demo)
-            std::cerr << "Swapchain out of date, recreation needed (not implemented in demo)." << std::endl;
+            this->recoverFromSwapchainError();
             return; // Skip rendering this frame
         }
         else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
-        {
             throw std::runtime_error("Failed to acquire swapchain image!");
-        }
 
         // Check if a previous frame is using this image
         if (m_imagesInFlight[m_imageIndex] != nullptr)
-        {
             vkWaitForFences(*m_device->getVkDevice(), 1, m_imagesInFlight[m_imageIndex], VK_TRUE, uint64_t(0) - 1u);
-        }
+
         // Mark the image as being in use by this frame
         m_imagesInFlight[m_imageIndex] = &m_device->getFence(m_currentFrame);
     }
@@ -152,19 +144,22 @@ namespace vkn
         VkResult presentResult = vkQueuePresentKHR(*m_device->getGraphicsQueue(), &presentInfo);
 
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
-        {
-            // Handle swapchain recreation (not implemented in demo)
-            std::cerr << "Swapchain out of date or suboptimal, recreation needed (not implemented in demo)." << std::endl;
-        }
+            recoverFromSwapchainError();
         else if (presentResult != VK_SUCCESS)
-        {
             throw std::runtime_error("Failed to present swapchain image!");
-        }
 
         m_signalSemaphores.clear();
 
         // Move to the next frame
         m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void VknCycle::recoverFromSwapchainError()
+    {
+        m_swapchain->recreateSwapchain();
+        for (auto &framebuffer : *m_renderpass->getFramebuffers())
+            framebuffer.recreateFramebuffer();
+        std::cerr << "Recovered from swapchain error." << std::endl;
     }
 
 } // namespace vkn

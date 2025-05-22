@@ -38,7 +38,7 @@ namespace vkn
         m_alphaToOneEnable = alphaToOneEnable;
     }
 
-    void VknMultisampleState::fillMultisampleStateCreateInfo()
+    void VknMultisampleState::_fillMultisampleStateCreateInfo()
     {
         if (m_filled)
             throw std::runtime_error("Multisample state create info already filled.");

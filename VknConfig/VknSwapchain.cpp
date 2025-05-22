@@ -9,27 +9,67 @@ namespace vkn
         m_instanceLock = this;
     }
 
-    void VknSwapchain::setImageCount(uint32_t imageCount)
+    void VknSwapchain::setImageCount()
     {
+        if (!m_setSurface)
+            throw std::runtime_error("Can't set swapchain image count until surface is added.");
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         if (m_setImageCount)
             throw std::runtime_error("Already set swapchain image count.");
-        m_imageCount = imageCount;
+        VkSurfaceCapabilitiesKHR capabilities{};
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+            m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            &capabilities);
+        m_imageCount = capabilities.minImageCount;
         m_setImageCount = true;
     }
 
-    void VknSwapchain::setImageDimensions(uint32_t imageWidth, uint32_t imageHeight)
+    void VknSwapchain::setImageDimensions()
     {
+        if (!m_setSurface)
+            throw std::runtime_error("Can't set image dimensions until surface is added.");
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
-        m_dimensions = {imageWidth, imageHeight};
+        VkSurfaceCapabilitiesKHR capabilities{};
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+            m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            &capabilities);
+        m_dimensions = {capabilities.currentExtent.width,
+                        capabilities.currentExtent.height};
+        m_setImageDimensions = true;
     }
 
     void VknSwapchain::setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace)
     {
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (!m_setSurface)
+            throw std::runtime_error("Can't set surface format until surface is added.");
+        uint32_t surfaceFormatCount{0};
+        VknVector<VkSurfaceFormatKHR> surfaceFormats{};
+        vkGetPhysicalDeviceSurfaceFormatsKHR(
+            m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            &surfaceFormatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(
+            m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            &surfaceFormatCount, surfaceFormats.getData(surfaceFormatCount));
+        bool formatFound{false};
+        for (uint32_t i = 0; i < surfaceFormatCount; ++i)
+        {
+            if (surfaceFormats(i).format == format &&
+                surfaceFormats(i).colorSpace == colorSpace)
+            {
+                formatFound = true;
+                break;
+            }
+        }
+        if (!formatFound)
+            throw std::runtime_error("Surface format not found.");
         m_surfaceFormat = VkSurfaceFormatKHR{format, colorSpace};
     }
 
@@ -66,13 +106,6 @@ namespace vkn
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
         m_compositeAlpha = compositeAlpha;
-    }
-
-    void VknSwapchain::setPresentMode(VkPresentModeKHR presentMode)
-    {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
-        m_presentMode = presentMode;
     }
 
     void VknSwapchain::setClipped(bool clipped)
@@ -112,10 +145,13 @@ namespace vkn
 
     void VknSwapchain::createSwapchain()
     {
-        if (!m_setImageCount)
-            this->setImageCount(1);
         if (!m_setSurface)
-            this->setSurface(0);
+            this->setSurface();
+        if (!m_setImageCount)
+            this->setImageCount();
+        if (!m_setImageDimensions)
+            this->setImageDimensions();
+
         if (m_createdSwapchain)
             throw std::runtime_error("Already created swapchain.");
 
@@ -128,13 +164,20 @@ namespace vkn
                                  &m_engine->getObject<VkSwapchainKHR>(m_absIdxs)),
             "Create swapchain"};
 
+        if (!m_gotSwapchainImages)
+            this->getSwapchainImages();
+        if (!m_addedSwapchainImageViews)
+            this->addImageViews();
+        if (!m_setImageViewSettings)
+            this->setSwapchainImageViewSettings();
+        if (!m_createdImageViews)
+            this->createImageViews();
+
         m_createdSwapchain = true;
     }
 
-    std::list<VknImageView> *VknSwapchain::getSwapchainImageViews()
+    void VknSwapchain::getSwapchainImages()
     {
-        if (m_createdImageViews)
-            return &m_imageViews;
         if (!m_createdSwapchain)
             throw std::runtime_error("Can't get swapchain image views before creating the swapchain.");
 
@@ -148,10 +191,8 @@ namespace vkn
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                 m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
                                 &imageCount, m_vkSwapchainImages.getData(m_imageCount));
-        this->addImageViews();
-        this->createImageViews();
-        m_createdImageViews = true;
-        return &m_imageViews;
+
+        m_gotSwapchainImages = true;
     }
 
     void VknSwapchain::addImageViews()
@@ -169,6 +210,18 @@ namespace vkn
             m_imageViews.back().setImage(&m_vkSwapchainImages(i));
             m_imageViews.back().setFormat(m_surfaceFormat.format);
         }
+        m_addedSwapchainImageViews = true;
+    }
+
+    void VknSwapchain::setSwapchainImageViewSettings()
+    {
+        for (uint32_t i = 0; i < m_imageCount; ++i)
+        {
+            VknImageView *imageView = getListElement<VknImageView>(i, m_imageViews);
+            imageView->setImage(&m_vkSwapchainImages(i));
+            imageView->setFormat(m_surfaceFormat.format);
+        }
+        m_setImageViewSettings = true;
     }
 
     void VknSwapchain::createImageViews()
@@ -198,5 +251,39 @@ namespace vkn
     uint32_t VknSwapchain::getNumImages()
     {
         return m_imageCount;
+    }
+
+    void VknSwapchain::demolishSwapchain()
+    {
+        vkDestroySwapchainKHR(
+            m_engine->getObject<VkDevice>(m_absIdxs),
+            m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
+            nullptr);
+    }
+
+    void VknSwapchain::demolishImageViews()
+    {
+        for (uint32_t i = 0; i < m_imageCount; ++i)
+            getListElement(i, m_imageViews)->demolishImageView();
+    }
+
+    void VknSwapchain::recreateSwapchain()
+    {
+        vkDeviceWaitIdle(m_engine->getObject<VkDevice>(m_absIdxs));
+        this->demolishImageViews();
+        this->demolishSwapchain();
+
+        m_setImageDimensions = false;
+        m_setImageCount = false;
+
+        m_gotSwapchainImages = false;
+        m_setImageViewSettings = false;
+        m_createdImageViews = false;
+
+        m_filledCreateInfo = false;
+        m_createdSwapchain = false;
+
+        this->createImageViews();
+        this->createSwapchain();
     }
 }

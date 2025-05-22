@@ -22,6 +22,16 @@ namespace vkn
         m_createdVkImage = true;
     }
 
+    void VknImage::demolishImage()
+    {
+        if (!m_createdVkImage)
+            throw std::runtime_error("VknImage::demolishImage called before createImage().");
+
+        vkDestroyImage(m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkImage>(m_absIdxs), nullptr);
+        this->deallocateMemory();
+        m_createdVkImage = false;
+    }
+
     void VknImage::setImageType(VkImageType imageType)
     {
         m_imageType = imageType;
@@ -85,38 +95,44 @@ namespace vkn
         vkGetPhysicalDeviceMemoryProperties(m_engine->getObject<VkPhysicalDevice>(m_absIdxs), &memProperties);
 
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-        {
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            {
                 return i;
-            }
-        }
         throw std::runtime_error("Failed to find suitable memory type!");
+    }
+
+    void VknImage::deallocateMemory()
+    {
+        if (!m_memoryBound)
+            throw std::runtime_error("VknImage::deallocateMemory called but memory is not bound.");
+
+        vkFreeMemory(m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkDeviceMemory>(m_absIdxs), nullptr);
+        m_memoryBound = false;
+    }
+
+    void VknImage::addMemory()
+    {
+        if (m_memoryAdded)
+            throw std::runtime_error("VknImage::addMemory called but memory is already allocated.");
+        m_instanceLock(this);
+        m_deviceMemory = &m_engine->addNewObject<VkDeviceMemory, VkDevice>(m_absIdxs);
+        m_memoryAdded = true;
     }
 
     // Helper function (moved outside the class)
     void VknImage::allocateAndBindMemory(VkMemoryPropertyFlags requiredMemoryProperties)
     {
-        m_instanceLock(this);
         if (!m_createdVkImage)
-        {
             throw std::runtime_error("VknImage::allocateAndBindMemory called before createImage().");
-        }
         if (m_memoryBound)
-        {
             throw std::runtime_error("VknImage::allocateAndBindMemory called but memory is already bound.");
-        }
+
+        if (!m_memoryAdded)
+            this->addMemory();
 
         VkDevice device = m_engine->getObject<VkDevice>(m_absIdxs);
         VkImage image = m_engine->getObject<VkImage>(m_absIdxs);
-        // Assuming VknDevice holds a VknPhysicalDevice, and VknPhysicalDevice can give its VkPhysicalDevice handle.
-        // This part needs to be adapted to how you access the VkPhysicalDevice handle from VknEngine/VknDevice.
-        // For this example, let's assume m_engine can provide it or it's accessible via m_absIdxs.
-        // This is a placeholder for how you get the physical device.
-        // You'll likely need to get the VknDevice first, then its VknPhysicalDevice.
         VkPhysicalDevice physicalDevice = m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkDevice>()); // This assumes physical device 0 for device 0
 
-        VkDeviceMemory *deviceMemory = &m_engine->addNewObject<VkDeviceMemory, VkDevice>(m_absIdxs);
         VkMemoryRequirements memoryRequirements;
         vkGetImageMemoryRequirements(device, image, &memoryRequirements);
 
@@ -126,8 +142,8 @@ namespace vkn
         allocInfo.allocationSize = memoryRequirements.size;
         allocInfo.memoryTypeIndex = findSuitableMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
 
-        VknResult resAlloc{vkAllocateMemory(device, &allocInfo, nullptr, deviceMemory), "VknImage vkAllocateMemory"};
-        VknResult resBind{vkBindImageMemory(device, image, *deviceMemory, 0), "VknImage vkBindImageMemory"};
+        VknResult resAlloc{vkAllocateMemory(device, &allocInfo, nullptr, m_deviceMemory), "VknImage vkAllocateMemory"};
+        VknResult resBind{vkBindImageMemory(device, image, *m_deviceMemory, 0), "VknImage vkBindImageMemory"};
         m_memoryBound = true;
     }
 }

@@ -68,7 +68,7 @@ namespace vkn
         void setCreateFlags(VkPipelineLayoutCreateFlags flags);
 
         // Create
-        void createPipelineLayout();
+        void _createPipelineLayout();
 
         // Get
         VkPipelineLayout *getVkLayout();

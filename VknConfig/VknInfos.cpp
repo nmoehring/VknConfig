@@ -357,7 +357,7 @@ namespace vkn
     }
 
     VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(
-        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VknVector<VkDynamicState> dynamicStates)
+        uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VknVector<VkDynamicState> &dynamicStates)
     {
         VkPipelineDynamicStateCreateInfo *info =
             &m_dynamicStateCreateInfos[deviceIdx][renderpassIdx]
@@ -565,8 +565,10 @@ namespace vkn
         VkCompositeAlphaFlagBitsKHR compositeAlpha, VkPresentModeKHR presentMode, VkBool32 clipped,
         VkSwapchainKHR oldSwapchain)
     {
+        uint32_t scIdx = relIdxs.get<VkSwapchainKHR>();
+        VknVector<VkSwapchainCreateInfoKHR> &swapchainVec = m_swapchainCreateInfos[relIdxs.get<VkDevice>()].getDataVector();
         VkSwapchainCreateInfoKHR &swapchainInfo =
-            m_swapchainCreateInfos.insert(relIdxs.get<VkSwapchainKHR>(), VkSwapchainCreateInfoKHR{});
+            swapchainVec.exists(scIdx) ? swapchainVec(scIdx) : swapchainVec.insert(scIdx, VkSwapchainCreateInfoKHR{});
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         swapchainInfo.surface = *surface;                 // The surface you created
         swapchainInfo.minImageCount = imageCount;         // Number of images in the swapchain
@@ -770,7 +772,7 @@ namespace vkn
 
     VkSwapchainCreateInfoKHR *VknInfos::getSwapchainCreateInfo(VknIdxs &relIdxs)
     {
-        return &m_swapchainCreateInfos(relIdxs.get<VkSwapchainKHR>());
+        return &m_swapchainCreateInfos[relIdxs.get<VkDevice>()](relIdxs.get<VkSwapchainKHR>());
     }
 
     VkFramebufferCreateInfo *VknInfos::getFramebufferCreateInfo(VknIdxs &relIdxs)

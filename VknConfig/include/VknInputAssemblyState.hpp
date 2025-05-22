@@ -58,7 +58,7 @@ namespace vkn
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
         void setDetails(VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable);
-        void fillInputAssemblyStateCreateInfo();
+        void _fillInputAssemblyStateCreateInfo();
 
     private:
         // Engine

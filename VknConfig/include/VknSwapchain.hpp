@@ -59,28 +59,29 @@ namespace vkn
         VknSwapchain(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *m_infos);
 
         // Config
-        void setImageCount(uint32_t imageCount);
-        void setImageDimensions(uint32_t imageWidth, uint32_t imageHeight);
         void setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace);
         void setNumImageLayers(uint32_t numImageLayers);
         void setUsage(VkImageUsageFlags usage);
         void setSharingMode(VkSharingMode sharingMode);
         void setPreTransform(VkSurfaceTransformFlagBitsKHR preTransform);
         void setCompositeAlpha(VkCompositeAlphaFlagBitsKHR compositeAlpha);
-        void setPresentMode(VkPresentModeKHR presentMode);
         void setClipped(bool clipped);
         void setOldSwapchain(VkSwapchainKHR oldSwapchain);
-        void setSurface(uint32_t surfaceIdx);
+        void setSurface(uint32_t surfaceIdx = 0);
 
         // Create
         void createSwapchain();
+        void demolishSwapchain();
+        void recreateSwapchain();
 
         // Getters
         VkSwapchainKHR *getVkSwapchain();
-        std::list<VknImageView> *getSwapchainImageViews();
+        void getSwapchainImages();
         uint32_t getImageViewStartIdx();
         uint32_t getNumImages();
         VkExtent2D getActualExtent() { return m_dimensions; }
+        bool isSwapchainCreated() { return m_createdSwapchain; }
+        std::list<VknImageView> &getImageViews() { return m_imageViews; }
 
     private:
         // Engine
@@ -101,7 +102,7 @@ namespace vkn
         VkSharingMode m_sharingMode{VK_SHARING_MODE_EXCLUSIVE};
         VkSurfaceTransformFlagBitsKHR m_preTransform{VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR};
         VkCompositeAlphaFlagBitsKHR m_compositeAlpha{VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR};
-        VkPresentModeKHR m_presentMode{VK_PRESENT_MODE_FIFO_KHR};
+        VkPresentModeKHR m_presentMode{VK_PRESENT_MODE_FIFO_KHR}; // FIFO ONLY
         VkBool32 m_clipped{VK_TRUE};
         VkSwapchainKHR m_oldSwapchain{VK_NULL_HANDLE};
         uint32_t m_imageCount{1};
@@ -115,10 +116,18 @@ namespace vkn
         uint32_t m_imageViewStartIdx{0};
         VknInstanceLock<VknSwapchain> m_instanceLock;
         bool m_createdImageViews{false};
+        bool m_gotSwapchainImages{false};
+        bool m_addedSwapchainImageViews{false};
+        bool m_setImageViewSettings{false};
+        bool m_setImageDimensions{false};
 
-        VkSwapchainCreateInfoKHR *
-        fillSwapchainCreateInfo();
+        VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo();
         void addImageViews();
+        void setSwapchainImageViewSettings();
         void createImageViews();
+        void demolishImageViews();
+
+        void setImageCount();
+        void setImageDimensions();
     };
 }

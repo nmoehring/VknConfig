@@ -64,7 +64,7 @@ namespace vkn
             VkPipelineBindPoint pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             VkSubpassDescriptionFlags flags = 0);
         VknFramebuffer *addFramebuffer(uint32_t framebufferIdx);
-        std::list<VknFramebuffer> *addFramebuffers(std::list<VknImageView> *swapchainImageViews);
+        std::list<VknFramebuffer> *addFramebuffers(VknSwapchain &swapchain);
 
         // Config
         void addAttachment(
@@ -98,12 +98,12 @@ namespace vkn
         VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
+        std::list<VknFramebuffer> *getFramebuffers() { return &m_framebuffers; }
         VknIdxs &getRelIdxs() { return m_relIdxs; }
 
     private:
         // Engine
         VknEngine *m_engine;
-
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         VknInfos *m_infos;

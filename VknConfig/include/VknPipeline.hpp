@@ -63,6 +63,7 @@
 #include "VknShaderStage.hpp"
 #include "VknColorBlendState.hpp" // Add include
 #include "VknPipelineLayout.hpp"
+#include "VknDynamicState.hpp"
 
 namespace vkn
 {
@@ -96,7 +97,9 @@ namespace vkn
         VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }
         VknRasterizationState *getRasterizationState() { return &m_rasterizationState.value(); }
         VknViewportState *getViewportState() { return &m_viewportState.value(); }
-        VknColorBlendState *getColorBlendState() { return &m_colorBlendState.value(); } // Add getter
+        VknColorBlendState *getColorBlendState() { return &m_colorBlendState.value(); }
+        VknDynamicState *getDynamicState() { return &m_dynamicState.value(); }
+        VknPipelineLayout *getPipelineLayout() { return &m_layouts.front(); }
 
     private:
         // Engine
@@ -113,9 +116,8 @@ namespace vkn
         std::optional<VknViewportState> m_viewportState = std::nullopt;
         std::optional<VknRasterizationState> m_rasterizationState = std::nullopt;
         std::optional<VknMultisampleState> m_multisampleState = std::nullopt;
-        std::optional<VknColorBlendState> m_colorBlendState = std::nullopt; // Add member
-        // std::optional<VknColorBlendState> m_colorBlendState = std::nullopt;
-        // std::optional<VknDynamicState> m_dynamicState = std::nullopt;
+        std::optional<VknColorBlendState> m_colorBlendState = std::nullopt;
+        std::optional<VknDynamicState> m_dynamicState = std::nullopt;
         std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
 
         // Params

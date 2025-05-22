@@ -82,6 +82,16 @@ namespace vkn
         m_filledCreateInfo = true;
     }
 
+    void VknImageView::demolishImageView()
+    {
+        vkDestroyImageView(
+            m_engine->getObject<VkDevice>(m_absIdxs),
+            m_engine->getObject<VkImageView>(m_absIdxs), nullptr);
+        m_filledCreateInfo = false;
+        m_createdImageView = false;
+        m_setVkImage = false;
+    }
+
     void VknImageView::createImageView()
     {
         if (m_createdImageView)

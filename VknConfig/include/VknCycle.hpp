@@ -7,7 +7,7 @@ namespace vkn
     class VknCycle
     {
     public:
-        void loadConfig(VknConfig *config, VknEngine *engine);
+        // Execution steps
         void wait();
         void acquireImage();
         void recordCommandBuffer();
@@ -15,7 +15,8 @@ namespace vkn
         void presentImage();
 
         // Setup
-        void addShaderHardcodedVertexCount(uint32_t numShaderHardCodedVertices);
+        void loadConfig(VknConfig *config, VknEngine *engine);
+        void recoverFromSwapchainError();
 
     private:
         // Engine

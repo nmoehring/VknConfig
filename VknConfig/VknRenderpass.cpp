@@ -125,7 +125,19 @@ namespace vkn
         VkPipeline *vkPipelines =
             m_engine->getVectorSlice<VkPipeline>(m_pipelineStartAbsIdx, m_numSubpasses).getData();
         for (auto &pipeline : m_pipelines)
+        {
+            pipeline.getVertexInputState()->_fillVertexInputStateCreateInfo();
+            pipeline.getInputAssemblyState()->_fillInputAssemblyStateCreateInfo();
+            pipeline.getMultisampleState()->_fillMultisampleStateCreateInfo();
+            pipeline.getRasterizationState()->_fillRasterizationStateCreateInfo();
+            pipeline.getViewportState()->_fillViewportStateCreateInfo();
+            pipeline.getColorBlendState()->_fillColorBlendStateCreateInfo();
+            pipeline.getDynamicState()->_fillDynamicStateCreateInfo();
+            pipeline.getPipelineLayout()->_createPipelineLayout();
+            for (auto &shaderstage : *pipeline.getShaderStages())
+                shaderstage._fillShaderStageCreateInfo();
             pipeline._fillPipelineCreateInfo();
+        }
         VknSpace<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
         VknResult res{vkCreateGraphicsPipelines(
@@ -148,15 +160,17 @@ namespace vkn
         this->addPipeline(subpassIdx);
     }
 
-    std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(std::list<VknImageView> *swapchainImageViews)
+    std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(VknSwapchain &swapchain)
     {
         m_instanceLock(this);
-        for (uint32_t i = 0; i < swapchainImageViews->size(); ++i)
+        std::list<VknImageView> &swapchainImageViews = swapchain.getImageViews();
+        for (uint32_t i = 0; i < swapchainImageViews.size(); ++i)
         {
             m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
                 i, m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
 
-            m_framebuffers.back().addSwapchainImageView(getListElement(i, *swapchainImageViews));
+            m_framebuffers.back().setDimensions(swapchain);
+            m_framebuffers.back().addSwapchainImageView(getListElement(i, swapchainImageViews));
             m_framebuffers.back().setSwapchainAttachmentDescriptionIndex(0);
             m_framebuffers.back().addAttachments();
         }

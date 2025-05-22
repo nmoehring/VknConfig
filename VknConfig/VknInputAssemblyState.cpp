@@ -14,7 +14,7 @@ namespace vkn
         m_primitiveRestartEnable = primitiveRestartEnable;
     }
 
-    void VknInputAssemblyState::fillInputAssemblyStateCreateInfo()
+    void VknInputAssemblyState::_fillInputAssemblyStateCreateInfo()
     {
         if (m_filledCreateInfo)
             throw std::runtime_error("Input assembly state create info already filled.");

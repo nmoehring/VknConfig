@@ -53,6 +53,7 @@
 #include "VknFramebuffer.hpp"
 #include "VknImage.hpp"
 #include "VknImageView.hpp"
+#include "VknSwapchain.hpp"
 
 namespace vkn
 {
@@ -65,20 +66,28 @@ namespace vkn
 
         // Members
         void addAttachments();
-        void createAttachments();
         void addSwapchainImageView(VknImageView *swapchainImageView);
 
         // Config
         void setDimensions(uint32_t width, uint32_t height);
+        void setDimensions(VknSwapchain &swapchain);
         void setNumLayers(uint32_t numLayers);
         void setCreateFlags(VkFramebufferCreateFlags createFlags);
         void setSwapchainAttachmentDescriptionIndex(uint32_t descriptionIndex);
+        void setAttachmentSettings();
 
         // Create
         void createFramebuffer();
+        void createAttachments();
+        void demolishFramebuffer();
+        void recreateFramebuffer(VknSwapchain &swapchain);
 
         // Get
-        VkFramebuffer *getVkFramebuffer() { return &m_engine->getObject<VkFramebuffer>(m_absIdxs); } // Add getter
+        VkFramebuffer *getVkFramebuffer()
+        {
+            return &m_engine->getObject<VkFramebuffer>(m_absIdxs);
+        } // Add getter
+        bool isSwapchainImage(uint32_t i);
         VknVectorIterator<VkImageView> getAttachmentImageViews();
 
     private:
@@ -102,12 +111,12 @@ namespace vkn
 
         // State
         bool m_createdFramebuffer{false};
-        bool m_setAttachments{false};
+        bool m_addedAttachments{false};
+        bool m_createdAttachments{false};
+        bool m_setAttachmentSettings{false};
         uint32_t m_imageStartIdx{0};
         uint32_t m_imageViewStartIdx{0};
         VknInstanceLock<VknFramebuffer> m_instanceLock;
         std::optional<uint32_t> m_swapchainAttachmentDescIndex; // Index of the VkAttachmentDescription for the swapchain
-
-        void setAttachmentDimensions(uint32_t width, uint32_t height);
     };
 }

@@ -294,7 +294,7 @@ namespace vkn
         /*VknVector<VkPipelineCache> pipelineCaches{};*/
 
         // Helper functions to get extension function pointers
-        void destroyDebugUtilsMessengerEXT(
+        void demolishDebugUtilsMessengerEXT(
             VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger, const VkAllocationCallbacks *pAllocator);
 
         template <typename ObjectType, typename ParentType>

@@ -223,7 +223,7 @@ namespace vkn
             VkPipelineColorBlendStateCreateFlags flags);
         VkPipelineDynamicStateCreateInfo *fillDynamicStateCreateInfo(
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
-            VknVector<VkDynamicState> dynamicStates);
+            VknVector<VkDynamicState> &dynamicStates);
         VkGraphicsPipelineCreateInfo *fillGfxPipelineCreateInfo(
             VknIdxs &relIdxs, VkRenderPass &renderpass,
             VkPipelineLayout *layout,
@@ -303,10 +303,6 @@ namespace vkn
             uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx);
         VkImageViewCreateInfo *getImageViewCreateInfo(VknIdxs &relIdxs);
         VkFramebufferCreateInfo *getFramebufferCreateInfo(VknIdxs &relIdxs);
-        VkSwapchainCreateInfoKHR *getSwapchainCreateInfoKHR(uint32_t swapchainIdx)
-        {
-            return &m_swapchainCreateInfos(swapchainIdx);
-        }
 
         VkFramebufferCreateInfo *fillFramebufferCreateInfo(VknIdxs &relIdxs, VkRenderPass *renderpass,
                                                            VknVectorIterator<VkImageView> attachments, uint32_t width,
@@ -361,7 +357,7 @@ namespace vkn
         VknSpace<VkPipelineColorBlendStateCreateInfo> m_colorBlendStateCreateInfos{2u};       // Device>Renderpass>Subpass#info
         VknSpace<VkPipelineDynamicStateCreateInfo> m_dynamicStateCreateInfos{2u};             // Device>Renderpass>Subpass#info
         VknSpace<VkGraphicsPipelineCreateInfo> m_gfxPipelineCreateInfos{2u};                  // Device>Renderpass>Subpass#info
-        VknVector<VkSwapchainCreateInfoKHR> m_swapchainCreateInfos{};                         // >info (as many as needed, e.g. multiple windows)
+        VknSpace<VkSwapchainCreateInfoKHR> m_swapchainCreateInfos{1u};                        // Device>Swapchain#info
 
         VknSpace<VkRenderPassCreateInfo> m_renderpassCreateInfos{1u};                   // Device>Renderpass#info (multi, some per device)
         VknSpace<VkAttachmentDescription> m_attachmentDescriptions{2u};                 // Device>Renderpass>Attachment#description

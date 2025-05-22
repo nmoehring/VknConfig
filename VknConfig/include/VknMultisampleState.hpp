@@ -63,7 +63,7 @@ namespace vkn
         void setAlphaToCoverageEnable(VkBool32 alphaToCoverageEnable);
         void setAlphaToOneEnable(VkBool32 alphaToOneEnable);
 
-        void fillMultisampleStateCreateInfo();
+        void _fillMultisampleStateCreateInfo();
 
     private:
         // Engine

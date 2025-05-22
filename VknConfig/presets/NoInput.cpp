@@ -8,7 +8,6 @@ namespace vkn
         config->setAppName("NoInputsTest");
         config->setEngineName("MinVknConfig");
         config->createInstance();
-
         config->createSurface(0);
 
         // Config=>Devices
@@ -20,7 +19,8 @@ namespace vkn
         // Config=>Device=>Swapchain
         auto *swapchain = device->addSwapchain(0);
         swapchain->createSwapchain();
-        auto *swapchainImageViews = swapchain->getSwapchainImageViews();
+        auto *swapchainImageViews = &swapchain->getImageViews();
+        VkExtent2D swapchainExtent = swapchain->getActualExtent(); // Get the actual extent
 
         // Config=>Device=>Renderpass
         auto *renderpass = device->addRenderpass(0);
@@ -28,42 +28,21 @@ namespace vkn
         renderpass->addAttachmentRef(0, 0);
         renderpass->addSubpass(0);
         renderpass->createRenderpass();
-
         // Config=>Device=>Renderpass=>Framebuffer
-        std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(swapchainImageViews);
+        std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(*swapchain);
         renderpass->createFramebuffers();
 
-        // Config=>Device=>Pipeline (subpass creates a pipeline)
+        // Config=>Device=>Renderpass=>Pipeline (subpass creates a pipeline)
         auto *pipeline = renderpass->getPipeline(0);
-
-        // Config=>Device=>Pipeline=>ShaderStage
+        // Config=>Device=>Renderpass=>Pipeline=>ShaderStage
         VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
         vertShader->createShaderModule();
-        vertShader->fillShaderStageCreateInfo();
         VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
         fragShader->createShaderModule();
-        fragShader->fillShaderStageCreateInfo();
-
-        // Config=>Device=>Pipeline=>[Various Pipeline States]
-        vkn::VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
-        vertexInputState->fillVertexInputStateCreateInfo();
-        vkn::VknInputAssemblyState *inputAssemblyState = pipeline->getInputAssemblyState();
-        inputAssemblyState->fillInputAssemblyStateCreateInfo();
-        vkn::VknMultisampleState *multisampleState = pipeline->getMultisampleState();
-        multisampleState->fillMultisampleStateCreateInfo();
-        vkn::VknRasterizationState *rasterizationState = pipeline->getRasterizationState();
-        rasterizationState->fillRasterizationStateCreateInfo();
+        // Config=>Device=>Renderpass=>Pipeline=>ViewportState
         vkn::VknViewportState *viewportState = pipeline->getViewportState();
-        viewportState->addViewport();
-        viewportState->addScissor();
-        viewportState->fillViewportStateCreateInfo();
-        vkn::VknColorBlendState *colorBlendState = pipeline->getColorBlendState();
-        colorBlendState->fillColorBlendStateCreateInfo();
-
-        // Config=>Device=>Pipeline=>PipelineLayout
-        auto *layout = pipeline->getLayout();
-        layout->createPipelineLayout();
-
+        viewportState->syncWithSwapchain(*swapchain);
+        // Create the pipeline
         renderpass->createPipelines();
 
         // Create command pool, command buffers, and sync objects
@@ -72,6 +51,8 @@ namespace vkn
         commandPool->createCommandPool(queueFamilyIdx);
         commandPool->createCommandBuffers(swapchain->getNumImages());
         device->createSyncObjects(2); // Use 2 frames in flight for a simple demo
+
+        // Set shader vertices
         config->setNumHardCodedVertices(3);
 
         return true;

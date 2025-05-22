@@ -31,8 +31,7 @@ namespace vkn
             VkBlendFactor dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
             VkBlendOp alphaBlendOp = VK_BLEND_OP_ADD);
 
-        // Call this after configuring
-        void fillColorBlendStateCreateInfo();
+        void _fillColorBlendStateCreateInfo();
 
     private:
         // Engine

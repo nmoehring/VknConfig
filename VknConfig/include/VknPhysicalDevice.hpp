@@ -67,6 +67,7 @@ namespace vkn
         ~VknPhysicalDevice();
 
         VkPhysicalDevice *getVkPhysicalDevice();
+        uint32_t getPhysicalDeviceAbsIdx() { return m_absIdxs.get<VkPhysicalDevice>(); }
         VkPhysicalDeviceProperties &getProperties();
         VknVector<VkPhysicalDeviceProperties> &getAllProperties();
         bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);

@@ -15,7 +15,7 @@ namespace vkn
     void VknApp::exit()
     {
         m_engine.shutdown();
-        m_config.destroy();
+        m_config.demolish();
         --m_numApps;
     }
 

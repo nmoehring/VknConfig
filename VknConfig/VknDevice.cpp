@@ -15,6 +15,11 @@ namespace vkn
     {
         if (!m_swapchainExtensionEnabled)
             throw std::runtime_error("Swapchain extension not enabled before adding swapchain.");
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device not created before adding swapchain.");
+        if (m_engine->getVector<VkSurfaceKHR>().isEmpty())
+            throw std::runtime_error("Surface not created before adding swapchain.");
+
         m_instanceLock(this);
         VknSwapchain &swapchain = m_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
             swapchainIdx, m_swapchains, m_relIdxs, m_absIdxs, m_infos);
@@ -139,8 +144,10 @@ namespace vkn
             throw std::runtime_error("Device already created.");
         if (!physicalDevice->areQueuePrioritiesFilled())
             physicalDevice->fillDeviceQueuePrioritiesDefault(); // Subtle initiation of chain-reaction default configurations
-        m_infos->fillDeviceFeatures(features);
         physicalDevice->fillQueueCreateInfos();
+        m_absIdxs.add<VkPhysicalDevice>(physicalDevice->getPhysicalDeviceAbsIdx());
+        m_infos->fillDeviceFeatures(features);
+
         m_infos->fillDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{
             vkCreateDevice(
@@ -177,6 +184,15 @@ namespace vkn
 
     VknRenderpass *VknDevice::addRenderpass(uint32_t renderpassIdx)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device not created before adding renderpass.");
+        bool allSwapchainsCreated{true};
+        for (auto &swapchain : m_swapchains)
+            if (!swapchain.isSwapchainCreated())
+                allSwapchainsCreated = false;
+        if (!allSwapchainsCreated)
+            throw std::runtime_error("Swapchain not created before adding renderpass.");
+
         m_instanceLock(this);
         return &m_engine->addNewVknObject<VknRenderpass, VkRenderPass, VkDevice>(
             renderpassIdx, m_renderpasses, m_relIdxs, m_absIdxs, m_infos);

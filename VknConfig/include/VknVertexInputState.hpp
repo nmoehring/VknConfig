@@ -61,7 +61,8 @@ namespace vkn
                                           VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
         void fillVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
                                             VkFormat format = VK_FORMAT_R32G32_SFLOAT, uint32_t offset = 0);
-        void fillVertexInputStateCreateInfo();
+
+        void _fillVertexInputStateCreateInfo();
 
         // Getters
         uint32_t getNumBindings() const { return m_numBindings; }

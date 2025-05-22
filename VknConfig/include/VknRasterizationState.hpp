@@ -56,8 +56,6 @@ namespace vkn
         VknRasterizationState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        void fillRasterizationStateCreateInfo();
-
         void setPolygonMode(VkPolygonMode mode);
         void setCullMode(VkCullModeFlags mode);
         void setFrontFace(VkFrontFace face);
@@ -68,6 +66,8 @@ namespace vkn
         void setDepthBiasConstantFactor(float factor);
         void setDepthBiasClamp(float clamp);
         void setDepthBiasSlopeFactor(float factor);
+
+        void _fillRasterizationStateCreateInfo();
 
     private:
         // Engine

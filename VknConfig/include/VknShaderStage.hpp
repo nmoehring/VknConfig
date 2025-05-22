@@ -71,11 +71,11 @@ namespace vkn
         void setFilename(std::string filename);
         void setFlags(VkPipelineShaderStageCreateFlags createFlags);
         void setSpecialization(VkSpecializationInfo m_specializationInfo);
-        void fillShaderStageCreateInfo();
 
         // Create
         /** @brief Creates the VkShaderModule object from the loaded shader code.*/
         void createShaderModule();
+        void _fillShaderStageCreateInfo();
 
         // Get
         bool isShaderModuleCreated();

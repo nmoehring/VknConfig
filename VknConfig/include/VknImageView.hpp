@@ -71,8 +71,8 @@ namespace vkn
         void setSubresourceRange(VkImageSubresourceRange subresourceRange);
 
         // Create
-        void fillImageViewCreateInfo();
         void createImageView();
+        void demolishImageView();
 
         // Get
         VkImageView *getImageView();
@@ -103,5 +103,7 @@ namespace vkn
         bool m_filledCreateInfo{false};
         bool m_createdImageView{false};
         bool m_setVkImage{false};
+
+        void fillImageViewCreateInfo();
     };
 }

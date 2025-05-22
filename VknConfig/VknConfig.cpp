@@ -124,7 +124,11 @@ namespace vkn
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
         if (m_GLFWwindow)
-            return this->createWindowSurface_GLFW(surfaceIdx);
+        {
+            VkSurfaceKHR *surface = this->createWindowSurface_GLFW(surfaceIdx);
+            m_createdSurface = true;
+            return surface;
+        }
         throw std::runtime_error("No window configured for VknConfig::createSurface()");
     }
 
@@ -157,7 +161,7 @@ namespace vkn
         m_apiVersion = apiVersion;
     }
 
-    void VknConfig::destroy()
+    void VknConfig::demolish()
     {
         m_devices.clear();
     }

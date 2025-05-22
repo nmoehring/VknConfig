@@ -2,7 +2,7 @@
 
 namespace vkn
 {
-    void VknEngine::destroyDebugUtilsMessengerEXT(
+    void VknEngine::demolishDebugUtilsMessengerEXT(
         VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger, const VkAllocationCallbacks *pAllocator)
     {
         ((PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"))(
@@ -19,7 +19,7 @@ namespace vkn
 
     void VknEngine::shutdown()
     {
-        // Wait for each device to idle before destroying resources
+        // Wait for each device to idle before demolishing resources
         for (auto &device : this->getVector<VkDevice>())
             vkDeviceWaitIdle(device);
         for (size_t i = 0; i < this->getVectorSize<VkShaderModule>(); ++i)
@@ -104,13 +104,13 @@ namespace vkn
         for (auto &surface : this->getVector<VkSurfaceKHR>())
             vkDestroySurfaceKHR(this->getObject<VkInstance>(0), surface, VK_NULL_HANDLE);
         for (auto &debugMsgr : this->getVector<VkDebugUtilsMessengerEXT>())
-            destroyDebugUtilsMessengerEXT(this->getObject<VkInstance>(0),
-                                          this->getObject<VkDebugUtilsMessengerEXT>(0), nullptr);
+            demolishDebugUtilsMessengerEXT(this->getObject<VkInstance>(0),
+                                           this->getObject<VkDebugUtilsMessengerEXT>(0), nullptr);
         for (auto &instance : this->getVector<VkInstance>())
             vkDestroyInstance(instance, VK_NULL_HANDLE);
 
-        // Destroy synchronization objects (semaphores and fences)
-        // Need to iterate through all devices and destroy their sync objects
+        // Demolish synchronization objects (semaphores and fences)
+        // Need to iterate through all devices and demolish their sync objects
         this->deleteVector<VkQueueFamilyProperties>();
         this->deleteVector<VkPhysicalDevice>();
 

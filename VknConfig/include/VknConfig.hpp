@@ -96,7 +96,7 @@ namespace vkn
         VkResult createDebugUtilsMessengerEXT(
             VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
             const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger);
-        void destroy();
+        void demolish();
 
         // Getters
         VkInstance *getInstance()
@@ -137,6 +137,7 @@ namespace vkn
         bool m_createdInstance{false};
         bool m_filledAppInfo{false};
         bool m_validationLayerAdded{false};
+        bool m_createdSurface{false};
 
         void fillAppInfo();
         void fillInstanceCreateInfo();

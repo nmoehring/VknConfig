@@ -8,7 +8,7 @@ namespace vkn
     {
     }
 
-    void VknRasterizationState::fillRasterizationStateCreateInfo()
+    void VknRasterizationState::_fillRasterizationStateCreateInfo()
     {
         if (m_filled)
             throw std::runtime_error("RasterizationStateCreateInfo already filled.");

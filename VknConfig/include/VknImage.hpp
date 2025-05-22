@@ -59,7 +59,12 @@ namespace vkn
 
         // Create
         void createImage();
-        void allocateAndBindMemory(VkMemoryPropertyFlags requiredMemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        void demolishImage();
+        void addMemory();
+        void allocateAndBindMemory(
+            VkMemoryPropertyFlags requiredMemoryProperties =
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        void deallocateMemory();
         // uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties); // Removed member function
 
         // Config
@@ -85,6 +90,9 @@ namespace vkn
         VknIdxs m_absIdxs;
         VknInfos *m_infos;
 
+        // Members
+        VkDeviceMemory *m_deviceMemory = nullptr;
+
         // Params
         VkImageType m_imageType = VK_IMAGE_TYPE_2D;
         VkFormat m_format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -100,6 +108,7 @@ namespace vkn
         // State
         bool m_createdVkImage{false};
         bool m_memoryBound{false};
+        bool m_memoryAdded{false};
         VknInstanceLock<VknImage> m_instanceLock;
 
         uint32_t findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

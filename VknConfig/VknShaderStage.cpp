@@ -43,7 +43,7 @@ namespace vkn
         m_filledSpecializationInfo = true;
     }
 
-    void VknShaderStage::fillShaderStageCreateInfo()
+    void VknShaderStage::_fillShaderStageCreateInfo()
     {
         if (!m_setFilename || !m_setShaderStageType)
             throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");

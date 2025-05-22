@@ -8,7 +8,7 @@ namespace vkn
     {
     }
 
-    void VknVertexInputState::fillVertexInputStateCreateInfo()
+    void VknVertexInputState::_fillVertexInputStateCreateInfo()
     {
         if (m_filled)
             throw std::runtime_error("Vertex input state already filled.");
