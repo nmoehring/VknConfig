@@ -154,7 +154,7 @@ namespace vkn
     }
 
     VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
-        VknIdxs &relIdxs, VknVector<char> *code)
+        VknIdxs &relIdxs, std::vector<char> *code)
     {
         VkShaderModuleCreateInfo *info =
             &m_shaderModuleCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()]
@@ -162,8 +162,8 @@ namespace vkn
         info->sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         info->pNext = nullptr;
         info->flags = 0;
-        info->codeSize = code->getSize();
-        info->pCode = reinterpret_cast<const uint32_t *>(code->getData());
+        info->codeSize = code->size();
+        info->pCode = reinterpret_cast<const uint32_t *>(code->data());
         return info;
     }
 
@@ -844,5 +844,51 @@ namespace vkn
         info.subresourceRange = subresourceRange;
         info.flags = flags;
         return &info;
+    }
+
+    void VknInfos::removeFramebufferCreateInfo(VknIdxs relIdxs)
+    {
+        VknVector<VkFramebufferCreateInfo> &infos =
+            m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].getDataVector();
+        if (infos.exists(relIdxs.get<VkFramebuffer>()))
+            infos.remove(relIdxs.get<VkFramebuffer>());
+        else
+            throw std::runtime_error("Framebuffer create info does not exist at that position.");
+    }
+
+    void VknInfos::removeImageViewCreateInfo(VknIdxs relIdxs)
+    {
+        VknVector<VkImageViewCreateInfo> &infos = m_imageViewCreateInfos;
+        if (infos.exists(relIdxs.get<VkImageView>()))
+            infos.remove(relIdxs.get<VkImageView>());
+        else
+            throw std::runtime_error("Image view create info does not exist at that position.");
+    }
+
+    void VknInfos::removeImageCreateInfo(VknIdxs relIdxs)
+    {
+        VknVector<VkImageCreateInfo> &infos = m_imageCreateInfos;
+        if (infos.exists(relIdxs.get<VkImage>()))
+            infos.remove(relIdxs.get<VkImage>());
+        else
+            throw std::runtime_error("Image create info does not exist at that position.");
+    }
+
+    void VknInfos::removePipelineCreateInfo(VknIdxs relIdxs)
+    {
+        VknVector<VkGraphicsPipelineCreateInfo> &infos = m_gfxPipelineCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].getDataVector();
+        if (infos.exists(relIdxs.get<VkPipeline>()))
+            infos.remove(relIdxs.get<VkPipeline>());
+        else
+            throw std::runtime_error("Pipeline create info does not exist at that position.");
+    }
+
+    void VknInfos::removeViewportStateCreateInfo(VknIdxs relIdxs)
+    {
+        VknVector<VkPipelineViewportStateCreateInfo> &infos = m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()].getDataVector();
+        if (infos.exists(relIdxs.get<VkPipeline>()))
+            infos.remove(relIdxs.get<VkPipeline>());
+        else
+            throw std::runtime_error("Viewport create info does not exist at that position.");
     }
 }

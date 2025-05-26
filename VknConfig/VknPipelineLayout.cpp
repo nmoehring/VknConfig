@@ -29,7 +29,7 @@ namespace vkn
     }
 
     // Create
-    void VknPipelineLayout::createPipelineLayout()
+    void VknPipelineLayout::_createPipelineLayout()
     {
         if (m_createdPipelineLayout)
             throw std::runtime_error("Already created the pipeline layout.");

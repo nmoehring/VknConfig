@@ -90,7 +90,7 @@ namespace vkn
         VknInfos *m_infos;
 
         // Params
-        VknVector<char> m_code; /**< Stores the shader's SPIR-V bytecode. */
+        std::vector<char> m_code; /**< Stores the shader's SPIR-V bytecode. */
         VkShaderStageFlagBits m_shaderStageFlagBit{};
         std::string m_filename{};
         VkPipelineShaderStageCreateFlags m_createFlags{0}; /**< Flags for shader stage creation */

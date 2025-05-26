@@ -49,4 +49,19 @@ namespace vkn
         this->addScissor(VkOffset2D{0, 0}, extent);
         this->addViewport(0.0f, 0.0f, extent.width, extent.height);
     }
+
+    void VknViewportState::removeCreateInfo()
+    {
+        m_infos->removeViewportStateCreateInfo(m_relIdxs);
+        m_filledCreateInfo = false;
+    }
+
+    void VknViewportState::removeScissors()
+    {
+        m_scissors.clear();
+    }
+    void VknViewportState::removeViewports()
+    {
+        m_viewports.clear();
+    }
 }

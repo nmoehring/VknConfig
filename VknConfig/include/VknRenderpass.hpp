@@ -93,6 +93,7 @@ namespace vkn
         void createRenderpass();
         void createPipelines();
         void createFramebuffers();
+        void recreateFramebuffersAndPipelines(VknSwapchain &swapchain);
 
         // Getters
         VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }
@@ -123,6 +124,7 @@ namespace vkn
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};
         size_t m_pipelineStartAbsIdx{0};
+        bool m_recreatingPipelines{false};
         VknInstanceLock<VknRenderpass> m_instanceLock;
 
         VknPipeline *addPipeline(uint32_t subpassIdx);

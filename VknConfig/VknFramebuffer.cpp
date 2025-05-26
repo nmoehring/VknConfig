@@ -5,7 +5,6 @@ namespace vkn
     VknFramebuffer::VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
-        m_instanceLock = this;
     }
 
     void VknFramebuffer::setDimensions(uint32_t width, uint32_t height)
@@ -14,11 +13,19 @@ namespace vkn
         m_height = height;
     }
 
-    void VknFramebuffer::setDimensions(VknSwapchain &swapchain)
+    void VknFramebuffer::setDimensions()
     {
-        auto swapchainExtent = swapchain.getActualExtent();
+        if (!m_setSwapchain)
+            throw std::runtime_error("Swapchain not added before setting dimensions from swapchain.");
+        auto swapchainExtent = m_swapchain->getActualExtent();
         m_width = swapchainExtent.width;
         m_height = swapchainExtent.height;
+    }
+
+    void VknFramebuffer::setSwapchain(VknSwapchain *swapchain)
+    {
+        m_swapchain = swapchain;
+        m_setSwapchain = true;
     }
 
     void VknFramebuffer::setNumLayers(uint32_t numLayers)
@@ -38,8 +45,8 @@ namespace vkn
 
         if (!m_addedAttachments)
             this->addAttachments();
-        if (!m_setAttachmentSettings)
-            this->setAttachmentSettings();
+        /*if (!m_setAttachmentSettings)
+            this->setAttachmentSettings();*/
         if (!m_createdAttachments)
             this->createAttachments();
 
@@ -64,7 +71,6 @@ namespace vkn
     {
         if (m_addedAttachments)
             throw std::runtime_error("Attachments already set on framebuffer.");
-        m_instanceLock(this);
 
         VknSpace<VkAttachmentReference> *refs = m_infos->getRenderpassAttachmentReferences(
             m_relIdxs);
@@ -77,10 +83,19 @@ namespace vkn
             return;
         }
 
-        m_imageViewStartIdx = m_engine->getVectorSize<VkImageView>();
+        m_imageViewStartIdx = m_engine->getVector<VkImageView>().getDefragPos(descriptions->getDataSize());
         for (uint32_t i = 0; i < descriptions->getDataSize(); ++i) // Iterate descriptions
         {
-            if (!isSwapchainImage(i))
+            VknImageView *view;
+            if (m_recreatingFramebuffer)
+                view = getListElement(i, m_attachViews);
+            else
+                view = &m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
+                    m_attachViews.size(), m_attachViews, m_relIdxs, m_absIdxs, m_infos);
+
+            if (isSwapchainImage(i))
+                m_swapchain->initializeSwapchainImageViewFromFramebuffer(view, m_relIdxs.get<VkFramebuffer>());
+            else
             {
                 // This is an attachment for which we need to create and manage a VknImage
                 // (e.g., depth buffer, offscreen color target).
@@ -88,18 +103,15 @@ namespace vkn
                     m_attachImages.size(), m_attachImages, // Adds to this framebuffer's m_attachImages list
                     m_relIdxs, m_absIdxs, m_infos);
 
-                // Configure the newly created VknImage
+                // Configure the newly added VknImage
+                image.setExtent({m_width, m_height, 1});
                 image.setFormat((*descriptions)(i).format);
                 image.setSamples((*descriptions)(i).samples);
                 image.setInitialLayout((*descriptions)(i).initialLayout); // Set initial layout
-                image.setUsage(0);                                        // Initialize usage to 0 for accumulation
+                image.setUsage(0);
 
-                VknImageView &view = m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
-                    m_attachViews.size(), m_attachViews,
-                    m_relIdxs, m_absIdxs, m_infos);
-
-                view.setImage(image.getVkImage());
-                view.setFormat((*descriptions)(i).format); // Format from the attachment description
+                view->setImage(image.getVkImage());
+                view->setFormat((*descriptions)(i).format); // Format from the attachment description
                 // Set other VknImageView properties if necessary (e.g., viewType, components, subresourceRange)
                 // Default subresource range in VknImageView is usually fine for color/depth.
 
@@ -145,7 +157,7 @@ namespace vkn
 
     bool VknFramebuffer::isSwapchainImage(uint32_t i)
     {
-        return m_swapchainImageView &&
+        return m_swapchain &&
                m_swapchainAttachmentDescIndex.has_value() &&
                m_swapchainAttachmentDescIndex.value() == i;
     }
@@ -164,25 +176,24 @@ namespace vkn
     {
         for (uint32_t i = 0; i < m_attachViews.size(); ++i)
         {
-            getListElement(i, m_attachImages)->createImage();
-            getListElement(i, m_attachImages)->allocateAndBindMemory(); // Allocate and bind memory for the VknImage
-            getListElement(i, m_attachViews)->createImageView();
+            if (!isSwapchainImage(i))
+            {
+                getListElement(i, m_attachImages)->createImage();
+                getListElement(i, m_attachImages)->allocateAndBindMemory(); // Allocate and bind memory for the VknImage
+                getListElement(i, m_attachViews)->createImageView();
+            }
         }
-    }
-
-    void VknFramebuffer::addSwapchainImageView(VknImageView *swapchainImageView)
-    {
-        m_swapchainImageView = swapchainImageView;
     }
 
     VknVectorIterator<VkImageView> VknFramebuffer::getAttachmentImageViews()
     {
         if (!m_addedAttachments)
             throw std::runtime_error("Attachments not set before trying to get() them.");
-        if (m_infos->getRenderpassAttachmentDescriptions(m_relIdxs)->getDataSize() == 0 &&
-            m_attachViews.empty())
+
+        if (m_infos->getRenderpassAttachmentDescriptions(m_relIdxs)->getDataSize() == 0)
             return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, 0);
-        return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, m_attachViews.size());
+        else
+            return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, m_attachViews.size());
     }
 
     void VknFramebuffer::demolishFramebuffer()
@@ -190,20 +201,27 @@ namespace vkn
         for (uint32_t i = 0; i < m_attachViews.size(); ++i)
         {
             getListElement(i, m_attachViews)->demolishImageView();
-            getListElement(i, m_attachImages)->demolishImage();
-            getListElement(i, m_attachImages)->deallocateMemory();
+            if (!isSwapchainImage(i))
+            {
+                getListElement(i, m_attachImages)->demolishImage();
+                getListElement(i, m_attachImages)->deallocateMemory();
+            }
+            m_infos->removeFramebufferCreateInfo(m_relIdxs);
         }
         vkDestroyFramebuffer(
             m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkFramebuffer>(m_absIdxs), nullptr);
     }
 
-    void VknFramebuffer::recreateFramebuffer(VknSwapchain &swapchain)
+    void VknFramebuffer::recreateFramebuffer()
     {
+        m_recreatingFramebuffer = true;
         this->demolishFramebuffer();
         m_setAttachmentSettings = false;
         m_createdAttachments = false;
         m_createdFramebuffer = false;
-        this->setDimensions(swapchain);
+        m_addedAttachments = false;
+        this->setDimensions();
         this->createFramebuffer();
+        m_recreatingFramebuffer = false;
     }
 }

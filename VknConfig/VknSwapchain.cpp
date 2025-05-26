@@ -164,22 +164,19 @@ namespace vkn
                                  &m_engine->getObject<VkSwapchainKHR>(m_absIdxs)),
             "Create swapchain"};
 
+        m_createdSwapchain = true;
+
         if (!m_gotSwapchainImages)
             this->getSwapchainImages();
-        if (!m_addedSwapchainImageViews)
-            this->addImageViews();
-        if (!m_setImageViewSettings)
-            this->setSwapchainImageViewSettings();
-        if (!m_createdImageViews)
-            this->createImageViews();
-
-        m_createdSwapchain = true;
     }
 
     void VknSwapchain::getSwapchainImages()
     {
         if (!m_createdSwapchain)
             throw std::runtime_error("Can't get swapchain image views before creating the swapchain.");
+
+        if (m_vkSwapchainImages.isEmpty())
+            m_vkSwapchainImages.grow(m_imageCount);
 
         uint32_t imageCount{0};
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
@@ -190,48 +187,45 @@ namespace vkn
             throw std::runtime_error("Swapchain imageCount does not equal what should have been set.");
         vkGetSwapchainImagesKHR(m_engine->getObject<VkDevice>(m_absIdxs),
                                 m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
-                                &imageCount, m_vkSwapchainImages.getData(m_imageCount));
+                                &imageCount, m_vkSwapchainImages.getData());
 
         m_gotSwapchainImages = true;
     }
 
-    void VknSwapchain::addImageViews()
+    void VknSwapchain::initializeSwapchainImageViewFromFramebuffer(VknImageView *imageView, uint32_t framebufferIdx)
     {
-        m_instanceLock(this);
+        if (framebufferIdx >= m_imageCount)
+            throw std::runtime_error("Trying to create too many swapchain imageviews.");
+
+        this->setSwapchainImageViewSettings(imageView, framebufferIdx);
+        this->createImageView(imageView);
+
+        if (framebufferIdx == m_imageCount - 1u)
+        {
+            m_setImageViewSettings = true;
+            m_createdImageViews = true;
+        }
+    }
+
+    void VknSwapchain::setSwapchainImageViewSettings(VknImageView *imageView, uint32_t framebufferIdx)
+    {
         if (!m_createdSwapchain)
-            throw std::runtime_error("Can't create image views before creating the swapchain.");
+            throw std::runtime_error("Can't set swapchain imageview settings before creating swapchain.");
+        if (m_setImageViewSettings)
+            throw std::runtime_error("Already set image view settings.");
 
-        VknVector<VkImageView> engineImageViews = m_engine->getVector<VkImageView>();
-        m_imageViewStartIdx = engineImageViews.getSize();
-        for (uint32_t i = 0; i < m_imageCount; ++i)
-        {
-            m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
-                i, m_imageViews, m_relIdxs, m_absIdxs, m_infos);
-            m_imageViews.back().setImage(&m_vkSwapchainImages(i));
-            m_imageViews.back().setFormat(m_surfaceFormat.format);
-        }
-        m_addedSwapchainImageViews = true;
+        imageView->setImage(&m_vkSwapchainImages(framebufferIdx));
+        imageView->setFormat(m_surfaceFormat.format);
     }
 
-    void VknSwapchain::setSwapchainImageViewSettings()
-    {
-        for (uint32_t i = 0; i < m_imageCount; ++i)
-        {
-            VknImageView *imageView = getListElement<VknImageView>(i, m_imageViews);
-            imageView->setImage(&m_vkSwapchainImages(i));
-            imageView->setFormat(m_surfaceFormat.format);
-        }
-        m_setImageViewSettings = true;
-    }
-
-    void VknSwapchain::createImageViews()
+    void VknSwapchain::createImageView(VknImageView *imageView)
     {
         if (!m_createdSwapchain)
             throw std::runtime_error("Can't create image views before creating the swapchain.");
-        if (m_imageViews.size() != m_imageCount)
-            throw std::runtime_error("Num of image views being added does not equal imageCount.");
-        for (auto &imageView : m_imageViews)
-            imageView.createImageView();
+        if (m_createdImageViews)
+            throw std::runtime_error("Already created image views.");
+
+        imageView->createImageView();
     }
 
     void VknSwapchain::setSurface(uint32_t surfaceIdx)
@@ -243,11 +237,6 @@ namespace vkn
         m_setSurface = true;
     }
 
-    uint32_t VknSwapchain::getImageViewStartIdx()
-    {
-        return m_imageViewStartIdx;
-    }
-
     uint32_t VknSwapchain::getNumImages()
     {
         return m_imageCount;
@@ -255,22 +244,16 @@ namespace vkn
 
     void VknSwapchain::demolishSwapchain()
     {
+        m_vkSwapchainImages.clear();
         vkDestroySwapchainKHR(
             m_engine->getObject<VkDevice>(m_absIdxs),
             m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
             nullptr);
     }
 
-    void VknSwapchain::demolishImageViews()
-    {
-        for (uint32_t i = 0; i < m_imageCount; ++i)
-            getListElement(i, m_imageViews)->demolishImageView();
-    }
-
     void VknSwapchain::recreateSwapchain()
     {
         vkDeviceWaitIdle(m_engine->getObject<VkDevice>(m_absIdxs));
-        this->demolishImageViews();
         this->demolishSwapchain();
 
         m_setImageDimensions = false;
@@ -282,8 +265,6 @@ namespace vkn
 
         m_filledCreateInfo = false;
         m_createdSwapchain = false;
-
-        this->createImageViews();
         this->createSwapchain();
     }
 }

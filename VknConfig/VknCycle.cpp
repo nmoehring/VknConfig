@@ -157,8 +157,7 @@ namespace vkn
     void VknCycle::recoverFromSwapchainError()
     {
         m_swapchain->recreateSwapchain();
-        for (auto &framebuffer : *m_renderpass->getFramebuffers())
-            framebuffer.recreateFramebuffer();
+        m_renderpass->recreateFramebuffersAndPipelines(*m_swapchain);
         std::cerr << "Recovered from swapchain error." << std::endl;
     }
 

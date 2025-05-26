@@ -87,6 +87,7 @@ namespace vkn
         vkDestroyImageView(
             m_engine->getObject<VkDevice>(m_absIdxs),
             m_engine->getObject<VkImageView>(m_absIdxs), nullptr);
+        m_infos->removeImageViewCreateInfo(m_relIdxs);
         m_filledCreateInfo = false;
         m_createdImageView = false;
         m_setVkImage = false;

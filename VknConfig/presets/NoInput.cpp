@@ -19,8 +19,6 @@ namespace vkn
         // Config=>Device=>Swapchain
         auto *swapchain = device->addSwapchain(0);
         swapchain->createSwapchain();
-        auto *swapchainImageViews = &swapchain->getImageViews();
-        VkExtent2D swapchainExtent = swapchain->getActualExtent(); // Get the actual extent
 
         // Config=>Device=>Renderpass
         auto *renderpass = device->addRenderpass(0);

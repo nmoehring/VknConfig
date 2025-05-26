@@ -66,6 +66,9 @@ namespace vkn
         void addScissor(VkOffset2D offset = {0, 0}, VkExtent2D extent = {800, 600});
 
         void _fillViewportStateCreateInfo();
+        void removeCreateInfo();
+        void removeScissors();
+        void removeViewports();
 
     private:
         // Engine

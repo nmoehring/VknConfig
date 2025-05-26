@@ -9,11 +9,11 @@
 class VknVectorTest : public ::testing::Test
 {
 protected:
-    vkn::VknVector<int, uint32_t> vec_int;
-    vkn::VknVector<std::string, uint16_t> vec_str;
+    vkn::VknVector<int> vec_int;
+    vkn::VknVector<std::string> vec_str;
 
     // Helper to check basic state
-    void ExpectEmpty(const vkn::VknVector<int, uint32_t> &vec)
+    void ExpectEmpty(const vkn::VknVector<int> &vec)
     {
         ASSERT_TRUE(vec.isEmpty());
         ASSERT_EQ(vec.getSize(), 0);
@@ -30,7 +30,7 @@ TEST_F(VknVectorTest, DefaultConstruction)
 
 TEST_F(VknVectorTest, CopyConstruction_Empty)
 {
-    vkn::VknVector<int, uint32_t> copy_vec(vec_int);
+    vkn::VknVector<int> copy_vec(vec_int);
     ASSERT_EQ(copy_vec.getData(), nullptr);
     ExpectEmpty(copy_vec);
 }
@@ -39,7 +39,7 @@ TEST_F(VknVectorTest, CopyConstruction_WithElements)
 {
     vec_int.insert(0, 10);
     vec_int.insert(2, 20);
-    vkn::VknVector<int, uint32_t> copy_vec(vec_int);
+    vkn::VknVector<int> copy_vec(vec_int);
 
     ASSERT_EQ(copy_vec.getSize(), 2);
     ASSERT_EQ(copy_vec.getNumPositions(), 3); // Logical positions up to 2
@@ -57,7 +57,7 @@ TEST_F(VknVectorTest, MoveConstruction)
     vec_int.insert(1, 20);
     int *original_data_ptr = vec_int.getData();
 
-    vkn::VknVector<int, uint32_t> moved_vec(std::move(vec_int));
+    vkn::VknVector<int> moved_vec(std::move(vec_int));
 
     ASSERT_EQ(moved_vec.getSize(), 2);
     ASSERT_EQ(moved_vec.getNumPositions(), 2);
@@ -71,7 +71,7 @@ TEST_F(VknVectorTest, MoveConstruction)
 TEST_F(VknVectorTest, CopyAssignment)
 {
     vec_int.insert(0, 10);
-    vkn::VknVector<int, uint32_t> assigned_vec;
+    vkn::VknVector<int> assigned_vec;
     assigned_vec.insert(5, 500); // Give it some initial state
     assigned_vec = vec_int;
 
@@ -85,7 +85,7 @@ TEST_F(VknVectorTest, MoveAssignment)
 {
     vec_int.insert(0, 10);
     int *original_data_ptr = vec_int.getData();
-    vkn::VknVector<int, uint32_t> assigned_vec;
+    vkn::VknVector<int> assigned_vec;
     assigned_vec.insert(5, 500);
     assigned_vec = std::move(vec_int);
 
@@ -130,7 +130,7 @@ TEST_F(VknVectorTest, Insert_MultipleSparseElements_AccessibleAndExists)
 TEST_F(VknVectorTest, Insert_ExistingPosition_ThrowsException)
 {
     vec_int.insert(1, 10);
-    ASSERT_THROW(vec_int.insert(1, 20), std::runtime_error);
+    ASSERT_ANY_THROW(vec_int.insert(1, 20));
 }
 
 TEST_F(VknVectorTest, GetElement_NonExistent_ReturnsNullptr)

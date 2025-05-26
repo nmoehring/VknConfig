@@ -236,7 +236,7 @@ namespace vkn
         template <typename ObjectType>
         uint32_t getVectorSize()
         {
-            return this->getVector<ObjectType>().getSize();
+            return this->getVector<ObjectType>().getNumPositions();
         }
 
         template <typename VknObjectType, typename VkObjectType, typename VkParentType>

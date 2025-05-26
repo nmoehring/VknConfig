@@ -47,13 +47,11 @@ namespace vkn
 
     VknPipeline *VknRenderpass::getPipeline(uint32_t pipelineIdx)
     {
-        m_instanceLock(this);
         return getListElement(pipelineIdx, m_pipelines);
     }
 
     VknFramebuffer *VknRenderpass::getFramebuffer(uint32_t bufferIdx)
     {
-        m_instanceLock(this);
         return getListElement(bufferIdx, m_framebuffers);
     }
 
@@ -61,7 +59,6 @@ namespace vkn
                                              uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
                                              VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
     {
-        m_instanceLock(this);
         if (dependencyIdx != m_numSubpassDeps++)
             throw std::runtime_error("DependencyIdx passed to addSubpassDependency is invalid. Should be next idx.");
 
@@ -77,7 +74,6 @@ namespace vkn
         VkImageLayout finalLayout,
         VkAttachmentDescriptionFlags flags)
     {
-        m_instanceLock(this);
 
         m_infos->fillAttachmentDescription(
             m_relIdxs, attachIdx, format, samples, loadOp, storeOp, stencilLoadOp,
@@ -126,16 +122,21 @@ namespace vkn
             m_engine->getVectorSlice<VkPipeline>(m_pipelineStartAbsIdx, m_numSubpasses).getData();
         for (auto &pipeline : m_pipelines)
         {
-            pipeline.getVertexInputState()->_fillVertexInputStateCreateInfo();
-            pipeline.getInputAssemblyState()->_fillInputAssemblyStateCreateInfo();
-            pipeline.getMultisampleState()->_fillMultisampleStateCreateInfo();
-            pipeline.getRasterizationState()->_fillRasterizationStateCreateInfo();
-            pipeline.getViewportState()->_fillViewportStateCreateInfo();
-            pipeline.getColorBlendState()->_fillColorBlendStateCreateInfo();
-            pipeline.getDynamicState()->_fillDynamicStateCreateInfo();
-            pipeline.getPipelineLayout()->_createPipelineLayout();
-            for (auto &shaderstage : *pipeline.getShaderStages())
-                shaderstage._fillShaderStageCreateInfo();
+            if (m_recreatingPipelines)
+                pipeline.getViewportState()->_fillViewportStateCreateInfo();
+            else
+            {
+                pipeline.getVertexInputState()->_fillVertexInputStateCreateInfo();
+                pipeline.getInputAssemblyState()->_fillInputAssemblyStateCreateInfo();
+                pipeline.getMultisampleState()->_fillMultisampleStateCreateInfo();
+                pipeline.getRasterizationState()->_fillRasterizationStateCreateInfo();
+                pipeline.getViewportState()->_fillViewportStateCreateInfo();
+                pipeline.getColorBlendState()->_fillColorBlendStateCreateInfo();
+                pipeline.getPipelineLayout()->_createPipelineLayout();
+
+                for (auto &shaderstage : *pipeline.getShaderStages())
+                    shaderstage._fillShaderStageCreateInfo();
+            }
             pipeline._fillPipelineCreateInfo();
         }
         VknSpace<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
@@ -162,15 +163,13 @@ namespace vkn
 
     std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(VknSwapchain &swapchain)
     {
-        m_instanceLock(this);
-        std::list<VknImageView> &swapchainImageViews = swapchain.getImageViews();
-        for (uint32_t i = 0; i < swapchainImageViews.size(); ++i)
+        for (uint32_t i = 0; i < swapchain.getNumImages(); ++i)
         {
             m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
                 i, m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
 
-            m_framebuffers.back().setDimensions(swapchain);
-            m_framebuffers.back().addSwapchainImageView(getListElement(i, swapchainImageViews));
+            m_framebuffers.back().setSwapchain(&swapchain);
+            m_framebuffers.back().setDimensions();
             m_framebuffers.back().setSwapchainAttachmentDescriptionIndex(0);
             m_framebuffers.back().addAttachments();
         }
@@ -183,5 +182,39 @@ namespace vkn
             throw std::runtime_error("No framebuffers to create.");
         for (auto &framebuffer : m_framebuffers)
             framebuffer.createFramebuffer();
+    }
+
+    void VknRenderpass::recreateFramebuffersAndPipelines(VknSwapchain &swapchain)
+    {
+        m_recreatingPipelines = true;
+        for (auto &pipeline : m_pipelines)
+        {
+            m_infos->removePipelineCreateInfo(pipeline.getRelIdxs());
+            vkDestroyPipeline(
+                m_engine->getObject<VkDevice>(m_absIdxs),
+                m_engine->getObject<VkPipeline>(pipeline.getAbsIdxs()),
+                nullptr);
+            VknViewportState *viewport = pipeline.getViewportState();
+            viewport->removeCreateInfo();
+            viewport->removeScissors();
+            viewport->removeViewports();
+            viewport->syncWithSwapchain(swapchain);
+            m_createdPipelines = false;
+        }
+        this->createPipelines();
+        m_recreatingPipelines = false;
+
+        uint32_t numSwapchainImages{swapchain.getNumImages()};
+        if (m_framebuffers.size() != numSwapchainImages)
+        {
+            for (auto &framebuffer : m_framebuffers)
+                framebuffer.demolishFramebuffer();
+            m_framebuffers.clear();
+            this->addFramebuffers(swapchain);
+            this->createFramebuffers();
+        }
+        else
+            for (auto &framebuffer : m_framebuffers)
+                framebuffer.recreateFramebuffer();
     }
 }

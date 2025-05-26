@@ -15,7 +15,6 @@ namespace vkn
         m_rasterizationState = VknRasterizationState{engine, relIdxs, absIdxs, infos};
         m_colorBlendState = VknColorBlendState{engine, relIdxs, absIdxs, infos}; // Initialize
         m_viewportState = VknViewportState{engine, relIdxs, absIdxs, infos};
-        m_dynamicState = VknDynamicState{engine, relIdxs, absIdxs, infos};
     }
 
     VknShaderStage *VknPipeline::addShaderStage(uint32_t shaderIdx,

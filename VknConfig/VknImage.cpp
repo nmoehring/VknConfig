@@ -29,6 +29,7 @@ namespace vkn
 
         vkDestroyImage(m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkImage>(m_absIdxs), nullptr);
         this->deallocateMemory();
+        m_infos->removeImageCreateInfo(m_relIdxs);
         m_createdVkImage = false;
     }
 

@@ -14,10 +14,10 @@ public:
 class VknSpaceTest : public ::testing::Test
 {
 protected:
-    vkn::VknSpace<int, uint32_t> space_int_default; // Default maxDepth = 255, depth = 0
-    vkn::VknSpace<std::string, uint16_t> space_str_limited_depth;
+    vkn::VknSpace<int> space_int_default{255, 0, false}; // Default maxDepth = 255, depth = 0
+    vkn::VknSpace<std::string> space_str_limited_depth;
 
-    VknSpaceTest() : space_str_limited_depth(2, 0) {} // maxDepth = 2, depth = 0
+    VknSpaceTest() : space_str_limited_depth(2, 0, false) {} // maxDepth = 2, depth = 0
 
     void SetUp() override
     {
@@ -41,7 +41,7 @@ TEST_F(VknSpaceTest, DefaultConstruction)
 
 TEST_F(VknSpaceTest, ConstructionWithMaxDepth)
 {
-    vkn::VknSpace<int, uint32_t> space(5, 1); // maxDepth = 5, initial depth = 1
+    vkn::VknSpace<int> space(5, 1); // maxDepth = 5, initial depth = 1
     ASSERT_EQ(space.getDepth(), 1);
     ASSERT_EQ(space.getMaxDepth(), 5);
 }
@@ -49,8 +49,8 @@ TEST_F(VknSpaceTest, ConstructionWithMaxDepth)
 // --- Copy Operations ---
 TEST_F(VknSpaceTest, CopyConstruction_Empty)
 {
-    vkn::VknSpace<int, uint32_t> original(3, 1);
-    vkn::VknSpace<int, uint32_t> copy(original);
+    vkn::VknSpace<int> original(3, 1, false);
+    vkn::VknSpace<int> copy(original);
 
     ASSERT_EQ(copy.getDepth(), 1);
     ASSERT_EQ(copy.getMaxDepth(), 3);
@@ -60,11 +60,11 @@ TEST_F(VknSpaceTest, CopyConstruction_Empty)
 
 TEST_F(VknSpaceTest, CopyConstruction_WithDataAndSubspaces)
 {
-    vkn::VknSpace<int, uint32_t> original(3, 0);
+    vkn::VknSpace<int> original(3, 0, false);
     original.append(100);
     original[0].append(200); // Creates subspace at [0]
 
-    vkn::VknSpace<int, uint32_t> copy(original);
+    vkn::VknSpace<int> copy(original);
     ASSERT_EQ(copy.getDepth(), 0);
     ASSERT_EQ(copy.getMaxDepth(), 3);
     ASSERT_EQ(copy.getDataSize(), 1);
@@ -79,11 +79,11 @@ TEST_F(VknSpaceTest, CopyConstruction_WithDataAndSubspaces)
 
 TEST_F(VknSpaceTest, CopyAssignment)
 {
-    vkn::VknSpace<int, uint32_t> original(3, 0);
+    vkn::VknSpace<int> original(3, 0, false);
     original.append(100);
     original[0].append(200);
 
-    vkn::VknSpace<int, uint32_t> assigned_space(1, 1); // Different initial state
+    vkn::VknSpace<int> assigned_space(1, 1, false); // Different initial state
     assigned_space.append(999);
 
     assigned_space = original;
@@ -100,11 +100,11 @@ TEST_F(VknSpaceTest, CopyAssignment)
 // --- Move Operations ---
 TEST_F(VknSpaceTest, MoveConstruction)
 {
-    vkn::VknSpace<int, uint32_t> original(3, 0);
+    vkn::VknSpace<int> original(3, 0, false);
     original.append(100);
     original[0].append(200);
 
-    vkn::VknSpace<int, uint32_t> moved_space(std::move(original));
+    vkn::VknSpace<int> moved_space(std::move(original));
 
     ASSERT_EQ(moved_space.getDepth(), 0);
     ASSERT_EQ(moved_space.getMaxDepth(), 3);
@@ -123,11 +123,11 @@ TEST_F(VknSpaceTest, MoveConstruction)
 
 TEST_F(VknSpaceTest, MoveAssignment)
 {
-    vkn::VknSpace<int, uint32_t> original(3, 0);
+    vkn::VknSpace<int> original(3, 0, false);
     original.append(100);
     original[0].append(200);
 
-    vkn::VknSpace<int, uint32_t> assigned_space(1, 1);
+    vkn::VknSpace<int> assigned_space(1, 1, false);
     assigned_space.append(999);
 
     assigned_space = std::move(original);
@@ -151,21 +151,21 @@ TEST_F(VknSpaceTest, GetSubspace_CreatesNew_AndReturnsExisting)
 {
     ASSERT_EQ(space_int_default.getNumSubspaces(), 0);
 
-    vkn::VknSpace<int, uint32_t> &sub0 = space_int_default.getSubspace(0);
+    vkn::VknSpace<int> &sub0 = space_int_default.getSubspace(0);
     ASSERT_EQ(space_int_default.getNumSubspaces(), 1);
     ASSERT_EQ(sub0.getDepth(), 1);      // Assumes getter exists
     ASSERT_EQ(sub0.getMaxDepth(), 255); // Assumes getter exists
 
-    vkn::VknSpace<int, uint32_t> &sub0_again = space_int_default[0]; // Using operator[]
-    ASSERT_EQ(space_int_default.getNumSubspaces(), 1);               // No new subspace created
-    ASSERT_EQ(&sub0, &sub0_again);                                   // Should be the same object
+    vkn::VknSpace<int> &sub0_again = space_int_default[0]; // Using operator[]
+    ASSERT_EQ(space_int_default.getNumSubspaces(), 1);     // No new subspace created
+    ASSERT_EQ(&sub0, &sub0_again);                         // Should be the same object
 }
 
 TEST_F(VknSpaceTest, GetSubspace_MultipleLevels)
 {
-    vkn::VknSpace<int, uint32_t> &sub0 = space_int_default[0];
-    vkn::VknSpace<int, uint32_t> &sub0_1 = sub0[1];
-    vkn::VknSpace<int, uint32_t> &sub0_1_2 = sub0_1[2];
+    vkn::VknSpace<int> &sub0 = space_int_default[0];
+    vkn::VknSpace<int> &sub0_1 = sub0[1];
+    vkn::VknSpace<int> &sub0_1_2 = sub0_1[2];
 
     ASSERT_EQ(sub0.getDepth(), 1);
     ASSERT_EQ(sub0_1.getDepth(), 2);
@@ -179,11 +179,11 @@ TEST_F(VknSpaceTest, GetSubspace_MultipleLevels)
 TEST_F(VknSpaceTest, GetSubspace_ReachesMaxDepth_ThrowsOnNextDive)
 {
     // space_str_limited_depth has maxDepth = 2, current depth = 0
-    vkn::VknSpace<std::string, uint16_t> &sub_d0 = space_str_limited_depth[0]; // depth 1, OK
+    vkn::VknSpace<std::string> &sub_d0 = space_str_limited_depth[0]; // depth 1, OK
     ASSERT_EQ(sub_d0.getDepth(), 1);
     ASSERT_EQ(sub_d0.getMaxDepth(), 2);
 
-    vkn::VknSpace<std::string, uint16_t> &sub_d1 = sub_d0[0]; // depth 2, OK (at maxDepth)
+    vkn::VknSpace<std::string> &sub_d1 = sub_d0[0]; // depth 2, OK (at maxDepth)
     ASSERT_EQ(sub_d1.getDepth(), 2);
     ASSERT_EQ(sub_d1.getMaxDepth(), 2);
 
@@ -237,7 +237,7 @@ TEST_F(VknSpaceTest, Data_GetDataWithNewSize)
 TEST_F(VknSpaceTest, Data_GetDataVector_Modify)
 {
     space_int_default.append(10);
-    vkn::VknVector<int, uint32_t> &data_vec = space_int_default.getDataVector();
+    vkn::VknVector<int> &data_vec = space_int_default.getDataVector();
     data_vec(0) = 111; // Modify through the reference
     ASSERT_EQ(space_int_default(0), 111);
 }
@@ -262,7 +262,7 @@ TEST_F(VknSpaceTest, GetSubspaceSlice_Iterate)
     // After inserting at 0, 2, 5, the physical indices in m_subspaces are 0, 1, 2.
     // The logical positions stored in m_subspaces.m_positions are 0, 2, 5.
     // Let's get a slice covering physical indices 0 to 1 (logical positions 0 and 2).
-    vkn::VknVectorIterator<vkn::VknSpace<int, uint32_t>, uint32_t> slice_it = space_int_default.getSubspaceSlice(0, 3); // Physical start 0, length 2
+    vkn::VknVectorIterator<vkn::VknSpace<int>> slice_it = space_int_default.getSubspaceSlice(0, 3); // Physical start 0, length 2
 
     ASSERT_FALSE(slice_it.isEmpty());
     ASSERT_EQ(slice_it.getSize(), 2);
@@ -283,7 +283,7 @@ TEST_F(VknSpaceTest, GetSubspaceSlice_Iterate)
 
 TEST_F(VknSpaceTest, GetSubspaceSlice_Empty)
 {
-    vkn::VknVectorIterator<vkn::VknSpace<int, uint32_t>, uint32_t> slice_it =
+    vkn::VknVectorIterator<vkn::VknSpace<int>> slice_it =
         space_int_default.getSubspaceSlice(0, 0);
     ASSERT_TRUE(slice_it.isEmpty());
     ASSERT_EQ(slice_it.getSize(), 0);

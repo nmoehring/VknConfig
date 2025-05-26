@@ -50,6 +50,7 @@
 #include <stdexcept>
 #include <limits>
 #include <algorithm>
+#include <vector>
 
 #include <vulkan/vulkan.h>
 #include "VknEngine.hpp"
@@ -181,7 +182,7 @@ namespace vkn
 
         //================FILL PIPELINE INFOS===================
         VkShaderModuleCreateInfo *fillShaderModuleCreateInfo(
-            VknIdxs &relIdxs, VknVector<char> *code);
+            VknIdxs &relIdxs, std::vector<char> *code);
         VkPipelineShaderStageCreateInfo *fillShaderStageCreateInfo(
             VknIdxs &relIdxs, VkShaderModule *module, VkShaderStageFlagBits *stage,
             VkPipelineShaderStageCreateFlags *flags,
@@ -322,6 +323,11 @@ namespace vkn
             m_debugMessengerCreateInfo = createInfo;
             return m_debugMessengerCreateInfo;
         }
+        void removeFramebufferCreateInfo(VknIdxs relIdxs);
+        void removeImageViewCreateInfo(VknIdxs relIdxs);
+        void removeImageCreateInfo(VknIdxs relIdxs);
+        void removePipelineCreateInfo(VknIdxs relIdxs);
+        void removeViewportStateCreateInfo(VknIdxs relIdxs);
 
     private:
         std::string m_appName{};
@@ -329,7 +335,7 @@ namespace vkn
         std::list<std::string> m_instanceExtensions_Store{};
         VknVector<const char *> m_instanceExtensions_NamePointers{};
         std::list<std::string> m_deviceExtensions_Store{1};
-        VknSpace<const char *> m_deviceExtensions_NamePointers{};
+        VknSpace<const char *> m_deviceExtensions_NamePointers{1u};
         std::list<std::string> m_layers_Store{};
         VknVector<const char *> m_layers_NamePointers{};
         VknVector<VkPhysicalDeviceFeatures> m_enabledFeatures{};
@@ -364,13 +370,13 @@ namespace vkn
         VknSpace<VkAttachmentReference> m_attachmentReferences{4u};                     // Device>Renderpass>Subpass>AttachmentType>Attachment#ref
         VknSpace<uint32_t> m_preserveAttachments{3u};                                   // Device>Renderpass>Subpass>Attachment#ref
         VknSpace<VkSubpassDescription> m_subpassDescriptions{2u};                       // Device>Renderpass>Subpass#info
-        VknSpace<VkSubpassDependency> m_subpassDependencies{3u};                        // Device>Renderpass>Subpass>Dependency#description
+        VknSpace<VkSubpassDependency> m_subpassDependencies{2u};                        // Device>Renderpass>Dependency#description
         VknSpace<VkDescriptorSetLayoutCreateInfo> m_descriptorSetLayoutCreateInfos{3u}; // Device>Renderpass>PipelineLayout>DescriptorSetlayout#info
 
-        VknSpace<VkVertexInputBindingDescription> m_vertexInputBindings{3u};     // Device>Renderpass>Subpass>Infos
-        VknSpace<VkVertexInputAttributeDescription> m_vertexInputAttributes{3u}; // Device>Renderpass>Subpass>Infos
+        VknSpace<VkVertexInputBindingDescription> m_vertexInputBindings{3u};     // Device>Renderpass>Subpass>InputBiding#Infos
+        VknSpace<VkVertexInputAttributeDescription> m_vertexInputAttributes{3u}; // Device>Renderpass>Subpass>InputAttribute#Infos
 
-        VknSpace<VkFramebufferCreateInfo> m_framebufferCreateInfos{2u}; // Device>Renderpass>Framebuffers
+        VknSpace<VkFramebufferCreateInfo> m_framebufferCreateInfos{2u}; // Device>Renderpass>Framebuffer#CreateInfo
         VknVector<VkImageViewCreateInfo> m_imageViewCreateInfos{};      // >ImageViews
         VknVector<VkImageCreateInfo> m_imageCreateInfos{};              //>Image
         const char m_mainEntry[5] = "main";

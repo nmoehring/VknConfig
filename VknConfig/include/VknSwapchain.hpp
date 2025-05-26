@@ -68,11 +68,15 @@ namespace vkn
         void setClipped(bool clipped);
         void setOldSwapchain(VkSwapchainKHR oldSwapchain);
         void setSurface(uint32_t surfaceIdx = 0);
+        // Should maybe be private (friend framebuffer/framebuffer calling function?)
+        void setSwapchainImageViewSettings(VknImageView *imageView, uint32_t framebufferIdx);
+        void createImageView(VknImageView *imageView);
 
         // Create
         void createSwapchain();
         void demolishSwapchain();
         void recreateSwapchain();
+        void initializeSwapchainImageViewFromFramebuffer(VknImageView *imageView, uint32_t framebufferIdx);
 
         // Getters
         VkSwapchainKHR *getVkSwapchain();
@@ -81,7 +85,6 @@ namespace vkn
         uint32_t getNumImages();
         VkExtent2D getActualExtent() { return m_dimensions; }
         bool isSwapchainCreated() { return m_createdSwapchain; }
-        std::list<VknImageView> &getImageViews() { return m_imageViews; }
 
     private:
         // Engine
@@ -113,19 +116,13 @@ namespace vkn
         bool m_createdSwapchain{false};
         bool m_setSurface{false};
         bool m_setImageCount{false};
-        uint32_t m_imageViewStartIdx{0};
         VknInstanceLock<VknSwapchain> m_instanceLock;
         bool m_createdImageViews{false};
         bool m_gotSwapchainImages{false};
-        bool m_addedSwapchainImageViews{false};
         bool m_setImageViewSettings{false};
         bool m_setImageDimensions{false};
 
         VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo();
-        void addImageViews();
-        void setSwapchainImageViewSettings();
-        void createImageViews();
-        void demolishImageViews();
 
         void setImageCount();
         void setImageDimensions();

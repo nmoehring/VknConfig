@@ -8,7 +8,7 @@ class VknVectorIteratorTest : public ::testing::Test
 {
 protected:
     // Use a VknVector to create iterators from
-    vkn::VknVector<int, uint32_t> vec_int;
+    vkn::VknVector<int> vec_int;
 
     void SetUp() override
     {
@@ -37,7 +37,7 @@ protected:
 TEST_F(VknVectorIteratorTest, Constructor_EmptyVector_IsEmpty)
 {
     // An iterator created from an empty vector with length 0 should be empty
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 0);
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 0);
     ASSERT_TRUE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 0);
     // Dereferencing/incrementing an empty iterator is undefined behavior,
@@ -61,7 +61,7 @@ TEST_F(VknVectorIteratorTest, Constructor_ZeroLengthSlice_IsEmpty)
 {
     PopulateVector({{0, 10}, {1, 20}}); // Vector has 2 elements
     // A slice of length 0 should be empty, even from a non-empty vector
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 0);
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 0);
     ASSERT_TRUE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 0);
     ASSERT_THROW(*it, std::runtime_error);
@@ -73,8 +73,8 @@ TEST_F(VknVectorIteratorTest, Constructor_ZeroLengthSlice_IsEmpty)
 TEST_F(VknVectorIteratorTest, Iterate_PhysicallyContiguous_LogicallyContiguous)
 {
     // Elements inserted in order, positions 0, 1, 2 -> physical indices 0, 1, 2
-    PopulateVector({{0, 10}, {1, 20}, {2, 30}});                       // m_positions = {0, 1, 2}
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 3); // Slice covers physical indices 0, 1, 2
+    PopulateVector({{0, 10}, {1, 20}, {2, 30}});             // m_positions = {0, 1, 2}
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 3); // Slice covers physical indices 0, 1, 2
 
     ASSERT_FALSE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 3);
@@ -103,8 +103,8 @@ TEST_F(VknVectorIteratorTest, Iterate_PhysicallyContiguous_LogicallyContiguous)
 TEST_F(VknVectorIteratorTest, Slice_TooSmall)
 {
     // Elements inserted in order, positions 5, 10, 15 -> physical indices 0, 1, 2
-    PopulateVector({{5, 50}, {10, 100}, {15, 150}});                   // m_positions = {5, 10, 15}
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 3); // Slice covers physical indices 0, 1, 2
+    PopulateVector({{5, 50}, {10, 100}, {15, 150}});         // m_positions = {5, 10, 15}
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 3); // Slice covers physical indices 0, 1, 2
 
     ASSERT_TRUE(it.isEmpty()); // it slices logical positions, not indices. There's nothing there.
     ASSERT_EQ(it.getSize(), 0);
@@ -123,7 +123,7 @@ TEST_F(VknVectorIteratorTest, Iterate_LogicallySparse)
     // m_positions might be {0, 10, 5, 15} depending on insert implementation
 
     // Let's create a slice covering physical indices 1 and 2 (logical positions 10 and 5)
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(5, 6); // Slice covers physical indices 1, 2
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(5, 6); // Slice covers physical indices 1, 2
 
     ASSERT_FALSE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 2); // Should be 2 elements in the slice
@@ -148,14 +148,14 @@ TEST_F(VknVectorIteratorTest, Iterate_LogicallySparse)
 TEST_F(VknVectorIteratorTest, Decrement_FromEnd_ToBeginning)
 {
     PopulateVector({{0, 10}, {1, 20}, {2, 30}});
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 3);
-    vkn::VknVectorIterator<int, uint32_t> end_it = vec_int.getSlice(0, 3); // Need an end iterator
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 3);
+    vkn::VknVectorIterator<int> end_it = vec_int.getSlice(0, 3); // Need an end iterator
     // How to get a valid end iterator? Your iterator doesn't provide begin/end methods.
     // Let's assume an iterator constructed with length 0 at the end position represents end().
     // This is tricky with your current iterator design.
     // A standard end iterator is one past the last element.
     // Let's manually advance an iterator to the end state.
-    vkn::VknVectorIterator<int, uint32_t> it_at_end = vec_int.getSlice(0, 3);
+    vkn::VknVectorIterator<int> it_at_end = vec_int.getSlice(0, 3);
     ++it_at_end;
     ++it_at_end;
     ++it_at_end; // Advance to end
@@ -188,8 +188,8 @@ TEST_F(VknVectorIteratorTest, Decrement_FromEnd_ToBeginning)
 TEST_F(VknVectorIteratorTest, Comparison_Equal)
 {
     PopulateVector({{0, 10}, {1, 20}});
-    vkn::VknVectorIterator<int, uint32_t> it1 = vec_int.getSlice(0, 2); // Slice covering phys 0, 1
-    vkn::VknVectorIterator<int, uint32_t> it2 = vec_int.getSlice(0, 2); // Another iterator for the same slice
+    vkn::VknVectorIterator<int> it1 = vec_int.getSlice(0, 2); // Slice covering phys 0, 1
+    vkn::VknVectorIterator<int> it2 = vec_int.getSlice(0, 2); // Another iterator for the same slice
 
     ASSERT_TRUE(it1 == it2);
     ASSERT_FALSE(it1 != it2);
@@ -205,8 +205,8 @@ TEST_F(VknVectorIteratorTest, Comparison_Equal)
 TEST_F(VknVectorIteratorTest, Comparison_LessThan)
 {
     PopulateVector({{0, 10}, {1, 20}, {2, 30}});
-    vkn::VknVectorIterator<int, uint32_t> it1 = vec_int.getSlice(0, 3); // At logical pos 0
-    vkn::VknVectorIterator<int, uint32_t> it2 = vec_int.getSlice(0, 3);
+    vkn::VknVectorIterator<int> it1 = vec_int.getSlice(0, 3); // At logical pos 0
+    vkn::VknVectorIterator<int> it2 = vec_int.getSlice(0, 3);
     ++it2; // At logical pos 1
 
     ASSERT_TRUE(it1 < it2);
@@ -221,43 +221,43 @@ TEST_F(VknVectorIteratorTest, Comparison_LessThan)
 TEST_F(VknVectorIteratorTest, Arithmetic_Add)
 {
     PopulateVector({{0, 10}, {1, 20}, {2, 30}, {3, 40}, {4, 50}});
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 5); // At logical pos 0
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 5); // At logical pos 0
 
-    vkn::VknVectorIterator<int, uint32_t> it_plus_2 = it + 2; // Should move 2 logical steps
-    ASSERT_EQ(*it_plus_2, 30);                                // Value at logical pos 2
+    vkn::VknVectorIterator<int> it_plus_2 = it + 2; // Should move 2 logical steps
+    ASSERT_EQ(*it_plus_2, 30);                      // Value at logical pos 2
     ASSERT_EQ(it_plus_2.getLogicalPosition(), 2);
 
-    vkn::VknVectorIterator<int, uint32_t> it_plus_4 = it + 4; // Should move 4 logical steps
-    ASSERT_EQ(*it_plus_4, 50);                                // Value at logical pos 4
+    vkn::VknVectorIterator<int> it_plus_4 = it + 4; // Should move 4 logical steps
+    ASSERT_EQ(*it_plus_4, 50);                      // Value at logical pos 4
     ASSERT_EQ(it_plus_4.getLogicalPosition(), 4);
 
     // Test adding past the end (should result in end state)
-    vkn::VknVectorIterator<int, uint32_t> it_plus_5 = it + 5;
+    vkn::VknVectorIterator<int> it_plus_5 = it + 5;
     ASSERT_TRUE(it_plus_5.isAtEnd());
 }
 
 TEST_F(VknVectorIteratorTest, Arithmetic_Subtract)
 {
     PopulateVector({{0, 10}, {1, 20}, {2, 30}, {3, 40}, {4, 50}});
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 5);
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 5);
     // Advance to logical pos 3
-    vkn::VknVectorIterator<int, uint32_t> it_at_3 = it + 3;
+    vkn::VknVectorIterator<int> it_at_3 = it + 3;
 
-    vkn::VknVectorIterator<int, uint32_t> it_minus_2 = it_at_3 - 2; // Should move back 2 logical steps
-    ASSERT_EQ(*it_minus_2, 20);                                     // Value at logical pos 1
+    vkn::VknVectorIterator<int> it_minus_2 = it_at_3 - 2; // Should move back 2 logical steps
+    ASSERT_EQ(*it_minus_2, 20);                           // Value at logical pos 1
     ASSERT_EQ(it_minus_2.getLogicalPosition(), 1);
 
     // Test subtracting before the beginning (should throw or result in begin state)
     // Your operator- throws if the target logical position is before the slice's logical range
-    vkn::VknVectorIterator<int, uint32_t> it_minus_4 = it_at_3 - 4;
+    vkn::VknVectorIterator<int> it_minus_4 = it_at_3 - 4;
     ASSERT_TRUE(it_minus_4.isAtBegin()); // Target logical pos -1
 }
 
 TEST_F(VknVectorIteratorTest, Arithmetic_Difference)
 {
     PopulateVector({{0, 10}, {1, 20}, {2, 30}, {3, 40}, {4, 50}});
-    vkn::VknVectorIterator<int, uint32_t> it1 = vec_int.getSlice(0, 5); // At logical pos 0
-    vkn::VknVectorIterator<int, uint32_t> it2 = it1 + 3;                // At logical pos 3
+    vkn::VknVectorIterator<int> it1 = vec_int.getSlice(0, 5); // At logical pos 0
+    vkn::VknVectorIterator<int> it2 = it1 + 3;                // At logical pos 3
 
     ASSERT_EQ(it2 - it1, 3); // Difference in logical positions
     ASSERT_THROW(it1 - it2, std::runtime_error);
@@ -270,7 +270,7 @@ TEST_F(VknVectorIteratorTest, GetData_LogicallyContiguousSlice_ReturnsPointer)
     // Elements inserted contiguously in logical positions 0, 1, 2, 3, 4
     PopulateVector({{0, 10}, {1, 20}, {2, 30}, {3, 40}, {4, 50}}); // m_positions = {0, 1, 2, 3, 4}
     // Slice covering physical indices 1, 2, 3 (logical positions 1, 2, 3)
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(1, 3);
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(1, 3);
 
     ASSERT_FALSE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 3);
@@ -287,7 +287,7 @@ TEST_F(VknVectorIteratorTest, GetData_LogicallySparseSlice_Throws)
     // Elements inserted in order, positions 5, 10, 15 -> physical indices 0, 1, 2
     PopulateVector({{5, 50}, {10, 100}, {15, 150}}); // m_positions = {5, 10, 15}
     // Slice covering physical indices 0, 1 (logical positions 5, 10)
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 11);
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 11);
 
     ASSERT_FALSE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 2); // Slice has 2 elements
@@ -301,7 +301,7 @@ TEST_F(VknVectorIteratorTest, GetData_LogicallySparseSlice_Throws)
 TEST_F(VknVectorIteratorTest, GetData_EmptySlice_ReturnsNullptr)
 {
     PopulateVector({{0, 10}});
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 0); // Empty slice
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 0); // Empty slice
     ASSERT_TRUE(it.isEmpty());
     ASSERT_EQ(it.getData(), nullptr);
 }
@@ -313,15 +313,15 @@ TEST_F(VknVectorIteratorTest, GetSize_VariousSlices)
     PopulateVector({{0, 10}, {2, 20}, {5, 50}, {6, 60}}); // phys: {0,1,2,3}, logical: {0,2,5,6}
 
     // Slice covering physical indices 0, 1, 2, 3 (all elements)
-    vkn::VknVectorIterator<int, uint32_t> it_all = vec_int.getSlice(0, 7);
+    vkn::VknVectorIterator<int> it_all = vec_int.getSlice(0, 7);
     ASSERT_EQ(it_all.getSize(), 4);
 
     // Slice covering physical indices 1, 2 (logical positions 2, 5)
-    vkn::VknVectorIterator<int, uint32_t> it_partial = vec_int.getSlice(1, 5);
+    vkn::VknVectorIterator<int> it_partial = vec_int.getSlice(1, 5);
     ASSERT_EQ(it_partial.getSize(), 2);
 
     // Empty slice
-    vkn::VknVectorIterator<int, uint32_t> it_empty = vec_int.getSlice(0, 0);
+    vkn::VknVectorIterator<int> it_empty = vec_int.getSlice(0, 0);
     ASSERT_EQ(it_empty.getSize(), 0);
 }
 
@@ -331,8 +331,8 @@ TEST_F(VknVectorIteratorTest, GetSize_VariousSlices)
 
 TEST_F(VknVectorIteratorTest, Iterate_SingleElementSlice)
 {
-    PopulateVector({{10, 100}});                                        // phys 0, pos 10
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 11); // Slice phys 0, length 1
+    PopulateVector({{10, 100}});                              // phys 0, pos 10
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 11); // Slice phys 0, length 1
 
     ASSERT_FALSE(it.isEmpty());
     ASSERT_EQ(it.getSize(), 1);
@@ -350,7 +350,7 @@ TEST_F(VknVectorIteratorTest, Iterate_SliceIncludesMaxLogicalPosition)
     // Max logical position is 10.
     // Let's get a slice that includes the element at logical position 10.
     // Element at logical pos 10 is at physical index 1.
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(5, 6); // Slice covers physical indices 1, 2 (logical pos 10, 5)
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(5, 6); // Slice covers physical indices 1, 2 (logical pos 10, 5)
 
     // Iteration order should be 5, 10 (logical order)
     ASSERT_EQ(*it, 50); // Logical pos 5
@@ -366,7 +366,7 @@ TEST_F(VknVectorIteratorTest, Iterate_SliceIncludesMinLogicalPosition)
     PopulateVector({{0, 0}, {10, 100}, {5, 50}}); // phys: {0,1,2}, logical: {0,10,5}
     // Min logical position is 0.
     // Element at logical pos 0 is at physical index 0.
-    vkn::VknVectorIterator<int, uint32_t> it = vec_int.getSlice(0, 11); // Slice covers physical indices 0, 1 (logical pos 0, 10)
+    vkn::VknVectorIterator<int> it = vec_int.getSlice(0, 11); // Slice covers physical indices 0, 1 (logical pos 0, 10)
 
     // Iteration order should be 0, 10 (logical order)
     ASSERT_EQ(*it, 0); // Logical pos 0
