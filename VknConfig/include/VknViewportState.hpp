@@ -59,7 +59,7 @@ namespace vkn
         VknViewportState(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos,
                          VkExtent2D *swapchainExtent, const bool *swapchainCreated);
 
-        void syncWithSwapchain(VknSwapchain &swapchain);
+        void syncWithSwapchain(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx);
 
         void addViewport(float x = 0.0f, float y = 0.0f, float width = 800, float height = 600,
                          float minDepth = 0.0f, float maxDepth = 1.0f);
@@ -69,6 +69,8 @@ namespace vkn
         void removeCreateInfo();
         void removeScissors();
         void removeViewports();
+        VkViewport &getVkViewport(uint32_t idx) { return m_viewports(idx); }
+        VkRect2D &getVkScissor(uint32_t idx) { return m_scissors(idx); }
 
     private:
         // Engine

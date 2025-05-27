@@ -19,6 +19,10 @@ namespace vkn
 
     void VknEngine::shutdown()
     {
+        if (!m_poweredOn) // If already shut down, do nothing
+            return;
+        m_poweredOn = false; // Set immediately to prevent re-entrancy issues from destructor
+
         // Wait for each device to idle before demolishing resources
         for (auto &device : this->getVector<VkDevice>())
             vkDeviceWaitIdle(device);
@@ -136,6 +140,5 @@ namespace vkn
         this->deleteVectors<VkSurfaceKHR, VkInstance>();
         this->deleteVectors<VkDebugUtilsMessengerEXT, VkInstance>();
         this->deleteVector<VkInstance>();
-        m_poweredOn = false;
     }
 }

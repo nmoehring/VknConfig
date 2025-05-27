@@ -61,7 +61,8 @@
 #include "VknViewportState.hpp"
 #include "VknRasterizationState.hpp"
 #include "VknShaderStage.hpp"
-#include "VknColorBlendState.hpp" // Add include
+#include "VknColorBlendState.hpp"
+#include "VknDynamicState.hpp"
 #include "VknPipelineLayout.hpp"
 
 namespace vkn
@@ -97,6 +98,7 @@ namespace vkn
         VknRasterizationState *getRasterizationState() { return &m_rasterizationState.value(); }
         VknViewportState *getViewportState() { return &m_viewportState.value(); }
         VknColorBlendState *getColorBlendState() { return &m_colorBlendState.value(); }
+        VknDynamicState *getDynamicState() { return &m_dynamicState.value(); }
         VknPipelineLayout *getPipelineLayout() { return &m_layouts.front(); }
         VknIdxs &getRelIdxs() { return m_relIdxs; }
         VknIdxs &getAbsIdxs() { return m_absIdxs; }
@@ -117,6 +119,7 @@ namespace vkn
         std::optional<VknRasterizationState> m_rasterizationState = std::nullopt;
         std::optional<VknMultisampleState> m_multisampleState = std::nullopt;
         std::optional<VknColorBlendState> m_colorBlendState = std::nullopt;
+        std::optional<VknDynamicState> m_dynamicState = std::nullopt;
         std::list<VknShaderStage> m_shaderStages{}; // List prevents dangling pointers to elements of changing structure
 
         // Params

@@ -132,8 +132,8 @@ namespace vkn
                 pipeline.getRasterizationState()->_fillRasterizationStateCreateInfo();
                 pipeline.getViewportState()->_fillViewportStateCreateInfo();
                 pipeline.getColorBlendState()->_fillColorBlendStateCreateInfo();
+                pipeline.getDynamicState()->_fillDynamicStateCreateInfo();
                 pipeline.getPipelineLayout()->_createPipelineLayout();
-
                 for (auto &shaderstage : *pipeline.getShaderStages())
                     shaderstage._fillShaderStageCreateInfo();
             }
@@ -184,7 +184,7 @@ namespace vkn
             framebuffer.createFramebuffer();
     }
 
-    void VknRenderpass::recreateFramebuffersAndPipelines(VknSwapchain &swapchain)
+    void VknRenderpass::recreatePipelines(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx)
     {
         m_recreatingPipelines = true;
         for (auto &pipeline : m_pipelines)
@@ -198,12 +198,15 @@ namespace vkn
             viewport->removeCreateInfo();
             viewport->removeScissors();
             viewport->removeViewports();
-            viewport->syncWithSwapchain(swapchain);
+            viewport->syncWithSwapchain(swapchain, viewportIdx, scissorIdx);
             m_createdPipelines = false;
         }
         this->createPipelines();
         m_recreatingPipelines = false;
+    }
 
+    void VknRenderpass::recreateFramebuffers(VknSwapchain &swapchain)
+    {
         uint32_t numSwapchainImages{swapchain.getNumImages()};
         if (m_framebuffers.size() != numSwapchainImages)
         {

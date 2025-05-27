@@ -93,7 +93,8 @@ namespace vkn
         void createRenderpass();
         void createPipelines();
         void createFramebuffers();
-        void recreateFramebuffersAndPipelines(VknSwapchain &swapchain);
+        void recreatePipelines(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx);
+        void recreateFramebuffers(VknSwapchain &swapchain);
 
         // Getters
         VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }

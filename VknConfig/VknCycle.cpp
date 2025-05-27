@@ -68,6 +68,9 @@ namespace vkn
 
         VknResult resBegin{vkBeginCommandBuffer(*m_currentCommandBuffer, &beginInfo), "Begin command buffer"};
 
+        vkCmdSetViewport(*m_currentCommandBuffer, 0, 1, &m_pipeline->getViewportState()->getVkViewport(0));
+        vkCmdSetScissor(*m_currentCommandBuffer, 0, 1, &m_pipeline->getViewportState()->getVkScissor(0));
+
         VkRenderPassBeginInfo renderPassBeginInfo{};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = *m_renderpass->getVkRenderPass();
@@ -157,7 +160,9 @@ namespace vkn
     void VknCycle::recoverFromSwapchainError()
     {
         m_swapchain->recreateSwapchain();
-        m_renderpass->recreateFramebuffersAndPipelines(*m_swapchain);
+        m_pipeline->getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
+        m_renderpass->recreateFramebuffers(*m_swapchain);
+        // m_renderpass->recreatePipelines(*m_swapchain); // Viewports and scissors updates dynamically, now.
         std::cerr << "Recovered from swapchain error." << std::endl;
     }
 

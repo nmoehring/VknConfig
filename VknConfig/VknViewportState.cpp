@@ -43,11 +43,22 @@ namespace vkn
         scissor.extent = extent;
     }
 
-    void VknViewportState::syncWithSwapchain(VknSwapchain &swapchain)
+    void VknViewportState::syncWithSwapchain(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx)
     {
+        if (viewportIdx > m_viewports.getSize())
+            throw std::runtime_error("Viewport index out of range.");
+        if (scissorIdx > m_scissors.getSize())
+            throw std::runtime_error("Scissor index out of range.");
+        if (viewportIdx == m_viewports.getSize())
+            this->addViewport();
+        if (scissorIdx == m_scissors.getSize())
+            this->addScissor();
+        VkViewport &viewport = m_viewports(viewportIdx);
+        VkRect2D &scissor = m_scissors(scissorIdx);
         VkExtent2D extent = swapchain.getActualExtent();
-        this->addScissor(VkOffset2D{0, 0}, extent);
-        this->addViewport(0.0f, 0.0f, extent.width, extent.height);
+        scissor.extent = extent;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = static_cast<float>(extent.height);
     }
 
     void VknViewportState::removeCreateInfo()

@@ -119,5 +119,11 @@ namespace vkn
         bool m_filledQueueCreateInfos{false};
         VknInstanceLock<VknDevice> m_instanceLock;
         bool m_swapchainExtensionEnabled{false};
+
+        // For correct sync object retrieval
+        uint32_t m_imageAvailableSemaphoreStartIdx{0};
+        uint32_t m_renderFinishedSemaphoreStartIdx{0}; // Could combine with IA if strictly interleaved
+        uint32_t m_inFlightFenceStartIdx{0};
+        uint32_t m_maxFramesInFlightForSyncObjects{0};
     };
 }

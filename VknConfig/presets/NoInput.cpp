@@ -25,6 +25,26 @@ namespace vkn
         renderpass->addAttachment(0);
         renderpass->addAttachmentRef(0, 0);
         renderpass->addSubpass(0);
+        // Dependency to transition layout for rendering (clear/draw)
+        renderpass->addSubpassDependency(
+            0,                                             // dependencyIdx
+            VK_SUBPASS_EXTERNAL,                           // srcSubpass
+            0,                                             // dstSubpass (our only subpass)
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // srcStageMask (wait for previous color ops or top of pipe)
+            0,                                             // srcAccessMask (no access needed if coming from UNDEFINED)
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // dstStageMask (transition for color output)
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT           // dstAccessMask (allow writing to color attachment)
+        );
+        // Dependency to transition layout for presentation
+        renderpass->addSubpassDependency(
+            1,                                             // dependencyIdx
+            0,                                             // srcSubpass (our only subpass)
+            VK_SUBPASS_EXTERNAL,                           // dstSubpass
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // srcStageMask (after we're done writing)
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,          // srcAccessMask (ensure writes are finished)
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,          // dstStageMask (presentation engine will pick it up)
+            0                                              // dstAccessMask (presentation engine handles its own access)
+        );
         renderpass->createRenderpass();
         // Config=>Device=>Renderpass=>Framebuffer
         std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(*swapchain);
@@ -32,6 +52,7 @@ namespace vkn
 
         // Config=>Device=>Renderpass=>Pipeline (subpass creates a pipeline)
         auto *pipeline = renderpass->getPipeline(0);
+        pipeline->getRasterizationState()->setCullMode(VK_CULL_MODE_NONE); // Temporarily disable culling
         // Config=>Device=>Renderpass=>Pipeline=>ShaderStage
         VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
         vertShader->createShaderModule();
@@ -39,8 +60,8 @@ namespace vkn
         fragShader->createShaderModule();
         // Config=>Device=>Renderpass=>Pipeline=>ViewportState
         vkn::VknViewportState *viewportState = pipeline->getViewportState();
-        viewportState->syncWithSwapchain(*swapchain);
-        // Create the pipeline
+        viewportState->syncWithSwapchain(*swapchain, 0, 0);
+        //  Create the pipeline
         renderpass->createPipelines();
 
         // Create command pool, command buffers, and sync objects
