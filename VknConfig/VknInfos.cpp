@@ -367,6 +367,7 @@ namespace vkn
         info->flags = 0; // reserved for future use
         info->dynamicStateCount = dynamicStates.getSize();
         info->pDynamicStates = dynamicStates.getData();
+        m_filledDynamicStateInfo = true;
         return info;
     }
 

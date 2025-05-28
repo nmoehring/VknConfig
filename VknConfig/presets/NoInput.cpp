@@ -54,9 +54,9 @@ namespace vkn
         auto *pipeline = renderpass->getPipeline(0);
         pipeline->getRasterizationState()->setCullMode(VK_CULL_MODE_NONE); // Temporarily disable culling
         // Config=>Device=>Renderpass=>Pipeline=>ShaderStage
-        VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "simple_shader.vert.spv");
+        VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "triangle.vert.spv");
         vertShader->createShaderModule();
-        VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "simple_shader.frag.spv");
+        VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "triangle.frag.spv");
         fragShader->createShaderModule();
         // Config=>Device=>Renderpass=>Pipeline=>ViewportState
         vkn::VknViewportState *viewportState = pipeline->getViewportState();

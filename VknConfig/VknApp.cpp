@@ -54,12 +54,33 @@ namespace vkn
         m_config.setValidationEnabled();
     }
 
-    void VknApp::cycleEngine()
+    bool VknApp::cycleEngine()
     {
+        if (!m_configured)
+            throw std::runtime_error("App not configured before cycling engine.");
+
+        if (!this->waitForWindowEventsAndTestIfMinimized()) // Ensures glfwWaitEvents is called if minimized
+            return false;
         m_cycle.wait();
-        m_cycle.acquireImage();
+        if (!m_cycle.acquireImage())
+            return this->waitForWindowEventsAndTestIfMinimized();
         m_cycle.recordCommandBuffer();
         m_cycle.submitCommandBuffer();
-        m_cycle.presentImage();
+        if (!m_cycle.presentImage())
+            return this->waitForWindowEventsAndTestIfMinimized();
+        return true;
+    }
+
+    bool VknApp::waitForWindowEventsAndTestIfMinimized()
+    {
+        if (m_cycle.isWindowMinimized())
+        {
+            if (m_config.hasGLFWConfig())
+                glfwWaitEvents();
+            else
+                throw std::runtime_error("Unknown window configuration!");
+            return false;
+        }
+        return true;
     }
 }

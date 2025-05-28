@@ -56,9 +56,11 @@ namespace vkn
 
         VkFramebufferCreateInfo *createInfo =
             m_infos->getFramebufferCreateInfo(m_relIdxs);
-        vkCreateFramebuffer(
-            m_engine->getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
-            &m_engine->getObject<VkFramebuffer>(m_absIdxs));
+        VknResult res{
+            vkCreateFramebuffer(
+                m_engine->getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
+                &m_engine->getObject<VkFramebuffer>(m_absIdxs)),
+            "Create framebuffer."};
         m_createdFramebuffer = true;
     }
 

@@ -38,9 +38,12 @@ namespace vkn
         VkPipelineLayoutCreateInfo *createInfo = m_infos->fillPipelineLayoutCreateInfo(
             m_relIdxs, m_engine->getVectorSlice<VkDescriptorSetLayout>(m_descriptorSetLayoutStartIdx, m_descriptorSetLayouts.size()),
             m_pushConstantRanges, m_createFlags);
-        vkCreatePipelineLayout(
-            m_engine->getObject<VkDevice>(m_absIdxs), createInfo,
-            nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs));
+
+        VknResult res{
+            vkCreatePipelineLayout(
+                m_engine->getObject<VkDevice>(m_absIdxs), createInfo,
+                nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs)),
+            "Create pipeline layout."};
         m_createdPipelineLayout = true;
     }
 

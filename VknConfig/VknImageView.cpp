@@ -100,9 +100,11 @@ namespace vkn
         VkImageViewCreateInfo *ci{nullptr};
         ci = m_infos->fillImageViewCreateInfo(m_absIdxs, *this->getVkImage(),
                                               m_viewType, m_format, m_components, m_subresourceRange, m_createFlags);
-        vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs),
-                          ci, VK_NULL_HANDLE,
-                          &m_engine->getObject<VkImageView>(m_absIdxs));
+        VknResult res{
+            vkCreateImageView(m_engine->getObject<VkDevice>(m_absIdxs),
+                              ci, VK_NULL_HANDLE,
+                              &m_engine->getObject<VkImageView>(m_absIdxs)),
+            "Create image view."};
         m_createdImageView = true;
     }
 }

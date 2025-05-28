@@ -3,6 +3,32 @@
 namespace vkn
 {
 
+    bool VknCycle::isWindowMinimized()
+    {
+        // Prioritize direct window check if available
+        if (m_config && m_config->hasGLFWConfig() && m_config->getGLFWwindow())
+        {
+            int width = 0, height = 0;
+            glfwGetFramebufferSize(m_config->getGLFWwindow(), &width, &height);
+            if (width == 0 || height == 0)
+            {
+                return true;
+            }
+            // Optionally, also check iconified state, though framebuffer size is usually sufficient for Vulkan
+            // if (glfwGetWindowAttrib(m_config->getGLFWwindow(), GLFW_ICONIFIED)) {
+            //     return true;
+            // }
+        }
+        else if (m_swapchain) // Fallback to swapchain extent if direct window check not possible
+        {
+            VkExtent2D extent = m_swapchain->getActualExtent();
+            if (extent.width == 0 || extent.height == 0)
+                return true;
+        }
+        // If no config or swapchain, or if checks pass, assume not minimized in a way that blocks rendering.
+        return false;
+    }
+
     void VknCycle::loadConfig(VknConfig *config, VknEngine *engine)
     {
         m_config = config;
@@ -12,8 +38,7 @@ namespace vkn
         m_renderpass = m_device->getRenderpass(0);
         m_pipeline = m_renderpass->getPipeline(0);
         m_commandPool = m_device->getCommandPool(0);
-        for (uint32_t i = 0; i < m_swapchain->getNumImages(); ++i)
-            m_imagesInFlight.push_back(nullptr);
+        m_imagesInFlight.assign(m_swapchain->getNumImages(), nullptr);
 
         // Determine if the pipeline expects vertex inputs
         VknVertexInputState *vertexInputState = m_pipeline->getVertexInputState();
@@ -33,7 +58,7 @@ namespace vkn
         //*device->getVkDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
     }
 
-    void VknCycle::acquireImage()
+    bool VknCycle::acquireImage()
     {
         // 2. Acquire an image from the swapchain
         VkResult acquireResult = vkAcquireNextImageKHR(
@@ -41,12 +66,12 @@ namespace vkn
             m_device->getImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &m_imageIndex);
 
         if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
-        {
-            this->recoverFromSwapchainError();
-            return; // Skip rendering this frame
-        }
-        else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
-            throw std::runtime_error("Failed to acquire swapchain image!");
+            return this->recoverFromSwapchainError(); // Skip rendering this frame
+        else if (acquireResult == VK_SUBOPTIMAL_KHR)
+            if (this->isWindowMinimized())
+                return false;
+            else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+                throw std::runtime_error("Failed to acquire swapchain image!");
 
         // Check if a previous frame is using this image
         if (m_imagesInFlight[m_imageIndex] != nullptr)
@@ -54,6 +79,7 @@ namespace vkn
 
         // Mark the image as being in use by this frame
         m_imagesInFlight[m_imageIndex] = &m_device->getFence(m_currentFrame);
+        return true;
     }
 
     void VknCycle::recordCommandBuffer()
@@ -74,14 +100,12 @@ namespace vkn
         VkRenderPassBeginInfo renderPassBeginInfo{};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = *m_renderpass->getVkRenderPass();
-        // Need to get the correct framebuffer for this image index
-        // Assuming framebuffers are created in the same order as swapchain images
         renderPassBeginInfo.framebuffer = *m_renderpass->getFramebuffer(m_imageIndex)->getVkFramebuffer(); // Need getVkFramebuffer on VknFramebuffer
         renderPassBeginInfo.renderArea.offset = {0, 0};
         renderPassBeginInfo.renderArea.extent = m_swapchain->getActualExtent(); // Use actual swapchain extent
 
         VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // Black clear color
-        renderPassBeginInfo.clearValueCount = 1;                // Assuming one color attachment
+        renderPassBeginInfo.clearValueCount = 1;                // Assuming one color attachment, should be renderpass attachments that have loadOp=VK_ATTACHMENT_LOAD_OP_CLEAR
         renderPassBeginInfo.pClearValues = &clearColor;
 
         vkCmdBeginRenderPass(*m_currentCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -129,7 +153,7 @@ namespace vkn
             "Submit command buffer"};
     }
 
-    void VknCycle::presentImage()
+    bool VknCycle::presentImage()
     {
         // 5. Present the image
         VkPresentInfoKHR presentInfo{};
@@ -145,25 +169,52 @@ namespace vkn
         presentInfo.pResults = nullptr; // Optional: to check results per swapchain
 
         VkResult presentResult = vkQueuePresentKHR(*m_device->getGraphicsQueue(), &presentInfo);
+        m_signalSemaphores.clear();
+        m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // Move to the next frame
 
         if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
-            recoverFromSwapchainError();
+            return this->recoverFromSwapchainError();
         else if (presentResult != VK_SUCCESS)
             throw std::runtime_error("Failed to present swapchain image!");
-
-        m_signalSemaphores.clear();
-
-        // Move to the next frame
-        m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        return true;
     }
 
-    void VknCycle::recoverFromSwapchainError()
+    bool VknCycle::recoverFromSwapchainError()
     {
+        // First, check if the window is minimized using the most reliable method.
+        // If it is, we cannot and should not attempt to recreate the swapchain with zero dimensions.
+        // Signal that recovery failed *for now*; the calling layer (VknApp)
+        // should handle waiting for window events (like un-minimizing).
+        if (this->isWindowMinimized())
+            return false;
+
+        vkDeviceWaitIdle(*m_device->getVkDevice());
+
+        // Critical check: Re-query surface capabilities *directly* before attempting swapchain recreation.
+        // This ensures we have the absolute latest extent information.
+        VkSurfaceCapabilitiesKHR capabilities{};
+        VknPhysicalDevice *physDevice = m_device->getPhysicalDevice();
+
+        if (!physDevice || !physDevice->getVkPhysicalDevice())
+            throw std::runtime_error("Cannot get physical device for swapchain recovery.");
+        if (!m_swapchain->getSurfaceIdx().has_value())
+            throw std::runtime_error("Swapchain does not have a valid surface index for recovery.");
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+            *(physDevice->getVkPhysicalDevice()),
+            m_engine->getObject<VkSurfaceKHR>(m_swapchain->getSurfaceIdx().value()),
+            &capabilities);
+
+        if (capabilities.currentExtent.width == 0 || capabilities.currentExtent.height == 0)
+            // Window became (or still is) minimized just before recreation attempt.
+            return false; // Signal app to wait for events.
+
+        // If we've reached here, the window is not minimized, and capabilities show non-zero extent.
         m_swapchain->recreateSwapchain();
         m_pipeline->getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
         m_renderpass->recreateFramebuffers(*m_swapchain);
-        // m_renderpass->recreatePipelines(*m_swapchain); // Viewports and scissors updates dynamically, now.
         std::cerr << "Recovered from swapchain error." << std::endl;
+        return true;
     }
 
 } // namespace vkn

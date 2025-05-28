@@ -7,8 +7,9 @@ namespace vkn
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
         m_instanceLock = this;
-        m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice, VkInstance>(
+        VknPhysicalDevice &physicalDevice = m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice, VkInstance>(
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
+        m_absIdxs.add<VkPhysicalDevice>(physicalDevice.getPhysicalDeviceAbsIdxs().get<VkPhysicalDevice>());
     }
 
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)

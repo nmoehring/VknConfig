@@ -20,8 +20,9 @@ namespace vkn
         void enableValidationLayer();
 
         // Execute
-        void cycleEngine();
+        bool cycleEngine();
         void exit();
+        bool waitForWindowEventsAndTestIfMinimized();
 
     private:
         // Engine

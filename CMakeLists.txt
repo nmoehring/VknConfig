@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.30)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(VknConfig VERSION 0.3 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")

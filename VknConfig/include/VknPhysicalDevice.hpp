@@ -81,6 +81,7 @@ namespace vkn
         int getNumQueueFamilies() { return m_queues.size(); }
         std::list<VknQueueFamily> &getQueues() { return m_queues; }
         VknQueueFamily &getQueue(int idx);
+        VknIdxs getPhysicalDeviceAbsIdxs() { return m_absIdxs; }
 
     private:
         // Engine

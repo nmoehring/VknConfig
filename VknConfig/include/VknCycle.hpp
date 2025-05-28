@@ -8,15 +8,16 @@ namespace vkn
     {
     public:
         // Execution steps
+        bool isWindowMinimized();
         void wait();
-        void acquireImage();
+        bool acquireImage();
         void recordCommandBuffer();
         void submitCommandBuffer();
-        void presentImage();
+        bool presentImage();
 
         // Setup
         void loadConfig(VknConfig *config, VknEngine *engine);
-        void recoverFromSwapchainError();
+        bool recoverFromSwapchainError();
 
     private:
         // Engine
@@ -38,7 +39,7 @@ namespace vkn
         uint32_t m_currentFrame = 0;
         uint32_t m_imageIndex;
         std::vector<VkSemaphore> m_signalSemaphores;
-        std::vector<VkFence *> m_imagesInFlight{nullptr}; // Fence for each swapchain image
+        std::vector<VkFence *> m_imagesInFlight; // Fence for each swapchain image
         bool m_pipelineExpectsVertexInputs{false};
         VknIdxs m_devRelIdxs;
         uint32_t verticesDrawnLastFrame{0};

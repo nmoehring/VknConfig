@@ -32,7 +32,9 @@ namespace vkn
             throw std::runtime_error("Can't set image dimensions until surface is added.");
         if (m_filledCreateInfo)
             throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+
         VkSurfaceCapabilitiesKHR capabilities{};
+
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
             m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
@@ -40,6 +42,14 @@ namespace vkn
         m_dimensions = {capabilities.currentExtent.width,
                         capabilities.currentExtent.height};
         m_setImageDimensions = true;
+
+        // This check is a safeguard. The primary prevention should be in VknCycle::recoverFromSwapchainError.
+        if (m_dimensions.width == 0 || m_dimensions.height == 0)
+        {
+            throw std::runtime_error(
+                "VknSwapchain::setImageDimensions trying to set zero extent. Window likely minimized. "
+                "This should have been caught by pre-checks in VknCycle::recoverFromSwapchainError.");
+        }
     }
 
     void VknSwapchain::setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace)
@@ -253,7 +263,6 @@ namespace vkn
 
     void VknSwapchain::recreateSwapchain()
     {
-        vkDeviceWaitIdle(m_engine->getObject<VkDevice>(m_absIdxs));
         this->demolishSwapchain();
 
         m_setImageDimensions = false;

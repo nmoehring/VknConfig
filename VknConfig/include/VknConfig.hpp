@@ -107,6 +107,8 @@ namespace vkn
         VknDevice *getDevice(uint32_t deviceIdx);
         std::list<VknDevice> &getDevices() { return m_devices; }
         uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
+        bool hasGLFWConfig() { return m_GLFWwindow != nullptr; }
+        GLFWwindow *getGLFWwindow() { return m_GLFWwindow; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 

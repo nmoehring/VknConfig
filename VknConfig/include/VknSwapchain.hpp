@@ -85,6 +85,7 @@ namespace vkn
         uint32_t getNumImages();
         VkExtent2D getActualExtent() { return m_dimensions; }
         bool isSwapchainCreated() { return m_createdSwapchain; }
+        std::optional<uint32_t> getSurfaceIdx() { return m_surfaceIdx; }
 
     private:
         // Engine
