@@ -59,7 +59,7 @@ namespace vkn
         VknViewportState(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos,
                          VkExtent2D *swapchainExtent, const bool *swapchainCreated);
 
-        void syncWithSwapchain(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx);
+        void syncWithSwapchain(VknSwapchain &swapchain, uint32_t viewportIdx = 0, uint32_t scissorIdx = 0);
 
         void addViewport(float x = 0.0f, float y = 0.0f, float width = 800, float height = 600,
                          float minDepth = 0.0f, float maxDepth = 1.0f);

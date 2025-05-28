@@ -69,7 +69,6 @@ namespace vkn
         uint32_t queueFamilyIdx = device->findGraphicsQueue();
         commandPool->createCommandPool(queueFamilyIdx);
         commandPool->createCommandBuffers(swapchain->getNumImages());
-        device->createSyncObjects(2); // Use 2 frames in flight for a simple demo
 
         // Set shader vertices
         config->setNumHardCodedVertices(3);

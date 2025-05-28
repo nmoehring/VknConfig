@@ -77,7 +77,7 @@ namespace vkn
         VkSampleCountFlagBits m_rasterizationSamples{VK_SAMPLE_COUNT_1_BIT};
         VkBool32 m_sampleShadingEnable{VK_FALSE};
         float m_minSampleShading{0.0f};
-        VkSampleMask m_sampleMask{0};
+        VkSampleMask m_sampleMask{0xFFFFFFFFu};
         VkBool32 m_alphaToCoverageEnable{VK_FALSE};
         VkBool32 m_alphaToOneEnable{VK_FALSE};
 
