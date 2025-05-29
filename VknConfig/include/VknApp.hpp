@@ -1,4 +1,5 @@
 #pragma once
+
 #include <functional>
 #include "VknConfig.hpp"
 #include "VknCycle.hpp"
@@ -16,7 +17,7 @@ namespace vkn
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> func);
-        void addWindow_GLFW(GLFWwindow *window);
+        void addWindow(void *window);
         void enableValidationLayer();
 
         // Execute

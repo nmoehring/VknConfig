@@ -38,7 +38,7 @@ int main()
     info_app.exit();
 
     vkn::VknApp noInputTest{};
-    noInputTest.addWindow_GLFW(window);
+    noInputTest.addWindow(window);
     noInputTest.configureWithPreset(vkn::noInputConfig);
 
     while (!glfwWindowShouldClose(window))

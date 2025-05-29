@@ -2,6 +2,16 @@
 
 namespace vkn
 {
+    VknConfig::VknConfig(VknEngine *engine, VknInfos *infos)
+        : m_engine{engine}, m_infos{infos}
+    {
+#ifdef _WIN32
+        m_hasGlfwWindow = true;
+#elif defined(__ANDROID__)
+        m_hasAndroidWindow = true;
+#endif
+    }
+
     // Debug callback function
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -32,11 +42,6 @@ namespace vkn
     {
         return ((PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"))(
             instance, pCreateInfo, pAllocator, pDebugMessenger);
-    }
-
-    VknConfig::VknConfig(VknEngine *engine, VknInfos *infos)
-        : m_engine{engine}, m_infos{infos}
-    {
     }
 
     VknDevice *VknConfig::addDevice(uint32_t deviceIdx)
@@ -114,34 +119,59 @@ namespace vkn
         return getListElement(deviceIdx, m_devices);
     }
 
-    void VknConfig::addWindow_GLFW(GLFWwindow *window)
+    void VknConfig::addWindow(void *window)
     {
-        m_GLFWwindow = window;
+        m_window = window;
     }
 
     VkSurfaceKHR *VknConfig::createSurface(uint32_t surfaceIdx)
     {
+        if (!m_window)
+            throw std::runtime_error("No window configured for VknConfig::createSurface()");
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
-        if (m_GLFWwindow)
+        if (m_hasGlfwWindow)
         {
             VkSurfaceKHR *surface = this->createWindowSurface_GLFW(surfaceIdx);
             m_createdSurface = true;
             return surface;
         }
-        throw std::runtime_error("No window configured for VknConfig::createSurface()");
+        else if (m_hasAndroidWindow)
+        {
+            VkSurfaceKHR *surface = this->createWindowSurface_Android(surfaceIdx);
+            m_createdSurface = true;
+            return surface;
+        }
+        throw std::runtime_error("No window (GLFW or Android Native) configured for VknConfig::createSurface()");
     }
 
     VkSurfaceKHR *VknConfig::createWindowSurface_GLFW(uint32_t surfaceIdx)
     {
-        if (m_GLFWwindow == nullptr)
-            throw std::runtime_error("Trying to create a window surface but did not pass a window object to Config.");
-
         VkSurfaceKHR *surface = &m_engine->addNewObject<VkSurfaceKHR, VkInstance>(m_absIdxs);
-
         VknResult res{"Create window surface."};
+
+#ifdef _WIN32
         res = glfwCreateWindowSurface(
-            m_engine->getObject<VkInstance>(0), m_GLFWwindow, nullptr, surface);
+            m_engine->getObject<VkInstance>(0), static_cast<GLFWwindow *>(m_window), nullptr, surface);
+#endif
+
+        return surface;
+    }
+
+    VkSurfaceKHR *VknConfig::createWindowSurface_Android(uint32_t surfaceIdx)
+    {
+        VkSurfaceKHR *surface = &m_engine->addNewObject<VkSurfaceKHR, VkInstance>(m_absIdxs);
+        VknResult res{"Create Android window surface."};
+
+#ifdef __ANDROID__
+        VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo{};
+        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+        surfaceCreateInfo.window = m_ANativeWindow;
+
+        PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR_func =
+            (PFN_vkCreateAndroidSurfaceKHR)vkGetInstanceProcAddr(m_engine->getObject<VkInstance>(0), "vkCreateAndroidSurfaceKHR");
+        res = vkCreateAndroidSurfaceKHR_func(m_engine->getObject<VkInstance>(0), &surfaceCreateInfo, nullptr, surface);
+#endif
 
         return surface;
     }

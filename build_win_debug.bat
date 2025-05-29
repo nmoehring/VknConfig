@@ -1,7 +1,7 @@
 @echo off
 echo -- Config and Build Script running --
-set configCommand=cmake . --preset debug
-set buildCommand=cmake --build --preset debug
+set configCommand=cmake . --preset winDebug
+set buildCommand=cmake --build --preset winDebugBuild
 
 IF "%1" == "-log" (
     echo -- Logging enabled --

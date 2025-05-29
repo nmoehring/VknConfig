@@ -17,18 +17,16 @@ namespace vkn
     bool VknCycle::isWindowMinimized()
     {
         // Prioritize direct window check if available
-        if (m_config && m_config->hasGLFWConfig() && m_config->getGLFWwindow())
+        if (m_config && m_config->hasGLFWConfig())
         {
             m_width = 0;
             m_height = 0;
-            glfwGetFramebufferSize(m_config->getGLFWwindow(), &m_width, &m_height);
+#ifdef _WIN32
+            glfwGetFramebufferSize(static_cast<GLFWwindow *>(m_config->getWindow()), &m_width, &m_height);
+#endif
             if (m_width == 0 || m_height == 0)
                 return true;
-            // Optionally, also check iconified state, though framebuffer size is usually sufficient for Vulkan
-            // if (glfwGetWindowAttrib(m_config->getGLFWwindow(), GLFW_ICONIFIED)) {
-            //     return true;
-            // }
-        }
+                }
         else if (m_swapchain) // Fallback to swapchain extent if direct window check not possible
         {
             m_extent = m_swapchain->getActualExtent();

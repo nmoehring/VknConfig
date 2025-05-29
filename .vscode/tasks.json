@@ -3,7 +3,7 @@
         {
             "type": "shell",
             "label": "(Debug) CMake configure and build all",
-            "command": "${workspaceFolder}\\build_debug.bat",
+            "command": "${workspaceFolder}\\build_win_debug.bat",
             "options": {},
             "problemMatcher": [
                 "$msCompile"
@@ -14,7 +14,7 @@
         {
             "type": "shell",
             "label": "(Debug) CMake configure and build all w/ logs",
-            "command": "${workspaceFolder}\\build_debug.bat",
+            "command": "${workspaceFolder}\\build_win_debug.bat",
             "args": [
                 "-log"
             ],
@@ -28,7 +28,7 @@
         {
             "type": "shell",
             "label": "(Debug) CMake configure and build all w/ trace",
-            "command": "${workspaceFolder}\\build_debug.bat",
+            "command": "${workspaceFolder}\\build_win_debug.bat",
             "args": [
                 "trace-log"
             ],

@@ -27,21 +27,27 @@ namespace vkn
             m_cycle.loadConfig(&m_config, &m_engine);
     }
 
-    void VknApp::addWindow_GLFW(GLFWwindow *window)
+    void VknApp::addWindow(void *window)
     {
         if (window == nullptr)
             throw std::runtime_error("Window passed to addWindow_GLFW() is null. There may be a problem with window creation.");
-        m_config.addWindow_GLFW(window);
+        m_config.addWindow(window);
+        uint32_t count{0};
+        std::vector<std::string> extensionStrings{};
+        const char **extensions{nullptr};
 
-        uint32_t count;
-        const char **extensions = glfwGetRequiredInstanceExtensions(&count);
+#ifdef _WIN32
+        extensions = glfwGetRequiredInstanceExtensions(&count);
+        for (uint32_t i = 0; i < count; ++i)
+            extensionStrings.push_back(extensions[i]);
+#elif defined(__ANDROID__)
+        extensionStrings.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+#endif
+
         if (count == 0 | extensions == nullptr)
             throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
-        for (uint32_t i = 0; i < count; i++)
-        {
-            std::string name = extensions[i];
-            m_config.addInstanceExtension(name);
-        }
+        for (auto &ext : extensionStrings)
+            m_config.addInstanceExtension(ext);
     }
 
     void VknApp::enableValidationLayer()

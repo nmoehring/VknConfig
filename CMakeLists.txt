@@ -1,7 +1,22 @@
 cmake_minimum_required(VERSION 3.30)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-project(VknConfig VERSION 0.3 LANGUAGES CXX)
+project(VknConfig VERSION 0.5 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
+
+if(ANDROID)
+    message("Android build detected")
+elseif(WIN32)
+    # WIN32 is defined by CMake for both 32-bit and 64-bit Windows.
+    # If you need to distinguish, you can use CMAKE_SIZEOF_VOID_P.
+    # For example: if(CMAKE_SIZEOF_VOID_P EQUAL 8) message("64-bit Windows") else() message("32-bit Windows") endif()
+    set(PLATFORM_PC TRUE)
+    message("Windows (WIN32) build detected")
+elseif(MACOS)
+    message("MACOS build detected")
+elseif(LINUX)
+    set(PLATFORM_PC TRUE)
+    message("Linux build detected")
+endif()
 
 # --- Utility functions ---
 # Copy directories to build folders keeping in mind debug configs
@@ -32,25 +47,28 @@ endif()
 # --- DEPENDENCIES ---
 include(FetchContent)
 find_package(Vulkan REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
+find_package(GTest CONFIG)
+
+if(GTest_FOUND)
+    message(STATUS "Found GTest via find_package (version ${GTest_VERSION})")
+
+    # GTest is found (e.g., from vcpkg), enable testing
+    enable_testing()
+    include(GoogleTest)
+
+    if(MSVC)
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    endif()
+else()
+    message(WARNING "GTest not found via find_package. Testing will be disabled or FetchContent might be attempted if used elsewhere.")
+endif()
+
+if(PLATFORM_PC)
+    find_package(glfw3 CONFIG REQUIRED)
+endif()
 
 message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
 message(STATUS "Vulkan_LIBRARIES: ${Vulkan_LIBRARIES}")
-
-# --- Fetch gtest ---
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG main
-    GIT_SHALLOW
-)
-
-if(MSVC)
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-endif()
-
-FetchContent_MakeAvailable(googletest)
 
 # ########## LIB AND INCLUDE ########### #
 message("Vulkan header version: ${VulkanHeaderVersion}")

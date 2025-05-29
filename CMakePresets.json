@@ -8,23 +8,54 @@
   "configurePresets": [
     {
       "name": "default",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "binaryDir": "../VknConfig_build/",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
       }
     },
     {
-      "name": "debug",
+      "name": "windows",
       "inherits": "default",
+      "description": "Windows build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "android",
+      "inherits": "default",
+      "description": "Android build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "winDebug",
+      "inherits": "windows",
       "description": "Debug build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "release",
-      "inherits": "default",
+      "name": "winRelease",
+      "inherits": "windows",
+      "description": "Release build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "androidDebug",
+      "inherits": "android",
+      "description": "Debug build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "androidRelease",
+      "inherits": "android",
       "description": "Release build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
@@ -37,12 +68,20 @@
       "configurePreset": "default"
     },
     {
-      "name": "debug",
-      "configurePreset": "debug"
+      "name": "winDebugBuild",
+      "configurePreset": "winDebug"
     },
     {
-      "name": "release",
-      "configurePreset": "release"
+      "name": "winRelease",
+      "configurePreset": "winRelease"
+    },
+    {
+      "name": "androidDebug",
+      "configurePreset": "androidDebug"
+    },
+    {
+      "name": "androidRelease",
+      "configurePreset": "androidRelease"
     }
   ]
 }

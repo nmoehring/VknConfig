@@ -75,7 +75,7 @@ namespace vkn
 
         // Members
         VknDevice *addDevice(uint32_t deviceIdx);
-        void addWindow_GLFW(GLFWwindow *window);
+        void addWindow(void *window);
 
         // Config
         void setupDebugMessenger();
@@ -83,6 +83,7 @@ namespace vkn
         void addLayer(std::string &layer);
         VkSurfaceKHR *createSurface(uint32_t surfaceIdx);
         VkSurfaceKHR *createWindowSurface_GLFW(uint32_t surfaceIdx);
+        VkSurfaceKHR *createWindowSurface_Android(uint32_t surfaceIdx);
         void setValidationEnabled() { m_validationLayerAdded = true; }
         VkDebugUtilsMessengerCreateInfoEXT &populateDebugMessengerCreateInfo();
         void setInstanceCreateFlags(VkInstanceCreateFlags flags) { m_flags = flags; }
@@ -107,8 +108,9 @@ namespace vkn
         VknDevice *getDevice(uint32_t deviceIdx);
         std::list<VknDevice> &getDevices() { return m_devices; }
         uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
-        bool hasGLFWConfig() { return m_GLFWwindow != nullptr; }
-        GLFWwindow *getGLFWwindow() { return m_GLFWwindow; }
+        bool hasWindow() { return m_window != nullptr; } // Generic check
+        bool hasGLFWConfig() { return m_hasGlfwWindow; }
+        void *getWindow() { return m_window; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
@@ -121,7 +123,7 @@ namespace vkn
 
         // Params
         VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
-        GLFWwindow *m_GLFWwindow{nullptr};
+        void *m_window{nullptr};
         VkInstanceCreateFlags m_flags{0};
         std::string m_appName{"My App"};
         std::string m_engineName{"void* Engine"};
@@ -140,6 +142,8 @@ namespace vkn
         bool m_filledAppInfo{false};
         bool m_validationLayerAdded{false};
         bool m_createdSurface{false};
+        bool m_hasGlfwWindow{false};
+        bool m_hasAndroidWindow{false};
 
         void fillAppInfo();
         void fillInstanceCreateInfo();
