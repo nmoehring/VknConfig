@@ -44,7 +44,10 @@ namespace vkn
         extensionStrings.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 #endif
 
-        if (count == 0 | extensions == nullptr)
+        // After attempting to populate extensionStrings, check if it's empty.
+        // For GLFW, if count is 0 or extensions is null, extensionStrings would also be empty.
+        // For Android, we explicitly add one.
+        if (extensionStrings.empty())
             throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
         for (auto &ext : extensionStrings)
             m_config.addInstanceExtension(ext);

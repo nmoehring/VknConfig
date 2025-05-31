@@ -166,7 +166,7 @@ namespace vkn
 #ifdef __ANDROID__
         VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo{};
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.window = m_ANativeWindow;
+        surfaceCreateInfo.window = static_cast<ANativeWindow *>(m_window); // Use m_window
 
         PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR_func =
             (PFN_vkCreateAndroidSurfaceKHR)vkGetInstanceProcAddr(m_engine->getObject<VkInstance>(0), "vkCreateAndroidSurfaceKHR");

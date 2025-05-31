@@ -138,15 +138,13 @@ endif()
 enable_testing()
 
 # --- Single-header libraries
-add_library(vma INTERFACE)
-target_sources(vma INTERFACE single-headers/vma.cpp)
+# add_library(vma INTERFACE)
+# target_sources(vma INTERFACE single-headers/vma.cpp)
 
 # --- subdir ---
 add_subdirectory(VknConfig)
-add_subdirectory(tests)
 
-# add_subdirectory(tests)
-
-# add_subdirectory(VkCore)
-buildSubDir(VkExtCheck)
-buildSubDir(minTest)
+if(NOT PLATFORM_PC)
+    add_subdirectory(tests)
+    buildSubDir(minTest)
+endif()

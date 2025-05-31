@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Debug minTest (MSVC)",
+            "name": "Debug minTest",
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
@@ -10,14 +10,14 @@
             "console": "externalTerminal"
         },
         {
-            "name": "Build ALL and debug minTest (MSVC)",
+            "name": "Build ALL and run minTest (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
             "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build all"
+            "preLaunchTask": "(Windows) CMake Debug Build"
         },
         {
             "name": "Build ALL and run tests (MSVC)",
@@ -27,27 +27,27 @@
             "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/tests/DEBUG/VknConfigUnitTests.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build all"
+            "preLaunchTask": "(Windows) CMake Debug Build"
         },
         {
-            "name": "Build ALL and debug CURRENT file w/ LOGS (MSVC)",
+            "name": "Build ALL and run minTest w/ LOGS (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
             "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build all w/ logs"
+            "preLaunchTask": "(Windows) CMake Debug Build w/ logs"
         },
         {
-            "name": "Build ALL and debug CURRENT file w/ TRACE logs (MSVC)",
+            "name": "Build ALL and run minTest w/ TRACE logs (MSVC)",
             "type": "cppvsdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug",
             "program": "${workspaceFolder}/../${workspaceFolderBasename}_build/minTest/Debug/minTest.exe",
             "stopAtEntry": false,
             "console": "externalTerminal",
-            "preLaunchTask": "(Debug) CMake configure and build all w/ trace"
+            "preLaunchTask": "(Windows) CMake Debug Build w/ trace-log"
         }
     ],
     "version": "2.0.0"

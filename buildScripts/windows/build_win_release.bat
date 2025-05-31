@@ -1,7 +1,9 @@
+REM Usage: build_win_release.bat [-log | -trace-log]
+
 @echo off
 echo -- Config and Build Script running --
-set configCommand=cmake . --preset winDebug
-set buildCommand=cmake --build --preset winDebugBuild
+set configCommand=cmake . --preset winRelease
+set buildCommand=cmake --build --preset winReleaseBuild
 
 IF "%1" == "-log" (
     echo -- Logging enabled --
