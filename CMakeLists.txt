@@ -32,13 +32,6 @@ function(copyResources)
     endif()
 endfunction()
 
-function(buildSubDir subdir)
-    if(NOT TARGET_SUBDIR OR TARGET_SUBDIR MATCHES ALL OR TARGET_SUBDIR MATCHES ${subdir})
-        message(" BUILDING ${TARGET_SUBDIR} ")
-        add_subdirectory(${subdir})
-    endif()
-endfunction()
-
 # --- Create build dir ---
 if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR})
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -47,28 +40,39 @@ endif()
 # --- DEPENDENCIES ---
 include(FetchContent)
 find_package(Vulkan REQUIRED)
-find_package(GTest CONFIG)
-
-if(GTest_FOUND)
-    message(STATUS "Found GTest via find_package (version ${GTest_VERSION})")
-
-    # GTest is found (e.g., from vcpkg), enable testing
-    enable_testing()
-    include(GoogleTest)
-
-    if(MSVC)
-        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    endif()
-else()
-    message(WARNING "GTest not found via find_package. Testing will be disabled or FetchContent might be attempted if used elsewhere.")
-endif()
-
-if(PLATFORM_PC)
-    find_package(glfw3 CONFIG REQUIRED)
-endif()
 
 message(STATUS "Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS}")
 message(STATUS "Vulkan_LIBRARIES: ${Vulkan_LIBRARIES}")
+
+
+if(PLATFORM_PC)
+    find_package(glfw3 CONFIG REQUIRED)
+    find_package(GTest CONFIG)
+
+    if(GTest_FOUND)
+        message(STATUS "Found GTest via find_package (version ${GTest_VERSION})")
+        include(GoogleTest)
+        if(MSVC)
+            set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        endif()
+    else()
+        message(WARNING "GTest not found via find_package. Testing will be disabled or FetchContent might be attempted if used elsewhere.")
+    endif()
+elseif(ANDROID)
+    find_library(log-lib         # Variable to store the path
+            log)            # Name of the library to find (liblog.so)
+
+    find_library(android-lib     # Variable
+            android)        # Name of the library (libandroid.so)
+
+    # For ANativeWindow access, especially if you're getting it from a Java Surface
+    find_library(jnigraphics-lib # For ANativeWindow_fromSurface
+            jnigraphics)
+
+    # Example: If using OpenGL ES
+    # find_library(opengles2-lib EGL GLESv2) # Find EGL and GLESv2
+
+endif()
 
 # ########## LIB AND INCLUDE ########### #
 message("Vulkan header version: ${VulkanHeaderVersion}")
@@ -78,9 +82,14 @@ message("^If this points to some other installed Vulkan header files and not you
 include_directories(
     ${CMAKE_SOURCE_DIR}
     ${Vulkan_INCLUDE_DIRS}
-    ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
-    ${glfw3_DIR}/include
 )
+
+if(PLATFORM_PC)
+    include_directories(
+        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
+        ${glfw3_DIR}/include
+    )
+endif()
 
 # --- Compiler Arguments (Cross-Platform) ---
 add_library(VknConfig_args INTERFACE)
@@ -121,21 +130,21 @@ elseif(CMAKE_BUILD_TYPE MATCHES MinSizeRel)
 endif()
 
 # --- Lib Dirs ---
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    link_directories(
-        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
-    )
-elseif(CMAKE_BUILD_TYPE MATCHES Release OR
-    CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
-    CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-    link_directories(
-        ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
-    )
-else()
-    message("Unknown build type.")
+if (PLATFORM_PC)
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        link_directories(
+            ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
+        )
+    elseif(CMAKE_BUILD_TYPE MATCHES Release OR
+        CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
+        CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+        link_directories(
+            ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
+        )
+    else()
+        message("Unknown build type.")
+    endif()
 endif()
-
-enable_testing()
 
 # --- Single-header libraries
 # add_library(vma INTERFACE)
@@ -144,7 +153,7 @@ enable_testing()
 # --- subdir ---
 add_subdirectory(VknConfig)
 
-if(NOT PLATFORM_PC)
+if(PLATFORM_PC)
     add_subdirectory(tests)
-    buildSubDir(minTest)
+    add_subdirectory(minTest)
 endif()
