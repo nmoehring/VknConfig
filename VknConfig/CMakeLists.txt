@@ -18,13 +18,13 @@ add_library(VknConfig ${VKNCONFIG_LIB_TYPE} VknConfig.cpp VknDevice.cpp VknInfos
 if (ANDROID)
     target_sources(VknConfig PRIVATE native-lib.cpp)
     target_link_libraries(VknConfig PRIVATE
-            ${log-lib}         # For logging
-            ${android-lib}     # For ANativeWindow, AAssetManager, etc.
-            ${jnigraphics-lib} # Specifically if using ANativeWindow_fromSurface
+            log # For logging
+            android ## For ANativeWindow, AAssetManager, etc.
+            jnigraphics ## Specifically if using ANativeWindow_fromSurface
             vulkan
     )
 elseif(PLATFORM_PC)
-    target_link_libraries(${Vulkan_LIBRARIES}) #Android provides its own libraries
+    target_link_libraries(VknConfig PUBLIC ${Vulkan_LIBRARIES}) #Android provides its own libraries
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -38,4 +38,4 @@ else()
 endif()
 
 target_link_libraries(VknConfig VknConfig_args)
-target_include_directories(VknConfig PUBLIC $CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(VknConfig PRIVATE $CMAKE_CURRENT_SOURCE_DIR}/include)
