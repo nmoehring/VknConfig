@@ -1,6 +1,7 @@
 project(VknConfig)
 
 set(VKNCONFIG_LIB_TYPE STATIC) # Default to STATIC
+
 if(ANDROID)
     set(VKNCONFIG_LIB_TYPE SHARED)
 endif()
@@ -15,27 +16,17 @@ add_library(VknConfig ${VKNCONFIG_LIB_TYPE} VknConfig.cpp VknDevice.cpp VknInfos
     VknColorBlendState.cpp VknCommandPool.cpp VknApp.cpp VknCycle.cpp
     presets/NoInput.cpp presets/DeviceInfo.cpp VknDynamicState.cpp)
 
-if (ANDROID)
+if(ANDROID)
     target_sources(VknConfig PRIVATE native-lib.cpp)
     target_link_libraries(VknConfig PRIVATE
-            log # For logging
-            android ## For ANativeWindow, AAssetManager, etc.
-            jnigraphics ## Specifically if using ANativeWindow_fromSurface
-            vulkan
+        log # For logging
+        android # # For ANativeWindow, AAssetManager, etc.
+        jnigraphics # # Specifically if using ANativeWindow_fromSurface
+        vulkan
     )
 elseif(PLATFORM_PC)
-    target_link_libraries(VknConfig PUBLIC ${Vulkan_LIBRARIES}) #Android provides its own libraries
+    target_link_libraries(VknConfig PUBLIC ${Vulkan_LIBRARIES}) # Android provides its own libraries
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-# target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})
-elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR
-    CMAKE_BUILD_TYPE MATCHES Release OR
-    CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-# target_link_directories(VknConfig PUBLIC ${Vulkan_LIBRARIES})
-else()
-    message("Unknown build type.")
-endif()
-
-target_link_libraries(VknConfig VknConfig_args)
-target_include_directories(VknConfig PRIVATE $CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(VknConfig PRIVATE VknConfig_args)
+target_include_directories(VknConfig PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
