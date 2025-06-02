@@ -8,7 +8,6 @@ namespace vkn
     {
     public:
         // Execution steps
-        bool isWindowMinimized();
         void wait();
         bool acquireImage();
         void recordCommandBuffer();

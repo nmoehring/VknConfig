@@ -42,9 +42,6 @@
  * [VknResult] (Free/Top-Level)
  */
 
-#define VK_USE_PLATFORM_WIN32_KHR
-#define GLFW_INCLUDE_VULKAN
-
 #pragma once
 
 #include <list>
@@ -54,11 +51,10 @@
 #include <stdexcept>
 
 #include <vulkan/vulkan.h>
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 
 #include "VknDevice.hpp"
 #include "VknData.hpp"
+#include "VknWindow.hpp"
 
 namespace vkn
 {
@@ -75,7 +71,7 @@ namespace vkn
 
         // Members
         VknDevice *addDevice(uint32_t deviceIdx);
-        void addWindow(void *window);
+        void addWindow(VknWindow *window);
 
         // Config
         void setupDebugMessenger();
@@ -110,7 +106,7 @@ namespace vkn
         uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
         bool hasWindow() { return m_window != nullptr; } // Generic check
         bool hasGLFWConfig() { return m_hasGlfwWindow; }
-        void *getWindow() { return m_window; }
+        VknWindow *getWindow() { return m_window; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
@@ -123,7 +119,7 @@ namespace vkn
 
         // Params
         VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
-        void *m_window{nullptr};
+        VknWindow *m_window{nullptr};
         VkInstanceCreateFlags m_flags{0};
         std::string m_appName{"My App"};
         std::string m_engineName{"void* Engine"};

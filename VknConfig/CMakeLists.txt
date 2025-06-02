@@ -14,18 +14,20 @@ add_library(VknConfig ${VKNCONFIG_LIB_TYPE} VknConfig.cpp VknDevice.cpp VknInfos
     VknFramebuffer.cpp VknEngine.cpp VknData.cpp VknPipelineLayout.cpp
     VknDescriptorSetLayout.cpp VknImage.cpp VknFeatures.cpp
     VknColorBlendState.cpp VknCommandPool.cpp VknApp.cpp VknCycle.cpp
-    presets/NoInput.cpp presets/DeviceInfo.cpp VknDynamicState.cpp)
+    presets/NoInput.cpp presets/DeviceInfo.cpp VknDynamicState.cpp
+    VknPlatforms.cpp)
 
 if(ANDROID)
-    target_sources(VknConfig PRIVATE native-lib.cpp)
+    target_sources(VknConfig PRIVATE native-lib.cpp PlatformSpecific/Android_Window.cpp)
     target_link_libraries(VknConfig PRIVATE
         log # For logging
         android # # For ANativeWindow, AAssetManager, etc.
         jnigraphics # # Specifically if using ANativeWindow_fromSurface
         vulkan
     )
-elseif(PLATFORM_PC)
-    target_link_libraries(VknConfig PUBLIC ${Vulkan_LIBRARIES}) # Android provides its own libraries
+elseif(PLATFORM_DESKTOP)
+    target_sources(VknConfig PRIVATE PlatformSpecific/GLFW_Window.cpp)
+    target_link_libraries(VknConfig PRIVATE glfw ${Vulkan_LIBRARIES})
 endif()
 
 target_link_libraries(VknConfig PRIVATE VknConfig_args)

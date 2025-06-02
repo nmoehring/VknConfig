@@ -14,29 +14,6 @@ namespace vkn
         m_clearColor = {{{r, g, b, a}}};
     }
 
-    bool VknCycle::isWindowMinimized()
-    {
-        // Prioritize direct window check if available
-        if (m_config && m_config->hasGLFWConfig())
-        {
-            m_width = 0;
-            m_height = 0;
-#ifdef _WIN32
-            glfwGetFramebufferSize(static_cast<GLFWwindow *>(m_config->getWindow()), &m_width, &m_height);
-#endif
-            if (m_width == 0 || m_height == 0)
-                return true;
-                }
-        else if (m_swapchain) // Fallback to swapchain extent if direct window check not possible
-        {
-            m_extent = m_swapchain->getActualExtent();
-            if (m_extent.width == 0 || m_extent.height == 0)
-                return true;
-        }
-        // If no config or swapchain, or if checks pass, assume not minimized in a way that blocks rendering.
-        return false;
-    }
-
     void VknCycle::loadConfig(VknConfig *config, VknEngine *engine)
     {
         m_config = config;
@@ -86,13 +63,10 @@ namespace vkn
             *m_device->getVkDevice(), *m_swapchain->getVkSwapchain(), m_defaultTimeout,
             m_device->getImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &m_imageIndex);
 
-        if (m_acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+        if (m_acquireResult == VK_ERROR_OUT_OF_DATE_KHR || m_acquireResult == VK_SUBOPTIMAL_KHR)
             return this->recoverFromSwapchainError(); // Skip rendering this frame
-        else if (m_acquireResult == VK_SUBOPTIMAL_KHR)
-            if (this->isWindowMinimized())
-                return false;
-            else if (m_acquireResult != VK_SUCCESS && m_acquireResult != VK_SUBOPTIMAL_KHR)
-                throw std::runtime_error("Failed to acquire swapchain image!");
+        else if (m_acquireResult != VK_SUCCESS && m_acquireResult != VK_SUBOPTIMAL_KHR)
+            throw std::runtime_error("Failed to acquire swapchain image!");
 
         // Check if a previous frame is using this image
         if (m_imagesInFlight[m_imageIndex] != nullptr)
@@ -204,7 +178,7 @@ namespace vkn
         // If it is, we cannot and should not attempt to recreate the swapchain with zero dimensions.
         // Signal that recovery failed *for now*; the calling layer (VknApp)
         // should handle waiting for window events (like un-minimizing).
-        if (this->isWindowMinimized())
+        if (!m_config->getWindow()->isActive())
             return false;
 
         vkDeviceWaitIdle(*m_device->getVkDevice());

@@ -1,8 +1,11 @@
 #pragma once
 
 #include <functional>
+
+#include "VknPlatforms.hpp"
 #include "VknConfig.hpp"
 #include "VknCycle.hpp"
+#include "VknWindow.hpp"
 
 namespace vkn
 {
@@ -17,13 +20,13 @@ namespace vkn
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> func);
-        void addWindow(void *window);
+        void addWindow();
         void enableValidationLayer();
 
         // Execute
         bool cycleEngine();
+        void run();
         void exit();
-        bool waitForWindowEventsAndTestIfMinimized();
 
     private:
         // Engine
@@ -32,8 +35,12 @@ namespace vkn
         VknEngine m_engine{};
         VknInfos m_infos{};
 
+        // Members
+        VknWindow *m_vknWindow{nullptr};
+
         // State
         bool m_configured{false};
+        bool m_setPlatformExtensions{false};
         static uint32_t m_numApps;
     };
 

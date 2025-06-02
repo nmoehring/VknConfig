@@ -12,10 +12,26 @@ namespace vkn
             ++m_numApps;
     }
 
+    void VknApp::run()
+    {
+        bool keepRunning{true};
+        if (m_vknWindow && !m_vknWindow->init())
+            throw std::runtime_error("VknWindow initialization failed.");
+        while (keepRunning)
+        {
+            keepRunning = m_vknWindow->update();
+            if (keepRunning && m_vknWindow->isActive())
+                this->cycleEngine();
+        }
+    }
+
     void VknApp::exit()
     {
         m_engine.shutdown();
         m_config.demolish();
+        if (m_vknWindow)
+            delete m_vknWindow;
+        m_vknWindow = nullptr;
         --m_numApps;
     }
 
@@ -27,30 +43,32 @@ namespace vkn
             m_cycle.loadConfig(&m_config, &m_engine);
     }
 
-    void VknApp::addWindow(void *window)
+    void VknApp::addWindow()
     {
-        if (window == nullptr)
-            throw std::runtime_error("Window passed to addWindow_GLFW() is null. There may be a problem with window creation.");
-        m_config.addWindow(window);
-        uint32_t count{0};
-        std::vector<std::string> extensionStrings{};
-        const char **extensions{nullptr};
+        m_vknWindow = getPlatformSpecificWindow();
 
-#ifdef _WIN32
-        extensions = glfwGetRequiredInstanceExtensions(&count);
-        for (uint32_t i = 0; i < count; ++i)
-            extensionStrings.push_back(extensions[i]);
-#elif defined(__ANDROID__)
-        extensionStrings.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-#endif
+        if (!m_vknWindow) // Should be caught by addWindow if getPlatformSpecificWindow returns null
+            throw std::runtime_error("VknWindow was not created by addWindow().");
 
-        // After attempting to populate extensionStrings, check if it's empty.
-        // For GLFW, if count is 0 or extensions is null, extensionStrings would also be empty.
-        // For Android, we explicitly add one.
-        if (extensionStrings.empty())
-            throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
-        for (auto &ext : extensionStrings)
-            m_config.addInstanceExtension(ext);
+        if (!m_vknWindow->init())
+            throw std::runtime_error("VknWindow initialization failed.");
+
+        if (!m_setPlatformExtensions)
+        {
+            std::vector<std::string> extensionStrings = getPlatformSpecificExtensions();
+
+            // After attempting to populate extensionStrings, check if it's empty.
+            // For GLFW, if count is 0 or extensions is null, extensionStrings would also be empty.
+            // For Android, we explicitly add one.
+            if (extensionStrings.empty())
+                throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
+
+            for (auto &ext : extensionStrings)
+                m_config.addInstanceExtension(ext);
+
+            m_setPlatformExtensions = true;
+            m_config.addWindow(m_vknWindow);
+        }
     }
 
     void VknApp::enableValidationLayer()
@@ -68,28 +86,13 @@ namespace vkn
         if (!m_configured)
             throw std::runtime_error("App not configured before cycling engine.");
 
-        if (!this->waitForWindowEventsAndTestIfMinimized()) // Ensures glfwWaitEvents is called if minimized
-            return false;
         m_cycle.wait();
         if (!m_cycle.acquireImage())
-            return this->waitForWindowEventsAndTestIfMinimized();
+            return false;
         m_cycle.recordCommandBuffer();
         m_cycle.submitCommandBuffer();
         if (!m_cycle.presentImage())
-            return this->waitForWindowEventsAndTestIfMinimized();
-        return true;
-    }
-
-    bool VknApp::waitForWindowEventsAndTestIfMinimized()
-    {
-        if (m_cycle.isWindowMinimized())
-        {
-            if (m_config.hasGLFWConfig())
-                glfwWaitEvents();
-            else
-                throw std::runtime_error("Unknown window configuration!");
             return false;
-        }
         return true;
     }
 }

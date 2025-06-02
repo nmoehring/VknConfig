@@ -1,4 +1,5 @@
 #include "include/VknConfig.hpp"
+#include "include/VknPlatforms.hpp"
 
 namespace vkn
 {
@@ -119,59 +120,24 @@ namespace vkn
         return getListElement(deviceIdx, m_devices);
     }
 
-    void VknConfig::addWindow(void *window)
+    void VknConfig::addWindow(VknWindow *window)
     {
         m_window = window;
     }
 
     VkSurfaceKHR *VknConfig::createSurface(uint32_t surfaceIdx)
     {
+
         if (!m_window)
             throw std::runtime_error("No window configured for VknConfig::createSurface()");
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
-        if (m_hasGlfwWindow)
-        {
-            VkSurfaceKHR *surface = this->createWindowSurface_GLFW(surfaceIdx);
-            m_createdSurface = true;
-            return surface;
-        }
-        else if (m_hasAndroidWindow)
-        {
-            VkSurfaceKHR *surface = this->createWindowSurface_Android(surfaceIdx);
-            m_createdSurface = true;
-            return surface;
-        }
-        throw std::runtime_error("No window (GLFW or Android Native) configured for VknConfig::createSurface()");
-    }
 
-    VkSurfaceKHR *VknConfig::createWindowSurface_GLFW(uint32_t surfaceIdx)
-    {
         VkSurfaceKHR *surface = &m_engine->addNewObject<VkSurfaceKHR, VkInstance>(m_absIdxs);
         VknResult res{"Create window surface."};
 
-#ifdef _WIN32
-        res = glfwCreateWindowSurface(
-            m_engine->getObject<VkInstance>(0), static_cast<GLFWwindow *>(m_window), nullptr, surface);
-#endif
-
-        return surface;
-    }
-
-    VkSurfaceKHR *VknConfig::createWindowSurface_Android(uint32_t surfaceIdx)
-    {
-        VkSurfaceKHR *surface = &m_engine->addNewObject<VkSurfaceKHR, VkInstance>(m_absIdxs);
-        VknResult res{"Create Android window surface."};
-
-#ifdef __ANDROID__
-        VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo{};
-        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.window = static_cast<ANativeWindow *>(m_window); // Use m_window
-
-        PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR_func =
-            (PFN_vkCreateAndroidSurfaceKHR)vkGetInstanceProcAddr(m_engine->getObject<VkInstance>(0), "vkCreateAndroidSurfaceKHR");
-        res = vkCreateAndroidSurfaceKHR_func(m_engine->getObject<VkInstance>(0), &surfaceCreateInfo, nullptr, surface);
-#endif
+        getPlatformSpecificSurface(
+            surface, surfaceIdx, m_engine->getObject<VkInstance>(0), m_window);
 
         return surface;
     }
