@@ -19,7 +19,6 @@ namespace vkn
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> func);
-        void addWindow();
         void enableValidationLayer();
 
         // Execute

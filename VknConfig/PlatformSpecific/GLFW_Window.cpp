@@ -67,6 +67,9 @@ namespace vkn
 
     bool GLFW_Window::init()
     {
+        if (m_windowCreated)
+            throw std::runtime_error("Window already created.");
+
         if (s_windowCount == 1)
         {
             if (!glfwInit())

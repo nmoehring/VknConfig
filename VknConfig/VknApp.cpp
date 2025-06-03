@@ -15,8 +15,6 @@ namespace vkn
     void VknApp::run()
     {
         bool keepRunning{true};
-        if (m_config.getWindow() && !m_config.getWindow()->init())
-            throw std::runtime_error("VknWindow initialization failed.");
         while (keepRunning)
         {
             keepRunning = m_config.getWindow()->update();
