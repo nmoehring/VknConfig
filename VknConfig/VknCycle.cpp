@@ -200,6 +200,10 @@ namespace vkn
 
         // If we've reached here, the window is not minimized, and capabilities show non-zero extent.
         m_swapchain->recreateSwapchain();
+
+        // Reset m_imagesInFlight for the new swapchain
+        m_imagesInFlight.assign(m_swapchain->getNumImages(), nullptr);
+
         m_pipeline->getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
         m_renderpass->recreateFramebuffers(*m_swapchain);
         std::cerr << "Recovered from swapchain error." << std::endl;
