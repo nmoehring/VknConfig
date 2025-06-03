@@ -1,16 +1,10 @@
 #include "include/VknConfig.hpp"
-#include "include/VknPlatforms.hpp"
 
 namespace vkn
 {
     VknConfig::VknConfig(VknEngine *engine, VknInfos *infos)
         : m_engine{engine}, m_infos{infos}
     {
-#ifdef _WIN32
-        m_hasGlfwWindow = true;
-#elif defined(__ANDROID__)
-        m_hasAndroidWindow = true;
-#endif
     }
 
     // Debug callback function
@@ -120,15 +114,37 @@ namespace vkn
         return getListElement(deviceIdx, m_devices);
     }
 
-    void VknConfig::addWindow(VknWindow *window)
+    void VknConfig::addWindow()
     {
-        m_window = window;
+        m_vknWindow = getPlatformSpecificWindow();
+
+        if (!m_vknWindow) // Should be caught by addWindow if getPlatformSpecificWindow returns null
+            throw std::runtime_error("VknWindow was not created by addWindow().");
+
+        if (!m_vknWindow->init())
+            throw std::runtime_error("VknWindow initialization failed.");
+
+        if (!m_setPlatformExtensions)
+        {
+            std::vector<std::string> extensionStrings = getPlatformSpecificExtensions();
+
+            // After attempting to populate extensionStrings, check if it's empty.
+            // For GLFW, if count is 0 or extensions is null, extensionStrings would also be empty.
+            // For Android, we explicitly add one.
+            if (extensionStrings.empty())
+                throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
+
+            for (auto &ext : extensionStrings)
+                this->addInstanceExtension(ext);
+
+            m_setPlatformExtensions = true;
+        }
     }
 
     VkSurfaceKHR *VknConfig::createSurface(uint32_t surfaceIdx)
     {
 
-        if (!m_window)
+        if (!m_vknWindow)
             throw std::runtime_error("No window configured for VknConfig::createSurface()");
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
@@ -137,7 +153,7 @@ namespace vkn
         VknResult res{"Create window surface."};
 
         getPlatformSpecificSurface(
-            surface, surfaceIdx, m_engine->getObject<VkInstance>(0), m_window);
+            surface, surfaceIdx, m_engine->getObject<VkInstance>(0), m_vknWindow);
 
         return surface;
     }
@@ -160,5 +176,8 @@ namespace vkn
     void VknConfig::demolish()
     {
         m_devices.clear();
+        if (m_vknWindow)
+            delete m_vknWindow;
+        m_vknWindow = nullptr;
     }
 }

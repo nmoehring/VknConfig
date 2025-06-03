@@ -7,6 +7,7 @@ namespace vkn
         // Shallow Config members
         config->setAppName("NoInputsTest");
         config->setEngineName("MinVknConfig");
+        config->addWindow();
         config->createInstance();
         config->createSurface(0);
 

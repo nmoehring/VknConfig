@@ -67,9 +67,6 @@ namespace vkn
 
     bool GLFW_Window::init()
     {
-        if (!glfwVulkanSupported())
-            throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
-
         if (s_windowCount == 1)
         {
             if (!glfwInit())
@@ -82,6 +79,8 @@ namespace vkn
 
         if (!m_window)
             throw std::runtime_error("Problem creating GLFW window.");
+        if (!glfwVulkanSupported())
+            throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
         glfwSetWindowUserPointer(m_window, this);
         glfwSetKeyCallback(m_window, glfwKeyCallback);
 

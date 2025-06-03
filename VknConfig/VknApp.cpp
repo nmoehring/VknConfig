@@ -15,12 +15,12 @@ namespace vkn
     void VknApp::run()
     {
         bool keepRunning{true};
-        if (m_vknWindow && !m_vknWindow->init())
+        if (m_config.getWindow() && !m_config.getWindow()->init())
             throw std::runtime_error("VknWindow initialization failed.");
         while (keepRunning)
         {
-            keepRunning = m_vknWindow->update();
-            if (keepRunning && m_vknWindow->isActive())
+            keepRunning = m_config.getWindow()->update();
+            if (keepRunning && m_config.getWindow()->isActive())
                 this->cycleEngine();
         }
     }
@@ -29,9 +29,6 @@ namespace vkn
     {
         m_engine.shutdown();
         m_config.demolish();
-        if (m_vknWindow)
-            delete m_vknWindow;
-        m_vknWindow = nullptr;
         --m_numApps;
     }
 
@@ -41,34 +38,6 @@ namespace vkn
         m_configured = true;
         if (readyToRun)
             m_cycle.loadConfig(&m_config, &m_engine);
-    }
-
-    void VknApp::addWindow()
-    {
-        m_vknWindow = getPlatformSpecificWindow();
-
-        if (!m_vknWindow) // Should be caught by addWindow if getPlatformSpecificWindow returns null
-            throw std::runtime_error("VknWindow was not created by addWindow().");
-
-        if (!m_vknWindow->init())
-            throw std::runtime_error("VknWindow initialization failed.");
-
-        if (!m_setPlatformExtensions)
-        {
-            std::vector<std::string> extensionStrings = getPlatformSpecificExtensions();
-
-            // After attempting to populate extensionStrings, check if it's empty.
-            // For GLFW, if count is 0 or extensions is null, extensionStrings would also be empty.
-            // For Android, we explicitly add one.
-            if (extensionStrings.empty())
-                throw std::runtime_error("Problem retrieving Vulkan extensions required for surface creation. There may be a problem with window creation, or only compute is supported.");
-
-            for (auto &ext : extensionStrings)
-                m_config.addInstanceExtension(ext);
-
-            m_setPlatformExtensions = true;
-            m_config.addWindow(m_vknWindow);
-        }
     }
 
     void VknApp::enableValidationLayer()

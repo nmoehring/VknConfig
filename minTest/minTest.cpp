@@ -14,27 +14,19 @@ GLFWwindow *initWindow();
 
 int main()
 {
-    try
-    {
-        /*
-        vkn::VknApp info_app{};
-        info_app.configureWithPreset(vkn::deviceInfoConfig);
-        info_app.run();
-        info_app.exit();
-        */
+    /*
+    vkn::VknApp info_app{};
+    info_app.configureWithPreset(vkn::deviceInfoConfig);
+    info_app.run();
+    info_app.exit();
+    */
 
-        vkn::VknApp noInputApp{};
-        noInputApp.configureWithPreset(vkn::noInputConfig); // Configure before run
-        // If validation layers are desired:
-        // noInputApp.enableValidationLayer();
-        noInputApp.addWindow();
-        noInputApp.run();
-        noInputApp.exit(); // Explicitly call exit
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Unhandled exception: " << e.what() << std::endl;
-        return EXIT_FAILURE;
-    }
+    vkn::VknApp noInputApp{};
+    noInputApp.configureWithPreset(vkn::noInputConfig); // Configure before run
+    // If validation layers are desired:
+    // noInputApp.enableValidationLayer();
+    noInputApp.run();
+    noInputApp.exit(); // Explicitly call exit
+
     return EXIT_SUCCESS;
 }

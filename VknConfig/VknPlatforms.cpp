@@ -43,13 +43,13 @@ namespace vkn
             instance, static_cast<GLFWwindow *>(window->getNativeHandle()), nullptr, surface);
 
 #elif defined(__ANDROID__)
-        VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo{};
-        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-        surfaceCreateInfo.window = static_cast<ANativeWindow *>(window->getNativeHandle()); // Use getNativeHandle()
+        VkAndroidSurfaceCreateInfoKHR androidSurfaceCreateInfo{};
+        androidSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+        androidSurfaceCreateInfo.window = static_cast<ANativeWindow *>(window->getNativeHandle()); // Use getNativeHandle()
 
         PFN_vkCreateAndroidSurfaceKHR vkCreateAndroidSurfaceKHR_func =
             (PFN_vkCreateAndroidSurfaceKHR)vkGetInstanceProcAddr(instance, "vkCreateAndroidSurfaceKHR");
-        res = vkCreateAndroidSurfaceKHR_func(instance, &surfaceCreateInfo, nullptr, surface);
+        res = vkCreateAndroidSurfaceKHR_func(instance, &androidSurfaceCreateInfo, nullptr, surface);
 #endif
         // The VknResult 'res' will evaluate the VkResult from the surface creation call.
     }

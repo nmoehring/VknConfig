@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include "VknPlatforms.hpp"
 #include "VknConfig.hpp"
 #include "VknCycle.hpp"
 #include "VknWindow.hpp"
@@ -35,12 +34,8 @@ namespace vkn
         VknEngine m_engine{};
         VknInfos m_infos{};
 
-        // Members
-        VknWindow *m_vknWindow{nullptr};
-
         // State
         bool m_configured{false};
-        bool m_setPlatformExtensions{false};
         static uint32_t m_numApps;
     };
 

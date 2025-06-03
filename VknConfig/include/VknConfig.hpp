@@ -52,6 +52,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "VknPlatforms.hpp"
 #include "VknDevice.hpp"
 #include "VknData.hpp"
 #include "VknWindow.hpp"
@@ -71,7 +72,7 @@ namespace vkn
 
         // Members
         VknDevice *addDevice(uint32_t deviceIdx);
-        void addWindow(VknWindow *window);
+        void addWindow();
 
         // Config
         void setupDebugMessenger();
@@ -104,9 +105,8 @@ namespace vkn
         VknDevice *getDevice(uint32_t deviceIdx);
         std::list<VknDevice> &getDevices() { return m_devices; }
         uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
-        bool hasWindow() { return m_window != nullptr; } // Generic check
-        bool hasGLFWConfig() { return m_hasGlfwWindow; }
-        VknWindow *getWindow() { return m_window; }
+        bool hasWindow() { return m_vknWindow != nullptr; } // Generic check
+        VknWindow *getWindow() { return m_vknWindow; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
@@ -119,7 +119,7 @@ namespace vkn
 
         // Params
         VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
-        VknWindow *m_window{nullptr};
+        VknWindow *m_vknWindow{nullptr};
         VkInstanceCreateFlags m_flags{0};
         std::string m_appName{"My App"};
         std::string m_engineName{"void* Engine"};
@@ -138,10 +138,10 @@ namespace vkn
         bool m_filledAppInfo{false};
         bool m_validationLayerAdded{false};
         bool m_createdSurface{false};
-        bool m_hasGlfwWindow{false};
-        bool m_hasAndroidWindow{false};
+        bool m_setPlatformExtensions{false};
 
-        void fillAppInfo();
+        void
+        fillAppInfo();
         void fillInstanceCreateInfo();
     };
 
