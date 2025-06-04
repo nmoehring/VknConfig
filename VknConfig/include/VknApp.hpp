@@ -34,7 +34,7 @@ namespace vkn
         VknInfos m_infos{};
 
         // State
-        bool m_configured{false};
+        bool m_readyToRun{false};
         static uint32_t m_numApps;
     };
 

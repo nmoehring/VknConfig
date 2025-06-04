@@ -32,9 +32,8 @@ namespace vkn
 
     void VknApp::configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> preset)
     {
-        bool readyToRun = preset(&m_config, &m_engine, &m_infos);
-        m_configured = true;
-        if (readyToRun)
+        m_readyToRun = preset(&m_config, &m_engine, &m_infos);
+        if (m_readyToRun)
             m_cycle.loadConfig(&m_config, &m_engine);
     }
 
@@ -50,8 +49,8 @@ namespace vkn
 
     bool VknApp::cycleEngine()
     {
-        if (!m_configured)
-            throw std::runtime_error("App not configured before cycling engine.");
+        if (!m_readyToRun)
+            throw std::runtime_error("App Cycle not configured before being run.");
 
         m_cycle.wait();
         if (!m_cycle.acquireImage())

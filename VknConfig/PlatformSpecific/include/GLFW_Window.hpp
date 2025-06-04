@@ -20,6 +20,8 @@ namespace vkn
         bool isActive() override; // True if window is active and rendering can occur
         bool isClosed() override; // True if the window has been signaled to close or is demolished
         void *getNativeHandle() const override;
+        void setApp(void *app);         // Initially for Android, but may be other uses?
+        void handleAppCmd(int32_t cmd); // Initially for Android, but may be other uses?
 
     private:
         // Members

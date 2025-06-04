@@ -18,13 +18,22 @@ add_library(VknConfig ${VKNCONFIG_LIB_TYPE} VknConfig.cpp VknDevice.cpp VknInfos
     VknPlatforms.cpp)
 
 if(ANDROID)
-    target_sources(VknConfig PRIVATE native-lib.cpp PlatformSpecific/Android_Window.cpp)
+    target_sources(VknConfig PRIVATE native-lib.cpp)
+    message(STATUS "VknConfig Android: NativeActivity mode is ${VKNCONFIG_ANDROID_NATIVE_ACTIVITY}")
     target_link_libraries(VknConfig PRIVATE
         log # For logging
         android # # For ANativeWindow, AAssetManager, etc.
         jnigraphics # # Specifically if using ANativeWindow_fromSurface
         vulkan
     )
+
+    if(VKNCONFIG_ANDROID_NATIVE_ACTIVITY)
+        target_sources(VknConfig PRIVATE PlatformSpecific/Android_Window.cpp)
+        target_link_libraries(VknConfig PRIVATE android_native_app_glue)
+        target_compile_definitions(VknConfig PRIVATE VKN_NATIVE_ACTIVITY_MODE=1)
+    else()
+        target_compile_definitions(VknConfig PRIVATE VKN_NATIVE_ACTIVITY_MODE=0)
+    endif()
 elseif(PLATFORM_DESKTOP)
     target_sources(VknConfig PRIVATE PlatformSpecific/GLFW_Window.cpp)
     target_link_libraries(VknConfig PRIVATE glfw ${Vulkan_LIBRARIES})

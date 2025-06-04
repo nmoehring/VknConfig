@@ -5,15 +5,13 @@
 #include "VknConfig/include/VknData.hpp"
 #include "VknConfig/include/VknData.hpp"
 
+#if defined(_WIN32) || defined(__linux__) || defined(__MAC_OS__) || defined(__UNKNOWN_PLATFORM__)
 // Desktop main function
 int main()
 {
-    /*
     vkn::VknApp info_app{};
     info_app.configureWithPreset(vkn::deviceInfoConfig);
-    info_app.run();
     info_app.exit();
-    */
 
     vkn::VknApp noInputApp{};
     noInputApp.configureWithPreset(vkn::noInputConfig); // Configure before run
@@ -25,6 +23,7 @@ int main()
     return EXIT_SUCCESS;
 }
 
+#elif defined(__ANDROID__) && VKN_NATIVE_ACTIVITY_MODE
 // Android main function
 void android_main(struct android_app *app)
 {
@@ -59,3 +58,4 @@ void android_main(struct android_app *app)
     // Clean up and exit when run() returns.
     androidTestApp.exit();
 }
+#endif

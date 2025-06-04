@@ -24,10 +24,31 @@ namespace vkn
         m_pipeline = m_renderpass->getPipeline(0);
         m_commandPool = m_device->getCommandPool(0);
         m_physicalDevice = m_device->getPhysicalDevice();
+
+        // Determine MAX_FRAMES_IN_FLIGHT based on user setting and available swapchain images.
+        uint32_t actualSwapchainImageCount = m_swapchain->getNumImages();
+        if (actualSwapchainImageCount == 0)
+        {
+            // This case should ideally not happen if swapchain is successfully created before loadConfig.
+            // If it can, a more graceful handling or default might be needed.
+            throw std::runtime_error("Swapchain has 0 images in VknCycle::loadConfig. Ensure swapchain is created and has images.");
+        }
+
         if (MAX_FRAMES_IN_FLIGHT == 0)
-            MAX_FRAMES_IN_FLIGHT = /*m_imagesInFlight.size() + */ 1u;
+        { // If user hasn't called setMaxFramesInFlight
+            // Default to 2, but not more than available swapchain images.
+            // And ensure it's at least 1.
+            MAX_FRAMES_IN_FLIGHT = std::min(2u, actualSwapchainImageCount);
+        }
+        else
+        {
+            // User has set a value, cap it by actual swapchain images.
+            MAX_FRAMES_IN_FLIGHT = std::min(MAX_FRAMES_IN_FLIGHT, actualSwapchainImageCount);
+        }
+        MAX_FRAMES_IN_FLIGHT = std::max(1u, MAX_FRAMES_IN_FLIGHT); // Must be at least 1.
+
         m_device->createSyncObjects(MAX_FRAMES_IN_FLIGHT); // Use 2 frames in flight for a simple demo
-        m_imagesInFlight.assign(m_swapchain->getNumImages(), nullptr);
+        m_imagesInFlight.assign(actualSwapchainImageCount, nullptr);
         m_waitSemaphores.push_back(VkSemaphore{});
         m_waitStages.push_back(VkPipelineStageFlags{});
         m_swapchains.push_back(VkSwapchainKHR{});
@@ -63,9 +84,12 @@ namespace vkn
             *m_device->getVkDevice(), *m_swapchain->getVkSwapchain(), m_defaultTimeout,
             m_device->getImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &m_imageIndex);
 
-        if (m_acquireResult == VK_ERROR_OUT_OF_DATE_KHR || m_acquireResult == VK_SUBOPTIMAL_KHR)
-            return this->recoverFromSwapchainError(); // Skip rendering this frame
-        else if (m_acquireResult != VK_SUCCESS && m_acquireResult != VK_SUBOPTIMAL_KHR)
+        if (m_acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            this->recoverFromSwapchainError(); // Skip rendering this frame
+            return false;
+        }
+        else if (m_acquireResult != VK_SUBOPTIMAL_KHR && m_acquireResult != VK_SUCCESS)
             throw std::runtime_error("Failed to acquire swapchain image!");
 
         // Check if a previous frame is using this image
@@ -189,6 +213,8 @@ namespace vkn
         if (!m_swapchain->getSurfaceIdx().has_value())
             throw std::runtime_error("Swapchain does not have a valid surface index for recovery.");
 
+        // This might not be necessary because minimization doesn't trigger this recovery function anymore
+        // I'm not sure about other platforms though, so I'll keep it in mind
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
             *(m_physicalDevice->getVkPhysicalDevice()),
             m_engine->getObject<VkSurfaceKHR>(m_swapchain->getSurfaceIdx().value()),
