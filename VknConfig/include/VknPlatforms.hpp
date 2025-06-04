@@ -10,10 +10,12 @@
 #include "../PlatformSpecific/include/GLFW_Window.hpp"
 
 #elif defined(__ANDROID__) || defined(ANDROID)
-#define VK_USE_PLATFORM_ANDROID_KHR // Corrected: define instead of include
 #define PLATFORM_ANDROID
+// This define is crucial for vulkan.h to pick up Android-specifics
+#define VK_USE_PLATFORM_ANDROID_KHR
+// This header defines VK_KHR_ANDROID_SURFACE_EXTENSION_NAME and other Android specifics
+#include <vulkan/vulkan_android.h> // Always include for Android Vulkan development
 #if VKN_NATIVE_ACTIVITY_MODE
-#include <vulkan/vulkan_android.h>
 #include "../PlatformSpecific/include/Android_Window.hpp"
 #endif
 
