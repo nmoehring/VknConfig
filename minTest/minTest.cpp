@@ -5,7 +5,7 @@
 #include "VknConfig/include/VknData.hpp"
 #include "VknConfig/include/VknData.hpp"
 
-#if defined(_WIN32) || defined(__linux__) || defined(__MAC_OS__) || defined(__UNKNOWN_PLATFORM__)
+#if defined(_WIN32) || defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS) || defined(__UNKNOWN_PLATFORM__)
 // Desktop main function
 int main()
 {
@@ -23,7 +23,7 @@ int main()
     return EXIT_SUCCESS;
 }
 
-#elif defined(__ANDROID__) && VKN_NATIVE_ACTIVITY_MODE
+#elif defined(PLATFORM_ANDROID) && VKN_NATIVE_ACTIVITY_MODE
 // Android main function
 void android_main(struct android_app *app)
 {

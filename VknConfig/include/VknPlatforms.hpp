@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
 #include <string>
 #include <vector>
 #include "VknWindow.hpp"
@@ -8,19 +9,22 @@
 #if defined(_WIN32)
 #include "../PlatformSpecific/include/GLFW_Window.hpp"
 
-#elif defined(__ANDROID__)
+#elif defined(__ANDROID__) || defined(ANDROID)
 #define VK_USE_PLATFORM_ANDROID_KHR // Corrected: define instead of include
+#define PLATFORM_ANDROID
 #if VKN_NATIVE_ACTIVITY_MODE
+#include <vulkan/vulkan_android.h>
 #include "../PlatformSpecific/include/Android_Window.hpp"
 #endif
 
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
+#define PLATFORM_LINUX
 #include "../PlatformSpecific/include/GLFW_Window.hpp" // Assuming GLFW_Window is for all desktop GLFW
 
 #elif defined(__APPLE__) && defined(TARGET_OS_MAC)     // Check for macOS specifically
 #include <TargetConditionals.h>                        // For TARGET_OS_MAC
 #include "../PlatformSpecific/include/GLFW_Window.hpp" // Assuming GLFW_Window is for all desktop GLFW
-#define __MAC_OS__
+#define PLATFORM_MACOS
 
 #else
 #include "../PlatformSpecific/include/GLFW_Window.hpp"

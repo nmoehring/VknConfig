@@ -21,10 +21,10 @@ if(ANDROID)
     target_sources(VknConfig PRIVATE native-lib.cpp)
     message(STATUS "VknConfig Android: NativeActivity mode is ${VKNCONFIG_ANDROID_NATIVE_ACTIVITY}")
     target_link_libraries(VknConfig PRIVATE
+        Vulkan::Vulkan
         log # For logging
         android # # For ANativeWindow, AAssetManager, etc.
         jnigraphics # # Specifically if using ANativeWindow_fromSurface
-        vulkan
     )
 
     if(VKNCONFIG_ANDROID_NATIVE_ACTIVITY)
