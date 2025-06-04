@@ -41,13 +41,12 @@ namespace vkn
         // It's released when APP_CMD_TERM_WINDOW is handled.
     }
 
-    void Android_Window::setApp(struct android_app *app)
+    void Android_Window::setApp(void *app)
     {
         if (!app)
-        {
             throw std::runtime_error("Android_Window::setApp received a null android_app pointer.");
-        }
-        m_app = app;
+
+        m_app = static_cast<struct android_app *>(app);
         // Associate this Android_Window instance with the android_app state
         m_app->userData = this;
         // Register our command handler
@@ -166,13 +165,4 @@ namespace vkn
     {
         return m_readyToRender;
     }
-
-    // In a file like main_android.cpp or native-lib.cpp
-    // This is the entry point for your native Android application
-    void android_main(struct android_app *app_state)
-    {
-        // Ensure JNI and app glue are initialized.
-        // app_dummy() is a function from android_native_app_glue.h to prevent the linker
-        // from stripping out the glue library if it's not explicitly referenced elsewhere.
-        app_dummy();
-    }
+}

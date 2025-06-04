@@ -1,17 +1,11 @@
 #include <iostream>
 #include <filesystem>
 
-// #define GLFW_INCLUDE_VULKAN
-
 #include "VknConfig/include/VknApp.hpp"
 #include "VknConfig/include/VknData.hpp"
+#include "VknConfig/include/VknData.hpp"
 
-void printDevProps(vkn::VknVector<VkPhysicalDeviceProperties> devProps);
-void printFamProps(vkn::VknVector<VkQueueFamilyProperties> famProps);
-vkn::VknVector<char> readFile(const std::string &filename);
-vkn::VknVector<const char *> noNames{};
-GLFWwindow *initWindow();
-
+// Desktop main function
 int main()
 {
     /*
@@ -29,4 +23,39 @@ int main()
     noInputApp.exit(); // Explicitly call exit
 
     return EXIT_SUCCESS;
+}
+
+// Android main function
+void android_main(struct android_app *app)
+{
+    // Ensure the native app glue isn't stripped.
+    app_dummy();
+
+    vkn::VknApp androidTestApp{};
+
+    // To make VknApp work seamlessly on Android with a simple run() call,
+    // VknApp needs to be aware of the Android application context (struct android_app*).
+    // It's assumed here that VknApp has a method (e.g., setAndroidApp(app) or similar)
+    // to receive this context. This method would typically store the 'app' pointer
+    // and set up necessary Android callbacks (like app->onAppCmd and app->userData)
+    // internally within the VknApp class.
+
+    // Example (assuming such a method exists in VknApp):
+    // androidTestApp.setAndroidApp(app);
+
+    // Configure the app instance.
+    androidTestApp.configureWithPreset(vkn::noInputConfig);
+
+    androidTestApp.getWindow()->setApp(app);
+
+    // If validation layers are desired (assuming this method is platform-agnostic):
+    // androidTestApp.enableValidationLayer();
+
+    // Run the application.
+    // On Android, VknApp::run() would internally manage the event loop,
+    // process lifecycle events, and handle rendering.
+    androidTestApp.run();
+
+    // Clean up and exit when run() returns.
+    androidTestApp.exit();
 }
