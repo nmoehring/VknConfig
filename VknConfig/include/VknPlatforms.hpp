@@ -10,7 +10,9 @@
 
 #elif defined(__ANDROID__)
 #define VK_USE_PLATFORM_ANDROID_KHR // Corrected: define instead of include
+#if VKN_NATIVE_ACTIVITY_MODE
 #include "../PlatformSpecific/include/Android_Window.hpp"
+#endif
 
 #elif defined(__linux__)
 #include "../PlatformSpecific/include/GLFW_Window.hpp" // Assuming GLFW_Window is for all desktop GLFW
