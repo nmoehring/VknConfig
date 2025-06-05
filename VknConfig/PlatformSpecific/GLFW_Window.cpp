@@ -130,7 +130,7 @@ namespace vkn
     // Implement pure virtual functions from VknWindow.
     // For GLFW, these methods don't have a direct equivalent to Android's app commands,
     // so they can be no-ops or log a message if called unexpectedly.
-    void GLFW_Window::setApp(void *app)
+    void GLFW_Window::setNativeInterfaceObjectPointer(void *app)
     {
         // No-op for GLFW. This function is primarily for Android's android_app struct.
     }

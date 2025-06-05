@@ -41,9 +41,9 @@ namespace vkn
         // It's released when APP_CMD_TERM_WINDOW is handled.
     }
 
-    void Android_Window::setApp(void *app)
+    void Android_Window::setNativeInterfaceObjectPointer(void *nativeInterfaceObjectPointer)
     {
-        if (!app)
+        if (!nativeInterfaceObjectPointer)
             throw std::runtime_error("Android_Window::setApp received a null android_app pointer.");
 
         m_app = static_cast<struct android_app *>(app);

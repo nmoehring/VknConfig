@@ -15,8 +15,11 @@
 #define VK_USE_PLATFORM_ANDROID_KHR
 // This header defines VK_KHR_ANDROID_SURFACE_EXTENSION_NAME and other Android specifics
 #include <vulkan/vulkan_android.h> // Always include for Android Vulkan development
-#if VKN_NATIVE_ACTIVITY_MODE
+// Android_Window should be available for both Native Activity and JNI
+#if VKN_NATIVE_ACTIVITY_MODE       // This preprocessor definition needs to be set by CMake
 #include "../PlatformSpecific/include/Android_Window.hpp"
+#else
+#include "../PlatformSpecific/include/Android_WindowJNI.hpp"
 #endif
 
 #elif defined(__linux__) && !defined(__ANDROID__)

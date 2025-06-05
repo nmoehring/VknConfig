@@ -22,7 +22,7 @@ namespace vkn
         void *getNativeHandle() const override;
 
         // Android-specific methods
-        void setApp(struct android_app *app) override;
+        void Android_Window::setNativeInterfaceObjectPointer(void *nativeInterfaceObjectPointer) override;
         void handleAppCmd(int32_t cmd) override;
         bool isReady() const;
 
