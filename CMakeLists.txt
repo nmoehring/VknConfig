@@ -54,33 +54,43 @@ find_package(Vulkan REQUIRED)
 message(STATUS " Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS} ")
 message(STATUS " Vulkan_LIBRARIES: ${Vulkan_LIBRARIES} ")
 
+# Option to enable/disable tests, can be configured from Android Studio's build.gradle
+option(ENABLE_TESTING "Enable GTest for the project" ON)
+
 if(PLATFORM_DESKTOP)
     find_package(glfw3 CONFIG REQUIRED)
+elseif(ANDROID)
+    find_library(log-lib # Variable to store the path
+            log) # Name of the library to find (liblog.so)
+
+    find_library(android-lib # Variable
+            android) # Name of the library (libandroid.so)
+
+    # For ANativeWindow access, especially if you're getting it from a Java Surface
+    find_library(jnigraphics-lib # For ANativeWindow_fromSurface
+            jnigraphics)
+
+    # Example: If using OpenGL ES
+    # find_library(opengles2-lib EGL GLESv2) # Find EGL and GLESv2
+endif()
+
+# Find GTest if testing is enabled. This will make GTest targets available.
+# The Android app's native library target (which includes native-lib.cpp)
+# will need to be linked against GTest::gtest and GTest::gtest_main.
+if(ENABLE_TESTING)
     find_package(GTest CONFIG)
 
     if(GTest_FOUND)
         message(STATUS " Found GTest via find_package(version ${GTest_VERSION}) ")
         include(GoogleTest)
 
-        if(MSVC)
-            set(gtest_force_shared_crt ON CACHE BOOL " " FORCE)
+        if(MSVC AND PLATFORM_DESKTOP) # MSVC specific flag for desktop
+            set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT for GTest on MSVC" FORCE)
         endif()
     else()
-        message(WARNING " GTest not found via find_package. Testing will be disabled or FetchContent might be attempted if used elsewhere. ")
+        message(WARNING "GTest not found. Testing will be disabled.")
+        set(ENABLE_TESTING OFF) # Disable testing if GTest is not found
     endif()
-elseif(ANDROID)
-    find_library(log-lib # Variable to store the path
-        log) # Name of the library to find (liblog.so)
-
-    find_library(android-lib # Variable
-        android) # Name of the library (libandroid.so)
-
-    # For ANativeWindow access, especially if you're getting it from a Java Surface
-    find_library(jnigraphics-lib # For ANativeWindow_fromSurface
-        jnigraphics)
-
-    # Example: If using OpenGL ES
-    # find_library(opengles2-lib EGL GLESv2) # Find EGL and GLESv2
 endif()
 
 # ########## LIB AND INCLUDE ########### #

@@ -4,11 +4,11 @@
 
 namespace vkn
 {
-    class AndroidWindowJNI : VknWindow
+    class Android_WindowJNI : public VknWindow
     {
     public:
         // Destructor
-        ~AndroidWindowJNI() override = default;
+        ~Android_WindowJNI() override = default;
         bool init() override;
         bool update() override;                                              // Returns true if app should continue, false to exit
         bool isActive() override;                                            // True if window is active and rendering can occur

@@ -25,12 +25,12 @@ namespace vkn
         VknWindow *getPlatformSpecificWindow()
         {
 #if defined(_WIN32) || defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS) || defined(PLATFORM_UNKNOWN)
-                return new GLFW_Window();
+                return new GLFW_Window{};
 #elif defined(PLATFORM_ANDROID)
 #if VKN_NATIVE_ACTIVITY_MODE
-                return new Android_Window();
+                return new Android_Window{};
 #else
-                return new AndroidWindowJNI(); // Assuming Android_WindowJNI.hpp is included in VknPlatforms.hpp
+                return new Android_WindowJNI{}; // Assuming Android_WindowJNI.hpp is included in VknPlatforms.hpp
 #endif
 #endif
         }

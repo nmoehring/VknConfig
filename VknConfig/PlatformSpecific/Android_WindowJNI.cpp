@@ -7,21 +7,21 @@
 namespace vkn
 {
     // Constructor
-    AndroidWindowJNI::AndroidWindowJNI() : m_window(nullptr), m_active(false), m_shouldClose(false)
+    Android_WindowJNI::Android_WindowJNI() : m_window(nullptr), m_active(false), m_shouldClose(false)
     {
-        LOGI_JNI("AndroidWindowJNI created");
+        LOGI_JNI("Android_WindowJNI created");
     }
 
     // Destructor
-    AndroidWindowJNI::~AndroidWindowJNI()
+    Android_WindowJNI::~Android_WindowJNI()
     {
-        LOGI_JNI("AndroidWindowJNI destroyed");
+        LOGI_JNI("Android_WindowJNI destroyed");
         // ANativeWindow is managed by the system/JNI bridge, no direct release here
         // unless this destructor is guaranteed to be called when the ANativeWindow is truly gone.
         // Typically, ANativeWindow_release is handled in the JNI layer (native-lib.cpp).
     }
 
-    bool AndroidWindowJNI::init()
+    bool Android_WindowJNI::init()
     {
         // For JNI, initialization is minimal. The window handle comes via onSurfaceAvailable.
         m_active = false;
@@ -30,7 +30,7 @@ namespace vkn
         return true;
     }
 
-    bool AndroidWindowJNI::update()
+    bool Android_WindowJNI::update()
     {
         // In JNI mode, this function is called by nativeRender.
         // It doesn't poll events like the NativeActivity version.
@@ -40,26 +40,26 @@ namespace vkn
         return !m_shouldClose;
     }
 
-    bool AndroidWindowJNI::isActive()
+    bool Android_WindowJNI::isActive()
     {
         // Active means we have a valid window and the app is in a state to render (e.g., not paused).
         // LOGI_JNI("isActive called, window: %p, active_state: %d", m_window, m_active);
         return m_window != nullptr && m_active;
     }
 
-    bool AndroidWindowJNI::isClosed()
+    bool Android_WindowJNI::isClosed()
     {
         // LOGI_JNI("isClosed called, shouldClose: %d", m_shouldClose);
         return m_shouldClose;
     }
 
-    void *AndroidWindowJNI::getNativeHandle() const
+    void *Android_WindowJNI::getNativeHandle() const
     {
         // LOGI_JNI("getNativeHandle called, returning: %p", m_window);
         return m_window;
     }
 
-    void AndroidWindowJNI::setNativeInterfaceObjectPointer(void *nativeInterfaceObjectPointer)
+    void Android_WindowJNI::setNativeInterfaceObjectPointer(void *nativeInterfaceObjectPointer)
     {
         // For JNI, this is less critical. The ANativeWindow comes via onSurfaceAvailable.
         // This could be used if there was some other global Android object to pass.
@@ -68,14 +68,14 @@ namespace vkn
         // m_window = static_cast<ANativeWindow*>(nativeInterfaceObjectPointer);
     }
 
-    void AndroidWindowJNI::handleAppCmd(int32_t cmd)
+    void Android_WindowJNI::handleAppCmd(int32_t cmd)
     {
         // No-op for JNI mode, as app commands are handled by NativeActivity.
         LOGI_JNI("handleAppCmd called with cmd: %d (No-op for JNI)", cmd);
     }
 
     // Called from JNI when the Java Surface is created/changed
-    void AndroidWindowJNI::onSurfaceAvailable(ANativeWindow *window)
+    void Android_WindowJNI::onSurfaceAvailable(ANativeWindow *window)
     {
         LOGI_JNI("onSurfaceAvailable, window: %p", window);
         m_window = window;
@@ -87,7 +87,7 @@ namespace vkn
     }
 
     // Called from JNI when the Java Surface is destroyed
-    void AndroidWindowJNI::onSurfaceUnavailable()
+    void Android_WindowJNI::onSurfaceUnavailable()
     {
         LOGI_JNI("onSurfaceUnavailable");
         m_window = nullptr;
@@ -95,7 +95,7 @@ namespace vkn
     }
 
     // Called from JNI on onPause
-    void AndroidWindowJNI::onAppPause()
+    void Android_WindowJNI::onAppPause()
     {
         LOGI_JNI("onAppPause");
         m_active = false;
@@ -104,7 +104,7 @@ namespace vkn
     }
 
     // Called from JNI on onResume
-    void AndroidWindowJNI::onAppResume()
+    void Android_WindowJNI::onAppResume()
     {
         LOGI_JNI("onAppResume");
         m_active = true; // App is resuming, allow rendering if window is also available
