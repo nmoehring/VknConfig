@@ -1059,4 +1059,7 @@ namespace vkn
     };
 
     std::vector<char> readBinaryFile(std::filesystem::path filename);
+#ifdef __ANDROID__
+    std::vector<char> readAssetFile(const std::string &assetPath);
+#endif
 } // namespace vkn
