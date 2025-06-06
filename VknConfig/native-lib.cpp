@@ -39,7 +39,7 @@ static vkn::VknCycle &g_vknCycleRef = g_vknApp.getCycle();    // Use a reference
 static bool g_isVulkanConfigured = false;
 static bool g_isNativeWindowSet = false;
 static ANativeWindow *g_nativeWindow = nullptr;
-static AAssetManager *g_assetManager = nullptr;
+AAssetManager *g_assetManager = nullptr; // Removed static for external linkage
 
 #if GTEST_ENABLED
 // Helper to redirect GTest output to Logcat
