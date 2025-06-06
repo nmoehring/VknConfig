@@ -38,7 +38,7 @@ namespace vkn
         bool m_active{false}; // True if window is not minimized
         // bool m_readyToRender{false};
         bool m_shouldClose{false};
-        // static uint_fast32_t s_windowCount;
+        // static uint32_t s_windowCount;
 
         // void demolish();
         // bool isWindowMinimized();

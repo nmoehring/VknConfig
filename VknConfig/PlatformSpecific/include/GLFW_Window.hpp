@@ -32,7 +32,7 @@ namespace vkn
         // State
         bool m_windowCreated{false};
         bool m_active{false}; // True if window is not minimized
-        static uint_fast32_t s_windowCount;
+        static uint32_t s_windowCount;
         static void glfwErrorCallback(int error, const char *description);                            // Must be static
         static void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods); // Must be static
         void demolish();

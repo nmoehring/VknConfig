@@ -1,10 +1,10 @@
 #include "include/VknCycle.hpp"
 #include <algorithm> // For std::min and std::max
-#include <cstdint>   // For uint_fast32_t, uint32_t
+#include <cstdint>   // For uint32_t, uint32_t
 
 namespace vkn
 {
-    void VknCycle::setMaxFramesInFlight(uint_fast32_t maxFramesInFlight)
+    void VknCycle::setMaxFramesInFlight(uint32_t maxFramesInFlight)
     {
         MAX_FRAMES_IN_FLIGHT = maxFramesInFlight;
     }
@@ -40,14 +40,14 @@ namespace vkn
         { // If user hasn't called setMaxFramesInFlight
             // Default to 2, but not more than available swapchain images.
             // And ensure it's at least 1.
-            MAX_FRAMES_IN_FLIGHT = std::min(static_cast<uint_fast32_t>(2u), static_cast<uint_fast32_t>(actualSwapchainImageCount));
+            MAX_FRAMES_IN_FLIGHT = std::min(static_cast<uint32_t>(2u), static_cast<uint32_t>(actualSwapchainImageCount));
         }
         else
         {
             // User has set a value, cap it by actual swapchain images.
-            MAX_FRAMES_IN_FLIGHT = std::min(MAX_FRAMES_IN_FLIGHT, static_cast<uint_fast32_t>(actualSwapchainImageCount));
+            MAX_FRAMES_IN_FLIGHT = std::min(MAX_FRAMES_IN_FLIGHT, static_cast<uint32_t>(actualSwapchainImageCount));
         }
-        MAX_FRAMES_IN_FLIGHT = std::max(static_cast<uint_fast32_t>(1u), MAX_FRAMES_IN_FLIGHT); // Must be at least 1.
+        MAX_FRAMES_IN_FLIGHT = std::max(static_cast<uint32_t>(1u), MAX_FRAMES_IN_FLIGHT); // Must be at least 1.
 
         m_device->createSyncObjects(MAX_FRAMES_IN_FLIGHT); // Use 2 frames in flight for a simple demo
         m_imagesInFlight.assign(actualSwapchainImageCount, nullptr);

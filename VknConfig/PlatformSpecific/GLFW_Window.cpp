@@ -4,7 +4,7 @@
 
 namespace vkn
 {
-    uint_fast32_t GLFW_Window::s_windowCount = 0;
+    uint32_t GLFW_Window::s_windowCount = 0;
 
     GLFW_Window::GLFW_Window()
     {

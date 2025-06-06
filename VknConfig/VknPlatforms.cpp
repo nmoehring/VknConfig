@@ -8,11 +8,11 @@ namespace vkn
                 std::vector<std::string> extensionStrings{};
 
 #if defined(_WIN32) || defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS) || defined(PLATFORM_UNKNOWN)
-                uint_fast32_t count{0};
+                uint32_t count{0};
                 const char **extensions{nullptr};
                 extensions = glfwGetRequiredInstanceExtensions(&count);
                 if (extensions)
-                        for (uint_fast32_t i = 0; i < count; ++i)
+                        for (uint32_t i = 0; i < count; ++i)
                                 extensionStrings.push_back(extensions[i]);
 #elif defined(PLATFORM_ANDROID)
                 extensionStrings.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);

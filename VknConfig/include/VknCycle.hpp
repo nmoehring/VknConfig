@@ -16,7 +16,7 @@ namespace vkn
 
         // Setup
         void loadConfig(VknConfig *config, VknEngine *engine);
-        void setMaxFramesInFlight(uint_fast32_t maxFramesInFlight);
+        void setMaxFramesInFlight(uint32_t maxFramesInFlight);
         void setClearColor(float r, float g, float b, float a = 1.0f);
         bool recoverFromSwapchainError();
         void recreateForWindowChange();
@@ -37,8 +37,8 @@ namespace vkn
         VkSurfaceCapabilitiesKHR m_capabilities{};
 
         // Params
-        uint_fast32_t MAX_FRAMES_IN_FLIGHT = 0; // Should match the value used in createSyncObjects
-        uint_fast32_t m_defaultTimeout = uint_fast64_t(0) - 1u;
+        uint32_t MAX_FRAMES_IN_FLIGHT = 0; // Should match the value used in createSyncObjects
+        uint32_t m_defaultTimeout = uint_fast64_t(0) - 1u;
         int m_width{0};
         int m_height{0};
         VkExtent2D m_extent{0, 0};
@@ -58,13 +58,13 @@ namespace vkn
         VkResult m_presentResult{};
 
         // State
-        uint_fast32_t m_currentFrame = 0;
-        uint_fast32_t m_imageIndex;
+        uint32_t m_currentFrame = 0;
+        uint32_t m_imageIndex;
         std::vector<VkSemaphore> m_signalSemaphores;
         std::vector<VkFence *> m_imagesInFlight; // Fence for each swapchain image
         bool m_pipelineExpectsVertexInputs{false};
         VknIdxs m_devRelIdxs;
-        uint_fast32_t verticesDrawnLastFrame{0};
+        uint32_t verticesDrawnLastFrame{0};
         bool m_configLoaded{false};
     };
 }
