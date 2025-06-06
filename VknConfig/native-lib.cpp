@@ -22,8 +22,10 @@ Java_com_nathanielmoehring_vknconfig_MainActivity_stringFromJNI(
 // Adjust path if VknApp.hpp is not directly in VknConfig/include
 #include "include/VknApp.hpp"
 
+#if GTEST_ENABLED
 // For GTest
 #include "gtest/gtest.h"
+#endif
 
 #define LOG_TAG "VknConfigTestJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -36,6 +38,7 @@ static bool g_isVulkanConfigured = false;
 static bool g_isNativeWindowSet = false;
 static ANativeWindow *g_nativeWindow = nullptr;
 
+#if GTEST_ENABLED
 // Helper to redirect GTest output to Logcat
 class LogcatPrinter : public ::testing::EmptyTestEventListener
 {
@@ -77,6 +80,7 @@ class LogcatPrinter : public ::testing::EmptyTestEventListener
     }
     // You can override other OnTestSuiteStart, OnTestSuiteEnd, etc. if needed.
 };
+#endif // VKNCONFIG_WITH_GTEST
 
 static vkn::AndroidWindowJNI *getJniWindowInstance()
 {
@@ -271,6 +275,7 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeCleanup(JNIEnv *env, job
     }
 }
 
+#if GTEST_ENABLED
 extern "C" JNIEXPORT jint JNICALL
 Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeRunTests(JNIEnv *env, jobject /* this */)
 {
@@ -306,3 +311,12 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeRunTests(JNIEnv *env, jo
     LOGI("GTests finished with result code: %d", result);
     return result; // 0 for success
 }
+#else
+// Provide a stub if GTest is not available, so JNI linkage doesn't break
+extern "C" JNIEXPORT jint JNICALL
+Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeRunTests(JNIEnv *env, jobject /* this */)
+{
+    LOGE("GTest is not compiled into this build. nativeRunTests is a stub.");
+    return -1; // Indicate GTest was not run
+}
+#endif // VKNCONFIG_WITH_GTEST

@@ -89,9 +89,12 @@ if(ENABLE_TESTING)
         if(MSVC AND PLATFORM_DESKTOP) # MSVC specific flag for desktop
             set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT for GTest on MSVC" FORCE)
         endif()
+
+        target_compile_definitions(VknConfig PRIVATE GTEST_ENABLED=1)
     else()
         message(WARNING "GTest not found. Testing will be disabled.")
         set(ENABLE_TESTING OFF) # Disable testing if GTest is not found
+        target_compile_definitions(VknConfig PRIVATE GTEST_ENABLED=0)
     endif()
 endif()
 
