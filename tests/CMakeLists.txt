@@ -6,7 +6,11 @@ set(TEST_SOURCES
     test_vknvectoriterator.cpp
     test_vknspace.cpp)
 
-add_executable(VknConfigUnitTests ${TEST_SOURCES})
+if(ANDROID)
+    add_library(VknConfigUnitTests PRIVATE ${TEST_SOURCES})
+else()
+    add_executable(VknConfigUnitTests ${TEST_SOURCES})
+endif()
 
 # Link your VknConfig library (replace VknConfigLib with your actual library target name)
 # If VknData.hpp is header-only and included directly, you might not need to link a separate lib
@@ -19,4 +23,3 @@ target_link_libraries(VknConfigUnitTests PRIVATE VknConfig_args VknConfig GTest:
 target_include_directories(VknConfigUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/VknConfig/include)
 
 include(GoogleTest)
-gtest_discover_tests(VknConfigUnitTests)

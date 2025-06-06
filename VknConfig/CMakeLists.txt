@@ -1,12 +1,7 @@
 project(VknConfig)
 
-set(VKNCONFIG_LIB_TYPE STATIC) # Default to STATIC
-
-if(ANDROID)
-    set(VKNCONFIG_LIB_TYPE SHARED)
-endif()
-
-add_library(VknConfig ${VKNCONFIG_LIB_TYPE} VknConfig.cpp VknDevice.cpp VknInfos.cpp
+# Get VknConfig library started
+add_library(VknConfig STATIC VknConfig.cpp VknDevice.cpp VknInfos.cpp
     VknResult.cpp VknPhysicalDevice.cpp VknPipeline.cpp VknRenderpass.cpp
     VknVertexInputState.cpp VknInputAssemblyState.cpp VknMultisampleState.cpp
     VknShaderStage.cpp VknRasterizationState.cpp VknQueueFamily.cpp
@@ -18,7 +13,6 @@ add_library(VknConfig ${VKNCONFIG_LIB_TYPE} VknConfig.cpp VknDevice.cpp VknInfos
     VknPlatforms.cpp)
 
 if(ANDROID)
-    target_sources(VknConfig PRIVATE native-lib.cpp)
     message(STATUS "VknConfig Android: NativeActivity mode is ${VKNCONFIG_ANDROID_NATIVE_ACTIVITY}")
     target_link_libraries(VknConfig PRIVATE
         Vulkan::Vulkan

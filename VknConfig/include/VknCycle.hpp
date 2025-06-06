@@ -16,9 +16,10 @@ namespace vkn
 
         // Setup
         void loadConfig(VknConfig *config, VknEngine *engine);
-        bool recoverFromSwapchainError();
         void setMaxFramesInFlight(uint_fast32_t maxFramesInFlight);
         void setClearColor(float r, float g, float b, float a = 1.0f);
+        bool recoverFromSwapchainError();
+        void recreateForWindowChange();
 
     private:
         // Engine

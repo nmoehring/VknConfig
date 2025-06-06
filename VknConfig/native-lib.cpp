@@ -30,7 +30,8 @@ Java_com_nathanielmoehring_vknconfig_MainActivity_stringFromJNI(
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 static vkn::VknApp g_vknApp;
-static vkn::VknConfig g_vknConfig = g_vknApp.getConfig();
+static vkn::VknConfig &g_vknConfigRef = g_vknApp.getConfig(); // Use a reference
+static vkn::VknCycle &g_vknCycleRef = g_vknApp.getCycle();    // Use a reference
 static bool g_isVulkanConfigured = false;
 static bool g_isNativeWindowSet = false;
 static ANativeWindow *g_nativeWindow = nullptr;
@@ -88,7 +89,7 @@ static vkn::AndroidWindowJNI *getJniWindowInstance()
 extern "C" JNIEXPORT void JNICALL
 Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeConfig(JNIEnv *env, jobject /* this */)
 {
-
+    LOGI("nativeConfig called.");
     if (!g_isNativeWindowSet)
     {
         LOGI("Native window not set before Vulkan configuration.");
@@ -104,6 +105,10 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeConfig(JNIEnv *env, jobj
     {
         // Use your noInputConfig preset (ensure it's defined and accessible)
         g_vknApp.configureWithPreset(vkn::noInputConfig); // Or another suitable preset for Android
+        // This preset should call VknConfig::addWindow(), which in turn calls
+        // Android_WindowJNI::setNativeInterfaceObjectPointer with the ANativeWindow*
+        // previously set by VknConfig::setNativeWindow (which was called from nativeSetSurface).
+        // Then, the preset calls VknConfig::createSurface() which uses the handle from Android_WindowJNI.
         // The noInputConfig should set up Vulkan instance, physical device, logical device.
         // Swapchain and surface-dependent resources will be created when the surface is available.
         LOGI("VknApp initialized with preset.");
@@ -119,6 +124,7 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeConfig(JNIEnv *env, jobj
 extern "C" JNIEXPORT void JNICALL
 Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, jobject /* this */, jobject surface)
 {
+    LOGI("nativeSetSurface called with surface: %p", surface);
     if (!g_isVulkanConfigured)
     {
         LOGE("Vulkan not initialized in nativeSetSurface.");
@@ -127,13 +133,15 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, 
 
     if (g_nativeWindow)
     {
+        // Existing window is being replaced or destroyed
         ANativeWindow_release(g_nativeWindow);
         g_nativeWindow = nullptr;
         LOGI("Previous ANativeWindow released.");
-        // TODO: Notify VknApp to clean up old surface resources (swapchain, framebuffers, etc.)
-        // This might involve calling a specific method in VknApp or VknConfig to destroy
-        // the old VkSurfaceKHR and related objects before creating new ones.
-        // For now, VknApp::addWindow might handle recreation if called again.
+        g_isNativeWindowSet = false;
+        if (auto *jniWindow = getJniWindowInstance())
+        {
+            jniWindow->onSurfaceUnavailable(); // Inform the window object
+        }
     }
 
     if (surface != nullptr)
@@ -147,18 +155,17 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, 
         }
         try
         {
-            // This will call VknConfig::addWindow and VknConfig::createSurface
             if (auto *jniWindow = getJniWindowInstance())
+            {
+                // If VknApp and its window object already exist (e.g., nativeConfig was called),
+                // directly inform the JNI window instance.
                 jniWindow->onSurfaceAvailable(g_nativeWindow);
-            LOGI("ANativeWindow passed to VknApp, surface should be created.");
+                g_isNativeWindowSet = true;
+            }
+            LOGI("ANativeWindow set in VknConfig and/or AndroidWindowJNI.");
 
-            // If your preset didn't fully configure the device/swapchain because it lacked a window,
-            // you might need to trigger further configuration steps in VknApp or VknConfig here.
-            // For example, if VknApp::configureWithPreset only sets m_configured = true,
-            // and VknCycle::loadConfig is only called if readyToRun is true (which might depend on having a window).
-            // You might need to re-evaluate or call a method like:
-            // g_vknApp.completeConfigurationWithWindow();
-            // For now, assuming addWindow and the subsequent cycleEngine calls handle this.
+            if (g_isVulkanConfigured)
+                g_vknCycleRef.recreateForWindowChange();
         }
         catch (const std::exception &e)
         {
@@ -172,9 +179,11 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, 
     }
     else
     {
+        // Surface is null, meaning it's being destroyed
         if (auto *jniWindow = getJniWindowInstance())
             jniWindow->onSurfaceUnavailable();
         LOGI("Surface is null in nativeSetSurface (likely destroyed).");
+        g_vknConfigRef.setNativeWindow(nullptr); // Clear it in VknConfig too
         // g_nativeWindow is already null or will be handled by nativeSurfaceDestroyed
     }
 }
@@ -182,7 +191,7 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, 
 extern "C" JNIEXPORT void JNICALL
 Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeRender(JNIEnv *env, jobject /* this */)
 {
-    if (!g_isVulkanConfigured || g_nativeWindow == nullptr)
+    if (!g_isVulkanConfigured || !g_vknApp.getWindow() || !g_vknApp.getWindow()->isActive())
     {
         // LOGI("Vulkan not ready for rendering (init: %d, window: %p)",
         //      g_isVulkanConfigured, g_nativeWindow);
@@ -210,27 +219,28 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSurfaceDestroyed(JNIEnv 
     {
         if (auto *jniWindow = getJniWindowInstance())
             jniWindow->onSurfaceUnavailable();
-        // TODO: Inform VknApp that the surface is gone so it can clean up Vulkan surface-specific resources
-        // e.g., g_vknApp.onSurfaceDestroyed(); // You would implement this in VknApp/VknConfig
-        // This method would typically destroy the VkSurfaceKHR, swapchain, image views, framebuffers.
-        // It's crucial for robust surface recreation.
+
         LOGI("Releasing ANativeWindow: %p", g_nativeWindow);
         ANativeWindow_release(g_nativeWindow);
         g_nativeWindow = nullptr;
+        g_isNativeWindowSet = false;
+        g_vknConfigRef.setNativeWindow(nullptr);
     }
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_your_package_NativeBridge_nativePause(JNIEnv *env, jobject /* this */)
+Java_com_nathanielmoehring_vknconfig_NativeBridge_nativePause(JNIEnv *env, jobject /* this */)
 {
+    LOGI("nativePause called.");
     if (auto *jniWindow = getJniWindowInstance())
     {
         jniWindow->onAppPause();
     }
 }
 extern "C" JNIEXPORT void JNICALL
-Java_com_your_package_NativeBridge_nativeResume(JNIEnv *env, jobject /* this */)
+Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeResume(JNIEnv *env, jobject /* this */)
 {
+    LOGI("nativeResume called.");
     if (auto *jniWindow = getJniWindowInstance())
     {
         jniWindow->onAppResume();
@@ -243,15 +253,20 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeCleanup(JNIEnv *env, job
     if (g_isVulkanConfigured)
     {
         LOGI("VknApp nativeCleanup called.");
-        // Ensure surface-specific resources are cleaned first if not done in nativeSurfaceDestroyed
+        // Ensure ANativeWindow is released if it hasn't been already
         if (g_nativeWindow != nullptr)
         {
-            // g_vknApp.onSurfaceDestroyed(); // If not called before
+            // The call to g_vknApp.exit() should handle destroying the VkSurfaceKHR
+            // and other Vulkan resources.
             ANativeWindow_release(g_nativeWindow);
             g_nativeWindow = nullptr;
+            g_isNativeWindowSet = false;
         }
         g_vknApp.exit(); // This should clean up all Vulkan resources
         g_isVulkanConfigured = false;
+        // Reset VknConfig's native window pointer as well
+        // g_vknConfigRef.setNativeWindow(nullptr); // VknApp::exit() should lead to VknConfig::demolish()
+        // which should clear its VknWindow pointer.
         LOGI("VknApp cleanup finished.");
     }
 }

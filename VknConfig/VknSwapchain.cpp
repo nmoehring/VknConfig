@@ -259,11 +259,6 @@ namespace vkn
             m_engine->getObject<VkDevice>(m_absIdxs),
             m_engine->getObject<VkSwapchainKHR>(m_absIdxs),
             nullptr);
-    }
-
-    void VknSwapchain::recreateSwapchain()
-    {
-        this->demolishSwapchain();
 
         m_setImageDimensions = false;
         m_setImageCount = false;
@@ -274,6 +269,11 @@ namespace vkn
 
         m_filledCreateInfo = false;
         m_createdSwapchain = false;
+    }
+
+    void VknSwapchain::recreateSwapchain()
+    {
+        this->demolishSwapchain();
         this->createSwapchain();
     }
 }

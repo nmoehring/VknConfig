@@ -26,7 +26,8 @@ namespace vkn
         void run();
         void exit();
 
-        VknConfig *getConfig() { return &m_config; }
+        VknConfig &getConfig() { return m_config; }
+        VknCycle &getCycle() { return m_cycle; }
 
     private:
         // Engine

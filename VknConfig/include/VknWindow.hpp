@@ -11,7 +11,7 @@ namespace vkn
         virtual bool isActive() = 0;                                                          // True if window is active and rendering can occur
         virtual bool isClosed() = 0;                                                          // True if the window has been signaled to close or is demolished
         virtual void *getNativeHandle() const = 0;                                            // To get GLFWwindow* or ANativeWindow*
-        virtual void setNativeInterfaceObject(void *nativeInterfaceObjectPointer) = 0; // Initially for Android, but may be other uses?
+        virtual void setNativeInterfaceObjectPointer(void *nativeInterfaceObjectPointer) = 0; // Initially for Android, but may be other uses?
         virtual void handleAppCmd(int32_t cmd) = 0;                                           // Initially for Android, but may be other uses?
     };
 }

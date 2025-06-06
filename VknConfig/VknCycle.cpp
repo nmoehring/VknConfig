@@ -225,6 +225,13 @@ namespace vkn
             return false; // Signal app to wait for events.
 
         // If we've reached here, the window is not minimized, and capabilities show non-zero extent.
+        this->recreateForWindowChange();
+        std::cerr << "Recovered from swapchain error." << std::endl;
+        return true;
+    }
+
+    void VknCycle::recreateForWindowChange()
+    {
         m_swapchain->recreateSwapchain();
 
         // Reset m_imagesInFlight for the new swapchain
@@ -232,8 +239,6 @@ namespace vkn
 
         m_pipeline->getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
         m_renderpass->recreateFramebuffers(*m_swapchain);
-        std::cerr << "Recovered from swapchain error." << std::endl;
-        return true;
     }
 
 } // namespace vkn

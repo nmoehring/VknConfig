@@ -3,6 +3,10 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(VknConfig VERSION 0.5 LANGUAGES CXX)
 message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}")
 
+# Option to enable/disable tests, can be configured from Android Studio's build.gradle
+option(ENABLE_TESTING "Enable GTest for the project" ON)
+
+# --- Platform detection ---
 if(ANDROID)
     message("Android build detected")
 
@@ -19,7 +23,8 @@ elseif(WIN32)
 elseif(MACOS)
     message(" MACOS build detected ")
     set(PLATFORM_DESKTOP TRUE)
-elseif(LINUX)
+elseif(LINUX AND NOT ANDROID)
+    set(PLATFORM_LINUX TRUE)
     set(PLATFORM_PC TRUE)
     set(PLATFORM_DESKTOP TRUE)
     message(" Linux build detected ")
@@ -54,21 +59,18 @@ find_package(Vulkan REQUIRED)
 message(STATUS " Vulkan_INCLUDE_DIRS: ${Vulkan_INCLUDE_DIRS} ")
 message(STATUS " Vulkan_LIBRARIES: ${Vulkan_LIBRARIES} ")
 
-# Option to enable/disable tests, can be configured from Android Studio's build.gradle
-option(ENABLE_TESTING "Enable GTest for the project" ON)
-
 if(PLATFORM_DESKTOP)
     find_package(glfw3 CONFIG REQUIRED)
 elseif(ANDROID)
     find_library(log-lib # Variable to store the path
-            log) # Name of the library to find (liblog.so)
+        log) # Name of the library to find (liblog.so)
 
     find_library(android-lib # Variable
-            android) # Name of the library (libandroid.so)
+        android) # Name of the library (libandroid.so)
 
     # For ANativeWindow access, especially if you're getting it from a Java Surface
     find_library(jnigraphics-lib # For ANativeWindow_fromSurface
-            jnigraphics)
+        jnigraphics)
 
     # Example: If using OpenGL ES
     # find_library(opengles2-lib EGL GLESv2) # Find EGL and GLESv2
@@ -174,7 +176,10 @@ endif()
 # --- subdir ---
 add_subdirectory(VknConfig)
 
-if(PLATFORM_PC)
+if(ENABLE_TESTING AND PLATFORM_DESKTOP)
     add_subdirectory(tests)
+endif()
+
+if(PLATFORM_DESKTOP)
     add_subdirectory(minTest)
 endif()
