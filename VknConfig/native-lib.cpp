@@ -82,7 +82,7 @@ class LogcatPrinter : public ::testing::EmptyTestEventListener
 };
 #endif // VKNCONFIG_WITH_GTEST
 
-static vkn::AndroidWindowJNI *getJniWindowInstance()
+static vkn::Android_WindowJNI *getJniWindowInstance()
 {
     if (!g_vknConfig.getWindow())
         return nullptr;
