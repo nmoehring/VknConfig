@@ -84,10 +84,10 @@ class LogcatPrinter : public ::testing::EmptyTestEventListener
 
 static vkn::Android_WindowJNI *getJniWindowInstance()
 {
-    if (!g_vknConfig.getWindow())
+    if (!g_vknConfigRef.getWindow())
         return nullptr;
     // This assumes VKN_NATIVE_ACTIVITY_MODE is 0 for this build
-    return static_cast<vkn::AndroidWindowJNI *>(g_vknApp.getWindow());
+    return static_cast<vkn::Android_WindowJNI *>(g_vknConfigRef.getWindow());
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -111,7 +111,6 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeConfig(JNIEnv *env, jobj
         g_vknApp.configureWithPreset(vkn::noInputConfig); // Or another suitable preset for Android
         // This preset should call VknConfig::addWindow(), which in turn calls
         // Android_WindowJNI::setNativeInterfaceObjectPointer with the ANativeWindow*
-        // previously set by VknConfig::setNativeWindow (which was called from nativeSetSurface).
         // Then, the preset calls VknConfig::createSurface() which uses the handle from Android_WindowJNI.
         // The noInputConfig should set up Vulkan instance, physical device, logical device.
         // Swapchain and surface-dependent resources will be created when the surface is available.
@@ -187,7 +186,6 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, 
         if (auto *jniWindow = getJniWindowInstance())
             jniWindow->onSurfaceUnavailable();
         LOGI("Surface is null in nativeSetSurface (likely destroyed).");
-        g_vknConfigRef.setNativeWindow(nullptr); // Clear it in VknConfig too
         // g_nativeWindow is already null or will be handled by nativeSurfaceDestroyed
     }
 }
@@ -195,7 +193,7 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetSurface(JNIEnv *env, 
 extern "C" JNIEXPORT void JNICALL
 Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeRender(JNIEnv *env, jobject /* this */)
 {
-    if (!g_isVulkanConfigured || !g_vknApp.getWindow() || !g_vknApp.getWindow()->isActive())
+    if (!g_isVulkanConfigured || !g_vknConfigRef.getWindow() || !g_vknConfigRef.getWindow()->isActive())
     {
         // LOGI("Vulkan not ready for rendering (init: %d, window: %p)",
         //      g_isVulkanConfigured, g_nativeWindow);
@@ -228,7 +226,6 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSurfaceDestroyed(JNIEnv 
         ANativeWindow_release(g_nativeWindow);
         g_nativeWindow = nullptr;
         g_isNativeWindowSet = false;
-        g_vknConfigRef.setNativeWindow(nullptr);
     }
 }
 
@@ -268,9 +265,6 @@ Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeCleanup(JNIEnv *env, job
         }
         g_vknApp.exit(); // This should clean up all Vulkan resources
         g_isVulkanConfigured = false;
-        // Reset VknConfig's native window pointer as well
-        // g_vknConfigRef.setNativeWindow(nullptr); // VknApp::exit() should lead to VknConfig::demolish()
-        // which should clear its VknWindow pointer.
         LOGI("VknApp cleanup finished.");
     }
 }
