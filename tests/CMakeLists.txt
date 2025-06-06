@@ -17,7 +17,7 @@ endif()
 # target_link_libraries(VknVectorTests PRIVATE VknConfigLib) # If VknConfig is a library
 
 # Link Google Test
-target_link_libraries(VknConfigUnitTests PRIVATE VknConfig_args VknConfig GTest::gtest GTest::gtest_main)
+target_link_libraries(VknConfigUnitTests PRIVATE VknConfig VknConfig_args GTest::gtest GTest::gtest_main)
 
 # Add VknConfig include directory
 target_include_directories(VknConfigUnitTests PRIVATE ${CMAKE_SOURCE_DIR}/VknConfig/include)

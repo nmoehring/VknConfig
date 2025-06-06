@@ -1,6 +1,7 @@
 #pragma once
 
-#include "VknWindow.hpp"
+#include <android/native_window.h>
+#include "../../include/VknWindow.hpp"
 
 namespace vkn
 {
@@ -8,7 +9,8 @@ namespace vkn
     {
     public:
         // Destructor
-        ~Android_WindowJNI() override = default;
+        Android_WindowJNI();
+        ~Android_WindowJNI();
         bool init() override;
         bool update() override;                                                     // Returns true if app should continue, false to exit
         bool isActive() override;                                                   // True if window is active and rendering can occur
@@ -29,5 +31,7 @@ namespace vkn
 
     private:
         ANativeWindow *m_window;
+        bool m_active{false};
+        bool m_shouldClose{false};
     };
 }
