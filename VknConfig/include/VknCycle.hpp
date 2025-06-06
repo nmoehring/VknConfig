@@ -37,8 +37,8 @@ namespace vkn
         VkSurfaceCapabilitiesKHR m_capabilities{};
 
         // Params
-        uint32_t MAX_FRAMES_IN_FLIGHT = 0; // Should match the value used in createSyncObjects
-        uint32_t m_defaultTimeout = uint_fast64_t(0) - 1u;
+        uint32_t MAX_FRAMES_IN_FLIGHT = 0;      // Should match the value used in createSyncObjects
+        uint32_t m_defaultTimeout = UINT32_MAX; // Or std::numeric_limits<uint32_t>::max() if <limits> is included
         int m_width{0};
         int m_height{0};
         VkExtent2D m_extent{0, 0};
