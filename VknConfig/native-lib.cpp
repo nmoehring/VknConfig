@@ -17,6 +17,8 @@ Java_com_nathanielmoehring_vknconfig_MainActivity_stringFromJNI(
 #include <string>
 #include <vector>
 #include <android/native_window_jni.h> // For ANativeWindow
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 #include <android/log.h>
 
 // Adjust path if VknApp.hpp is not directly in VknConfig/include
@@ -37,6 +39,7 @@ static vkn::VknCycle &g_vknCycleRef = g_vknApp.getCycle();    // Use a reference
 static bool g_isVulkanConfigured = false;
 static bool g_isNativeWindowSet = false;
 static ANativeWindow *g_nativeWindow = nullptr;
+static AAssetManager *g_assetManager = nullptr;
 
 #if GTEST_ENABLED
 // Helper to redirect GTest output to Logcat
@@ -81,6 +84,23 @@ class LogcatPrinter : public ::testing::EmptyTestEventListener
     // You can override other OnTestSuiteStart, OnTestSuiteEnd, etc. if needed.
 };
 #endif // VKNCONFIG_WITH_GTEST
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_nathanielmoehring_vknconfig_NativeBridge_nativeSetAssetManager(JNIEnv *env, jobject /* this */, jobject java_asset_manager)
+{
+    g_assetManager = AAssetManager_fromJava(env, java_asset_manager);
+    if (g_assetManager == nullptr)
+    {
+        LOGE("Failed to get AAssetManager from Java AssetManager");
+    }
+    else
+    {
+        LOGI("AAssetManager successfully obtained: %p", g_assetManager);
+        // You might want to pass this to your VknApp/VknConfig if they need to load assets directly
+        // For example: g_vknApp.getConfig().setAssetManager(g_assetManager);
+        // This requires adding a setAssetManager method to VknConfig and potentially VknEngine
+    }
+}
 
 static vkn::Android_WindowJNI *getJniWindowInstance()
 {

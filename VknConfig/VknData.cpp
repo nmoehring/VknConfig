@@ -1,5 +1,9 @@
 #include "include/VknData.hpp"
-
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+// Declare g_assetManager if it's not accessible otherwise.
+extern AAssetManager *g_assetManager; // Ensure this is accessible
+#endif
 namespace vkn
 {
     std::vector<char> readBinaryFile(std::filesystem::path filename)
@@ -17,4 +21,33 @@ namespace vkn
         file.close();
         return buffer;
     }
+
+#ifdef __ANDROID__
+    std::vector<char> readAssetFile(const std::string &assetPath)
+    {
+        if (!g_assetManager)
+        {
+            throw std::runtime_error("Asset manager not set for reading asset: " + assetPath);
+        }
+
+        AAsset *asset = AAssetManager_open(g_assetManager, assetPath.c_str(), AASSET_MODE_BUFFER);
+        if (!asset)
+        {
+            throw std::runtime_error("Failed to open asset: " + assetPath);
+        }
+
+        off_t assetSize = AAsset_getLength(asset);
+        std::vector<char> buffer(assetSize);
+
+        int bytesRead = AAsset_read(asset, buffer.data(), assetSize);
+        AAsset_close(asset);
+
+        if (bytesRead < assetSize)
+        {
+            throw std::runtime_error("Failed to read entire asset: " + assetPath);
+        }
+        return buffer;
+    }
+#endif
+
 }

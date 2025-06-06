@@ -62,8 +62,13 @@ namespace vkn
     {
         if (m_createdShaderModule)
             throw std::runtime_error("Shader module already created.");
+#ifdef __ANDROID__
+        // On Android, shaders are typically in "shaders/" subdirectory of assets
+        m_code = readAssetFile("shaders/" + m_filename);
+#else
         std::filesystem::path shaderDir = std::filesystem::current_path() / "resources" / "shaders";
         m_code = readBinaryFile(shaderDir / m_filename);
+#endif
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
             m_infos->fillShaderModuleCreateInfo(m_relIdxs, &m_code);
         VknResult res{
