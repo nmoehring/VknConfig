@@ -398,8 +398,8 @@ namespace vkn
         // Allocate once, reuse
         uint_fast32_t m_iter{0};
         uint_fast32_t m_pos{0};
-        std::string m_vkTypeStr{"LongStrNoReallocate"};
-        std::string m_vkParentTypeStr{"LongStrNoReallocate"};
+        std::string m_vkTypeStr{"LongStrNoReallocation!!"};
+        std::string m_vkParentTypeStr{"LongStrNoReallocation!!"};
 
         // State
         bool m_poweredOn{true}; // State to track if shutdown has been called
@@ -407,7 +407,7 @@ namespace vkn
 
         // Helper functions to get extension function pointers
         void demolishDebugUtilsMessengerEXT(
-            VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger, const VkAllocationCallbacks *pAllocator);
+            VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator);
 
         template <typename ObjectType, typename ParentType>
         void deleteVectors()
@@ -427,12 +427,28 @@ namespace vkn
         void demolishObject(std::function<void __stdcall(VkObjectType)> func)
         {
             if (this->exists<VkObjectType>())
+            {
                 for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
-                    func(this->getObject<VkObjectType>(m_iter))
+                    func(this->getObject<VkObjectType>(m_iter));
+                this->deleteVector<VkObjectType>();
+            }
         }
 
         template <typename VkObjectType, typename VkParentType>
         void demolishObjects(std::function<void __stdcall(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
+        {
+            if (this->exists<VkObjectType>())
+            {
+                for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
+                    func(
+                        *this->getParentPointer<VkObjectType, VkParentType>(m_iter),
+                        this->getObject<VkObjectType>(m_iter), nullptr);
+                this->deleteVectors<VkObjectType, VkParentType>();
+            }
+        }
+
+        template <typename VkObjectType, typename VkParentType>
+        void demolishObjects(std::function<void(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
         {
             if (this->exists<VkObjectType>())
             {
@@ -466,15 +482,43 @@ namespace vkn
         void demolishCommandBuffers()
         {
             if (this->exists<VkCommandBuffer *>())
+            {
                 for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
                     vkFreeCommandBuffers(
                         *this->getParentPointer<VkCommandPool, VkDevice>(m_iter),
                         this->getObject<VkCommandPool>(m_iter),
                         this->getObject<uint32_t>(m_iter),
                         this->getObject<VkCommandBuffer *>(m_iter));
-            for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
-                delete[] this->getObject<VkCommandBuffer *>(m_iter);
-            this->deleteVectors<VkCommandBuffer *, VkDevice>();
+                for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
+                    delete[] this->getObject<VkCommandBuffer *>(m_iter);
+                this->deleteVectors<VkCommandBuffer *, VkDevice>();
+            }
+        }
+
+        void demolishDevices()
+        {
+            if (this->exists<VkDevice>())
+            {
+                for (auto &device : this->getVector<VkDevice>())
+                    vkDestroyDevice(device, VK_NULL_HANDLE);
+                this->deleteVectors<VkDevice, VkInstance>();
+            }
+        }
+
+        void demolishInstance()
+        {
+            vkDestroyInstance(this->getObject<VkInstance>(0), nullptr);
+            this->deleteVector<VkInstance>();
+        }
+
+        void demolishAllocators()
+        {
+            if (this->exists<VmaAllocator>())
+            {
+                for (m_iter = 0; m_iter < this->getVectorSize<VmaAllocator>(); ++m_iter)
+                    vmaDestroyAllocator(this->getObject<VmaAllocator>(m_iter));
+                this->deleteVector<VmaAllocator>();
+            }
         }
 
         template <typename ObjectType>

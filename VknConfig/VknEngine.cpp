@@ -3,7 +3,7 @@
 namespace vkn
 {
     void VknEngine::demolishDebugUtilsMessengerEXT(
-        VkInstance instance, VkDebugUtilsMessengerEXT &debugMessenger, const VkAllocationCallbacks *pAllocator)
+        VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator)
     {
         ((PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"))(
             instance, debugMessenger, pAllocator);
@@ -33,7 +33,6 @@ namespace vkn
         this->demolishObjects<VkPipelineLayout, VkDevice>(vkDestroyPipelineLayout);
         this->demolishObjects<VkPipelineCache, VkDevice>(vkDestroyPipelineCache);
         this->demolishObjects<VkPipeline, VkDevice>(vkDestroyPipeline);
-
         this->demolishObjects<VkFramebuffer, VkDevice>(vkDestroyFramebuffer);
         this->demolishObjects<VkRenderPass, VkDevice>(vkDestroyRenderPass);
 
@@ -45,33 +44,19 @@ namespace vkn
         this->demolishObjects<VkSemaphore, VkDevice>(vkDestroySemaphore);
         this->demolishObjects<VkFence, VkDevice>(vkDestroyFence);
 
-        if (this->exists<VmaAllocator>())
-            for (auto &allocator : this->getVector<VmaAllocator>())
-                vmaDestroyAllocator(allocator);
+        this->demolishAllocators();
         this->demolishObjects<VkDeviceMemory, VkDevice>(vkFreeMemory);
 
-        for (auto &device : this->getVector<VkDevice>())
-            vkDestroyDevice(device, VK_NULL_HANDLE);
+        this->demolishDevices();
         this->demolishObjects<VkSurfaceKHR, VkInstance>(vkDestroySurfaceKHR);
-        // What?
-        if (this->exists<VkDebugUtilsMessengerEXT>())
-            for (auto &debugMsgr : this->getVector<VkDebugUtilsMessengerEXT>())
-                /*What?*/ demolishDebugUtilsMessengerEXT(this->getObject<VkInstance>(0),
-                                                         this->getObject<VkDebugUtilsMessengerEXT>(0), nullptr);
-        for (auto &instance : this->getVector<VkInstance>())
-            vkDestroyInstance(instance, VK_NULL_HANDLE);
+        this->demolishObjects<VkDebugUtilsMessengerEXT, VkInstance>(demolishDebugUtilsMessengerEXT);
+        this->demolishInstance();
 
         if (this->exists<VkQueueFamilyProperties>())
             this->deleteVector<VkQueueFamilyProperties>();
-        if (this->exists<VkPhysicalDevice>())
-            this->deleteVector<VkPhysicalDevice>();
+        this->deleteVector<VkPhysicalDevice>();
 
-        this->deleteVectors<VkImage, VmaAllocator>();
-        this->deleteAllocationVector<VkImage>();
-        this->deleteVector<uint32_t>();
-        this->deleteVector<VmaAllocator>();
-        this->deleteVectors<VkDevice, VkInstance>();
-        this->deleteVectors<VkDebugUtilsMessengerEXT, VkInstance>();
-        this->deleteVector<VkInstance>();
+        if (this->exists<uint32_t>())
+            this->deleteVector<uint32_t>(); // i think it was num command buffers for each command pool
     }
 }
