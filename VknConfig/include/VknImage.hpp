@@ -47,6 +47,7 @@
 
 #include "VknEngine.hpp"
 #include "VknInfos.hpp"
+#include <vma/vk_mem_alloc.h> // Include VMA header
 
 namespace vkn
 {
@@ -59,13 +60,9 @@ namespace vkn
 
         // Create
         void createImage();
+        // createImage will now also handle memory allocation via VMA.
+        // demolishImage will handle destroying the image and freeing the VMA allocation.
         void demolishImage();
-        void addMemory();
-        void allocateAndBindMemory(
-            VkMemoryPropertyFlags requiredMemoryProperties =
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        void deallocateMemory();
-        // uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties); // Removed member function
 
         // Config
         void setImageType(VkImageType imageType);
@@ -91,7 +88,8 @@ namespace vkn
         VknInfos *m_infos;
 
         // Members
-        VkDeviceMemory *m_deviceMemory = nullptr;
+        // VkDeviceMemory is now managed by VmaAllocation
+        VmaAllocation m_allocation = VK_NULL_HANDLE;
 
         // Params
         VkImageType m_imageType = VK_IMAGE_TYPE_2D;
@@ -107,11 +105,8 @@ namespace vkn
 
         // State
         bool m_createdVkImage{false};
-        bool m_memoryBound{false};
-        bool m_memoryAdded{false};
+        // m_memoryBound and m_memoryAdded are no longer needed as VMA handles this.
         VknInstanceLock<VknImage> m_instanceLock;
-
-        uint32_t findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     };
 
 }

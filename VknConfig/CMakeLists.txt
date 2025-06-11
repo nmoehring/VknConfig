@@ -37,7 +37,7 @@ elseif(PLATFORM_DESKTOP)
     target_link_libraries(VknConfig PRIVATE glfw ${Vulkan_LIBRARIES})
 endif()
 
-target_link_libraries(VknConfig PRIVATE VknConfig_args)
+target_link_libraries(VknConfig PRIVATE VknConfig_args vma)
 target_include_directories(VknConfig PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Apply GTEST_ENABLED definition based on the flag from the parent CMakeLists.txt

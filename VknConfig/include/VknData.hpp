@@ -185,41 +185,63 @@ namespace vkn
             return result;
         }
 
+        VecDataType &_insert(uint32_t pos, VecDataType newElement)
+        {
+            this->grow(m_dataSize + 1u);
+            m_data[m_dataSize - 1u] = newElement;
+            m_positions[m_dataSize - 1u] = pos;
+            return m_data[m_dataSize - 1u];
+        }
+
+        VecDataType *_insert(uint_fast8_t startPos, VecDataType *newElements, uint_least32_t length)
+        {
+            uint32_t oldSize = m_dataSize;
+            this->grow(oldSize + length);
+            for (uint_least32_t i{0}; i < length; ++i)
+            {
+                m_data[i] = newElements[i];
+                m_positions[i] = startPos + i;
+            }
+            return &m_data[oldSize];
+        }
+
     public:
         friend class VknVectorIterator<VecDataType>;
 
-        uint_least32_t getDefragPos(uint_least32_t length)
+        uint_fast8_t getDefragPos(uint_fast32_t length)
         {
             if (m_dataSize == 0u)
                 return 0u;
             else if (m_dataSize == 1u)
                 return m_positions[0u];
-            else if (length == 1u)
-                ;
-            return m_posSize;
+            else if (this->getSize() == this->getNumPositions())
+                return this->getSize();
 
-            uint_least32_t i = 0u;
+            uint_fast32_t i{0u};
             PosSearchResult smallestPosRes{};
 
-            if (this->getSize() == this->getNumPositions())
-                return this->getSize();
             for (i = 0u; i < this->getNumPositions(); ++i)
             {
                 smallestPosRes = this->getSmallestPos(i);
-                if (!smallestPosRes.found || smallestPosRes.pos - i >= length)
+                if (!smallestPosRes.found && (smallestPosRes.pos - i) + 1u >= length)
                     return i;
+                else if (!smallestPosRes.found && (this->getNumPositions() - i) >= length)
+                    return i;
+                else if (!smallestPosRes.found)
+                    break;
                 else
                     i = smallestPosRes.pos;
             }
+            throw std::runtime_error("Due to fragmentation and/or limited capacity, there is no room in the vector for the specified contiguous data.");
         }
 
-        void remove(uint_least32_t position)
+        void remove(uint_fast8_t position)
         {
             if (this->isEmpty())
                 throw std::runtime_error("Cannot remove from an empty vector.");
             VecDataType *newData = this->getSize() > 1u ? new VecDataType[this->getSize() - 1u] : nullptr;
-            uint8_t *newPositions = this->getSize() > 1u ? new uint8_t[this->getSize() - 1u] : nullptr;
-            for (uint_least32_t i = 0u; i < this->getSize(); ++i)
+            uint_least8_t *newPositions = this->getSize() > 1u ? new uint_least8_t[this->getSize() - 1u] : nullptr;
+            for (uint_fast8_t i = 0u; i < this->getSize(); ++i)
             {
                 if (m_positions[i] == position)
                     continue;
@@ -233,12 +255,32 @@ namespace vkn
             --m_posSize;
         }
 
+        void remove(uint_fast8_t startPos, uint_fast32_t length)
+        {
+            if (this->isEmpty())
+                throw std::runtime_error("Cannot remove from an empty vector.");
+            VecDataType *newData = this->getSize() > length ? new VecDataType[this->getSize() - length] : nullptr;
+            uint_least8_t *newPositions = this->getSize() > length ? new uint_least8_t[this->getSize() - length] : nullptr;
+            for (uint32_t i = 0u; i < this->getSize(); ++i)
+            {
+                if (m_positions[i] >= startPos && m_positions[i] < startPos + length)
+                    continue;
+                newData[i] = m_data[i];
+                newPositions[i] = m_positions[i];
+            }
+            this->deleteArrays();
+            m_data = newData;
+            m_positions = newPositions;
+            m_dataSize -= length;
+            m_posSize -= length;
+        }
+
         void grow(uint_least32_t newSize)
         {
             if (newSize < this->getSize() || newSize > MAX_DATA_SIZE)
                 throw std::runtime_error("Invalid size for VknVector.");
             VecDataType *newData = new VecDataType[newSize];
-            uint8_t *newPositions = new uint8_t[newSize];
+            uint_least8_t *newPositions = new uint_least8_t[newSize];
             for (uint_least32_t i = 0u; i < this->getSize(); ++i)
             {
                 newData[i] = m_data[i];
@@ -282,7 +324,7 @@ namespace vkn
             }
             else
             {
-                m_positions = new uint8_t[m_dataSize];
+                m_positions = new uint_least8_t[m_dataSize];
                 m_data = new VecDataType[m_dataSize];
 
                 for (uint_least32_t i = 0u; i < this->getSize(); ++i)
@@ -306,7 +348,7 @@ namespace vkn
             }
             else
             {
-                m_positions = new uint8_t[otherSize];
+                m_positions = new uint_least8_t[otherSize];
                 m_data = new VecDataType[otherSize];
                 for (uint_least32_t i = 0u; i < otherSize; ++i)
                 {
@@ -426,11 +468,11 @@ namespace vkn
             return &m_data[oldSize];
         }
 
-        VecDataType *getElement(uint_least32_t position)
+        VecDataType *getElement(uint32_t position)
         {
             if (this->getSize() == 0u)
                 throw std::runtime_error("Cannot get(). Vector is empty!");
-            for (uint_least32_t i = 0u; i < this->getSize(); ++i)
+            for (uint32_t i = 0u; i < this->getSize(); ++i)
             {
                 if (m_positions[i] == position)
                     return &m_data[i];
@@ -438,7 +480,21 @@ namespace vkn
             return nullptr;
         }
 
-        bool exists(uint_least32_t position)
+        uint32_t defragInsert(VecDataType element)
+        {
+            uint32_t pos = this->getDefragPos(1);
+            this->_insert(pos, element);
+            return pos;
+        }
+
+        uint32_t defragInsert(VecDataType *elements, uint32_t length)
+        {
+            uint32_t pos = this->getDefragPos(length);
+            this->_insert(pos, elements, length);
+            return pos;
+        }
+
+        bool exists(uint32_t position)
         {
             if (!m_data)
                 return false;
@@ -448,7 +504,7 @@ namespace vkn
             return false;
         }
 
-        VecDataType &insert(uint_least32_t position, VecDataType newElement)
+        VecDataType &insert(uint32_t position, VecDataType newElement)
         {
             if (!m_data || !this->exists(position))
             {
@@ -459,6 +515,14 @@ namespace vkn
             else
                 throw std::runtime_error("Tried to insert into a VknVector element that is already assigned.");
             return m_data[m_dataSize - 1u];
+        }
+
+        VecDataType *insert(uint32_t startPos, VecDataType *newElements, uint32_t length)
+        {
+            for (uint32_t i{0u}; i < length; ++i)
+                if (this->exists(startPos + i))
+                    throw std::runtime_error("Tried to insert into a VknVector element that is already assigned.");
+            return this->_insert(startPos, newElements, length);
         }
 
         void swap(uint_least32_t position1, uint_least32_t position2)
@@ -491,8 +555,14 @@ namespace vkn
                 uint_least32_t i = 0;
                 uint_least32_t oldSize{this->getSize()};
                 this->grow(oldSize + numNewElements);
+                uint32_t startPos = this->getDefragPos(numNewElements);
                 for (i = oldSize; i < m_dataSize; ++i)
-                    m_positions[i] = this->getNextPosition();
+                {
+                    if (startPos + i >= m_posSize)
+                        m_positions[i] = this->getNextPosition();
+                    else
+                        m_positions[i] = startPos + i;
+                }
                 return m_data + oldSize;
             }
             return m_data;
@@ -525,10 +595,10 @@ namespace vkn
 
     private:
         VknVector<IterDataType> *m_vec;
-        uint8_t m_firstPos{0u};
-        uint8_t m_lastPos{0u};
-        uint8_t m_currentIdx{0u};
-        uint8_t m_currentPos{0u};
+        uint_least8_t m_firstPos{0u};
+        uint_least8_t m_lastPos{0u};
+        uint_least8_t m_currentIdx{0u};
+        uint_least8_t m_currentPos{0u};
 
         bool m_isInvalid{false};
         bool m_atEnd{false};

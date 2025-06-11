@@ -46,6 +46,7 @@
 #pragma once
 
 #include <memory>
+#include <vma/vk_mem_alloc.h>
 
 #include "VknRenderpass.hpp"
 #include "VknPhysicalDevice.hpp"
@@ -69,6 +70,7 @@ namespace vkn
         VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
         VknCommandPool *addCommandPool(uint32_t newCommandPoolIdx);
+        VmaAllocator *addAllocator();
 
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);
@@ -101,15 +103,16 @@ namespace vkn
         VknInfos *m_infos;
 
         // Members
-        std::list<VknRenderpass> m_renderpasses{};        // List, because elements don't need to be together, refs could be invalidated
-        std::list<VknSwapchain> m_swapchains{};           // Doesn't need to change after creation
-        std::list<VknPhysicalDevice> m_physicalDevices{}; // List, because elements don't need to be together, refs could be invalidated
+        std::list<VknRenderpass> m_renderpasses{};
+        std::list<VknSwapchain> m_swapchains{};
+        std::list<VknPhysicalDevice> m_physicalDevices{};
         std::list<VknCommandPool> m_commandPools{};
         VkQueue m_lastUsedGraphicsQueue{}; // Store graphics queue handle
 
         // Params
         const char *const *m_extensions{nullptr};
         uint32_t m_extensionsSize{0};
+        VmaVulkanFunctions m_vmaVulkanFunctions{};
 
         // State
         bool m_createdVkDevice{false};
@@ -119,6 +122,8 @@ namespace vkn
         bool m_filledQueueCreateInfos{false};
         VknInstanceLock<VknDevice> m_instanceLock;
         bool m_swapchainExtensionEnabled{false};
+        bool m_allocatorAdded{false};
+        bool m_addedVmaFunctions{false};
 
         // For correct sync object retrieval
         uint32_t m_imageAvailableSemaphoreStartIdx{0};

@@ -82,6 +82,7 @@ namespace vkn
         std::list<VknQueueFamily> &getQueues() { return m_queues; }
         VknQueueFamily &getQueue(int idx);
         VknIdxs getPhysicalDeviceAbsIdxs() { return m_absIdxs; }
+        VkPhysicalDeviceType getGPUType();
 
     private:
         // Engine

@@ -111,8 +111,6 @@ namespace vkn
 
             if (deviceCount == 0u)
                 throw std::runtime_error("No GPU's supporting Vulkan found.");
-            else if (deviceCount > 1u)
-                std::cerr << "Found more than one GPU supporting Vulkan. Selecting device at index 0." << std::endl;
             VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
             VknResult res2{vkEnumeratePhysicalDevices(
                                m_engine->getObject<VkInstance>(0u), &deviceCount,
@@ -120,6 +118,7 @@ namespace vkn
                            "Enum physical devices and store."};
             for (auto &vkDevice : *physDevices)
                 vkGetPhysicalDeviceProperties(vkDevice, s_properties.getData(1));
+
             s_enumeratedPhysicalDevices = true;
         } // if (!s_enumeratedPhysicalDevices)
     }
@@ -132,9 +131,19 @@ namespace vkn
         VknResult res("Enumerate physical devices.");
         this->enumeratePhysicalDevices();
 
-        m_relIdxs.add<VkPhysicalDevice>(0);
-        m_absIdxs.add<VkPhysicalDevice>(0);
-        m_selectedPhysicalDevice = true;
+        for (int i = 0; i < s_properties.getNumPositions(); ++i)
+            if (s_properties(i).deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+            {
+                m_relIdxs.add<VkPhysicalDevice>(i);
+                m_absIdxs.add<VkPhysicalDevice>(i);
+                m_selectedPhysicalDevice = true;
+            }
+        if (!m_selectedPhysicalDevice)
+        {
+            m_relIdxs.add<VkPhysicalDevice>(0);
+            m_absIdxs.add<VkPhysicalDevice>(0);
+            m_selectedPhysicalDevice = true;
+        }
 
         this->requestQueueFamilyProperties();
 
@@ -193,5 +202,10 @@ namespace vkn
     bool VknPhysicalDevice::areQueuePrioritiesFilled()
     {
         return m_filledQueuePriorities;
+    }
+
+    VkPhysicalDeviceType VknPhysicalDevice::getGPUType()
+    {
+        return s_properties(m_relIdxs.get<VkPhysicalDevice>()).deviceType;
     }
 }

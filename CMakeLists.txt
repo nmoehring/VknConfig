@@ -90,11 +90,11 @@ if(ENABLE_TESTING)
             set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT for GTest on MSVC" FORCE)
         endif()
 
-        set(VKNCONFIG_GTEST_ENABLED_FLAG ON PARENT_SCOPE) # Pass this to child scopes
+        set(VKNCONFIG_GTEST_ENABLED_FLAG ON) # Pass this to child scopes
     else()
         message(WARNING "GTest not found. Testing will be disabled.")
         set(ENABLE_TESTING OFF) # Disable testing if GTest is not found
-        set(VKNCONFIG_GTEST_ENABLED_FLAG OFF PARENT_SCOPE) # Pass this to child scopes
+        set(VKNCONFIG_GTEST_ENABLED_FLAG OFF) # Pass this to child scopes
     endif()
 endif()
 
@@ -173,8 +173,8 @@ if(PLATFORM_DESKTOP)
 endif()
 
 # --- Single-header libraries
-# add_library(vma INTERFACE)
-# target_sources(vma INTERFACE single-headers/vma.cpp)
+add_library(vma INTERFACE)
+target_sources(vma INTERFACE single-headers/vma.cpp)
 
 # --- subdir ---
 add_subdirectory(VknConfig)

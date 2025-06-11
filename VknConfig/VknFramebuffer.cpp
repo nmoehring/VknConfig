@@ -181,7 +181,6 @@ namespace vkn
             if (!isSwapchainImage(i))
             {
                 getListElement(i, m_attachImages)->createImage();
-                getListElement(i, m_attachImages)->allocateAndBindMemory(); // Allocate and bind memory for the VknImage
                 getListElement(i, m_attachViews)->createImageView();
             }
         }
@@ -198,7 +197,7 @@ namespace vkn
             return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, m_attachViews.size());
     }
 
-    void VknFramebuffer::demolishFramebuffer()
+    void VknFramebuffer::demolish()
     {
         for (uint32_t i = 0; i < m_attachViews.size(); ++i)
         {
@@ -206,7 +205,6 @@ namespace vkn
             if (!isSwapchainImage(i))
             {
                 getListElement(i, m_attachImages)->demolishImage();
-                getListElement(i, m_attachImages)->deallocateMemory();
             }
             m_infos->removeFramebufferCreateInfo(m_relIdxs);
         }
@@ -217,7 +215,7 @@ namespace vkn
     void VknFramebuffer::recreateFramebuffer()
     {
         m_recreatingFramebuffer = true;
-        this->demolishFramebuffer();
+        this->demolish();
         m_setAttachmentSettings = false;
         m_createdAttachments = false;
         m_createdFramebuffer = false;

@@ -44,8 +44,10 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <vulkan/vulkan.h>
+#include <vma/vk_mem_alloc.h>
 
 #include <unordered_map>
 #include <optional>
@@ -116,6 +118,12 @@ namespace vkn
             return "semaphore";
         else if constexpr (std::is_same_v<T, VkFence>)
             return "fence";
+        else if constexpr (std::is_same_v<T, VmaAllocator>)
+            return "allocator";
+        else if constexpr (std::is_same_v<T, VmaAllocation>)
+            return "allocation";
+        else if constexpr (std::is_same_v<T, void>)
+            return "VOID";
         else
             throw std::runtime_error("Invalid object type passed to typeToStr().");
     } // typeToStr<T>()
@@ -150,6 +158,13 @@ namespace vkn
             m_data[typeToStr<T>()] = value;
         }
 
+        template <typename T>
+        bool exists()
+        {
+            std::string vkTypeStr = typeToStr<T>();
+            return m_data.count(vkTypeStr);
+        }
+
     }; // VknIdxs
 
     class VknEngine
@@ -173,10 +188,10 @@ namespace vkn
         {
             VknVector<ObjectType> &vec{this->getVector<ObjectType>()};
             VknVector<ParentType *> &parentVec = this->getParentVector<ObjectType, ParentType>();
-            size_t pos = vec.getSize();
+            m_pos = vec.getSize();
             vec.append(val);
             parentVec.append(parent);
-            return pos;
+            return m_pos;
         }
 
         template <typename ObjectType, typename ParentType>
@@ -184,6 +199,16 @@ namespace vkn
         {
             ObjectType val{};
             return this->push_back<ObjectType, ParentType>(val, parent);
+        }
+
+        template <typename ObjectType>
+        uint32_t push_back()
+        {
+            ObjectType val{};
+            VknVector<ObjectType> &vec{this->getVector<ObjectType>()};
+            m_pos = vec.getSize();
+            vec.append(val);
+            return m_pos;
         }
 
         template <typename ObjectType>
@@ -201,21 +226,19 @@ namespace vkn
         template <typename ObjectType>
         VknVector<ObjectType> &getVector()
         {
-            std::string vkTypeStr = typeToStr<ObjectType>();
-            if (m_objectVectors.find(vkTypeStr) == m_objectVectors.end())
-
-                m_objectVectors[vkTypeStr] = new VknVector<ObjectType>{};
-            return *static_cast<VknVector<ObjectType> *>(m_objectVectors[vkTypeStr]);
+            m_vkTypeStr = typeToStr<ObjectType>();
+            if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
+                m_objectVectors[m_vkTypeStr] = new VknVector<ObjectType>{};
+            return *static_cast<VknVector<ObjectType> *>(m_objectVectors[m_vkTypeStr]);
         }
 
         template <typename ObjectType, typename ParentType>
         VknVector<ParentType *> &getParentVector()
         {
-            std::string vkObjectTypeStr = typeToStr<ObjectType>();
-            std::string vkParentTypeStr = typeToStr<ParentType>();
+            m_vkTypeStr = typeToStr<ObjectType>();
             if (m_parentVectors.find(vkObjectTypeStr) == m_parentVectors.end())
-                m_parentVectors[vkObjectTypeStr] = new VknVector<ParentType *>{};
-            return *static_cast<VknVector<ParentType *> *>(m_parentVectors[vkObjectTypeStr]);
+                m_parentVectors[m_vkTypeStr] = new VknVector<ParentType *>{};
+            return *static_cast<VknVector<ParentType *> *>(m_parentVectors[m_vkTypeStr]);
         }
 
         template <typename ObjectType, typename ParentType>
@@ -236,7 +259,10 @@ namespace vkn
         template <typename ObjectType>
         uint32_t getVectorSize()
         {
-            return this->getVector<ObjectType>().getNumPositions();
+            m_vkTypeStr = typeToStr<ObjectType>();
+            if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
+                return 0;
+            return m_objectVectors[m_vkTypeStr].getNumPositions();
         }
 
         template <typename VknObjectType, typename VkObjectType, typename VkParentType>
@@ -253,6 +279,38 @@ namespace vkn
             return objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
         }
 
+        template <typename VknObjectType, typename VkObjectType, typename VkParentType>
+        uint32_t addNewVknObjects(uint32_t count, std::list<VknObjectType> &objList,
+                                  VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+        {
+            VknVector<VkObjectType> &vkObjectVec = this->getVector<VkObjectType>();
+            uint32_t startPos = vkObjectVec.getDefragPos(count);
+            VknVector<VkParentType *> &vkParentVec = this->getParentVector<VkObjectType, VkParentType>();
+            VknIdxs newRelIdxs = relIdxs;
+            VknIdxs newAbsIdxs = absIdxs;
+            for (m_iter = 0; m_iter < count; ++m_iter)
+            {
+                newAbsIdxs.add<VkObjectType>(startPos + m_iter);
+                vkObjectVec.insert(startPos + m_iter, VkObjectType{});
+                newRelIdxs.add<VkObjectType>(objList.size());
+                vkParentVec.insert(startPos + m_iter, &this->getObject<VkParentType>(absIdxs));
+                objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+            }
+            return startPos;
+        }
+
+        template <typename VknObjectType, typename VkObjectType, typename VkParentType>
+        void demolishVknObjects(uint32_t startPos, uint32_t count, std::list<VknObjectType> &objList)
+        {
+            VknVector<VkObjectType> &vkObjectVec = this->getVector<VkObjectType>();
+            VknVector<VkParentType *> &vkParentVec = this->getParentVector<VkObjectType, VkParentType>();
+            vkObjectVec.remove(startPos, count);
+            vkParentVec.remove(startPos, count);
+            for (m_iter = 0; m_iter < objList.size(); ++m_iter)
+                objList[m_iter].demolish();
+            objList.clear();
+        }
+
         template <typename VkObjectType, typename VkParentType>
         VkObjectType &addNewObject(VknIdxs &absIdxs)
         {
@@ -261,17 +319,55 @@ namespace vkn
             return this->getObject<VkObjectType>(absIdxs);
         }
 
+        template <typename VkObjectType>
+        VkObjectType &addNewObject(VknIdxs &absIdxs)
+        {
+            absIdxs.add<VkObjectType>(this->push_back<VkObjectType>());
+            return this->getObject<VkObjectType>(absIdxs);
+        }
+
+        template <typename VkResourceType>
+        VmaAllocation &addNewAllocation(VknIdxs &absIdxs)
+        {
+            m_vkTypeStr = typeToStr<VkResourceType>();
+            if (m_allocations.find(m_vkTypeStr) == m_allocations.end())
+            {
+                m_allocations[m_vkTypeStr] = new VknVector<VmaAllocation>{};
+                m_parentVectors[m_vkTypeStr] = new VknVector<VmaAllocator *>{};
+            }
+            VknVector<VmaAllocation> &allocationVec = *static_cast<VknVector<VmaAllocation> *>(m_allocations[m_vkTypeStr]);
+            VknVector<VmaAllocator *> &allocatorVec = *static_cast<VknVector<VmaAllocator *> *>(m_parentVectors[m_vkTypeStr]);
+            if (!absIdxs.exists<VmaAllocation>())
+                absIdxs.add<VmaAllocation>(allocationVec.getDefragPos());
+            allocationVec.insert(absIdxs.get<VmaAllocation>(), VmaAllocation{});
+            allocatorVec.insert(absIdxs.get<VmaAllocation>(), &this->getObject<VmaAllocator>(absIdxs));
+            return allocationVec(absIdxs.get<VmaAllocation>());
+        }
+
+        template <typename VkResourceType>
+        VknVector<VmaAllocation> &getAllocationVector()
+        {
+            m_vkTypeStr = typeToStr<VkResourceType>();
+            return *static_cast<VknVector<VmaAllocation> *>(m_allocations[m_vkTypeStr]);
+        }
+
+        template <typename VkResourceType>
+        VmaAllocation *getAllocation(uint_fast32_t pos)
+        {
+            return &(this->getAllocationVector<VkResourceType>()(pos));
+        }
+
         VkInstance *addVkInstance(VknIdxs &relIdxs, VknIdxs &absIdxs)
         {
             VknVector<VkInstance> &vec{this->getVector<VkInstance>()};
-            size_t pos = vec.getSize();
-            if (pos != 0)
+            m_pos = vec.getSize();
+            if (m_pos != 0)
                 throw std::runtime_error("VkInstance already added.");
             vec.append(VkInstance{VK_NULL_HANDLE});
 
-            absIdxs.add<VkInstance>(pos);
-            relIdxs.add<VkInstance>(pos);
-            return &vec(pos);
+            absIdxs.add<VkInstance>(m_pos);
+            relIdxs.add<VkInstance>(m_pos);
+            return &vec(m_pos);
         }
 
         VkCommandBuffer *addVkCommandBuffers(VknIdxs &absIdxs, uint32_t numCommandBuffers)
@@ -282,14 +378,30 @@ namespace vkn
             uint32_t poolIdx{absIdxs.get<VkCommandPool>()};
             numBuffersVec.insert(poolIdx, numCommandBuffers);
             cmdBufferVec.insert(poolIdx, new VkCommandBuffer[numCommandBuffers]);
-            for (uint32_t i = 0; i < numCommandBuffers; ++i)
-                cmdBufferVec(poolIdx)[i] = VK_NULL_HANDLE;
+            for (m_iter = 0; m_iter < numCommandBuffers; ++m_iter)
+                cmdBufferVec(poolIdx)[m_iter] = VK_NULL_HANDLE;
             return cmdBufferVec(poolIdx);
+        }
+
+        template <typename T>
+        bool exists()
+        {
+            m_vkTypeStr = typeToStr<T>();
+            return m_objectVectors.count(m_vkTypeStr);
         }
 
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
         std::unordered_map<std::string, void *> m_parentVectors{};
+        std::unordered_map<std::string, void *> m_allocations{};
+
+        // Allocate once, reuse
+        uint_fast32_t m_iter{0};
+        uint_fast32_t m_pos{0};
+        std::string m_vkTypeStr{"LongStrNoReallocate"};
+        std::string m_vkParentTypeStr{"LongStrNoReallocate"};
+
+        // State
         bool m_poweredOn{true}; // State to track if shutdown has been called
         /*VknVector<VkPipelineCache> pipelineCaches{};*/
 
@@ -300,19 +412,89 @@ namespace vkn
         template <typename ObjectType, typename ParentType>
         void deleteVectors()
         {
-            std::string vkTypeStr = typeToStr<ObjectType>();
-            if (m_objectVectors.find(vkTypeStr) != m_objectVectors.end())
-                delete static_cast<VknVector<ObjectType> *>(m_objectVectors[vkTypeStr]);
-            if (m_parentVectors.find(vkTypeStr) != m_parentVectors.end())
-                delete static_cast<VknVector<ParentType *> *>(m_parentVectors[vkTypeStr]);
+            m_vkTypeStr = typeToStr<ObjectType>();
+            if (m_objectVectors.find(m_vkTypeStr) != m_objectVectors.end())
+                delete static_cast<VknVector<ObjectType> *>(m_objectVectors[m_vkTypeStr]);
+            else
+                throw std::runtime_error("Trying to delete non-existent object vector in VknEngine.");
+            if (m_parentVectors.find(m_vkTypeStr) != m_parentVectors.end())
+                delete static_cast<VknVector<ParentType *> *>(m_parentVectors[m_vkTypeStr]);
+            else
+                throw std::runtime_error("Trying to delete non-existent parent pointer vector in VknEngine.");
+        }
+
+        template <typename VkObjectType>
+        void demolishObject(std::function<void __stdcall(VkObjectType)> func)
+        {
+            if (this->exists<VkObjectType>())
+                for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
+                    func(this->getObject<VkObjectType>(m_iter))
+        }
+
+        template <typename VkObjectType, typename VkParentType>
+        void demolishObjects(std::function<void __stdcall(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
+        {
+            if (this->exists<VkObjectType>())
+            {
+                for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
+                    func(
+                        *this->getParentPointer<VkObjectType, VkParentType>(m_iter),
+                        this->getObject<VkObjectType>(m_iter), nullptr);
+                this->deleteVectors<VkObjectType, VkParentType>();
+            }
+        }
+
+        template <typename VkObjectType>
+        void demolishAllocations(std::function<void(VmaAllocator, VkObjectType, VmaAllocation)> func)
+        {
+            if (this->exists<VkObjectType>())
+            {
+                for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
+                {
+                    VmaAllocation *allocation = this->getAllocation<VkObjectType>(m_iter);
+                    VmaAllocator *allocator = this->getParentPointer<VkObjectType, VmaAllocator>(m_iter);
+                    VkObjectType &vkObject = this->getObject<VkObjectType>(m_iter);
+
+                    func(*allocator, vkObject, *allocation);
+                }
+
+                this->deleteVectors<VkObjectType, VmaAllocator>();
+                this->deleteAllocationVector<VkObjectType>();
+            }
+        }
+
+        void demolishCommandBuffers()
+        {
+            if (this->exists<VkCommandBuffer *>())
+                for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
+                    vkFreeCommandBuffers(
+                        *this->getParentPointer<VkCommandPool, VkDevice>(m_iter),
+                        this->getObject<VkCommandPool>(m_iter),
+                        this->getObject<uint32_t>(m_iter),
+                        this->getObject<VkCommandBuffer *>(m_iter));
+            for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
+                delete[] this->getObject<VkCommandBuffer *>(m_iter);
+            this->deleteVectors<VkCommandBuffer *, VkDevice>();
         }
 
         template <typename ObjectType>
         void deleteVector()
         {
-            std::string vkTypeStr = typeToStr<ObjectType>();
-            if (m_objectVectors.find(vkTypeStr) != m_objectVectors.end())
-                delete static_cast<VknVector<ObjectType> *>(m_objectVectors[vkTypeStr]);
+            m_vkTypeStr = typeToStr<ObjectType>();
+            if (m_objectVectors.find(m_vkTypeStr) != m_objectVectors.end())
+                delete static_cast<VknVector<ObjectType> *>(m_objectVectors[m_vkTypeStr]);
+            else
+                throw std::runtime_error("Trying to delete non-existent object vector in VknEngine.");
+        }
+
+        template <typename ObjectType>
+        void deleteAllocationVector()
+        {
+            m_vkTypeStr = typeToStr<ObjectType>();
+            if (m_allocations.find(m_vkTypeStr) != m_allocations.end())
+                delete static_cast<VknVector<VmaAllocation> *>(m_allocations[m_vkTypeStr]);
+            else
+                throw std::runtime_error("Trying to delete non-existent allocation vector in VknEngine.");
         }
     }; // VknEngine
 

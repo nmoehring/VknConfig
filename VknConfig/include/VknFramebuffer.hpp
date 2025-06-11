@@ -79,7 +79,7 @@ namespace vkn
         // Create
         void createFramebuffer();
         void createAttachments();
-        void demolishFramebuffer();
+        void demolish();
         void recreateFramebuffer();
 
         // Get

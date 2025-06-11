@@ -10,14 +10,33 @@ namespace vkn
 
     void VknImage::createImage()
     {
+        if (m_createdVkImage)
+            throw std::runtime_error("VknImage::createImage called but image already created.");
+
         VkImageCreateInfo *imageInfo = m_infos->fillImageCreateInfo(
             m_relIdxs, m_imageType, m_format, m_extent, m_mipLevels, m_arrayLayers,
             m_samples, m_tiling, m_usage, m_initialLayout, m_flags);
 
-        VknResult res{vkCreateImage(m_engine->getObject<VkDevice>(m_absIdxs),
-                                    imageInfo, VK_NULL_HANDLE,
-                                    &m_engine->getObject<VkImage>(m_absIdxs)),
-                      "Create image."};
+        // VMA Allocation
+        VmaAllocationCreateInfo allocInfo = {};
+        // For images, VMA_MEMORY_USAGE_GPU_ONLY is common unless it's a staging image or read by CPU.
+        // This should be configurable if VknImage needs to support different use cases.
+        allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE; // Or a more specific usage
+        // Add flags like VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT if needed for certain image types/usages
+
+        // Assuming VknDevice stores the VmaAllocator and it's retrievable via m_engine and m_absIdxs
+        // This might need adjustment based on how you expose the VmaAllocator.
+        // If VknDevice has a getVmaAllocator() method:
+        // VmaAllocator vmaAllocator = m_engine->getDevice(m_absIdxs.get<VkDevice>())->getVmaAllocator();
+        // For now, let's assume it's directly accessible via m_engine->getObject
+        VmaAllocator vmaAllocator = m_engine->getObject<VmaAllocator>(m_absIdxs);
+
+        VknResult res{vmaCreateImage(vmaAllocator,
+                                     imageInfo, &allocInfo,
+                                     &m_engine->getObject<VkImage>(m_absIdxs), // VknEngine stores the VkImage handle
+                                     &m_allocation,
+                                     nullptr), // Optional: VmaAllocationInfo
+                      "VMA Create Image"};
 
         m_createdVkImage = true;
     }
@@ -26,13 +45,20 @@ namespace vkn
     {
         if (!m_createdVkImage)
             throw std::runtime_error("VknImage::demolishImage called before createImage().");
-
-        vkDestroyImage(m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkImage>(m_absIdxs), nullptr);
-        this->deallocateMemory();
+        ; // Or throw
+        VmaAllocator vmaAllocator = m_engine->getObject<VmaAllocator>(m_absIdxs);
+        vmaDestroyImage(vmaAllocator, m_engine->getObject<VkImage>(m_absIdxs), m_allocation);
         m_infos->removeImageCreateInfo(m_relIdxs);
         m_createdVkImage = false;
+        m_allocation = VK_NULL_HANDLE; // Reset allocation handle
     }
 
+    VkImage *VknImage::getVkImage()
+    {
+        return &m_engine->getObject<VkImage>(m_absIdxs);
+    }
+
+    // Setters remain the same
     void VknImage::setImageType(VkImageType imageType)
     {
         m_imageType = imageType;
@@ -80,71 +106,6 @@ namespace vkn
 
     void VknImage::setFlags(VkImageCreateFlags flags)
     {
-
         m_flags = flags;
-    }
-
-    VkImage *VknImage::getVkImage()
-    {
-        return &m_engine->getObject<VkImage>(m_absIdxs);
-    }
-
-    // Helper function (could be in VknPhysicalDevice or a utility header)
-    uint32_t VknImage::findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-    {
-        VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(m_engine->getObject<VkPhysicalDevice>(m_absIdxs), &memProperties);
-
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-                return i;
-        throw std::runtime_error("Failed to find suitable memory type!");
-    }
-
-    void VknImage::deallocateMemory()
-    {
-        if (!m_memoryBound)
-            throw std::runtime_error("VknImage::deallocateMemory called but memory is not bound.");
-
-        vkFreeMemory(m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkDeviceMemory>(m_absIdxs), nullptr);
-        m_memoryBound = false;
-    }
-
-    void VknImage::addMemory()
-    {
-        if (m_memoryAdded)
-            throw std::runtime_error("VknImage::addMemory called but memory is already allocated.");
-        m_instanceLock(this);
-        m_deviceMemory = &m_engine->addNewObject<VkDeviceMemory, VkDevice>(m_absIdxs);
-        m_memoryAdded = true;
-    }
-
-    // Helper function (moved outside the class)
-    void VknImage::allocateAndBindMemory(VkMemoryPropertyFlags requiredMemoryProperties)
-    {
-        if (!m_createdVkImage)
-            throw std::runtime_error("VknImage::allocateAndBindMemory called before createImage().");
-        if (m_memoryBound)
-            throw std::runtime_error("VknImage::allocateAndBindMemory called but memory is already bound.");
-
-        if (!m_memoryAdded)
-            this->addMemory();
-
-        VkDevice device = m_engine->getObject<VkDevice>(m_absIdxs);
-        VkImage image = m_engine->getObject<VkImage>(m_absIdxs);
-        VkPhysicalDevice physicalDevice = m_engine->getObject<VkPhysicalDevice>(m_absIdxs.get<VkDevice>()); // This assumes physical device 0 for device 0
-
-        VkMemoryRequirements memoryRequirements;
-        vkGetImageMemoryRequirements(device, image, &memoryRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.pNext = nullptr;
-        allocInfo.allocationSize = memoryRequirements.size;
-        allocInfo.memoryTypeIndex = findSuitableMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
-
-        VknResult resAlloc{vkAllocateMemory(device, &allocInfo, nullptr, m_deviceMemory), "VknImage vkAllocateMemory"};
-        VknResult resBind{vkBindImageMemory(device, image, *m_deviceMemory, 0), "VknImage vkBindImageMemory"};
-        m_memoryBound = true;
     }
 }

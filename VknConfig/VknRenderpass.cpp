@@ -163,15 +163,15 @@ namespace vkn
 
     std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(VknSwapchain &swapchain)
     {
+        m_framebufferStartPos = m_engine->addNewVknObjects<VknFramebuffer, VkFramebuffer, VkDevice>(
+            swapchain.getNumImages(), m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
         for (uint32_t i = 0; i < swapchain.getNumImages(); ++i)
         {
-            m_engine->addNewVknObject<VknFramebuffer, VkFramebuffer, VkDevice>(
-                i, m_framebuffers, m_relIdxs, m_absIdxs, m_infos);
-
-            m_framebuffers.back().setSwapchain(&swapchain);
-            m_framebuffers.back().setDimensions();
-            m_framebuffers.back().setSwapchainAttachmentDescriptionIndex(0);
-            m_framebuffers.back().addAttachments();
+            VknFramebuffer *listElement = getListElement(i, m_framebuffers);
+            listElement->setSwapchain(&swapchain);
+            listElement->setDimensions();
+            listElement->setSwapchainAttachmentDescriptionIndex(0);
+            listElement->addAttachments();
         }
         return &m_framebuffers;
     }
@@ -210,8 +210,8 @@ namespace vkn
         uint32_t numSwapchainImages{swapchain.getNumImages()};
         if (m_framebuffers.size() != numSwapchainImages)
         {
-            for (auto &framebuffer : m_framebuffers)
-                framebuffer.demolishFramebuffer();
+            m_engine->demolishVknObjects<VknFramebuffer, VkFramebuffer, VkDevice>(
+                m_framebufferStartPos, numSwapchainImages, m_framebuffers);
             m_framebuffers.clear();
             this->addFramebuffers(swapchain);
             this->createFramebuffers();

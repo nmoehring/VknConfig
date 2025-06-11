@@ -126,6 +126,7 @@ namespace vkn
         uint32_t m_numSubpasses{0};
         size_t m_pipelineStartAbsIdx{0};
         bool m_recreatingPipelines{false};
+        uint32_t m_framebufferStartPos{0};
         VknInstanceLock<VknRenderpass> m_instanceLock;
 
         VknPipeline *addPipeline(uint32_t subpassIdx);

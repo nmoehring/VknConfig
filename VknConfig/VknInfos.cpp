@@ -892,4 +892,14 @@ namespace vkn
         else
             throw std::runtime_error("Viewport create info does not exist at that position.");
     }
+
+    VkMemoryAllocateInfo *VknInfos::fillMemoryAllocateInfo(VknIdxs &relIdxs, VkDeviceSize allocationSize, uint32_t memoryTypeIndex)
+    {
+        VkMemoryAllocateInfo &info = m_deviceMemoryAllocateInfos[relIdxs.get<VkDevice>()].append(VkMemoryAllocateInfo{});
+        info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        info.pNext = VK_NULL_HANDLE;
+        info.allocationSize = allocationSize;
+        info.memoryTypeIndex = memoryTypeIndex;
+        return &info;
+    }
 }

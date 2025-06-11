@@ -10,6 +10,7 @@ namespace vkn
         VknPhysicalDevice &physicalDevice = m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice, VkInstance>(
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice.getPhysicalDeviceAbsIdxs().get<VkPhysicalDevice>());
+        m_absIdxs.add<VmaAllocator>(m_engine->getVectorSize<VmaAllocator>());
     }
 
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
@@ -219,5 +220,23 @@ namespace vkn
         // getListElement is a template function, ensure it's accessible here
         // (it's in VknData.hpp, which should be included by VknDevice.hpp or .cpp)
         return getListElement(commandPoolIdx, m_commandPools);
+    }
+
+    VmaAllocator *VknDevice::addAllocator()
+    {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding allocator.");
+
+        VmaAllocator &allocator = m_engine->addNewObject<VmaAllocator, VkDevice>(m_absIdxs);
+        VmaAllocatorCreateInfo allocatorInfo{};
+        // allocatorInfo.pVulkanFunctions = &m_vmaVulkanFunctions; //This needs to come back if volk ever gets used.
+        allocatorInfo.physicalDevice = m_engine->getObject<VkPhysicalDevice>(m_absIdxs);
+        allocatorInfo.device = m_engine->getObject<VkDevice>(m_absIdxs);
+        allocatorInfo.instance = m_engine->getObject<VkInstance>(m_absIdxs);
+        allocatorInfo.vulkanApiVersion = m_infos->getAppInfo()->apiVersion;
+
+        VknResult res{"Create VMA allocator."};
+        res = vmaCreateAllocator(&allocatorInfo, &allocator);
+        return &allocator;
     }
 } // namespace vkn
