@@ -897,9 +897,44 @@ namespace vkn
     {
         VkMemoryAllocateInfo &info = m_deviceMemoryAllocateInfos[relIdxs.get<VkDevice>()].append(VkMemoryAllocateInfo{});
         info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        info.pNext = VK_NULL_HANDLE;
+        info.pNext = nullptr;
         info.allocationSize = allocationSize;
         info.memoryTypeIndex = memoryTypeIndex;
         return &info;
     }
+
+    VkBufferCreateInfo *VknInfos::fillBufferCreateInfo(VknIdxs &relIdxs, VkDeviceSize size, VkBufferUsageFlags usage,
+                                                       VkSharingMode sharingMode, uint32_t queueFamilyIndexCount,
+                                                       const uint32_t *pQueueFamilyIndices, VkBufferCreateFlags flags)
+    {
+        VkBufferCreateInfo &info = m_bufferCreateInfos[relIdxs.get<VkDevice>()].append(VkBufferCreateInfo{});
+        info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        info.pNext = nullptr;
+        info.flags = flags;
+        info.size = size;
+        info.usage = usage;
+        info.sharingMode = sharingMode;
+        info.queueFamilyIndexCount = queueFamilyIndexCount;
+        info.pQueueFamilyIndices = pQueueFamilyIndices;
+
+        return &info;
+    }
+    /*
+        VmaAllocationInfo *VknInfos::fillVmaAllocationInfo(VknIdxs &relIdxs, uint32_t memoryType, VkDeviceMemory deviceMemory, VkDeviceSize offset, VkDeviceSize size,
+                                                           void *pMappedData, void *pUserData, const char *pName)
+        {
+            VmaAllocationInfo &info = m_vmaAllocationInfos[relIdxs.get<VkDevice>()].append(VmaAllocationInfo{});
+            uint32_t memoryType;
+
+            VkDeviceSize offset;
+
+            VkDeviceSize size;
+
+            void *pMappedData;
+
+            void *pUserData;
+
+            const char *pName;
+        }
+            */
 }

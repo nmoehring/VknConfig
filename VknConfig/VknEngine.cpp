@@ -49,7 +49,11 @@ namespace vkn
 
         this->demolishDevices();
         this->demolishObjects<VkSurfaceKHR, VkInstance>(vkDestroySurfaceKHR);
-        this->demolishObjects<VkDebugUtilsMessengerEXT, VkInstance>(demolishDebugUtilsMessengerEXT);
+        this->demolishDebugObjects<VkDebugUtilsMessengerEXT, VkInstance>(
+            [this](VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks *pAllocator)
+            {
+                this->demolishDebugUtilsMessengerEXT(instance, messenger, pAllocator);
+            });
         this->demolishInstance();
 
         if (this->exists<VkQueueFamilyProperties>())

@@ -88,6 +88,7 @@ namespace vkn
             return &m_engine->getObject<VkFramebuffer>(m_absIdxs);
         } // Add getter
         bool isSwapchainImage(uint32_t i);
+        bool hasSwapchainImage();
         VknVectorIterator<VkImageView> getAttachmentImageViews();
 
     private:

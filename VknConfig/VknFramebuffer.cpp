@@ -85,15 +85,15 @@ namespace vkn
             return;
         }
 
-        m_imageViewStartIdx = m_engine->getVector<VkImageView>().getDefragPos(descriptions->getDataSize());
+        m_imageViewStartIdx = m_engine->addNewVknObjects<VknImageView, VkImageView, VkDevice>(
+            descriptions->getDataSize(), m_attachViews, m_relIdxs, m_absIdxs, m_infos);
+        m_imageStartIdx = m_engine->addNewVknObjects<VknImage, VkImage, VkDevice>(
+            this->hasSwapchainImage() ? descriptions->getDataSize() - 1u : descriptions->getDataSize(),
+            m_attachImages, m_relIdxs, m_absIdxs, m_infos);
+
         for (uint32_t i = 0; i < descriptions->getDataSize(); ++i) // Iterate descriptions
         {
-            VknImageView *view;
-            if (m_recreatingFramebuffer)
-                view = getListElement(i, m_attachViews);
-            else
-                view = &m_engine->addNewVknObject<VknImageView, VkImageView, VkDevice>(
-                    m_attachViews.size(), m_attachViews, m_relIdxs, m_absIdxs, m_infos);
+            VknImageView *view = getListElement(i, m_attachViews);
 
             if (isSwapchainImage(i))
                 m_swapchain->initializeSwapchainImageViewFromFramebuffer(view, m_relIdxs.get<VkFramebuffer>());
@@ -101,18 +101,16 @@ namespace vkn
             {
                 // This is an attachment for which we need to create and manage a VknImage
                 // (e.g., depth buffer, offscreen color target).
-                VknImage &image = m_engine->addNewVknObject<VknImage, VkImage, VkDevice>(
-                    m_attachImages.size(), m_attachImages, // Adds to this framebuffer's m_attachImages list
-                    m_relIdxs, m_absIdxs, m_infos);
+                VknImage *image = getListElement(i, m_attachImages);
 
                 // Configure the newly added VknImage
-                image.setExtent({m_width, m_height, 1});
-                image.setFormat((*descriptions)(i).format);
-                image.setSamples((*descriptions)(i).samples);
-                image.setInitialLayout((*descriptions)(i).initialLayout); // Set initial layout
-                image.setUsage(0);
+                image->setExtent({m_width, m_height, 1});
+                image->setFormat((*descriptions)(i).format);
+                image->setSamples((*descriptions)(i).samples);
+                image->setInitialLayout((*descriptions)(i).initialLayout); // Set initial layout
+                image->setUsage(0);
 
-                view->setImage(image.getVkImage());
+                view->setImage(image->getVkImage());
                 view->setFormat((*descriptions)(i).format); // Format from the attachment description
                 // Set other VknImageView properties if necessary (e.g., viewType, components, subresourceRange)
                 // Default subresource range in VknImageView is usually fine for color/depth.
@@ -150,7 +148,7 @@ namespace vkn
                     } // for attachment types (ref)
                 } // for subpasses (ref)
 
-                image.setUsage(accumulatedUsage);
+                image->setUsage(accumulatedUsage);
             } // if isSwapchainImage
         } // for descriptions
 
@@ -162,6 +160,11 @@ namespace vkn
         return m_swapchain &&
                m_swapchainAttachmentDescIndex.has_value() &&
                m_swapchainAttachmentDescIndex.value() == i;
+    }
+
+    bool VknFramebuffer::hasSwapchainImage()
+    {
+        return m_swapchain && m_swapchainAttachmentDescIndex.has_value();
     }
 
     void VknFramebuffer::setAttachmentSettings()

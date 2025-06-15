@@ -16,7 +16,7 @@
       "name": "windows",
       "inherits": "default",
       "description": "Windows build",
-      "binaryDir": "../VknConfig_Windows_Build",
+      "binaryDir": "../VknConfig_Desktop_Build",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }

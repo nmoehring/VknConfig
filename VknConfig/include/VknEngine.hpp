@@ -236,7 +236,7 @@ namespace vkn
         VknVector<ParentType *> &getParentVector()
         {
             m_vkTypeStr = typeToStr<ObjectType>();
-            if (m_parentVectors.find(vkObjectTypeStr) == m_parentVectors.end())
+            if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
                 m_parentVectors[m_vkTypeStr] = new VknVector<ParentType *>{};
             return *static_cast<VknVector<ParentType *> *>(m_parentVectors[m_vkTypeStr]);
         }
@@ -262,7 +262,7 @@ namespace vkn
             m_vkTypeStr = typeToStr<ObjectType>();
             if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
                 return 0;
-            return m_objectVectors[m_vkTypeStr].getNumPositions();
+            return static_cast<VknVector<ObjectType *> *>(m_objectVectors[m_vkTypeStr])->getNumPositions();
         }
 
         template <typename VknObjectType, typename VkObjectType, typename VkParentType>
@@ -307,7 +307,7 @@ namespace vkn
             vkObjectVec.remove(startPos, count);
             vkParentVec.remove(startPos, count);
             for (m_iter = 0; m_iter < objList.size(); ++m_iter)
-                objList[m_iter].demolish();
+                getListElement(m_iter, objList)->demolish();
             objList.clear();
         }
 
@@ -448,7 +448,7 @@ namespace vkn
         }
 
         template <typename VkObjectType, typename VkParentType>
-        void demolishObjects(std::function<void(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
+        void demolishDebugObjects(std::function<void(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
         {
             if (this->exists<VkObjectType>())
             {

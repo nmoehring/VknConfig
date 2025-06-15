@@ -314,6 +314,10 @@ namespace vkn
                                                        VkImageSubresourceRange &subresourceRange, VkImageViewCreateFlags &flags);
 
         VkMemoryAllocateInfo *fillMemoryAllocateInfo(VknIdxs &relIdxs, VkDeviceSize allocationSize, uint32_t memoryTypeIndex);
+        VkBufferCreateInfo *fillBufferCreateInfo(VknIdxs &relIdxs, VkDeviceSize size, VkBufferUsageFlags usage,
+                                                 VkSharingMode sharingMode, uint32_t queueFamilyIndexCount, const uint32_t *pQueueFamilyIndices,
+                                                 VkBufferCreateFlags flags);
+        VmaAllocationInfo *fillVmaAllocationInfo(VknIdxs &relIdxs);
 
         void addInstanceExtension(std::string name);
         void addLayer(std::string name);
@@ -383,6 +387,9 @@ namespace vkn
         VknVector<VkImageCreateInfo> m_imageCreateInfos{};              //>Image
 
         VknSpace<VkMemoryAllocateInfo> m_deviceMemoryAllocateInfos{1u}; // Device>DeviceMemory#AllocateInfo
+        VknSpace<VkBufferCreateInfo> m_bufferCreateInfos{1u};           // Device>Buffer#CreateInfo
+        VknSpace<VmaAllocation> m_vmaAllocationInfos{1u};               // Device>VmaAllocation#Info
+
         const char m_mainEntry[5] = "main";
 
         // Required fill checklist

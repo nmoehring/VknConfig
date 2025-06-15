@@ -9,7 +9,7 @@ namespace vkn
 
     VknBuffer::~VknBuffer()
     {
-        destroy();
+        demolish();
     }
 
     VknBuffer::VknBuffer(VknBuffer &&other) noexcept
@@ -34,7 +34,7 @@ namespace vkn
     {
         if (this != &other)
         {
-            destroy(); // Clean up existing resources
+            demolish(); // Clean up existing resources
 
             m_engine = other.m_engine;
             m_relIdxs = std::move(other.m_relIdxs);
@@ -94,12 +94,6 @@ namespace vkn
                                          &allocationInfo), // Get allocation info
                          "VMA Create Buffer"};
 
-        if (!res.isSuccess())
-        {
-            // m_engine->removeObject<VkBuffer>(m_absIdxs); // If VknEngine supports this
-            throw std::runtime_error("Failed to create VMA buffer: " + res.getMessage());
-        }
-
         m_vkBuffer = m_engine->getObject<VkBuffer>(m_absIdxs); // Store local handle for convenience
 
         if (allocationFlags & VMA_ALLOCATION_CREATE_MAPPED_BIT)
@@ -109,7 +103,7 @@ namespace vkn
         }
     }
 
-    void VknBuffer::destroy()
+    void VknBuffer::demolish()
     {
         if (m_vkBuffer == VK_NULL_HANDLE || m_allocation == VK_NULL_HANDLE)
         {

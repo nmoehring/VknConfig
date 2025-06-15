@@ -5,10 +5,11 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/",
-                "${workspaceFolder}/../VknConfig_Windows_Build/vcpkg_installed/x64-windows/include",
+                "${workspaceFolder}/../VknConfig_Desktop_Build/vcpkg_installed/x64-windows/include",
                 "${env:VULKAN_SDK}/include",
                 "${env:VULKAN_SDK}/include/vulkan",
                 "${workspaceFolder}/VknConfig/presets",
+                "${workspaceFolder}/VknConfig/include",
                 "${workspaceFolder}/VknConfig/PlatformSpecific/include"
             ],
             "defines": [
