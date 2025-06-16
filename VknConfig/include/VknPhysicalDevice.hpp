@@ -61,6 +61,7 @@ namespace vkn
     public:
         friend VknDevice;
 
+        // Constructor now takes VkSurfaceKHR for selection
         VknPhysicalDevice() = default;
         VknPhysicalDevice(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
@@ -70,8 +71,8 @@ namespace vkn
         uint32_t getPhysicalDeviceAbsIdx() { return m_absIdxs.get<VkPhysicalDevice>(); }
         VkPhysicalDeviceProperties &getProperties();
         VknVector<VkPhysicalDeviceProperties> &getAllProperties();
-        bool getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx);
-        VkPhysicalDevice *selectPhysicalDevice();
+        bool getSurfaceSupport(VkSurfaceKHR surface, uint32_t queueFamilyIdx); // surface passed by value
+        VkPhysicalDevice *selectPhysicalDevice();                              // Takes surface for selection
         VkPhysicalDeviceLimits *getLimits();
         void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities);
         void fillDeviceQueuePrioritiesDefault();

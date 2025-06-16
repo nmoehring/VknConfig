@@ -22,7 +22,7 @@ namespace vkn
         if (m_filledQueuePriorities)
             throw std::runtime_error("Already filled queue priorities.");
         if (!m_selectedQueues)
-            this->selectQueues(false);
+            this->selectQueues(true);
         m_infos->fillDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
         m_filledQueuePriorities = true;
     }
@@ -32,7 +32,7 @@ namespace vkn
         if (m_filledQueuePriorities)
             throw std::runtime_error("Already filled queue priorities.");
         if (!m_selectedQueues)
-            this->selectQueues(false);
+            this->selectQueues(true);
         for (int i = 0; i < m_queues.size(); ++i)
         {
             VknVector<float> newVec{};
@@ -128,29 +128,65 @@ namespace vkn
         if (m_selectedPhysicalDevice)
             throw std::runtime_error("Already selected a physical device.");
 
-        VknResult res("Enumerate physical devices.");
         this->enumeratePhysicalDevices();
 
-        for (int i = 0; i < s_properties.getNumPositions(); ++i)
-            if (s_properties(i).deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
-            {
-                m_relIdxs.add<VkPhysicalDevice>(i);
-                m_absIdxs.add<VkPhysicalDevice>(i);
-                m_selectedPhysicalDevice = true;
-            }
-        if (!m_selectedPhysicalDevice)
+        uint_fast32_t bestScore{0};
+        uint_fast32_t bestIdx{UINT32_MAX};
+        uint_fast32_t score{0};
+        VknVector<VkPhysicalDevice> &allPhysicalDevices = m_engine->getVector<VkPhysicalDevice>();
+        VkPhysicalDevice currentDevice{};
+        VkPhysicalDeviceProperties currentProps{};
+        bool graphicsNeeded = m_engine->getVectorSize<VkSurfaceKHR>();
+        for (uint_fast32_t i{0}; i < allPhysicalDevices.getSize(); ++i)
         {
-            m_relIdxs.add<VkPhysicalDevice>(0);
-            m_absIdxs.add<VkPhysicalDevice>(0);
-            m_selectedPhysicalDevice = true;
+            score = 0;
+            currentDevice = allPhysicalDevices(i);
+            currentProps = s_properties(i);
+
+            if (graphicsNeeded)
+                for (uint_fast32_t q_idx = 0; q_idx < m_engine->getVectorSize<VkQueueFamilyProperties>(); ++q_idx)
+                {
+                    if (m_engine->getObject<VkQueueFamilyProperties>(q_idx).queueFlags & VK_QUEUE_GRAPHICS_BIT) // Must support graphics
+                    {
+                        VkBool32 presentSupport = VK_FALSE;
+                        vkGetPhysicalDeviceSurfaceSupportKHR(currentDevice, q_idx, m_engine->getObject<VkSurfaceKHR>(0), &presentSupport);
+                        if (presentSupport)
+                            score += 128;
+                    }
+                }
+            else // graphics not needed
+                if (currentProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+                    score += 128;
+                else if (currentProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                    score += 64;
+                else if (currentProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
+                    score += 32;
+                else if (currentProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU)
+                    score += 16;
+                else
+                    score += 0;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestIdx = i;
+            }
         }
 
+        if (bestIdx == UINT32_MAX)
+            throw std::runtime_error("Failed to find a suitable GPU that supports presentation to the given surface.");
+
+        m_absIdxs.add<VkPhysicalDevice>(bestIdx); // This is the index in VknEngine's global list
+        // m_relIdxs.add<VkPhysicalDevice>(0); // Assuming VknDevice has only one VknPhysicalDevice, its relative index is 0.
+        // This depends on how VknIdxs is used for VknPhysicalDevice within VknDevice.
+        // If VknDevice stores VknPhysicalDevice in a list, this index would be its position in that list.
+        // For now, let's assume it's always the first/only one for its parent VknDevice.
+        m_selectedPhysicalDevice = true;
         this->requestQueueFamilyProperties();
 
         return this->getVkPhysicalDevice();
     }
 
-    bool VknPhysicalDevice::getSurfaceSupport(VkSurfaceKHR &surface, uint32_t queueFamilyIdx)
+    bool VknPhysicalDevice::getSurfaceSupport(VkSurfaceKHR surface, uint32_t queueFamilyIdx)
     {
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before getting surface support.");
