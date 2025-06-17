@@ -14,11 +14,11 @@ namespace vkn
         m_primitiveRestartEnable = primitiveRestartEnable;
     }
 
-    void VknInputAssemblyState::_fillInputAssemblyStateCreateInfo()
+    void VknInputAssemblyState::_fileInputAssemblyStateCreateInfo()
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Input assembly state create info already filled.");
-        m_infos->fillInputAssemblyStateCreateInfo(m_relIdxs, m_topology, m_primitiveRestartEnable);
-        m_filledCreateInfo = true;
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Input assembly state create info already filed.");
+        m_infos->fileInputAssemblyStateCreateInfo(m_relIdxs, m_topology, m_primitiveRestartEnable);
+        m_filedCreateInfo = true;
     }
 }

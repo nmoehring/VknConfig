@@ -65,7 +65,7 @@ namespace vkn
                          float minDepth = 0.0f, float maxDepth = 1.0f);
         void addScissor(VkOffset2D offset = {0, 0}, VkExtent2D extent = {800, 600});
 
-        void _fillViewportStateCreateInfo();
+        void _fileViewportStateCreateInfo();
         void removeCreateInfo();
         void removeScissors();
         void removeViewports();
@@ -98,6 +98,6 @@ namespace vkn
         VknVector<VkRect2D> m_scissors{};
 
         // State
-        bool m_filledCreateInfo{false};
+        bool m_filedCreateInfo{false};
     };
 }

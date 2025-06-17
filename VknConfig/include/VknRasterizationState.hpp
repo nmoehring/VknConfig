@@ -67,7 +67,7 @@ namespace vkn
         void setDepthBiasClamp(float clamp);
         void setDepthBiasSlopeFactor(float factor);
 
-        void _fillRasterizationStateCreateInfo();
+        void _fileRasterizationStateCreateInfo();
 
     private:
         // Engine
@@ -78,7 +78,7 @@ namespace vkn
         VknInfos *m_infos;
 
         // Members
-        VkPolygonMode m_polygonMode{VK_POLYGON_MODE_FILL};
+        VkPolygonMode m_polygonMode{VK_POLYGON_MODE_file};
         VkCullModeFlags m_cullMode{VK_CULL_MODE_BACK_BIT};
         VkFrontFace m_frontFace{VK_FRONT_FACE_CLOCKWISE};
         float m_lineWidth{1.0};
@@ -90,6 +90,6 @@ namespace vkn
         float m_depthBiasSlopeFactor{0};
 
         // State
-        bool m_filled{false};
+        bool m_filed{false};
     };
 }

@@ -8,10 +8,20 @@ namespace vkn
 {
     class VknFeatures
     {
+    public:
+        VknFeatures() = default;
+        VkPhysicalDeviceFeatures2 createInfo();
+
+        VknFeatures1 features1{};
+        VknFeatures2 features2{};
+    };
+
+    class VknFeatures1
+    {
         std::unordered_map<std::string, bool> m_features{};
 
     public:
-        VknFeatures() = default;
+        VknFeatures1() = default;
         VkPhysicalDeviceFeatures createInfo();
         bool robustBufferAccess(bool toggle = false);
         bool fullDrawIndexUint32(bool toggle = false);
@@ -26,7 +36,7 @@ namespace vkn
         bool drawIndirectFirstInstance(bool toggle = false);
         bool depthClamp(bool toggle = false);
         bool depthBiasClamp(bool toggle = false);
-        bool fillModeNonSolid(bool toggle = false);
+        bool fileModeNonSolid(bool toggle = false);
         bool depthBounds(bool toggle = false);
         bool wideLines(bool toggle = false);
         bool largePoints(bool toggle = false);
@@ -68,5 +78,26 @@ namespace vkn
         bool sparseResidencyAliased(bool toggle = false);
         bool variableMultisampleRate(bool toggle = false);
         bool inheritedQueries(bool toggle = false);
+    };
+
+    class VknFeatures2
+    {
+        std::unordered_map<std::string, bool> m_features{};
+        VkPhysicalDeviceMultiviewFeatures m_multiview{};
+        VkPhysicalDevice16BitStorageFeatures m_storage16bit{};
+        VkPhysicalDeviceProtectedMemoryFeatures m_protectedMemory{};
+
+    public:
+        VknFeatures2() = default;
+        VkPhysicalDeviceFeatures2 createInfo();
+
+        // Enable Multiview rendering.
+        bool multiview(bool toggle = false);
+
+        // Enable 16-bit Storage.
+        bool storage16bit(bool toggle = false);
+
+        // Enable Protected Memory.
+        bool protectedMemory(bool toggle = false);
     };
 }

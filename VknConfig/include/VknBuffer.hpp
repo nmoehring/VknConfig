@@ -79,8 +79,8 @@ namespace vkn
         void *m_mappedData = nullptr; // Stores pointer if persistently mapped by VMA
         bool m_isPersistentlyMapped = false;
 
-        // VkBufferCreateInfo *fillBufferCreateInfo();
-        // VmaAllocationCreateInfo *fillAllocationCreateInfo();
+        // VkBufferCreateInfo *fileBufferCreateInfo();
+        // VmaAllocationCreateInfo *fileAllocationCreateInfo();
     };
 
     /**
@@ -125,13 +125,12 @@ namespace vkn
     /**
      * @brief A specialized buffer for storing uniform data (e.g., transformation matrices, lighting parameters).
      * This implementation is optimized for CPU updates, making it host-visible and persistently mapped.
-     * For UBOs that are rarely updated and primarily GPU-read, consider creating a VknBuffer directly
-     * with VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE and using a staging buffer.
+     * For UBOs that are rarely updated and primarily GPU-read, use GpuUniformBuffer
      */
-    class UniformBuffer : public VknBuffer
+    class CpuUniformBuffer : public VknBuffer
     {
     public:
-        UniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        CpuUniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -139,6 +138,20 @@ namespace vkn
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VMA_MEMORY_USAGE_CPU_TO_GPU, // Optimized for CPU writes, GPU reads
                 VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+        }
+    };
+
+    // Doesn't change much, so don't plan to update often
+    class GpuUniformBuffer : public VknBuffer
+    {
+    public:
+        GpuUniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+            : VknBuffer(engine, relIdxs, absIdxs, infos)
+        {
+            create(
+                size,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
         }
     };
 

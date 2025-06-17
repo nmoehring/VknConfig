@@ -673,16 +673,16 @@ namespace vkn
         bool m_isInvalid{false};
         bool m_atEnd{false};
         bool m_atBegin{false};
-        bool m_iterFilledElements{true};
+        bool m_iterfiledElements{true};
         bool m_isEmpty{false};
 
     public:
         // TODO: Find out what explicit keyword does
         explicit VknVectorIterator(VknVector<IterDataType> *vknVector,
                                    uint_least32_t firstPos = 0u, uint_least32_t length = 0u, // Todo
-                                   bool iterateFilledElementsOnly = true)
+                                   bool iteratefiledElementsOnly = true)
             : m_vec(vknVector),
-              m_iterFilledElements{iterateFilledElementsOnly}
+              m_iterfiledElements{iteratefiledElementsOnly}
         {
             if (!vknVector->m_data || length == 0u)
             {
@@ -714,7 +714,7 @@ namespace vkn
                     m_currentPos = firstPos;
                 }
 
-                if (!m_isEmpty && m_iterFilledElements)
+                if (!m_isEmpty && m_iterfiledElements)
                     m_currentPos = m_vec->m_positions[m_currentIdx];
                 else
                     m_currentPos = firstPos;
@@ -780,13 +780,13 @@ namespace vkn
             if (nextIdxResult.found)
             {
                 m_currentIdx = nextIdxResult.pos;
-                if (m_iterFilledElements)
+                if (m_iterfiledElements)
                     m_currentPos = m_vec->m_positions[m_currentIdx];
                 else
                     ++m_currentPos;
             }
             else // nextIdx not found
-                if (m_iterFilledElements)
+                if (m_iterfiledElements)
                     m_atEnd = true;
                 else
                     ++m_currentPos;
@@ -837,13 +837,13 @@ namespace vkn
             if (nextIdxResult.found)
             {
                 m_currentIdx = nextIdxResult.pos;
-                if (m_iterFilledElements)
+                if (m_iterfiledElements)
                     m_currentPos = m_vec->m_positions[m_currentIdx];
                 else
                     --m_currentPos;
             }
             else // nextIdx not found
-                if (m_iterFilledElements)
+                if (m_iterfiledElements)
                     m_atEnd = true;
                 else
                     --m_currentPos;
@@ -1008,11 +1008,11 @@ namespace vkn
 
         uint_fast32_t getSize()
         {
-            if (!m_iterFilledElements) // Size is number of positions, even if not filled
+            if (!m_iterfiledElements) // Size is number of positions, even if not filed
                 return (m_lastPos - m_firstPos) + 1u;
             else if (m_isEmpty)
                 return 0u;
-            else // Size is number of filled positions, which may be out of order
+            else // Size is number of filed positions, which may be out of order
             {
                 uint_fast32_t idx{0};
                 uint_fast32_t size{0u};
@@ -1051,7 +1051,7 @@ namespace vkn
 
         bool isAtBegin() { return m_atBegin; }
         bool isAtEnd() { return m_atEnd; }
-        bool iteratesFilledElements() { return m_iterFilledElements; }
+        bool iteratesfiledElements() { return m_iterfiledElements; }
         bool isInvalid() { return m_isInvalid; }
     };
 

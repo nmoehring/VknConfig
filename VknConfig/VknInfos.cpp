@@ -21,12 +21,12 @@ namespace vkn
     {
     }
 
-    void VknInfos::fillDeviceQueuePriorities(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
+    void VknInfos::fileDeviceQueuePriorities(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
                                              VknVector<float> priorities)
     {
         for (auto &priority : priorities)
             m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].append(priority);
-        m_deviceQueuePrioritiesFilled = true;
+        m_deviceQueuePrioritiesfiled = true;
     }
 
     void VknInfos::setNumDeviceQueueFamilies(int num, uint32_t deviceIdx)
@@ -34,7 +34,7 @@ namespace vkn
         m_numQueueFamilies.insert(deviceIdx, num);
     }
 
-    VkGraphicsPipelineCreateInfo *VknInfos::fillGfxPipelineCreateInfo(
+    VkGraphicsPipelineCreateInfo *VknInfos::fileGfxPipelineCreateInfo(
         VknIdxs &relIdxs, VkRenderPass &renderpass,
         VkPipelineLayout *layout, VkPipeline basePipelineHandle,
         int32_t basePipelineIndex, VkPipelineCreateFlags flags)
@@ -45,14 +45,14 @@ namespace vkn
         info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags;
-        info.stageCount = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].getDataSize(); // Need fill
-        info.pStages = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].getData();        // Need fill
-        if (m_filledVertexInputStateInfo)
+        info.stageCount = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].getDataSize(); // Need file
+        info.pStages = m_shaderStageCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()][relIdxs.get<VkPipeline>()].getData();        // Need file
+        if (m_filedVertexInputStateInfo)
             info.pVertexInputState =
                 &m_vertexInputStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if VK_DYNAMIC_STATE_VERTEX_INPUT_EXT
                                                                                                                                  // set in pDynamicState below. Ignored if mesh shader stage
                                                                                                                                  // included in pStages.
-        if (m_filledInputAssemblyStateInfo)
+        if (m_filedInputAssemblyStateInfo)
             info.pInputAssemblyState =
                 &m_inputAssemblyStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE
                                                                                                                                    // and VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY are set in pDynamicState,
@@ -60,18 +60,18 @@ namespace vkn
                                                                                                                                    // VkPhysicalDeviceExtendedDynamicState3PropertiesEXT struct,
                                                                                                                                    // which requires the VK_EXT_extended_dynamic_state3 extension.
                                                                                                                                    // Also ignored if mesh shader stage included in pStages.
-        if (m_filledTessellationStateInfo)
+        if (m_filedTessellationStateInfo)
             info.pTessellationState =
                 &m_tessellationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if the VK_DYNAMIC_STATE_PATCH_CONTROL_POINTS_EXT
                                                                                                                                   // is set in the pDynamicState below.
-        if (m_filledViewportStateInfo)
+        if (m_filedViewportStateInfo)
             info.pViewportState =
                 &m_viewportStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                               // Can be null if VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT
                                                                                                                               // and VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT are set in pDynamicState
                                                                                                                               // below, and also requires the VK_EXT_extended_dynamic_state3
                                                                                                                               // extension enabled.
-        if (m_filledRasterizationStateInfo)
+        if (m_filedRasterizationStateInfo)
             info.pRasterizationState =
                 &m_rasterizationStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // I guess this could be null if rasterization is not enabled.
                                                                                                                                    // Can be null if VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT,
@@ -82,7 +82,7 @@ namespace vkn
                                                                                                                                    // and VK_DYNAMIC_STATE_LINE_WIDTH are set in pDynamicState below,
                                                                                                                                    // which also requires the VK_EXT_extended_dynamic_state3
                                                                                                                                    // extension enabled.
-        if (m_filledMultisampleStateInfo)
+        if (m_filedMultisampleStateInfo)
             info.pMultisampleState =
                 &m_multisampleStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                                  //  Can be null if VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT,
@@ -96,7 +96,7 @@ namespace vkn
                                                                                                                                  //  is VK_False).
                                                                                                                                  //   VK_EXT_extended_dynamic_state3 extension needs to be enabled
                                                                                                                                  //   to do this.
-        if (m_filledDepthStencilStateInfo)
+        if (m_filedDepthStencilStateInfo)
             info.pDepthStencilState =
                 &m_depthStencilStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                                   // Can be null if VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
@@ -105,7 +105,7 @@ namespace vkn
                                                                                                                                   // VK_DYNAMIC_STATE_STENCIL_TEST_ENABLE, VK_DYNAMIC_STATE_STENCIL_OP,
                                                                                                                                   // and VK_DYNAMIC_STATE_DEPTH_BOUNDS are set in pDynamicState below
                                                                                                                                   // Also requires the  VK_EXT_extended_dynamic_state3 extension.
-        if (m_filledColorBlendStateInfo)
+        if (m_filedColorBlendStateInfo)
             info.pColorBlendState =
                 &m_colorBlendStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Can be null if rasterization not enabled.
                                                                                                                                 // Can be null if VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT,
@@ -115,19 +115,19 @@ namespace vkn
                                                                                                                                 // VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT, and
                                                                                                                                 // VK_DYNAMIC_STATE_BLEND_CONSTANTS are set in pDynamicState below
                                                                                                                                 // Requires the VK_EXT_extended_dynamic_state3 extension.
-        if (m_filledDynamicStateInfo)
+        if (m_filedDynamicStateInfo)
             info.pDynamicState =
                 &m_dynamicStateCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkPipeline>()); // Could be null if no state in the pipeline needs to be dynamic.
-        info.layout = *layout;                                                                                               // Need fill
-        info.renderPass = renderpass;                                                                                        // Need fill
-        info.subpass = relIdxs.get<VkPipeline>();                                                                            // Need fill
-        info.basePipelineHandle = basePipelineHandle;                                                                        // Need fill
-        info.basePipelineIndex = basePipelineIndex;                                                                          // Need fill
+        info.layout = *layout;                                                                                               // Need file
+        info.renderPass = renderpass;                                                                                        // Need file
+        info.subpass = relIdxs.get<VkPipeline>();                                                                            // Need file
+        info.basePipelineHandle = basePipelineHandle;                                                                        // Need file
+        info.basePipelineIndex = basePipelineIndex;                                                                          // Need file
 
         return &info;
     }
 
-    VkRenderPassCreateInfo *VknInfos::fillRenderpassCreateInfo(VknIdxs &relIdxs,
+    VkRenderPassCreateInfo *VknInfos::fileRenderpassCreateInfo(VknIdxs &relIdxs,
                                                                VkRenderPassCreateFlags flags)
     {
         VkRenderPassCreateInfo &renderpassInfo =
@@ -153,7 +153,7 @@ namespace vkn
         return &renderpassInfo;
     }
 
-    VkShaderModuleCreateInfo *VknInfos::fillShaderModuleCreateInfo(
+    VkShaderModuleCreateInfo *VknInfos::fileShaderModuleCreateInfo(
         VknIdxs &relIdxs, std::vector<char> *code)
     {
         VkShaderModuleCreateInfo *info =
@@ -167,7 +167,7 @@ namespace vkn
         return info;
     }
 
-    VkPipelineShaderStageCreateInfo *VknInfos::fillShaderStageCreateInfo(
+    VkPipelineShaderStageCreateInfo *VknInfos::fileShaderStageCreateInfo(
         VknIdxs &relIdxs,
         VkShaderModule *module, VkShaderStageFlagBits *stage,
         VkPipelineShaderStageCreateFlags *flags, VkSpecializationInfo *pSpecializationInfo)
@@ -177,15 +177,15 @@ namespace vkn
                  .insert(VkPipelineShaderStageCreateInfo{}, relIdxs.get<VkShaderModule>());
         info->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
-        info->flags = *flags; // need fill
-        info->stage = *stage; // need fill
+        info->flags = *flags; // need file
+        info->stage = *stage; // need file
         info->module = *module;
         info->pName = m_mainEntry;
-        info->pSpecializationInfo = pSpecializationInfo; // need fill
+        info->pSpecializationInfo = pSpecializationInfo; // need file
         return info;
     }
 
-    VkPipelineVertexInputStateCreateInfo *VknInfos::fillVertexInputStateCreateInfo(
+    VkPipelineVertexInputStateCreateInfo *VknInfos::fileVertexInputStateCreateInfo(
         VknIdxs &relIdxs, uint32_t numBindings, uint32_t numAttributes)
     {
         VknSpace<VkVertexInputBindingDescription> *vertexBindingDescriptions =
@@ -209,11 +209,11 @@ namespace vkn
             info->pVertexAttributeDescriptions = VK_NULL_HANDLE;
         else
             info->pVertexAttributeDescriptions = vertexAttributeDescriptions->getData();
-        m_filledVertexInputStateInfo = true;
+        m_filedVertexInputStateInfo = true;
         return info;
     }
 
-    VkPipelineInputAssemblyStateCreateInfo *VknInfos::fillInputAssemblyStateCreateInfo(
+    VkPipelineInputAssemblyStateCreateInfo *VknInfos::fileInputAssemblyStateCreateInfo(
         VknIdxs &relIdxs, VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable)
     {
         VkPipelineInputAssemblyStateCreateInfo *info =
@@ -224,11 +224,11 @@ namespace vkn
         info->flags = 0; // reserved for future use
         info->topology = topology;
         info->primitiveRestartEnable = primitiveRestartEnable;
-        m_filledInputAssemblyStateInfo = true;
+        m_filedInputAssemblyStateInfo = true;
         return info;
     }
 
-    VkPipelineTessellationStateCreateInfo *VknInfos::fillTessellationStateCreateInfo(
+    VkPipelineTessellationStateCreateInfo *VknInfos::fileTessellationStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, uint32_t patchControlPoints)
     {
         VkPipelineTessellationStateCreateInfo *info =
@@ -241,7 +241,7 @@ namespace vkn
         return info;
     }
 
-    VkPipelineViewportStateCreateInfo *VknInfos::fillViewportStateCreateInfo(
+    VkPipelineViewportStateCreateInfo *VknInfos::fileViewportStateCreateInfo(
         VknIdxs &relIdxs,
         VknVector<VkViewport> *viewports, VknVector<VkRect2D> *scissors)
     {
@@ -255,11 +255,11 @@ namespace vkn
         info->pViewports = viewports->getData();
         info->scissorCount = scissors->getSize();
         info->pScissors = scissors->getData();
-        m_filledViewportStateInfo = true;
+        m_filedViewportStateInfo = true;
         return info;
     }
 
-    VkPipelineRasterizationStateCreateInfo *VknInfos::fillRasterizationStateCreateInfo(
+    VkPipelineRasterizationStateCreateInfo *VknInfos::fileRasterizationStateCreateInfo(
         VknIdxs &relIdxs, VkPolygonMode polygonMode,
         VkCullModeFlags cullMode, VkFrontFace frontFace,
         float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor,
@@ -282,11 +282,11 @@ namespace vkn
         info->depthBiasClamp = depthBiasClamp;
         info->depthBiasSlopeFactor = depthBiasSlopeFactor;
         info->lineWidth = lineWidth;
-        m_filledRasterizationStateInfo = true;
+        m_filedRasterizationStateInfo = true;
         return info;
     }
 
-    VkPipelineMultisampleStateCreateInfo *VknInfos::fillMultisampleStateCreateInfo(
+    VkPipelineMultisampleStateCreateInfo *VknInfos::fileMultisampleStateCreateInfo(
         VknIdxs &relIdxs, float minSampleShading,
         VkSampleMask *pSampleMask, VkSampleCountFlagBits rasterizationSamples,
         VkBool32 sampleShadingEnable, VkBool32 alphaToCoverageEnable,
@@ -304,11 +304,11 @@ namespace vkn
         info->pSampleMask = pSampleMask;
         info->alphaToCoverageEnable = alphaToCoverageEnable;
         info->alphaToOneEnable = alphaToOneEnable;
-        m_filledMultisampleStateInfo = true;
+        m_filedMultisampleStateInfo = true;
         return info;
     }
 
-    VkPipelineDepthStencilStateCreateInfo *VknInfos::fillDepthStencilStateCreateInfo(
+    VkPipelineDepthStencilStateCreateInfo *VknInfos::fileDepthStencilStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx,
         VkCompareOp depthCompareOp, VkStencilOpState front, VkStencilOpState back,
         float minDepthBounds, float maxDepthBounds,
@@ -334,7 +334,7 @@ namespace vkn
         return info;
     }
 
-    VkPipelineColorBlendStateCreateInfo *VknInfos::fillColorBlendStateCreateInfo(
+    VkPipelineColorBlendStateCreateInfo *VknInfos::fileColorBlendStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VkLogicOp logicOp,
         VknVector<VkPipelineColorBlendAttachmentState> &attachments, // Pass by reference
         float blendConstants[4], VkBool32 logicOpEnable,
@@ -352,11 +352,11 @@ namespace vkn
         info->attachmentCount = attachments.getSize();
         info->pAttachments = attachments.getData();
         std::copy(&blendConstants[0], &blendConstants[4], info->blendConstants);
-        m_filledColorBlendStateInfo = true; // Set the flag
+        m_filedColorBlendStateInfo = true; // Set the flag
         return info;
     }
 
-    VkPipelineDynamicStateCreateInfo *VknInfos::fillDynamicStateCreateInfo(
+    VkPipelineDynamicStateCreateInfo *VknInfos::fileDynamicStateCreateInfo(
         uint32_t deviceIdx, uint32_t renderpassIdx, uint32_t subpassIdx, VknVector<VkDynamicState> &dynamicStates)
     {
         VkPipelineDynamicStateCreateInfo *info =
@@ -367,11 +367,11 @@ namespace vkn
         info->flags = 0; // reserved for future use
         info->dynamicStateCount = dynamicStates.getSize();
         info->pDynamicStates = dynamicStates.getData();
-        m_filledDynamicStateInfo = true;
+        m_filedDynamicStateInfo = true;
         return info;
     }
 
-    VkDescriptorSetLayoutCreateInfo *VknInfos::fillDescriptorSetLayoutCreateInfo(
+    VkDescriptorSetLayoutCreateInfo *VknInfos::fileDescriptorSetLayoutCreateInfo(
         VknVector<VkDescriptorSetLayoutBinding> bindings,
         VkDescriptorSetLayoutCreateFlags flags)
     {
@@ -385,7 +385,7 @@ namespace vkn
         return &info;
     }
 
-    VkPipelineLayoutCreateInfo *VknInfos::fillPipelineLayoutCreateInfo(
+    VkPipelineLayoutCreateInfo *VknInfos::filePipelineLayoutCreateInfo(
         VknIdxs &relIdxs, VknVectorIterator<VkDescriptorSetLayout> setLayouts,
         VknVector<VkPushConstantRange> pushConstantRanges,
         VkPipelineLayoutCreateFlags flags)
@@ -403,7 +403,7 @@ namespace vkn
         return info;
     }
 
-    VkPipelineCacheCreateInfo *VknInfos::fillPipelineCacheCreateInfo(
+    VkPipelineCacheCreateInfo *VknInfos::filePipelineCacheCreateInfo(
         size_t initialDataSize,
         const void *pInitialData,
         VkPipelineCacheCreateFlags flags)
@@ -418,46 +418,46 @@ namespace vkn
         return &info;
     }
 
-    bool VknInfos::checkFill(checkFillFunctions functionName)
+    bool VknInfos::checkfile(checkfileFunctions functionName)
     {
         switch (functionName)
         {
         case APP_INFO:
-            if (!m_filledAppInfo)
-                throw std::runtime_error("AppInfo not filled before get.");
+            if (!m_filedAppInfo)
+                throw std::runtime_error("AppInfo not filed before get.");
             break;
         case DEVICE_QUEUE_CREATE_INFO:
-            if (!m_filledDeviceQueueCreateInfo)
-                throw std::runtime_error("DeviceQueueCreateInfo not filled before get.");
+            if (!m_filedDeviceQueueCreateInfo)
+                throw std::runtime_error("DeviceQueueCreateInfo not filed before get.");
             break;
         case DEVICE_CREATE_INFO:
-            if (!m_filledDeviceCreateInfo)
-                throw std::runtime_error("DeviceCreateInfo not filled before get.");
+            if (!m_filedDeviceCreateInfo)
+                throw std::runtime_error("DeviceCreateInfo not filed before get.");
             break;
         case INSTANCE_CREATE_INFO:
-            if (!m_filledInstanceCreateInfo)
-                throw std::runtime_error("InstanceCreateInfo not filled before get.");
+            if (!m_filedInstanceCreateInfo)
+                throw std::runtime_error("InstanceCreateInfo not filed before get.");
             break;
         }
         return true;
     }
 
-    void VknInfos::fillAppName(std::string name)
+    void VknInfos::fileAppName(std::string name)
     {
         m_appName = name;
-        m_filledAppName = true;
+        m_filedAppName = true;
     }
 
-    void VknInfos::fillEngineName(std::string name)
+    void VknInfos::fileEngineName(std::string name)
     {
         m_engineName = name;
-        m_filledEngineName = true;
+        m_filedEngineName = true;
     }
 
     void VknInfos::addInstanceExtension(std::string name)
     {
         this->storeName(name, m_instanceExtensions_Store, m_instanceExtensions_NamePointers);
-        m_filledInstanceExtensionNames = true;
+        m_filedInstanceExtensionNames = true;
     }
 
     void VknInfos::storeName(std::string &name, std::list<std::string> &store, VknVector<const char *> &pointers)
@@ -469,26 +469,32 @@ namespace vkn
     void VknInfos::addLayer(std::string name)
     {
         this->storeName(name, m_layers_Store, m_layers_NamePointers);
-        m_filledLayerNames = true;
+        m_filedLayerNames = true;
     }
 
     void VknInfos::addDeviceExtension(std::string name, VknIdxs relIdxs)
     {
         this->storeName(name, m_deviceExtensions_Store, m_deviceExtensions_NamePointers[relIdxs.get<VkDevice>()].getDataVector());
-        m_filledDeviceExtensionNames = true;
+        m_filedDeviceExtensionNames = true;
     }
 
-    void VknInfos::fillDeviceFeatures(VknFeatures features)
+    VknFeatures *VknInfos::getDeviceFeaturesObject()
     {
-        m_enabledFeatures.append(features.createInfo());
+        return &m_enabledFeatures;
     }
 
-    void VknInfos::fillAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion)
+    void VknInfos::fileDeviceFeaturesInfo()
     {
-        if (!m_filledAppName)
-            throw std::runtime_error("App name not filled before filling app info.");
-        if (!m_filledEngineName)
-            throw std::runtime_error("Engine name not filled before filling app info.");
+        m_featuresInfo = m_enabledFeatures.createInfo();
+        m_filedFeaturesInfo = true;
+    }
+
+    void VknInfos::fileAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion)
+    {
+        if (!m_filedAppName)
+            throw std::runtime_error("App name not filed before filing app info.");
+        if (!m_filedEngineName)
+            throw std::runtime_error("Engine name not filed before filing app info.");
         m_appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         m_appInfo.pNext = VK_NULL_HANDLE;
         m_appInfo.pApplicationName = m_appName.c_str();
@@ -497,13 +503,13 @@ namespace vkn
         m_appInfo.engineVersion = engineVersion;
         m_appInfo.apiVersion = apiVersion;
 
-        m_filledAppInfo = true;
+        m_filedAppInfo = true;
     }
 
-    void VknInfos::fillInstanceCreateInfo(VkInstanceCreateFlags flags)
+    void VknInfos::fileInstanceCreateInfo(VkInstanceCreateFlags flags)
     {
-        if (!m_filledAppInfo)
-            throw std::runtime_error("AppInfo not filled before InstanceCreateInfo.");
+        if (!m_filedAppInfo)
+            throw std::runtime_error("AppInfo not filed before InstanceCreateInfo.");
 
         m_instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         m_instanceCreateInfo.pNext = nullptr;
@@ -513,10 +519,10 @@ namespace vkn
         m_instanceCreateInfo.ppEnabledLayerNames = m_layers_NamePointers.getData();
         m_instanceCreateInfo.enabledExtensionCount = m_instanceExtensions_NamePointers.getSize();
         m_instanceCreateInfo.ppEnabledExtensionNames = m_instanceExtensions_NamePointers.getData();
-        m_filledInstanceCreateInfo = true;
+        m_filedInstanceCreateInfo = true;
     }
 
-    void VknInfos::fillDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
+    void VknInfos::fileDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
                                              uint32_t queueCount,
                                              VkDeviceQueueCreateFlags flags)
     {
@@ -528,21 +534,23 @@ namespace vkn
         info.queueCount = queueCount;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        if (!m_deviceQueuePrioritiesFilled)
-            throw std::runtime_error("Queue priorities not filled before filling device queue create info.");
+        if (!m_deviceQueuePrioritiesfiled)
+            throw std::runtime_error("Queue priorities not filed before filing device queue create info.");
         info.pQueuePriorities = m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].getData();
-        m_filledDeviceQueueCreateInfo = true;
+        m_filedDeviceQueueCreateInfo = true;
     }
 
-    VkDeviceCreateInfo *VknInfos::fillDeviceCreateInfo(uint32_t deviceIdx)
+    VkDeviceCreateInfo *VknInfos::fileDeviceCreateInfo(uint32_t deviceIdx)
     {
-        if (m_queueCreateInfos[deviceIdx].getDataSize() == 0) // filled function?
-            throw std::runtime_error("Queues not selected before filling device create info.");
+        if (!m_filedFeaturesInfo)
+            throw std::runtime_error("Features info not filed before filing device create info.");
+        if (m_queueCreateInfos[deviceIdx].getDataSize() == 0) // filed function?
+            throw std::runtime_error("Queues not selected before filing device create info.");
         VkDeviceCreateInfo &info =
             m_deviceCreateInfos.insert(deviceIdx, VkDeviceCreateInfo{});
         // default
         info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        info.pNext = VK_NULL_HANDLE;
+        info.pNext = &m_featuresInfo;
         info.flags = 0; // flags reserved, must = 0
         info.queueCreateInfoCount = m_queueCreateInfos[deviceIdx].getDataSize();
         info.pQueueCreateInfos = m_queueCreateInfos[deviceIdx].getData();
@@ -552,13 +560,13 @@ namespace vkn
         info.ppEnabledLayerNames = VK_NULL_HANDLE; // ignored, value doesn't matter
         info.enabledExtensionCount = m_deviceExtensions_NamePointers[deviceIdx].getDataSize();
         info.ppEnabledExtensionNames = m_deviceExtensions_NamePointers[deviceIdx].getData();
-        info.pEnabledFeatures = &m_enabledFeatures(deviceIdx);
+        info.pEnabledFeatures = nullptr;
 
-        m_filledDeviceCreateInfo = true;
+        m_filedDeviceCreateInfo = true;
         return &info;
     }
 
-    VkSwapchainCreateInfoKHR *VknInfos::fillSwapchainCreateInfo(
+    VkSwapchainCreateInfoKHR *VknInfos::fileSwapchainCreateInfo(
         VknIdxs &relIdxs,
         VkSurfaceKHR *surface, uint32_t imageCount, VkExtent2D dimensions,
         VkSurfaceFormatKHR surfaceFormat, uint32_t numImageArrayLayers, VkImageUsageFlags usage,
@@ -588,7 +596,7 @@ namespace vkn
         return &swapchainInfo;
     }
 
-    VkAttachmentDescription *VknInfos::fillAttachmentDescription(
+    VkAttachmentDescription *VknInfos::fileAttachmentDescription(
         VknIdxs &relIdxs, uint32_t attachIdx,
         VkFormat format, VkSampleCountFlagBits samples, VkAttachmentLoadOp loadOp,
         VkAttachmentStoreOp storeOp, VkAttachmentLoadOp stencilLoadOp,
@@ -612,7 +620,7 @@ namespace vkn
         return &description;
     }
 
-    void VknInfos::fillAttachmentReference(
+    void VknInfos::fileAttachmentReference(
         VknIdxs &relIdxs, uint32_t subpassIdx,
         uint32_t refIdx, VknAttachmentType attachmentType, uint32_t attachmentIdx,
         VkImageLayout layout)
@@ -671,7 +679,7 @@ namespace vkn
         return &m_preserveAttachments[deviceIdx][renderpassIdx];
     }
 
-    VkSubpassDescription *VknInfos::fillSubpassDescription(
+    VkSubpassDescription *VknInfos::fileSubpassDescription(
         VknIdxs &relIdxs, uint32_t subpassIdx,
         VkPipelineBindPoint pipelineBindPoint, VkSubpassDescriptionFlags flags)
     {
@@ -706,7 +714,7 @@ namespace vkn
         return &description;
     }
 
-    VkSubpassDependency *VknInfos::fillSubpassDependency(
+    VkSubpassDependency *VknInfos::fileSubpassDependency(
         VknIdxs &relIdxs,
         uint32_t srcSubpass, uint32_t dstSubpass, VkPipelineStageFlags srcStageMask,
         VkAccessFlags srcAccessMask, VkPipelineStageFlags dstStageMask, VkAccessFlags dstAccessMask)
@@ -724,7 +732,7 @@ namespace vkn
         return &dependency;
     }
 
-    VkVertexInputBindingDescription *VknInfos::fillVertexInputBindingDescription(
+    VkVertexInputBindingDescription *VknInfos::fileVertexInputBindingDescription(
         VknIdxs &relIdxs, uint32_t bindIdx,
         uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
 
@@ -739,7 +747,7 @@ namespace vkn
         return description;
     }
 
-    VkVertexInputAttributeDescription *VknInfos::fillVertexInputAttributeDescription(
+    VkVertexInputAttributeDescription *VknInfos::fileVertexInputAttributeDescription(
         VknIdxs &relIdxs, uint32_t attributeIdx, uint32_t binding,
         uint32_t location, VkFormat format, uint32_t offset)
     {
@@ -781,7 +789,7 @@ namespace vkn
         return &m_framebufferCreateInfos[relIdxs.get<VkDevice>()][relIdxs.get<VkRenderPass>()](relIdxs.get<VkFramebuffer>());
     }
 
-    VkFramebufferCreateInfo *VknInfos::fillFramebufferCreateInfo(VknIdxs &relIdxs,
+    VkFramebufferCreateInfo *VknInfos::fileFramebufferCreateInfo(VknIdxs &relIdxs,
                                                                  VkRenderPass *renderpass,
                                                                  VknVectorIterator<VkImageView> attachments,
                                                                  uint32_t width, uint32_t height, uint32_t numLayers,
@@ -802,7 +810,7 @@ namespace vkn
         return info;
     }
 
-    VkImageCreateInfo *VknInfos::fillImageCreateInfo(
+    VkImageCreateInfo *VknInfos::fileImageCreateInfo(
         VknIdxs &relId, VkImageType imageType, VkFormat format, VkExtent3D extent,
         uint32_t mipLevels, uint32_t arrayLayers, VkSampleCountFlagBits samples, VkImageTiling tiling,
         VkImageUsageFlags usage, VkImageLayout initialLayout,
@@ -828,7 +836,7 @@ namespace vkn
         return info;
     }
 
-    VkImageViewCreateInfo *VknInfos::fillImageViewCreateInfo(VknIdxs &absIdxs,
+    VkImageViewCreateInfo *VknInfos::fileImageViewCreateInfo(VknIdxs &absIdxs,
                                                              VkImage &image, VkImageViewType &viewType, VkFormat &format,
                                                              VkComponentMapping &components, VkImageSubresourceRange &subresourceRange,
                                                              VkImageViewCreateFlags &flags)
@@ -893,7 +901,7 @@ namespace vkn
             throw std::runtime_error("Viewport create info does not exist at that position.");
     }
 
-    VkMemoryAllocateInfo *VknInfos::fillMemoryAllocateInfo(VknIdxs &relIdxs, VkDeviceSize allocationSize, uint32_t memoryTypeIndex)
+    VkMemoryAllocateInfo *VknInfos::fileMemoryAllocateInfo(VknIdxs &relIdxs, VkDeviceSize allocationSize, uint32_t memoryTypeIndex)
     {
         VkMemoryAllocateInfo &info = m_deviceMemoryAllocateInfos[relIdxs.get<VkDevice>()].append(VkMemoryAllocateInfo{});
         info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -903,7 +911,7 @@ namespace vkn
         return &info;
     }
 
-    VkBufferCreateInfo *VknInfos::fillBufferCreateInfo(VknIdxs &relIdxs, VkDeviceSize size, VkBufferUsageFlags usage,
+    VkBufferCreateInfo *VknInfos::fileBufferCreateInfo(VknIdxs &relIdxs, VkDeviceSize size, VkBufferUsageFlags usage,
                                                        VkSharingMode sharingMode, uint32_t queueFamilyIndexCount,
                                                        const uint32_t *pQueueFamilyIndices, VkBufferCreateFlags flags)
     {
@@ -920,7 +928,7 @@ namespace vkn
         return &info;
     }
     /*
-        VmaAllocationInfo *VknInfos::fillVmaAllocationInfo(VknIdxs &relIdxs, uint32_t memoryType, VkDeviceMemory deviceMemory, VkDeviceSize offset, VkDeviceSize size,
+        VmaAllocationInfo *VknInfos::fileVmaAllocationInfo(VknIdxs &relIdxs, uint32_t memoryType, VkDeviceMemory deviceMemory, VkDeviceSize offset, VkDeviceSize size,
                                                            void *pMappedData, void *pUserData, const char *pName)
         {
             VmaAllocationInfo &info = m_vmaAllocationInfos[relIdxs.get<VkDevice>()].append(VmaAllocationInfo{});

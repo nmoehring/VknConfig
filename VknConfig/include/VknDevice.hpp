@@ -119,7 +119,7 @@ namespace vkn
         bool m_commandPoolCreated{false};
         bool m_commandBuffersAllocated{false};
         bool m_syncObjectsCreated{false};
-        bool m_filledQueueCreateInfos{false};
+        bool m_filedQueueCreateInfos{false};
         VknInstanceLock<VknDevice> m_instanceLock;
         bool m_swapchainExtensionEnabled{false};
         bool m_allocatorAdded{false};

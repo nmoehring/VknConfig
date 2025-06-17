@@ -86,7 +86,7 @@ namespace vkn
         void setCreateFlags(VkPipelineCreateFlags createFlags) { m_createFlags = createFlags; }
 
         // Create
-        VkGraphicsPipelineCreateInfo *_fillPipelineCreateInfo();
+        VkGraphicsPipelineCreateInfo *_filePipelineCreateInfo();
 
         // Get
         VknShaderStage *getShaderStage(uint32_t shaderIdx);

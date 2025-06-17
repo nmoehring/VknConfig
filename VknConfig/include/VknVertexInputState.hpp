@@ -57,12 +57,12 @@ namespace vkn
         VknVertexInputState(
             VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        void fillVertexBindingDescription(uint32_t binding = 0, uint32_t stride = 0,
+        void fileVertexBindingDescription(uint32_t binding = 0, uint32_t stride = 0,
                                           VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
-        void fillVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
+        void fileVertexAttributeDescription(uint32_t binding = 0, uint32_t location = 0,
                                             VkFormat format = VK_FORMAT_R32G32_SFLOAT, uint32_t offset = 0);
 
-        void _fillVertexInputStateCreateInfo();
+        void _fileVertexInputStateCreateInfo();
 
         // Getters
         uint32_t getNumBindings() const { return m_numBindings; }
@@ -79,8 +79,8 @@ namespace vkn
         // State
         uint32_t m_numBindings{0};
         uint32_t m_numAttributes{0};
-        bool m_attributesFilled{false};
-        bool m_bindingsFilled{false};
-        bool m_filled{false};
+        bool m_attributesfiled{false};
+        bool m_bindingsfiled{false};
+        bool m_filed{false};
     };
 } // namespace vkn

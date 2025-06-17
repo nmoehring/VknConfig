@@ -49,7 +49,7 @@ The VknConfig project is organized into a clear hierarchy of classes, with some 
 *   **`VknViewportState` (Hierarchy-Bound Leaf):** Configures the viewport and scissor state for a graphics pipeline.
 *   **`VknQueueFamily` (Hierarchy-Bound Leaf):** Represents a Vulkan queue family and its properties.
 *   **`VknEngine` (Free/Top-Level):** Manages core Vulkan objects and resources.
-*   **`VknInfos` (Free/Top-Level):** Provides methods for filling Vulkan info structures.
+*   **`VknInfos` (Free/Top-Level):** Provides methods for filing Vulkan info structures.
 *   **`VknResult` (Free/Top-Level):** Represents a Vulkan API result and provides error handling.
 
 ## Getting Started

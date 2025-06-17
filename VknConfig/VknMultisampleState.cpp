@@ -38,13 +38,13 @@ namespace vkn
         m_alphaToOneEnable = alphaToOneEnable;
     }
 
-    void VknMultisampleState::_fillMultisampleStateCreateInfo()
+    void VknMultisampleState::_fileMultisampleStateCreateInfo()
     {
-        if (m_filled)
-            throw std::runtime_error("Multisample state create info already filled.");
-        m_infos->fillMultisampleStateCreateInfo(m_relIdxs, m_minSampleShading, &m_sampleMask,
+        if (m_filed)
+            throw std::runtime_error("Multisample state create info already filed.");
+        m_infos->fileMultisampleStateCreateInfo(m_relIdxs, m_minSampleShading, &m_sampleMask,
                                                 m_rasterizationSamples, m_sampleShadingEnable,
                                                 m_alphaToCoverageEnable, m_alphaToOneEnable);
-        m_filled = true;
+        m_filed = true;
     }
 }

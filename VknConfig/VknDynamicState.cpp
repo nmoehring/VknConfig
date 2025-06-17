@@ -33,11 +33,11 @@ namespace vkn
         m_dynamicStates.append(dynamicState);
     }
 
-    VkPipelineDynamicStateCreateInfo *VknDynamicState::_fillDynamicStateCreateInfo()
+    VkPipelineDynamicStateCreateInfo *VknDynamicState::_fileDynamicStateCreateInfo()
     {
-        VkPipelineDynamicStateCreateInfo *result = m_infos->fillDynamicStateCreateInfo(
+        VkPipelineDynamicStateCreateInfo *result = m_infos->fileDynamicStateCreateInfo(
             m_relIdxs.get<VkDevice>(), m_relIdxs.get<VkRenderPass>(), m_relIdxs.get<VkPipeline>(), m_dynamicStates);
-        m_filledCreateInfo = true;
+        m_filedCreateInfo = true;
         return result;
     }
 }

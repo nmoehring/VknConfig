@@ -13,8 +13,8 @@ namespace vkn
     {
         if (!m_setSurface)
             throw std::runtime_error("Can't set swapchain image count until surface is added.");
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         if (m_setImageCount)
             throw std::runtime_error("Already set swapchain image count.");
         VkSurfaceCapabilitiesKHR capabilities{};
@@ -30,8 +30,8 @@ namespace vkn
     {
         if (!m_setSurface)
             throw std::runtime_error("Can't set image dimensions until surface is added.");
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
 
         VkSurfaceCapabilitiesKHR capabilities{};
 
@@ -54,8 +54,8 @@ namespace vkn
 
     void VknSwapchain::setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         if (!m_setSurface)
             throw std::runtime_error("Can't set surface format until surface is added.");
         uint32_t surfaceFormatCount{0};
@@ -85,50 +85,50 @@ namespace vkn
 
     void VknSwapchain::setNumImageLayers(uint32_t numImageLayers)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_numImageArrayLayers = numImageLayers;
     }
 
     void VknSwapchain::setUsage(VkImageUsageFlags usage)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_usage = usage;
     }
 
     void VknSwapchain::setSharingMode(VkSharingMode sharingMode)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_sharingMode = sharingMode;
     }
 
     void VknSwapchain::setPreTransform(VkSurfaceTransformFlagBitsKHR preTransform)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_preTransform = preTransform;
     }
 
     void VknSwapchain::setCompositeAlpha(VkCompositeAlphaFlagBitsKHR compositeAlpha)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_compositeAlpha = compositeAlpha;
     }
 
     void VknSwapchain::setClipped(bool clipped)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_clipped = clipped;
     }
 
     void VknSwapchain::setOldSwapchain(VkSwapchainKHR oldSwapchain)
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Trying to configure swapchain after create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Trying to configure swapchain after create info already filed.");
         m_oldSwapchain = oldSwapchain;
     }
 
@@ -137,19 +137,19 @@ namespace vkn
         return &m_engine->getObject<VkSwapchainKHR>(m_absIdxs);
     }
 
-    VkSwapchainCreateInfoKHR *VknSwapchain::fillSwapchainCreateInfo()
+    VkSwapchainCreateInfoKHR *VknSwapchain::fileSwapchainCreateInfo()
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Already filled swapchain create info.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Already filed swapchain create info.");
         if (!m_setSurface)
-            throw std::runtime_error("Can't fill swapchain create info until surface is added.");
-        VkSwapchainCreateInfoKHR *ci = m_infos->fillSwapchainCreateInfo(m_relIdxs,
+            throw std::runtime_error("Can't file swapchain create info until surface is added.");
+        VkSwapchainCreateInfoKHR *ci = m_infos->fileSwapchainCreateInfo(m_relIdxs,
                                                                         &m_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
                                                                         m_imageCount, m_dimensions, m_surfaceFormat,
                                                                         m_numImageArrayLayers, m_usage, m_sharingMode,
                                                                         m_preTransform, m_compositeAlpha, m_presentMode,
                                                                         m_clipped, m_oldSwapchain);
-        m_filledCreateInfo = true;
+        m_filedCreateInfo = true;
         return ci;
     }
 
@@ -165,7 +165,7 @@ namespace vkn
         if (m_createdSwapchain)
             throw std::runtime_error("Already created swapchain.");
 
-        this->fillSwapchainCreateInfo();
+        this->fileSwapchainCreateInfo();
         VkSwapchainCreateInfoKHR *createInfo{
             m_infos->getSwapchainCreateInfo(m_relIdxs)};
         VknResult res{
@@ -267,7 +267,7 @@ namespace vkn
         m_setImageViewSettings = false;
         m_createdImageViews = false;
 
-        m_filledCreateInfo = false;
+        m_filedCreateInfo = false;
         m_createdSwapchain = false;
     }
 

@@ -120,7 +120,7 @@ namespace vkn
         bool m_addedDevices{false};
         bool m_createdRenderpass{false};
         bool m_createdPipelines{false};
-        bool m_filledColorAttachment{false};
+        bool m_filedColorAttachment{false};
         uint32_t m_numSubpassDeps{0};
         uint32_t m_numAttachments{0};
         uint32_t m_numSubpasses{0};

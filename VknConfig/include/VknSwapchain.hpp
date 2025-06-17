@@ -113,7 +113,7 @@ namespace vkn
         std::optional<uint32_t> m_surfaceIdx{};
 
         // State
-        bool m_filledCreateInfo{false};
+        bool m_filedCreateInfo{false};
         bool m_createdSwapchain{false};
         bool m_setSurface{false};
         bool m_setImageCount{false};
@@ -123,7 +123,7 @@ namespace vkn
         bool m_setImageViewSettings{false};
         bool m_setImageDimensions{false};
 
-        VkSwapchainCreateInfoKHR *fillSwapchainCreateInfo();
+        VkSwapchainCreateInfoKHR *fileSwapchainCreateInfo();
 
         void setImageCount();
         void setImageDimensions();

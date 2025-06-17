@@ -16,13 +16,13 @@ namespace vkn
     {
     }
 
-    void VknViewportState::_fillViewportStateCreateInfo()
+    void VknViewportState::_fileViewportStateCreateInfo()
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("ViewportStateCreateInfo already filled.");
-        m_infos->fillViewportStateCreateInfo(
+        if (m_filedCreateInfo)
+            throw std::runtime_error("ViewportStateCreateInfo already filed.");
+        m_infos->fileViewportStateCreateInfo(
             m_relIdxs, &m_viewports, &m_scissors);
-        m_filledCreateInfo = true;
+        m_filedCreateInfo = true;
     }
 
     void VknViewportState::addViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
@@ -64,7 +64,7 @@ namespace vkn
     void VknViewportState::removeCreateInfo()
     {
         m_infos->removeViewportStateCreateInfo(m_relIdxs);
-        m_filledCreateInfo = false;
+        m_filedCreateInfo = false;
     }
 
     void VknViewportState::removeScissors()

@@ -36,7 +36,7 @@ namespace vkn
     {
         if (m_createdRenderpass)
             throw std::runtime_error("Renderpass already created.");
-        VkRenderPassCreateInfo *createInfo = m_infos->fillRenderpassCreateInfo(m_relIdxs, 0); // Flags not used ever
+        VkRenderPassCreateInfo *createInfo = m_infos->fileRenderpassCreateInfo(m_relIdxs, 0); // Flags not used ever
         VknResult res{vkCreateRenderPass(
                           m_engine->getObject<VkDevice>(m_absIdxs),
                           createInfo, VK_NULL_HANDLE,
@@ -62,7 +62,7 @@ namespace vkn
         if (dependencyIdx != m_numSubpassDeps++)
             throw std::runtime_error("DependencyIdx passed to addSubpassDependency is invalid. Should be next idx.");
 
-        m_infos->fillSubpassDependency(m_relIdxs,
+        m_infos->fileSubpassDependency(m_relIdxs,
                                        srcSubpass, dstSubpass, srcStageMask, srcAccessMask, dstStageMask, dstAccessMask);
     }
 
@@ -75,7 +75,7 @@ namespace vkn
         VkAttachmentDescriptionFlags flags)
     {
 
-        m_infos->fillAttachmentDescription(
+        m_infos->fileAttachmentDescription(
             m_relIdxs, attachIdx, format, samples, loadOp, storeOp, stencilLoadOp,
             stencilStoreOp, initialLayout, finalLayout, flags);
     }
@@ -101,10 +101,10 @@ namespace vkn
         else
             refIdx = m_numAttachRefs[subpassIdx](attachmentType)++;
 
-        m_infos->fillAttachmentReference(m_relIdxs, subpassIdx, refIdx,
+        m_infos->fileAttachmentReference(m_relIdxs, subpassIdx, refIdx,
                                          attachmentType, attachIdx, attachmentRefLayout);
         if (attachmentType == COLOR_ATTACHMENT)
-            m_filledColorAttachment = true;
+            m_filedColorAttachment = true;
     }
 
     void VknRenderpass::createPipelines()
@@ -123,21 +123,21 @@ namespace vkn
         for (auto &pipeline : m_pipelines)
         {
             if (m_recreatingPipelines)
-                pipeline.getViewportState()->_fillViewportStateCreateInfo();
+                pipeline.getViewportState()->_fileViewportStateCreateInfo();
             else
             {
-                pipeline.getVertexInputState()->_fillVertexInputStateCreateInfo();
-                pipeline.getInputAssemblyState()->_fillInputAssemblyStateCreateInfo();
-                pipeline.getMultisampleState()->_fillMultisampleStateCreateInfo();
-                pipeline.getRasterizationState()->_fillRasterizationStateCreateInfo();
-                pipeline.getViewportState()->_fillViewportStateCreateInfo();
-                pipeline.getColorBlendState()->_fillColorBlendStateCreateInfo();
-                pipeline.getDynamicState()->_fillDynamicStateCreateInfo();
+                pipeline.getVertexInputState()->_fileVertexInputStateCreateInfo();
+                pipeline.getInputAssemblyState()->_fileInputAssemblyStateCreateInfo();
+                pipeline.getMultisampleState()->_fileMultisampleStateCreateInfo();
+                pipeline.getRasterizationState()->_fileRasterizationStateCreateInfo();
+                pipeline.getViewportState()->_fileViewportStateCreateInfo();
+                pipeline.getColorBlendState()->_fileColorBlendStateCreateInfo();
+                pipeline.getDynamicState()->_fileDynamicStateCreateInfo();
                 pipeline.getPipelineLayout()->_createPipelineLayout();
                 for (auto &shaderstage : *pipeline.getShaderStages())
-                    shaderstage._fillShaderStageCreateInfo();
+                    shaderstage._fileShaderStageCreateInfo();
             }
-            pipeline._fillPipelineCreateInfo();
+            pipeline._filePipelineCreateInfo();
         }
         VknSpace<VkGraphicsPipelineCreateInfo> *pipelineCreateInfos{
             m_infos->getPipelineCreateInfos(m_relIdxs)};
@@ -155,9 +155,9 @@ namespace vkn
         VkSubpassDescriptionFlags flags)
     {
         // Check for color attachment *before* trying to access counts
-        if (!isCompute && !m_filledColorAttachment)
+        if (!isCompute && !m_filedColorAttachment)
             throw std::runtime_error("No color attachment created before creating subpass.");
-        m_infos->fillSubpassDescription(m_relIdxs, m_numSubpasses++, pipelineBindPoint, flags);
+        m_infos->fileSubpassDescription(m_relIdxs, m_numSubpasses++, pipelineBindPoint, flags);
         this->addPipeline(subpassIdx);
     }
 

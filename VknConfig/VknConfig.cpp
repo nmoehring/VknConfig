@@ -47,21 +47,21 @@ namespace vkn
             deviceIdx, m_devices, m_relIdxs, m_absIdxs, m_infos);
     }
 
-    void VknConfig::fillAppInfo()
+    void VknConfig::fileAppInfo()
     {
-        if (m_filledAppInfo)
-            throw std::runtime_error("Already filled app info.");
-        m_infos->fillAppName(m_appName);
-        m_infos->fillEngineName(m_engineName);
-        m_infos->fillAppInfo(m_apiVersion, m_appVersion, m_engineVersion);
+        if (m_filedAppInfo)
+            throw std::runtime_error("Already filed app info.");
+        m_infos->fileAppName(m_appName);
+        m_infos->fileEngineName(m_engineName);
+        m_infos->fileAppInfo(m_apiVersion, m_appVersion, m_engineVersion);
     }
 
-    void VknConfig::fillInstanceCreateInfo()
+    void VknConfig::fileInstanceCreateInfo()
     {
-        if (m_filledInstanceCreateInfo)
-            throw std::runtime_error("Instance create info already filled.");
-        m_infos->fillInstanceCreateInfo(m_flags);
-        m_filledInstanceCreateInfo = true;
+        if (m_filedInstanceCreateInfo)
+            throw std::runtime_error("Instance create info already filed.");
+        m_infos->fileInstanceCreateInfo(m_flags);
+        m_filedInstanceCreateInfo = true;
     }
 
     void VknConfig::addInstanceExtension(std::string &extension)
@@ -82,8 +82,8 @@ namespace vkn
     {
         if (m_createdInstance)
             throw std::runtime_error("Instance already created.");
-        this->fillAppInfo();
-        this->fillInstanceCreateInfo();
+        this->fileAppInfo();
+        this->fileInstanceCreateInfo();
         m_engine->addVkInstance(m_relIdxs, m_absIdxs);
         VknResult res{
             vkCreateInstance(

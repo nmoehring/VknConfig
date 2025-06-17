@@ -31,7 +31,7 @@ namespace vkn
             VkBlendFactor dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
             VkBlendOp alphaBlendOp = VK_BLEND_OP_ADD);
 
-        void _fillColorBlendStateCreateInfo();
+        void _fileColorBlendStateCreateInfo();
 
     private:
         // Engine
@@ -48,6 +48,6 @@ namespace vkn
         VkPipelineColorBlendStateCreateFlags flags{0};
 
         // State
-        bool m_filledCreateInfo{false};
+        bool m_filedCreateInfo{false};
     };
 }

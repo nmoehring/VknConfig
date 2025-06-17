@@ -13,7 +13,7 @@ namespace vkn
         if (m_createdVkImage)
             throw std::runtime_error("VknImage::createImage called but image already created.");
 
-        VkImageCreateInfo *imageInfo = m_infos->fillImageCreateInfo(
+        VkImageCreateInfo *imageInfo = m_infos->fileImageCreateInfo(
             m_relIdxs, m_imageType, m_format, m_extent, m_mipLevels, m_arrayLayers,
             m_samples, m_tiling, m_usage, m_initialLayout, m_flags);
 

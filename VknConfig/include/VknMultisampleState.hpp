@@ -63,7 +63,7 @@ namespace vkn
         void setAlphaToCoverageEnable(VkBool32 alphaToCoverageEnable);
         void setAlphaToOneEnable(VkBool32 alphaToOneEnable);
 
-        void _fillMultisampleStateCreateInfo();
+        void _fileMultisampleStateCreateInfo();
 
     private:
         // Engine
@@ -82,6 +82,6 @@ namespace vkn
         VkBool32 m_alphaToOneEnable{VK_FALSE};
 
         // State
-        bool m_filled{false};
+        bool m_filed{false};
     };
 }

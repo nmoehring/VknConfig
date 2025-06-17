@@ -159,13 +159,13 @@ namespace vkn
         VknPhysicalDevice *physicalDevice = getListElement(0, m_physicalDevices);
         if (m_createdVkDevice)
             throw std::runtime_error("Device already created.");
-        if (!physicalDevice->areQueuePrioritiesFilled())
-            physicalDevice->fillDeviceQueuePrioritiesDefault(); // Subtle initiation of chain-reaction default configurations
-        physicalDevice->fillQueueCreateInfos();
+        if (!physicalDevice->areQueuePrioritiesfiled())
+            physicalDevice->fileDeviceQueuePrioritiesDefault(); // Subtle initiation of chain-reaction default configurations
+        physicalDevice->fileQueueCreateInfos();
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice->getPhysicalDeviceAbsIdx());
-        m_infos->fillDeviceFeatures(features);
+        m_infos->fileDeviceFeatures(features);
 
-        m_infos->fillDeviceCreateInfo(m_relIdxs.get<VkDevice>());
+        m_infos->fileDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{
             vkCreateDevice(
                 *(getListElement(0, m_physicalDevices)->getVkPhysicalDevice()),

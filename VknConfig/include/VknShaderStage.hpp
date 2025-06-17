@@ -75,7 +75,7 @@ namespace vkn
         // Create
         /** @brief Creates the VkShaderModule object from the loaded shader code.*/
         void createShaderModule();
-        void _fillShaderStageCreateInfo();
+        void _fileShaderStageCreateInfo();
 
         // Get
         bool isShaderModuleCreated();
@@ -100,6 +100,6 @@ namespace vkn
         bool m_createdShaderModule{false}; /**< True if the shader module has been created. */
         bool m_setShaderStageType{false};
         bool m_setFilename{false};
-        bool m_filledSpecializationInfo{false};
+        bool m_filedSpecializationInfo{false};
     };
 }

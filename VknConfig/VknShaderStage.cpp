@@ -37,24 +37,24 @@ namespace vkn
 
     void VknShaderStage::setSpecialization(VkSpecializationInfo specializationInfo)
     {
-        if (m_filledSpecializationInfo)
-            throw std::runtime_error("Specialization info already filled.");
+        if (m_filedSpecializationInfo)
+            throw std::runtime_error("Specialization info already filed.");
         m_specializationInfo = specializationInfo;
-        m_filledSpecializationInfo = true;
+        m_filedSpecializationInfo = true;
     }
 
-    void VknShaderStage::_fillShaderStageCreateInfo()
+    void VknShaderStage::_fileShaderStageCreateInfo()
     {
         if (!m_setFilename || !m_setShaderStageType)
-            throw std::runtime_error("Both filename and shader stage type fields must be filled before shader stage creation.");
+            throw std::runtime_error("Both filename and shader stage type fields must be filed before shader stage creation.");
         if (!m_createdShaderModule)
             throw std::runtime_error("Shader module not created before shader stage creation.");
         VkSpecializationInfo *specialization = nullptr;
-        if (m_filledSpecializationInfo)
+        if (m_filedSpecializationInfo)
             specialization = &m_specializationInfo;
         else
             specialization = VK_NULL_HANDLE;
-        m_infos->fillShaderStageCreateInfo(m_relIdxs, this->getShaderModule(),
+        m_infos->fileShaderStageCreateInfo(m_relIdxs, this->getShaderModule(),
                                            &m_shaderStageFlagBit, &m_createFlags, specialization);
     }
 
@@ -70,7 +70,7 @@ namespace vkn
         m_code = readBinaryFile(shaderDir / m_filename);
 #endif
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
-            m_infos->fillShaderModuleCreateInfo(m_relIdxs, &m_code);
+            m_infos->fileShaderModuleCreateInfo(m_relIdxs, &m_code);
         VknResult res{
             vkCreateShaderModule(m_engine->getObject<VkDevice>(m_absIdxs),
                                  shaderModuleCreateInfo, VK_NULL_HANDLE,

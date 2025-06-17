@@ -50,7 +50,7 @@ namespace vkn
         if (!m_createdAttachments)
             this->createAttachments();
 
-        m_infos->fillFramebufferCreateInfo(
+        m_infos->fileFramebufferCreateInfo(
             m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs),
             this->getAttachmentImageViews(), m_width, m_height, m_numLayers, m_createFlags);
 

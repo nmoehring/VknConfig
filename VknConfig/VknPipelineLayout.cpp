@@ -35,7 +35,7 @@ namespace vkn
             throw std::runtime_error("Already created the pipeline layout.");
         VknVector<VkDescriptorSetLayout> descriptorSetLayouts;
 
-        VkPipelineLayoutCreateInfo *createInfo = m_infos->fillPipelineLayoutCreateInfo(
+        VkPipelineLayoutCreateInfo *createInfo = m_infos->filePipelineLayoutCreateInfo(
             m_relIdxs, m_engine->getVectorSlice<VkDescriptorSetLayout>(m_descriptorSetLayoutStartIdx, m_descriptorSetLayouts.size()),
             m_pushConstantRanges, m_createFlags);
 

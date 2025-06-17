@@ -41,10 +41,10 @@ namespace vkn
         return &m_layouts.front();
     }
 
-    VkGraphicsPipelineCreateInfo *VknPipeline::_fillPipelineCreateInfo()
+    VkGraphicsPipelineCreateInfo *VknPipeline::_filePipelineCreateInfo()
     {
         VkPipelineLayout *layout = this->getLayout()->getVkLayout();
-        return m_infos->fillGfxPipelineCreateInfo(
+        return m_infos->fileGfxPipelineCreateInfo(
             m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs),
             layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
     }

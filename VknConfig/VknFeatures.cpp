@@ -2,7 +2,15 @@
 
 namespace vkn
 {
-    bool VknFeatures::robustBufferAccess(bool toggle)
+    VkPhysicalDeviceFeatures2 VknFeatures::createInfo()
+    {
+        VkPhysicalDeviceFeatures ci1{features1.createInfo()};
+        VkPhysicalDeviceFeatures2 ci2{features2.createInfo()};
+        ci2.features = ci1;
+        return ci2;
+    }
+
+    bool VknFeatures1::robustBufferAccess(bool toggle)
     {
         if (toggle)
             if (m_features["robustBufferAccess"])
@@ -11,7 +19,7 @@ namespace vkn
                 m_features["robustBufferAccess"] = true;
         return m_features["robustBufferAccess"];
     }
-    bool VknFeatures::fullDrawIndexUint32(bool toggle)
+    bool VknFeatures1::fullDrawIndexUint32(bool toggle)
     {
         if (toggle)
             if (m_features["fullDrawIndexUint32"])
@@ -20,7 +28,7 @@ namespace vkn
                 m_features["fullDrawIndexUint32"] = true;
         return m_features["fullDrawIndexUint32"];
     }
-    bool VknFeatures::imageCubeArray(bool toggle)
+    bool VknFeatures1::imageCubeArray(bool toggle)
     {
         if (toggle)
             if (m_features["imageCubeArray"])
@@ -29,7 +37,7 @@ namespace vkn
                 m_features["imageCubeArray"] = true;
         return m_features["imageCubeArray"];
     }
-    bool VknFeatures::independentBlend(bool toggle)
+    bool VknFeatures1::independentBlend(bool toggle)
     {
         if (toggle)
             if (m_features["independentBlend"])
@@ -38,7 +46,7 @@ namespace vkn
                 m_features["independentBlend"] = true;
         return m_features["independentBlend"];
     }
-    bool VknFeatures::geometryShader(bool toggle)
+    bool VknFeatures1::geometryShader(bool toggle)
     {
         if (toggle)
             if (m_features["geometryShader"])
@@ -47,7 +55,7 @@ namespace vkn
                 m_features["geometryShader"] = true;
         return m_features["geometryShader"];
     }
-    bool VknFeatures::tessellationShader(bool toggle)
+    bool VknFeatures1::tessellationShader(bool toggle)
     {
         if (toggle)
             if (m_features["tessellationShader"])
@@ -56,7 +64,7 @@ namespace vkn
                 m_features["tessellationShader"] = true;
         return m_features["tessellationShader"];
     }
-    bool VknFeatures::sampleRateShading(bool toggle)
+    bool VknFeatures1::sampleRateShading(bool toggle)
     {
         if (toggle)
             if (m_features["sampleRateShading"])
@@ -65,7 +73,7 @@ namespace vkn
                 m_features["sampleRateShading"] = true;
         return m_features["sampleRateShading"];
     }
-    bool VknFeatures::dualSrcBlend(bool toggle)
+    bool VknFeatures1::dualSrcBlend(bool toggle)
     {
         if (toggle)
             if (m_features["dualSrcBlend"])
@@ -74,7 +82,7 @@ namespace vkn
                 m_features["dualSrcBlend"] = true;
         return m_features["dualSrcBlend"];
     }
-    bool VknFeatures::logicOp(bool toggle)
+    bool VknFeatures1::logicOp(bool toggle)
     {
         if (toggle)
             if (m_features["logicOp"])
@@ -83,7 +91,7 @@ namespace vkn
                 m_features["logicOp"] = true;
         return m_features["logicOp"];
     }
-    bool VknFeatures::multiDrawIndirect(bool toggle)
+    bool VknFeatures1::multiDrawIndirect(bool toggle)
     {
         if (toggle)
             if (m_features["multiDrawIndirect"])
@@ -92,7 +100,7 @@ namespace vkn
                 m_features["multiDrawIndirect"] = true;
         return m_features["multiDrawIndirect"];
     }
-    bool VknFeatures::drawIndirectFirstInstance(bool toggle)
+    bool VknFeatures1::drawIndirectFirstInstance(bool toggle)
     {
         if (toggle)
             if (m_features["drawIndirectFirstInstance"])
@@ -101,7 +109,7 @@ namespace vkn
                 m_features["drawIndirectFirstInstance"] = true;
         return m_features["drawIndirectFirstInstance"];
     }
-    bool VknFeatures::depthClamp(bool toggle)
+    bool VknFeatures1::depthClamp(bool toggle)
     {
         if (toggle)
             if (m_features["depthClamp"])
@@ -110,7 +118,7 @@ namespace vkn
                 m_features["depthClamp"] = true;
         return m_features["depthClamp"];
     }
-    bool VknFeatures::depthBiasClamp(bool toggle)
+    bool VknFeatures1::depthBiasClamp(bool toggle)
     {
         if (toggle)
             if (m_features["depthBiasClamp"])
@@ -119,16 +127,16 @@ namespace vkn
                 m_features["depthBiasClamp"] = true;
         return m_features["depthBiasClamp"];
     }
-    bool VknFeatures::fillModeNonSolid(bool toggle)
+    bool VknFeatures1::fileModeNonSolid(bool toggle)
     {
         if (toggle)
-            if (m_features["fillModeNonSolid"])
-                m_features["fillModeNonSolid"] = false;
+            if (m_features["fileModeNonSolid"])
+                m_features["fileModeNonSolid"] = false;
             else
-                m_features["fillModeNonSolid"] = true;
-        return m_features["fillModeNonSolid"];
+                m_features["fileModeNonSolid"] = true;
+        return m_features["fileModeNonSolid"];
     }
-    bool VknFeatures::depthBounds(bool toggle)
+    bool VknFeatures1::depthBounds(bool toggle)
     {
         if (toggle)
             if (m_features["depthBounds"])
@@ -137,7 +145,7 @@ namespace vkn
                 m_features["depthBounds"] = true;
         return m_features["depthBounds"];
     }
-    bool VknFeatures::wideLines(bool toggle)
+    bool VknFeatures1::wideLines(bool toggle)
     {
         if (toggle)
             if (m_features["wideLines"])
@@ -146,7 +154,7 @@ namespace vkn
                 m_features["wideLines"] = true;
         return m_features["wideLines"];
     }
-    bool VknFeatures::largePoints(bool toggle)
+    bool VknFeatures1::largePoints(bool toggle)
     {
         if (toggle)
             if (m_features["largePoints"])
@@ -155,7 +163,7 @@ namespace vkn
                 m_features["largePoints"] = true;
         return m_features["largePoints"];
     }
-    bool VknFeatures::alphaToOne(bool toggle)
+    bool VknFeatures1::alphaToOne(bool toggle)
     {
         if (toggle)
             if (m_features["alphaToOne"])
@@ -164,7 +172,7 @@ namespace vkn
                 m_features["alphaToOne"] = true;
         return m_features["alphaToOne"];
     }
-    bool VknFeatures::multiViewport(bool toggle)
+    bool VknFeatures1::multiViewport(bool toggle)
     {
         if (toggle)
             if (m_features["multiViewport"])
@@ -173,7 +181,7 @@ namespace vkn
                 m_features["multiViewport"] = true;
         return m_features["multiViewport"];
     }
-    bool VknFeatures::samplerAnisotropy(bool toggle)
+    bool VknFeatures1::samplerAnisotropy(bool toggle)
     {
         if (toggle)
             if (m_features["samplerAnisotropy"])
@@ -182,7 +190,7 @@ namespace vkn
                 m_features["samplerAnisotropy"] = true;
         return m_features["samplerAnisotropy"];
     }
-    bool VknFeatures::textureCompressionETC2(bool toggle)
+    bool VknFeatures1::textureCompressionETC2(bool toggle)
     {
         if (toggle)
             if (m_features["textureCompressionETC2"])
@@ -191,7 +199,7 @@ namespace vkn
                 m_features["textureCompressionETC2"] = true;
         return m_features["textureCompressionETC2"];
     }
-    bool VknFeatures::textureCompressionASTC_LDR(bool toggle)
+    bool VknFeatures1::textureCompressionASTC_LDR(bool toggle)
     {
         if (toggle)
             if (m_features["textureCompressionASTC_LDR"])
@@ -200,7 +208,7 @@ namespace vkn
                 m_features["textureCompressionASTC_LDR"] = true;
         return m_features["textureCompressionASTC_LDR"];
     }
-    bool VknFeatures::textureCompressionBC(bool toggle)
+    bool VknFeatures1::textureCompressionBC(bool toggle)
     {
         if (toggle)
             if (m_features["textureCompressionBC"])
@@ -209,7 +217,7 @@ namespace vkn
                 m_features["textureCompressionBC"] = true;
         return m_features["textureCompressionBC"];
     }
-    bool VknFeatures::occlusionQueryPrecise(bool toggle)
+    bool VknFeatures1::occlusionQueryPrecise(bool toggle)
     {
         if (toggle)
             if (m_features["occlusionQueryPrecise"])
@@ -218,7 +226,7 @@ namespace vkn
                 m_features["occlusionQueryPrecise"] = true;
         return m_features["occlusionQueryPrecise"];
     }
-    bool VknFeatures::pipelineStatisticsQuery(bool toggle)
+    bool VknFeatures1::pipelineStatisticsQuery(bool toggle)
     {
         if (toggle)
             if (m_features["pipelineStatisticsQuery"])
@@ -227,7 +235,7 @@ namespace vkn
                 m_features["pipelineStatisticsQuery"] = true;
         return m_features["pipelineStatisticsQuery"];
     }
-    bool VknFeatures::vertexPipelineStoresAndAtomics(bool toggle)
+    bool VknFeatures1::vertexPipelineStoresAndAtomics(bool toggle)
     {
         if (toggle)
             if (m_features["vertexPipelineStoresAndAtomics"])
@@ -236,7 +244,7 @@ namespace vkn
                 m_features["vertexPipelineStoresAndAtomics"] = true;
         return m_features["vertexPipelineStoresAndAtomics"];
     }
-    bool VknFeatures::fragmentStoresAndAtomics(bool toggle)
+    bool VknFeatures1::fragmentStoresAndAtomics(bool toggle)
     {
         if (toggle)
             if (m_features["fragmentStoresAndAtomics"])
@@ -245,7 +253,7 @@ namespace vkn
                 m_features["fragmentStoresAndAtomics"] = true;
         return m_features["fragmentStoresAndAtomics"];
     }
-    bool VknFeatures::shaderTessellationAndGeometryPointSize(bool toggle)
+    bool VknFeatures1::shaderTessellationAndGeometryPointSize(bool toggle)
     {
         if (toggle)
             if (m_features["shaderTessellationAndGeometryPointSize"])
@@ -254,7 +262,7 @@ namespace vkn
                 m_features["shaderTessellationAndGeometryPointSize"] = true;
         return m_features["shaderTessellationAndGeometryPointSize"];
     }
-    bool VknFeatures::shaderImageGatherExtended(bool toggle)
+    bool VknFeatures1::shaderImageGatherExtended(bool toggle)
     {
         if (toggle)
             if (m_features["shaderImageGatherExtended"])
@@ -263,7 +271,7 @@ namespace vkn
                 m_features["shaderImageGatherExtended"] = true;
         return m_features["shaderImageGatherExtended"];
     }
-    bool VknFeatures::shaderStorageImageExtendedFormats(bool toggle)
+    bool VknFeatures1::shaderStorageImageExtendedFormats(bool toggle)
     {
         if (toggle)
             if (m_features["shaderStorageImageExtendedFormats"])
@@ -272,7 +280,7 @@ namespace vkn
                 m_features["shaderStorageImageExtendedFormats"] = true;
         return m_features["shaderStorageImageExtendedFormats"];
     }
-    bool VknFeatures::shaderStorageImageMultisample(bool toggle)
+    bool VknFeatures1::shaderStorageImageMultisample(bool toggle)
     {
         if (toggle)
             if (m_features["shaderStorageImageMultisample"])
@@ -281,7 +289,7 @@ namespace vkn
                 m_features["shaderStorageImageMultisample"] = true;
         return m_features["shaderStorageImageMultisample"];
     }
-    bool VknFeatures::shaderStorageImageReadWithoutFormat(bool toggle)
+    bool VknFeatures1::shaderStorageImageReadWithoutFormat(bool toggle)
     {
         if (toggle)
             if (m_features["shaderStorageImageReadWithoutFormat"])
@@ -290,7 +298,7 @@ namespace vkn
                 m_features["shaderStorageImageReadWithoutFormat"] = true;
         return m_features["shaderStorageImageReadWithoutFormat"];
     }
-    bool VknFeatures::shaderStorageImageWriteWithoutFormat(bool toggle)
+    bool VknFeatures1::shaderStorageImageWriteWithoutFormat(bool toggle)
     {
         if (toggle)
             if (m_features["shaderStorageImageWriteWithoutFormat"])
@@ -299,7 +307,7 @@ namespace vkn
                 m_features["shaderStorageImageWriteWithoutFormat"] = true;
         return m_features["shaderStorageImageWriteWithoutFormat"];
     }
-    bool VknFeatures::shaderUniformBufferArrayDynamicIndexing(bool toggle)
+    bool VknFeatures1::shaderUniformBufferArrayDynamicIndexing(bool toggle)
     {
         if (toggle)
             if (m_features["shaderUniformBufferArrayDynamicIndexing"])
@@ -308,7 +316,7 @@ namespace vkn
                 m_features["shaderUniformBufferArrayDynamicIndexing"] = true;
         return m_features["shaderUniformBufferArrayDynamicIndexing"];
     }
-    bool VknFeatures::shaderSampledImageArrayDynamicIndexing(bool toggle)
+    bool VknFeatures1::shaderSampledImageArrayDynamicIndexing(bool toggle)
     {
         if (toggle)
             if (m_features["shaderSampledImageArrayDynamicIndexing"])
@@ -317,7 +325,7 @@ namespace vkn
                 m_features["shaderSampledImageArrayDynamicIndexing"] = true;
         return m_features["shaderSampledImageArrayDynamicIndexing"];
     }
-    bool VknFeatures::shaderStorageBufferArrayDynamicIndexing(bool toggle)
+    bool VknFeatures1::shaderStorageBufferArrayDynamicIndexing(bool toggle)
     {
         if (toggle)
             if (m_features["shaderStorageBufferArrayDynamicIndexing"])
@@ -326,7 +334,7 @@ namespace vkn
                 m_features["shaderStorageBufferArrayDynamicIndexing"] = true;
         return m_features["shaderStorageBufferArrayDynamicIndexing"];
     }
-    bool VknFeatures::shaderStorageImageArrayDynamicIndexing(bool toggle)
+    bool VknFeatures1::shaderStorageImageArrayDynamicIndexing(bool toggle)
     {
         if (toggle)
             if (m_features["shaderStorageImageArrayDynamicIndexing"])
@@ -335,7 +343,7 @@ namespace vkn
                 m_features["shaderStorageImageArrayDynamicIndexing"] = true;
         return m_features["shaderStorageImageArrayDynamicIndexing"];
     }
-    bool VknFeatures::shaderClipDistance(bool toggle)
+    bool VknFeatures1::shaderClipDistance(bool toggle)
     {
         if (toggle)
             if (m_features["shaderClipDistance"])
@@ -344,7 +352,7 @@ namespace vkn
                 m_features["shaderClipDistance"] = true;
         return m_features["shaderClipDistance"];
     }
-    bool VknFeatures::shaderCullDistance(bool toggle)
+    bool VknFeatures1::shaderCullDistance(bool toggle)
     {
         if (toggle)
             if (m_features["shaderCullDistance"])
@@ -353,7 +361,7 @@ namespace vkn
                 m_features["shaderCullDistance"] = true;
         return m_features["shaderCullDistance"];
     }
-    bool VknFeatures::shaderFloat64(bool toggle)
+    bool VknFeatures1::shaderFloat64(bool toggle)
     {
         if (toggle)
             if (m_features["shaderFloat64"])
@@ -362,7 +370,7 @@ namespace vkn
                 m_features["shaderFloat64"] = true;
         return m_features["shaderFloat64"];
     }
-    bool VknFeatures::shaderInt64(bool toggle)
+    bool VknFeatures1::shaderInt64(bool toggle)
     {
         if (toggle)
             if (m_features["shaderInt64"])
@@ -371,7 +379,7 @@ namespace vkn
                 m_features["shaderInt64"] = true;
         return m_features["shaderInt64"];
     }
-    bool VknFeatures::shaderInt16(bool toggle)
+    bool VknFeatures1::shaderInt16(bool toggle)
     {
         if (toggle)
             if (m_features["shaderInt16"])
@@ -380,7 +388,7 @@ namespace vkn
                 m_features["shaderInt16"] = true;
         return m_features["shaderInt16"];
     }
-    bool VknFeatures::shaderResourceResidency(bool toggle)
+    bool VknFeatures1::shaderResourceResidency(bool toggle)
     {
         if (toggle)
             if (m_features["shaderResourceResidency"])
@@ -389,7 +397,7 @@ namespace vkn
                 m_features["shaderResourceResidency"] = true;
         return m_features["shaderResourceResidency"];
     }
-    bool VknFeatures::shaderResourceMinLod(bool toggle)
+    bool VknFeatures1::shaderResourceMinLod(bool toggle)
     {
         if (toggle)
             if (m_features["shaderResourceMinLod"])
@@ -398,7 +406,7 @@ namespace vkn
                 m_features["shaderResourceMinLod"] = true;
         return m_features["shaderResourceMinLod"];
     }
-    bool VknFeatures::sparseBinding(bool toggle)
+    bool VknFeatures1::sparseBinding(bool toggle)
     {
         if (toggle)
             if (m_features["sparseBinding"])
@@ -407,7 +415,7 @@ namespace vkn
                 m_features["sparseBinding"] = true;
         return m_features["sparseBinding"];
     }
-    bool VknFeatures::sparseResidencyBuffer(bool toggle)
+    bool VknFeatures1::sparseResidencyBuffer(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidencyBuffer"])
@@ -416,7 +424,7 @@ namespace vkn
                 m_features["sparseResidencyBuffer"] = true;
         return m_features["sparseResidencyBuffer"];
     }
-    bool VknFeatures::sparseResidencyImage2D(bool toggle)
+    bool VknFeatures1::sparseResidencyImage2D(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidencyImage2D"])
@@ -425,7 +433,7 @@ namespace vkn
                 m_features["sparseResidencyImage2D"] = true;
         return m_features["sparseResidencyImage2D"];
     }
-    bool VknFeatures::sparseResidencyImage3D(bool toggle)
+    bool VknFeatures1::sparseResidencyImage3D(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidencyImage3D"])
@@ -434,7 +442,7 @@ namespace vkn
                 m_features["sparseResidencyImage3D"] = true;
         return m_features["sparseResidencyImage3D"];
     }
-    bool VknFeatures::sparseResidency2Samples(bool toggle)
+    bool VknFeatures1::sparseResidency2Samples(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidency2Samples"])
@@ -443,7 +451,7 @@ namespace vkn
                 m_features["sparseResidency2Samples"] = true;
         return m_features["sparseResidency2Samples"];
     }
-    bool VknFeatures::sparseResidency4Samples(bool toggle)
+    bool VknFeatures1::sparseResidency4Samples(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidency4Samples"])
@@ -452,7 +460,7 @@ namespace vkn
                 m_features["sparseResidency4Samples"] = true;
         return m_features["sparseResidency4Samples"];
     }
-    bool VknFeatures::sparseResidency8Samples(bool toggle)
+    bool VknFeatures1::sparseResidency8Samples(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidency8Samples"])
@@ -461,7 +469,7 @@ namespace vkn
                 m_features["sparseResidency8Samples"] = true;
         return m_features["sparseResidency8Samples"];
     }
-    bool VknFeatures::sparseResidency16Samples(bool toggle)
+    bool VknFeatures1::sparseResidency16Samples(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidency16Samples"])
@@ -470,7 +478,7 @@ namespace vkn
                 m_features["sparseResidency16Samples"] = true;
         return m_features["sparseResidency16Samples"];
     }
-    bool VknFeatures::sparseResidencyAliased(bool toggle)
+    bool VknFeatures1::sparseResidencyAliased(bool toggle)
     {
         if (toggle)
             if (m_features["sparseResidencyAliased"])
@@ -479,7 +487,7 @@ namespace vkn
                 m_features["sparseResidencyAliased"] = true;
         return m_features["sparseResidencyAliased"];
     }
-    bool VknFeatures::variableMultisampleRate(bool toggle)
+    bool VknFeatures1::variableMultisampleRate(bool toggle)
     {
         if (toggle)
             if (m_features["variableMultisampleRate"])
@@ -488,7 +496,7 @@ namespace vkn
                 m_features["variableMultisampleRate"] = true;
         return m_features["variableMultisampleRate"];
     }
-    bool VknFeatures::inheritedQueries(bool toggle)
+    bool VknFeatures1::inheritedQueries(bool toggle)
     {
         if (toggle)
             if (m_features["inheritedQueries"])
@@ -498,7 +506,7 @@ namespace vkn
         return m_features["inheritedQueries"];
     }
 
-    VkPhysicalDeviceFeatures VknFeatures::createInfo()
+    VkPhysicalDeviceFeatures VknFeatures1::createInfo()
     {
         VkPhysicalDeviceFeatures info = VkPhysicalDeviceFeatures{};
         info.robustBufferAccess = robustBufferAccess();
@@ -514,7 +522,7 @@ namespace vkn
         info.drawIndirectFirstInstance = drawIndirectFirstInstance();
         info.depthClamp = depthClamp();
         info.depthBiasClamp = depthBiasClamp();
-        info.fillModeNonSolid = fillModeNonSolid();
+        info.fileModeNonSolid = fileModeNonSolid();
         info.depthBounds = depthBounds();
         info.wideLines = wideLines();
         info.largePoints = largePoints();
@@ -557,5 +565,78 @@ namespace vkn
         info.variableMultisampleRate = variableMultisampleRate();
         info.inheritedQueries = inheritedQueries();
         return info;
+    }
+
+    VkPhysicalDeviceFeatures2 VknFeatures2::createInfo()
+    {
+        VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        deviceFeatures2.pNext = nullptr;
+        void **pNext = &deviceFeatures2.pNext;
+
+        if (m_features["multiview"])
+        {
+            m_multiview.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES;
+            m_multiview.multiview = VK_TRUE; // Enable if supported.
+            m_multiview.pNext = nullptr;
+            (*pNext) = &m_multiview;
+            pNext = &m_multiview.pNext;
+        }
+
+        if (m_features["storage16bit"])
+        {
+            m_storage16bit.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
+            m_storage16bit.storageBuffer16BitAccess = VK_TRUE; // And other 16-bit features as needed.
+            m_storage16bit.pNext = nullptr;
+            (*pNext) = &m_storage16bit;
+            pNext = &m_storage16bit.pNext;
+        }
+
+        if (m_features["protectedMemory"])
+        {
+            m_protectedMemory.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES;
+            m_protectedMemory.protectedMemory = VK_TRUE; // Enable if your app needs secure memory.
+            m_protectedMemory.pNext = nullptr;
+            (*pNext) = &m_protectedMemory;
+            pNext = &m_protectedMemory.pNext;
+        }
+        /*
+        // Query the physical device for its supported features.
+        vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
+        */
+        return deviceFeatures2;
+    }
+
+    // Enable Multiview rendering.
+    bool VknFeatures2::multiview(bool toggle = false)
+    {
+        if (toggle)
+            if (m_features["multiview"])
+                m_features["multiview"] = false;
+            else
+                m_features["multiview"] = true;
+        return m_features["multiview"];
+    }
+
+    // Enable 16-bit Storage.
+    bool VknFeatures2::storage16bit(bool toggle = false)
+    {
+        if (toggle)
+            if (m_features["storage16bit"])
+                m_features["storage16bit"] = false;
+            else
+                m_features["storage16bit"] = true;
+        return m_features["storage16bit"];
+    }
+
+    // Enable Protected Memory.
+    bool VknFeatures2::protectedMemory(bool toggle = false)
+    {
+        if (toggle)
+            if (m_features["protectedMemory"])
+                m_features["protectedMemory"] = false;
+            else
+                m_features["protectedMemory"] = true;
+        return m_features["protectedMemory"];
     }
 }

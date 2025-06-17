@@ -46,10 +46,10 @@ namespace vkn
         m_attachmentBlendStates.append(defaultState);
     }
 
-    void VknColorBlendState::_fillColorBlendStateCreateInfo()
+    void VknColorBlendState::_fileColorBlendStateCreateInfo()
     {
-        if (m_filledCreateInfo)
-            throw std::runtime_error("Color blend state create info already filled.");
+        if (m_filedCreateInfo)
+            throw std::runtime_error("Color blend state create info already filed.");
 
         // This assumes m_attachmentBlendStates is already populated (e.g., by setDefaultAttachmentState or other methods)
         // You'll need to ensure the number of attachments here matches the subpass's color attachment count.
@@ -60,7 +60,7 @@ namespace vkn
             setDefaultAttachmentState();
         }
 
-        m_infos->fillColorBlendStateCreateInfo(
+        m_infos->fileColorBlendStateCreateInfo(
             m_relIdxs.get<VkDevice>(),
             m_relIdxs.get<VkRenderPass>(),
             m_relIdxs.get<VkPipeline>(), // This is the subpass index for pipeline
@@ -69,6 +69,6 @@ namespace vkn
             m_blendConstants,
             m_logicOpEnable,
             0); // flags for VkPipelineColorBlendStateCreateInfo (usually 0)
-        m_filledCreateInfo = true;
+        m_filedCreateInfo = true;
     }
 }

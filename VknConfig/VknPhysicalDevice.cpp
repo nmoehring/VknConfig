@@ -17,30 +17,30 @@ namespace vkn
         s_properties.clear();
     }
 
-    void VknPhysicalDevice::fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities)
+    void VknPhysicalDevice::fileDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities)
     {
-        if (m_filledQueuePriorities)
-            throw std::runtime_error("Already filled queue priorities.");
+        if (m_filedQueuePriorities)
+            throw std::runtime_error("Already filed queue priorities.");
         if (!m_selectedQueues)
             this->selectQueues(true);
-        m_infos->fillDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
-        m_filledQueuePriorities = true;
+        m_infos->fileDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
+        m_filedQueuePriorities = true;
     }
 
-    void VknPhysicalDevice::fillDeviceQueuePrioritiesDefault()
+    void VknPhysicalDevice::fileDeviceQueuePrioritiesDefault()
     {
-        if (m_filledQueuePriorities)
-            throw std::runtime_error("Already filled queue priorities.");
+        if (m_filedQueuePriorities)
+            throw std::runtime_error("Already filed queue priorities.");
         if (!m_selectedQueues)
             this->selectQueues(true);
         for (int i = 0; i < m_queues.size(); ++i)
         {
             VknVector<float> newVec{};
             newVec.append(1.0f, getListElement<VknQueueFamily>(i, m_queues)->getNumSelected());
-            m_infos->fillDeviceQueuePriorities(
+            m_infos->fileDeviceQueuePriorities(
                 m_relIdxs, i, newVec);
         }
-        m_filledQueuePriorities = true;
+        m_filedQueuePriorities = true;
     }
 
     void VknPhysicalDevice::requestQueueFamilyProperties()
@@ -70,17 +70,17 @@ namespace vkn
         m_requestedQueues = true;
     }
 
-    void VknPhysicalDevice::fillQueueCreateInfos()
+    void VknPhysicalDevice::fileQueueCreateInfos()
     {
-        if (m_filledQueueCreateInfos)
-            throw std::runtime_error("Already filled queue create infos.");
+        if (m_filedQueueCreateInfos)
+            throw std::runtime_error("Already filed queue create infos.");
         for (int i = 0; i < m_queues.size(); ++i)
         {
             VknQueueFamily *fam = getListElement<VknQueueFamily>(i, m_queues);
-            m_infos->fillDeviceQueueCreateInfo(
+            m_infos->fileDeviceQueueCreateInfo(
                 m_relIdxs, i, fam->getNumSelected(), fam->getFlags());
         }
-        m_filledQueueCreateInfos = true;
+        m_filedQueueCreateInfos = true;
     }
 
     void VknPhysicalDevice::selectQueues(bool chooseAllAvailableQueues)
@@ -235,9 +235,9 @@ namespace vkn
         return *getListElement<VknQueueFamily>(idx, m_queues);
     }
 
-    bool VknPhysicalDevice::areQueuePrioritiesFilled()
+    bool VknPhysicalDevice::areQueuePrioritiesfiled()
     {
-        return m_filledQueuePriorities;
+        return m_filedQueuePriorities;
     }
 
     VkPhysicalDeviceType VknPhysicalDevice::getGPUType()

@@ -74,10 +74,10 @@ namespace vkn
         bool getSurfaceSupport(VkSurfaceKHR surface, uint32_t queueFamilyIdx); // surface passed by value
         VkPhysicalDevice *selectPhysicalDevice();                              // Takes surface for selection
         VkPhysicalDeviceLimits *getLimits();
-        void fillDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities);
-        void fillDeviceQueuePrioritiesDefault();
+        void fileDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities);
+        void fileDeviceQueuePrioritiesDefault();
         bool areQueuesSelected() { return m_selectedQueues; }
-        bool areQueuePrioritiesFilled();
+        bool areQueuePrioritiesfiled();
         void selectQueues(bool chooseAllAvailableQueues);
         int getNumQueueFamilies() { return m_queues.size(); }
         std::list<VknQueueFamily> &getQueues() { return m_queues; }
@@ -102,11 +102,11 @@ namespace vkn
         static bool s_enumeratedPhysicalDevices;
         bool m_requestedQueues{false};
         bool m_selectedQueues{false};
-        bool m_filledQueueCreateInfos{false};
-        bool m_filledQueuePriorities{false};
+        bool m_filedQueueCreateInfos{false};
+        bool m_filedQueuePriorities{false};
 
         void enumeratePhysicalDevices();
         void requestQueueFamilyProperties();
-        void fillQueueCreateInfos();
+        void fileQueueCreateInfos();
     };
 }

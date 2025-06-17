@@ -8,16 +8,16 @@ namespace vkn
     {
     }
 
-    void VknRasterizationState::_fillRasterizationStateCreateInfo()
+    void VknRasterizationState::_fileRasterizationStateCreateInfo()
     {
-        if (m_filled)
-            throw std::runtime_error("RasterizationStateCreateInfo already filled.");
-        m_infos->fillRasterizationStateCreateInfo(
+        if (m_filed)
+            throw std::runtime_error("RasterizationStateCreateInfo already filed.");
+        m_infos->fileRasterizationStateCreateInfo(
             m_relIdxs, m_polygonMode, m_cullMode, m_frontFace, m_depthBiasConstantFactor,
             m_depthBiasClamp, m_depthBiasSlopeFactor, m_lineWidth,
             m_depthClampEnable, m_rasterizerDiscardEnable, m_depthBiasEnable);
 
-        m_filled = true;
+        m_filed = true;
     }
 
     void VknRasterizationState::setPolygonMode(VkPolygonMode mode)

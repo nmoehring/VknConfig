@@ -8,33 +8,33 @@ namespace vkn
     {
     }
 
-    void VknVertexInputState::_fillVertexInputStateCreateInfo()
+    void VknVertexInputState::_fileVertexInputStateCreateInfo()
     {
-        if (m_filled)
-            throw std::runtime_error("Vertex input state already filled.");
-        m_infos->fillVertexInputStateCreateInfo(m_relIdxs, m_numBindings, m_numAttributes);
-        m_filled = true;
+        if (m_filed)
+            throw std::runtime_error("Vertex input state already filed.");
+        m_infos->fileVertexInputStateCreateInfo(m_relIdxs, m_numBindings, m_numAttributes);
+        m_filed = true;
     }
 
-    void VknVertexInputState::fillVertexAttributeDescription(uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
+    void VknVertexInputState::fileVertexAttributeDescription(uint32_t binding, uint32_t location, VkFormat format, uint32_t offset)
     {
         if (m_numBindings == 0)
             throw std::runtime_error("Must have a binding description if there are any attribute descriptions.");
         uint32_t attributeIdx = m_numAttributes;
-        m_infos->fillVertexInputAttributeDescription(
+        m_infos->fileVertexInputAttributeDescription(
             m_relIdxs, attributeIdx, binding,
             location, format, offset);
         ++m_numAttributes;
-        m_attributesFilled = true;
+        m_attributesfiled = true;
     }
 
-    void VknVertexInputState::fillVertexBindingDescription(
+    void VknVertexInputState::fileVertexBindingDescription(
         uint32_t binding, uint32_t stride, VkVertexInputRate inputRate)
     {
         uint32_t bindIdx = m_numBindings;
-        m_infos->fillVertexInputBindingDescription(
+        m_infos->fileVertexInputBindingDescription(
             m_relIdxs, bindIdx, binding, stride, inputRate);
         ++m_numBindings;
-        m_bindingsFilled = true;
+        m_bindingsfiled = true;
     }
 }

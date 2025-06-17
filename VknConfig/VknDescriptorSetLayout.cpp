@@ -25,7 +25,7 @@ namespace vkn
     // Create
     void VknDescriptorSetLayout::createDescriptorSetLayout()
     {
-        VkDescriptorSetLayoutCreateInfo *createInfo = m_infos->fillDescriptorSetLayoutCreateInfo(
+        VkDescriptorSetLayoutCreateInfo *createInfo = m_infos->fileDescriptorSetLayoutCreateInfo(
             m_bindings, m_createFlags);
         VknResult res{
             vkCreateDescriptorSetLayout(

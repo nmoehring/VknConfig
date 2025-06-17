@@ -18,7 +18,7 @@ namespace vkn
         void addDynamicState(VkDynamicState dynamicState);
 
         // Create
-        VkPipelineDynamicStateCreateInfo *_fillDynamicStateCreateInfo();
+        VkPipelineDynamicStateCreateInfo *_fileDynamicStateCreateInfo();
 
     private:
         // Engine
@@ -31,7 +31,7 @@ namespace vkn
         VknVector<VkDynamicState> m_dynamicStates{};
 
         // State
-        bool m_filledCreateInfo{false};
+        bool m_filedCreateInfo{false};
         bool m_createdDynamicState{false};
     };
 }

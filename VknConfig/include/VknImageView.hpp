@@ -100,10 +100,10 @@ namespace vkn
                                                    VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 
         // State
-        bool m_filledCreateInfo{false};
+        bool m_filedCreateInfo{false};
         bool m_createdImageView{false};
         bool m_setVkImage{false};
 
-        void fillImageViewCreateInfo();
+        void fileImageViewCreateInfo();
     };
 }

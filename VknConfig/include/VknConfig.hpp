@@ -133,16 +133,16 @@ namespace vkn
 
         // State
         bool m_selectedQueues{false};
-        bool m_filledInstanceCreateInfo{false};
+        bool m_filedInstanceCreateInfo{false};
         bool m_createdInstance{false};
-        bool m_filledAppInfo{false};
+        bool m_filedAppInfo{false};
         bool m_validationLayerAdded{false};
         bool m_createdSurface{false};
         bool m_setPlatformExtensions{false};
 
         void
-        fillAppInfo();
-        void fillInstanceCreateInfo();
+        fileAppInfo();
+        void fileInstanceCreateInfo();
     };
 
     // Helper function to set up the debug messenger create info
