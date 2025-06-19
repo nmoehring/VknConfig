@@ -5,6 +5,7 @@
 namespace vkn
 {
     uint32_t GLFW_Window::s_windowCount = 0;
+    bool GLFW_Window::s_initialized = false;
 
     GLFW_Window::GLFW_Window()
     {
@@ -27,7 +28,10 @@ namespace vkn
         }
         --s_windowCount;
         if (s_windowCount == 0)
+        {
             glfwTerminate();
+            s_initialized = false;
+        }
     }
 
     bool GLFW_Window::update()
@@ -70,11 +74,12 @@ namespace vkn
         if (m_windowCreated)
             throw std::runtime_error("Window already created.");
 
-        if (s_windowCount == 1)
+        if (!s_initialized)
         {
             if (!glfwInit())
                 throw std::runtime_error("Problem initializing GLFW.");
             glfwSetErrorCallback(glfwErrorCallback);
+            s_initialized = true;
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

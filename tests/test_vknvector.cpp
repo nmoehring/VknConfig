@@ -163,8 +163,8 @@ TEST_F(VknVectorTest, Exists_NonExistent_ReturnsFalse)
 // --- Append ---
 TEST_F(VknVectorTest, Append_SingleElement)
 {
-    vec_int.append(10);
-    vec_int.append(20);
+    vec_int.appendOne(10);
+    vec_int.appendOne(20);
     ASSERT_EQ(vec_int.getSize(), 2);
     ASSERT_EQ(vec_int.getNumPositions(), 2);
     ASSERT_EQ(vec_int(0), 10);
@@ -173,7 +173,7 @@ TEST_F(VknVectorTest, Append_SingleElement)
 
 TEST_F(VknVectorTest, Append_MultipleValues)
 {
-    vec_int.append(7, 3); // Append 7, 3 times
+    vec_int.appendRepeat(7, 3); // Append 7, 3 times
     ASSERT_EQ(vec_int.getSize(), 3);
     ASSERT_EQ(vec_int.getNumPositions(), 3);
     ASSERT_EQ(vec_int(0), 7);
@@ -250,7 +250,8 @@ TEST_F(VknVectorTest, Swap_SparseElements)
 TEST_F(VknVectorTest, Swap_NonExistentElement_Throws)
 {
     vec_int.insert(0, 10);
-    ASSERT_THROW(vec_int.swap(0, 1), std::runtime_error); // Element at logical pos 1 doesn't exist
+    ASSERT_NO_THROW(vec_int.swap(0, 1)); // Element at logical pos 1 doesn't exist
+    ASSERT_EQ(vec_int(1), 10);
 }
 
 // --- getData ---
@@ -340,8 +341,8 @@ TEST_F(VknVectorTest, Insert_CorrectnessCheck_For_NoElementGreaterOrEqual_Setup)
 
 TEST_F(VknVectorTest, Insert_Max_Elements_Plus_One)
 {
-    vec_int.append(1, 256);
-    ASSERT_THROW(vec_int.append(1), std::runtime_error);
+    vec_int.appendRepeat(1, 256);
+    ASSERT_THROW(vec_int.appendOne(1), std::runtime_error);
 }
 
 TEST_F(VknVectorTest, Remove_Element_From_Empty_Vec)
@@ -356,7 +357,7 @@ TEST_F(VknVectorTest, Clear_Empty_Vec)
 
 TEST_F(VknVectorTest, Defrag_Pos_Basic_And_Remove_Each_Element)
 {
-    vec_int.append(3, 8);
+    vec_int.appendRepeat(3, 8);
     ASSERT_EQ(vec_int.getDefragPos(2), 8);
     vec_int.remove(2);
     ASSERT_EQ(vec_int.getDefragPos(2), 8);
@@ -372,7 +373,7 @@ TEST_F(VknVectorTest, Defrag_Pos_Basic_And_Remove_Each_Element)
 
 TEST_F(VknVectorTest, Defrag_Pos_No_Room)
 {
-    vec_int.append(3, 256);
+    vec_int.appendRepeat(3, 256);
     ASSERT_THROW(vec_int.getDefragPos(1), std::runtime_error);
     vec_int.remove(40, 8);
     vec_int.remove(190, 4);
@@ -383,15 +384,15 @@ TEST_F(VknVectorTest, Defrag_Pos_No_Room)
 
 TEST_F(VknVectorTest, Remove_Too_Much)
 {
-    vec_int.append(3, 8);
+    vec_int.appendRepeat(3, 8);
     ASSERT_NO_THROW(vec_int.remove(6, 4));
-    vec_int.append(6, 248);
+    vec_int.appendRepeat(6, 248);
     ASSERT_NO_THROW(vec_int.remove(250, 10));
 }
 
 TEST_F(VknVectorTest, Remove_Sparse)
 {
-    vec_int.append(7, 50);
+    vec_int.appendRepeat(7, 50);
     vec_int.remove(8, 2);
     vec_int.remove(15, 3);
     vec_int.remove(25, 5);
@@ -406,7 +407,7 @@ TEST_F(VknVectorTest, Get_Element_Test)
 {
     ASSERT_THROW(vec_int(0), std::runtime_error);
     ASSERT_THROW(vec_int(256), std::runtime_error);
-    vec_int.append(1);
+    vec_int.appendOne(1);
     ASSERT_EQ(vec_int(0), 1);
     ASSERT_THROW(vec_int(1), std::runtime_error);
     ASSERT_THROW(vec_int(256), std::runtime_error);
@@ -414,13 +415,13 @@ TEST_F(VknVectorTest, Get_Element_Test)
 
 TEST_F(VknVectorTest, Append_Test)
 {
-    vec_int.append(3, 256);
-    ASSERT_THROW(vec_int.append(1), std::runtime_error);
+    vec_int.appendRepeat(3, 256);
+    ASSERT_THROW(vec_int.appendOne(1), std::runtime_error);
     vec_int.remove(250, 6);
-    ASSERT_THROW(vec_int.append(4, 7), std::runtime_error);
+    ASSERT_THROW(vec_int.appendRepeat(4, 7), std::runtime_error);
     vkn::VknVector<int> append_vec_int{};
-    append_vec_int.append(4, 10);
-    ASSERT_THROW(vec_int.append(append_vec_int), std::runtime_error);
+    append_vec_int.appendRepeat(4, 10);
+    ASSERT_THROW(vec_int.appendVector(append_vec_int), std::runtime_error);
     int append_ints[6] = {1, 2, 3, 4, 5, 6};
     ASSERT_NO_THROW(vec_int.insert(250, append_ints, 6));
 }
@@ -432,13 +433,13 @@ TEST_F(VknVectorTest, Relative_Size)
     std::cout << "sizeOf(empty VknVector<int>): " << sizeof(vec_int) << std::endl;
 
     stdIntCompare.push_back(1);
-    vec_int.append(1);
+    vec_int.appendOne(1);
     std::cout << "sizeOf(1 element std::vector<int>): " << sizeof(stdIntCompare) << std::endl;
     std::cout << "sizeOf(1 element VknVector<int>): " << sizeof(vec_int) << std::endl;
 
     for (int i = 0; i < 9; ++i)
         stdIntCompare.push_back(1);
-    vec_int.append(1, 9);
+    vec_int.appendRepeat(1, 9);
     std::cout << "sizeOf(10 element std::vector<int>): " << sizeof(stdIntCompare) << std::endl;
     std::cout << "sizeOf(10 element VknVector<int>): " << sizeof(vec_int) << std::endl;
 }
@@ -448,29 +449,29 @@ TEST_F(VknVectorTest, Append_Array)
     int *test1{nullptr};
     int test2[1] = {1};
     int test3[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    ASSERT_NO_THROW(vec_int.append(test1, 0));
-    ASSERT_NO_THROW(vec_int.append(test2, 1));
-    ASSERT_NO_THROW(vec_int.append(test3, 10));
-    vec_int.append(3, 240);
-    ASSERT_THROW(vec_int.append(test3, 10), std::runtime_error);
+    ASSERT_NO_THROW(vec_int.appendArray(test1, 0));
+    ASSERT_NO_THROW(vec_int.appendArray(test2, 1));
+    ASSERT_NO_THROW(vec_int.appendArray(test3, 10));
+    vec_int.appendRepeat(3, 240);
+    ASSERT_THROW(vec_int.appendArray(test3, 10), std::runtime_error);
 }
 
 TEST_F(VknVectorTest, Append_VknVector)
 {
     vkn::VknVector<int> test{};
-    ASSERT_NO_THROW(vec_int.append(test));
-    test.append(1);
-    ASSERT_NO_THROW(vec_int.append(test));
-    test.append(3, 9);
-    ASSERT_NO_THROW(vec_int.append(test));
-    test.append(3, 240);
-    ASSERT_THROW(vec_int.append(test), std::runtime_error);
+    ASSERT_NO_THROW(vec_int.appendVector(test));
+    test.appendOne(1);
+    ASSERT_NO_THROW(vec_int.appendVector(test));
+    test.appendRepeat(3, 9);
+    ASSERT_NO_THROW(vec_int.appendVector(test));
+    test.appendRepeat(3, 240);
+    ASSERT_THROW(vec_int.appendVector(test), std::runtime_error);
 }
 
 TEST_F(VknVectorTest, Get_Element_2_I_Think)
 {
     ASSERT_EQ(vec_int.getElement(0), nullptr);
-    vec_int.append(3, 10);
+    vec_int.appendRepeat(3, 10);
     ASSERT_EQ(vec_int.getElement(11), nullptr);
     ASSERT_NO_THROW(vec_int.getElement(5));
     ASSERT_THROW(vec_int.getElement(256), std::runtime_error);
@@ -479,7 +480,7 @@ TEST_F(VknVectorTest, Get_Element_2_I_Think)
 TEST_F(VknVectorTest, VknVector_Exists)
 {
     ASSERT_EQ(vec_int.exists(9), false);
-    vec_int.append(3, 15);
+    vec_int.appendRepeat(3, 15);
     ASSERT_EQ(vec_int.exists(15), false);
     ASSERT_EQ(vec_int.exists(3), true);
     ASSERT_THROW(vec_int.exists(256), std::runtime_error);
@@ -499,8 +500,8 @@ TEST_F(VknVectorTest, VknVector_Insert)
 TEST_F(VknVectorTest, VknVector_Swap)
 {
     ASSERT_NO_THROW(vec_int.swap(2, 3));
-    vec_int.append(100);
-    vec_int.append(150);
+    vec_int.appendOne(100);
+    vec_int.appendOne(150);
     ASSERT_NO_THROW(vec_int.swap(0, 1));
     ASSERT_THROW(vec_int.swap(1, 256), std::runtime_error);
     ASSERT_NO_THROW(vec_int.swap(1, 2));

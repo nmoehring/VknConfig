@@ -165,7 +165,6 @@ namespace vkn
         void fileAppInfo(uint32_t apiVersion, uint32_t applicationVersion, uint32_t engineVersion);
         void fileInstanceCreateInfo(VkInstanceCreateFlags flags);
         void fileDeviceExtensionNames(uint32_t deviceIdx, const char *const *names, uint32_t size);
-        void fileDeviceFeatures(VknFeatures features);
         void fileDeviceQueueCreateInfo(VknIdxs &relIdxs, uint32_t queueFamilyIdx,
                                        uint32_t queueCount, VkDeviceQueueCreateFlags flags);
         VkDeviceCreateInfo *fileDeviceCreateInfo(uint32_t deviceIdx);
@@ -416,6 +415,6 @@ namespace vkn
         bool m_filedDepthStencilStateInfo{false};
         bool m_filedColorBlendStateInfo{false};
         bool m_filedDynamicStateInfo{false};
-        bool m_deviceQueuePrioritiesfiled{false};
+        bool m_filedDeviceQueuePriorities{false};
     };
 }

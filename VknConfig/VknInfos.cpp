@@ -26,7 +26,7 @@ namespace vkn
     {
         for (auto &priority : priorities)
             m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].append(priority);
-        m_deviceQueuePrioritiesfiled = true;
+        m_filedDeviceQueuePriorities = true;
     }
 
     void VknInfos::setNumDeviceQueueFamilies(int num, uint32_t deviceIdx)
@@ -463,7 +463,7 @@ namespace vkn
     void VknInfos::storeName(std::string &name, std::list<std::string> &store, VknVector<const char *> &pointers)
     {
         store.push_back(name);
-        pointers.append(store.back().c_str());
+        pointers.appendOne(store.back().c_str());
     }
 
     void VknInfos::addLayer(std::string name)
@@ -534,7 +534,7 @@ namespace vkn
         info.queueCount = queueCount;
         info.pNext = VK_NULL_HANDLE;
         info.flags = flags; // Only flag is a protected memory bit, for a queue family that supports it
-        if (!m_deviceQueuePrioritiesfiled)
+        if (!m_filedDeviceQueuePriorities)
             throw std::runtime_error("Queue priorities not filed before filing device queue create info.");
         info.pQueuePriorities = m_queuePriorities[relIdxs.get<VkDevice>()][queueFamilyIdx].getData();
         m_filedDeviceQueueCreateInfo = true;
@@ -817,7 +817,7 @@ namespace vkn
         VkImageCreateFlags flags)
     {
         VkImageCreateInfo *info =
-            &m_imageCreateInfos.append(VkImageCreateInfo{});
+            &m_imageCreateInfos.appendOne(VkImageCreateInfo{});
         info->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         info->pNext = VK_NULL_HANDLE;
         info->flags = flags;

@@ -4,6 +4,7 @@ namespace vkn
 {
     VkPhysicalDeviceFeatures2 VknFeatures::createInfo()
     {
+        // features2.multiview(true);
         VkPhysicalDeviceFeatures ci1{features1.createInfo()};
         VkPhysicalDeviceFeatures2 ci2{features2.createInfo()};
         ci2.features = ci1;
@@ -127,14 +128,14 @@ namespace vkn
                 m_features["depthBiasClamp"] = true;
         return m_features["depthBiasClamp"];
     }
-    bool VknFeatures1::fileModeNonSolid(bool toggle)
+    bool VknFeatures1::fillModeNonSolid(bool toggle)
     {
         if (toggle)
-            if (m_features["fileModeNonSolid"])
-                m_features["fileModeNonSolid"] = false;
+            if (m_features["fillModeNonSolid"])
+                m_features["fillModeNonSolid"] = false;
             else
-                m_features["fileModeNonSolid"] = true;
-        return m_features["fileModeNonSolid"];
+                m_features["fillModeNonSolid"] = true;
+        return m_features["fillModeNonSolid"];
     }
     bool VknFeatures1::depthBounds(bool toggle)
     {
@@ -522,7 +523,7 @@ namespace vkn
         info.drawIndirectFirstInstance = drawIndirectFirstInstance();
         info.depthClamp = depthClamp();
         info.depthBiasClamp = depthBiasClamp();
-        info.fileModeNonSolid = fileModeNonSolid();
+        info.fillModeNonSolid = fillModeNonSolid();
         info.depthBounds = depthBounds();
         info.wideLines = wideLines();
         info.largePoints = largePoints();
@@ -608,7 +609,7 @@ namespace vkn
     }
 
     // Enable Multiview rendering.
-    bool VknFeatures2::multiview(bool toggle = false)
+    bool VknFeatures2::multiview(bool toggle)
     {
         if (toggle)
             if (m_features["multiview"])
@@ -619,7 +620,7 @@ namespace vkn
     }
 
     // Enable 16-bit Storage.
-    bool VknFeatures2::storage16bit(bool toggle = false)
+    bool VknFeatures2::storage16bit(bool toggle)
     {
         if (toggle)
             if (m_features["storage16bit"])
@@ -630,7 +631,7 @@ namespace vkn
     }
 
     // Enable Protected Memory.
-    bool VknFeatures2::protectedMemory(bool toggle = false)
+    bool VknFeatures2::protectedMemory(bool toggle)
     {
         if (toggle)
             if (m_features["protectedMemory"])

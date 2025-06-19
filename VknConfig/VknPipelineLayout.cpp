@@ -22,7 +22,7 @@ namespace vkn
     void VknPipelineLayout::addPushConstantRange(VkShaderStageFlags stageFlags,
                                                  uint32_t offset, uint32_t size)
     {
-        VkPushConstantRange &element = m_pushConstantRanges.append(VkPushConstantRange{});
+        VkPushConstantRange &element = m_pushConstantRanges.appendOne(VkPushConstantRange{});
         element.stageFlags = stageFlags;
         element.offset = offset;
         element.size = size;

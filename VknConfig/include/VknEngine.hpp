@@ -189,8 +189,8 @@ namespace vkn
             VknVector<ObjectType> &vec{this->getVector<ObjectType>()};
             VknVector<ParentType *> &parentVec = this->getParentVector<ObjectType, ParentType>();
             m_pos = vec.getSize();
-            vec.append(val);
-            parentVec.append(parent);
+            vec.appendOne(val);
+            parentVec.appendOne(parent);
             return m_pos;
         }
 
@@ -363,7 +363,7 @@ namespace vkn
             m_pos = vec.getSize();
             if (m_pos != 0)
                 throw std::runtime_error("VkInstance already added.");
-            vec.append(VkInstance{VK_NULL_HANDLE});
+            vec.appendOne(VkInstance{VK_NULL_HANDLE});
 
             absIdxs.add<VkInstance>(m_pos);
             relIdxs.add<VkInstance>(m_pos);

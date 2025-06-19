@@ -27,7 +27,7 @@ namespace vkn
 
     void VknViewportState::addViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
     {
-        VkViewport &viewport = m_viewports.append(VkViewport{});
+        VkViewport &viewport = m_viewports.appendOne(VkViewport{});
         viewport.x = x;
         viewport.y = y;
         viewport.width = static_cast<float>(width);
@@ -38,7 +38,7 @@ namespace vkn
 
     void VknViewportState::addScissor(VkOffset2D offset, VkExtent2D extent)
     {
-        VkRect2D &scissor = m_scissors.append(VkRect2D{});
+        VkRect2D &scissor = m_scissors.appendOne(VkRect2D{});
         scissor.offset = offset;
         scissor.extent = extent;
     }

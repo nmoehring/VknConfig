@@ -11,6 +11,7 @@ namespace vkn
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice.getPhysicalDeviceAbsIdxs().get<VkPhysicalDevice>());
         m_absIdxs.add<VmaAllocator>(m_engine->getVectorSize<VmaAllocator>());
+        features = m_infos->getDeviceFeaturesObject();
     }
 
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
@@ -159,11 +160,11 @@ namespace vkn
         VknPhysicalDevice *physicalDevice = getListElement(0, m_physicalDevices);
         if (m_createdVkDevice)
             throw std::runtime_error("Device already created.");
-        if (!physicalDevice->areQueuePrioritiesfiled())
+        if (!physicalDevice->areQueuePrioritiesFiled())
             physicalDevice->fileDeviceQueuePrioritiesDefault(); // Subtle initiation of chain-reaction default configurations
         physicalDevice->fileQueueCreateInfos();
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice->getPhysicalDeviceAbsIdx());
-        m_infos->fileDeviceFeatures(features);
+        m_infos->fileDeviceFeaturesInfo();
 
         m_infos->fileDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{

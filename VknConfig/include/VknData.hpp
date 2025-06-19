@@ -27,7 +27,7 @@ namespace vkn
     const uint_least16_t MAX_POS = 255u;
 
     template <typename T>
-    T *getListElement(uint_least32_t idx, std::list<T> &objList)
+    T *getListElement(uint_fast32_t idx, std::list<T> &objList)
     {
         if (idx + 1u > objList.size())
             throw std::runtime_error("Index out of range.");
@@ -476,7 +476,7 @@ namespace vkn
                 this, startPos, length};
         }
 
-        VecDataType &append(VecDataType newElement)
+        VecDataType &appendOne(VecDataType newElement)
         {
             this->grow(this->getSize() + 1u);
             m_positions[m_dataSize - 1u] = this->getNextPosition();
@@ -484,7 +484,7 @@ namespace vkn
             return m_data[m_dataSize - 1u];
         }
 
-        VknVectorIterator<VecDataType> append(VknVector<VecDataType> &newElements)
+        VknVectorIterator<VecDataType> appendVector(VknVector<VecDataType> &newElements)
         {
             uint_fast32_t i{0u};
             uint_fast32_t oldSize{this->getSize()};
@@ -498,7 +498,7 @@ namespace vkn
             return VknVectorIterator(this, oldSize, m_dataSize - oldSize);
         }
 
-        VecDataType *append(VecDataType *arr, uint_fast32_t length)
+        VecDataType *appendArray(VecDataType *arr, uint_fast32_t length)
         {
             uint_fast32_t i{0u};
             uint_fast32_t oldSize{this->getSize()};
@@ -512,7 +512,7 @@ namespace vkn
             return &m_data[oldSize];
         }
 
-        VecDataType *append(VecDataType value, uint_fast32_t length)
+        VecDataType *appendRepeat(VecDataType value, uint_fast32_t length)
         {
             uint_fast32_t oldSize{this->getSize()};
             uint_fast32_t i{oldSize};
@@ -595,8 +595,9 @@ namespace vkn
         void swap(uint_fast32_t position1, uint_fast32_t position2)
         {
             if (position1 > MAX_POS || position2 > MAX_POS)
+                throw std::runtime_error("Position out of range!");
 
-                std::optional<uint_fast8_t> idx1{};
+            std::optional<uint_fast8_t> idx1{};
             std::optional<uint_fast8_t> idx2{};
             uint_fast32_t i{0u};
 
@@ -607,11 +608,11 @@ namespace vkn
                 else if (m_positions[i] == position2)
                     idx2 = i;
             }
-            if (!idx1.has_value() || !idx2.has_value())
-                throw std::runtime_error("Elements for swap not found!");
-            i = m_positions[idx1.value()]; // reuse i as a temp var
-            m_positions[idx1.value()] = m_positions[idx2.value()];
-            m_positions[idx2.value()] = i;
+
+            if (idx1.has_value())
+                m_positions[idx1.value()] = position2;
+            if (idx2.has_value())
+                m_positions[idx2.value()] = position1;
         }
 
         VecDataType *getData(uint_fast32_t numNewElements = 0u)
@@ -1183,7 +1184,7 @@ namespace vkn
         SpaceDataType &append(SpaceDataType element)
         {
             this->dataLeafTest();
-            return m_data.append(element);
+            return m_data.appendOne(element);
         }
         SpaceDataType &insert(SpaceDataType element, uint_fast32_t position)
         {

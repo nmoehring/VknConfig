@@ -43,7 +43,7 @@ namespace vkn
         defaultState.dstAlphaBlendFactor = dstAlphaBlendFactor;
         defaultState.alphaBlendOp = alphaBlendOp;
         defaultState.colorWriteMask = colorWriteMask;
-        m_attachmentBlendStates.append(defaultState);
+        m_attachmentBlendStates.appendOne(defaultState);
     }
 
     void VknColorBlendState::_fileColorBlendStateCreateInfo()

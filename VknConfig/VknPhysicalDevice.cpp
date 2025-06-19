@@ -2,27 +2,41 @@
 
 namespace vkn
 {
+    // Static member definitions
     VknVector<VkPhysicalDeviceProperties> VknPhysicalDevice::s_properties{};
+    VknVector<uint_fast32_t> VknPhysicalDevice::s_deviceQueuePropStartPos{};
+    VknVector<uint_fast32_t> VknPhysicalDevice::s_numQueueFamilies{};
+    std::list<VknQueueFamily> VknPhysicalDevice::s_queues{};
+    uint_fast32_t s_physDevCount{0u};
+    bool VknPhysicalDevice::s_requestedQueues{false};
     bool VknPhysicalDevice::s_enumeratedPhysicalDevices{false};
 
     VknPhysicalDevice::VknPhysicalDevice(
         VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
+        ++s_physDevCount;
     }
 
     VknPhysicalDevice::~VknPhysicalDevice()
     {
-        s_enumeratedPhysicalDevices = false;
-        s_properties.clear();
+        if (--s_physDevCount == 0)
+        {
+            s_properties.clear();
+            s_deviceQueuePropStartPos.clear();
+            s_numQueueFamilies.clear();
+            s_queues.clear();
+            s_requestedQueues = false;
+            s_enumeratedPhysicalDevices = false;
+        }
     }
 
     void VknPhysicalDevice::fileDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities)
     {
         if (m_filedQueuePriorities)
             throw std::runtime_error("Already filed queue priorities.");
-        if (!m_selectedQueues)
-            this->selectQueues(true);
+        if (!m_selectedPhysicalDevice)
+            throw std::runtime_error("Physical device not selected before setting queue priorities.");
         m_infos->fileDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
         m_filedQueuePriorities = true;
     }
@@ -31,73 +45,62 @@ namespace vkn
     {
         if (m_filedQueuePriorities)
             throw std::runtime_error("Already filed queue priorities.");
-        if (!m_selectedQueues)
-            this->selectQueues(true);
-        for (int i = 0; i < m_queues.size(); ++i)
+        if (!m_selectedPhysicalDevice)
+            this->selectPhysicalDevice();
+        uint_fast32_t startPos{s_deviceQueuePropStartPos(m_relIdxs.get<VkPhysicalDevice>())};
+        VknVector<float> queueFamilyPriorities{};
+        for (uint_fast32_t i = startPos; i < s_numQueueFamilies(m_relIdxs.get<VkPhysicalDevice>()) + startPos; ++i)
         {
-            VknVector<float> newVec{};
-            newVec.append(1.0f, getListElement<VknQueueFamily>(i, m_queues)->getNumSelected());
+            queueFamilyPriorities.clear();
+            queueFamilyPriorities.appendRepeat(1.0f, getListElement<VknQueueFamily>(i, s_queues)->getNumSelected());
             m_infos->fileDeviceQueuePriorities(
-                m_relIdxs, i, newVec);
+                m_relIdxs, i, queueFamilyPriorities);
         }
         m_filedQueuePriorities = true;
     }
 
     void VknPhysicalDevice::requestQueueFamilyProperties()
     {
-        if (m_requestedQueues)
+        if (s_requestedQueues)
             throw std::runtime_error("Queue properties already requested.");
 
-        size_t oldVectorSize{m_engine->getVectorSize<VkQueueFamilyProperties>()};
-        uint32_t propertyCount{0};
-        vkGetPhysicalDeviceQueueFamilyProperties(
-            m_engine->getObject<VkPhysicalDevice>(m_absIdxs),
-            &propertyCount, VK_NULL_HANDLE);
-        if (propertyCount == 0)
-            throw std::runtime_error("No available queue families found.");
+        uint_fast32_t familyPropertyCount{0};
+        VknVector<VkPhysicalDevice> &physDevices = m_engine->getVector<VkPhysicalDevice>();
+        for (uint_fast32_t i = 0; i < physDevices.getSize(); ++i)
+        {
+            vkGetPhysicalDeviceQueueFamilyProperties(physDevices(i), &familyPropertyCount, nullptr);
+            if (familyPropertyCount == 0)
+                throw std::runtime_error("No available queue families found.");
 
-        for (int i = 0; i < propertyCount; ++i)
-            m_engine->addNewVknObject<VknQueueFamily, VkQueueFamilyProperties, VkDevice>(
-                i, m_queues, m_relIdxs, m_absIdxs, m_infos);
+            s_deviceQueuePropStartPos.appendOne(m_engine->addNewVknObjects<VknQueueFamily, VkQueueFamilyProperties, VkDevice>(
+                familyPropertyCount, s_queues, m_relIdxs, m_absIdxs, m_infos));
+            s_numQueueFamilies.appendOne(familyPropertyCount);
 
-        VknVectorIterator<VkQueueFamilyProperties> queuesIterator{
-            m_engine->getVectorSlice<VkQueueFamilyProperties>(oldVectorSize, propertyCount)};
+            VknVectorIterator<VkQueueFamilyProperties> queuesIterator{
+                m_engine->getVectorSlice<VkQueueFamilyProperties>(s_deviceQueuePropStartPos(i), familyPropertyCount)};
 
-        vkGetPhysicalDeviceQueueFamilyProperties(
-            *this->getVkPhysicalDevice(),
-            &propertyCount,
-            queuesIterator.getData());
-        m_requestedQueues = true;
+            vkGetPhysicalDeviceQueueFamilyProperties(
+                m_engine->getObject<VkPhysicalDevice>(i),
+                &familyPropertyCount,
+                queuesIterator.getData());
+
+            for (auto &queue : s_queues)
+                queue.setNumSelected(queue.getNumAvailable());
+        }
+        s_requestedQueues = true;
     }
 
     void VknPhysicalDevice::fileQueueCreateInfos()
     {
         if (m_filedQueueCreateInfos)
             throw std::runtime_error("Already filed queue create infos.");
-        for (int i = 0; i < m_queues.size(); ++i)
+        for (int i = 0; i < s_queues.size(); ++i)
         {
-            VknQueueFamily *fam = getListElement<VknQueueFamily>(i, m_queues);
+            VknQueueFamily *fam = getListElement<VknQueueFamily>(i, s_queues);
             m_infos->fileDeviceQueueCreateInfo(
                 m_relIdxs, i, fam->getNumSelected(), fam->getFlags());
         }
         m_filedQueueCreateInfos = true;
-    }
-
-    void VknPhysicalDevice::selectQueues(bool chooseAllAvailableQueues)
-    {
-        if (m_selectedQueues)
-            throw std::runtime_error("Queues already selected.");
-        if (!m_selectedPhysicalDevice)
-            this->selectPhysicalDevice();
-
-        for (int i = 0; i < m_queues.size(); ++i)
-        {
-            int numSelected = 1;
-            if (chooseAllAvailableQueues)
-                numSelected = getListElement<VknQueueFamily>(i, m_queues)->getNumAvailable();
-            getListElement<VknQueueFamily>(i, m_queues)->setNumSelected(numSelected);
-        }
-        m_selectedQueues = true;
     }
 
     void VknPhysicalDevice::enumeratePhysicalDevices()
@@ -127,8 +130,10 @@ namespace vkn
     {
         if (m_selectedPhysicalDevice)
             throw std::runtime_error("Already selected a physical device.");
-
-        this->enumeratePhysicalDevices();
+        if (!s_enumeratedPhysicalDevices)
+            this->enumeratePhysicalDevices();
+        if (!s_requestedQueues)
+            this->requestQueueFamilyProperties();
 
         uint_fast32_t bestScore{0};
         uint_fast32_t bestIdx{UINT32_MAX};
@@ -181,7 +186,6 @@ namespace vkn
         // If VknDevice stores VknPhysicalDevice in a list, this index would be its position in that list.
         // For now, let's assume it's always the first/only one for its parent VknDevice.
         m_selectedPhysicalDevice = true;
-        this->requestQueueFamilyProperties();
 
         return this->getVkPhysicalDevice();
     }
@@ -230,12 +234,12 @@ namespace vkn
 
     VknQueueFamily &VknPhysicalDevice::getQueue(int idx)
     {
-        if (!m_selectedQueues)
-            throw std::runtime_error("Queues not selected before getting queue.");
-        return *getListElement<VknQueueFamily>(idx, m_queues);
+        if (!m_selectedPhysicalDevice)
+            throw std::runtime_error("Physical device not selected before getting queue.");
+        return *getListElement<VknQueueFamily>(idx, s_queues);
     }
 
-    bool VknPhysicalDevice::areQueuePrioritiesfiled()
+    bool VknPhysicalDevice::areQueuePrioritiesFiled()
     {
         return m_filedQueuePriorities;
     }

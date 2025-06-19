@@ -30,6 +30,7 @@ namespace vkn
         GLFWwindow *m_window{nullptr};
 
         // State
+        static bool s_initialized;
         bool m_windowCreated{false};
         bool m_active{false}; // True if window is not minimized
         static uint32_t s_windowCount;

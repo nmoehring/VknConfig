@@ -76,11 +76,9 @@ namespace vkn
         VkPhysicalDeviceLimits *getLimits();
         void fileDeviceQueuePriorities(uint32_t queueFamilyIdx, VknVector<float> priorities);
         void fileDeviceQueuePrioritiesDefault();
-        bool areQueuesSelected() { return m_selectedQueues; }
-        bool areQueuePrioritiesfiled();
-        void selectQueues(bool chooseAllAvailableQueues);
-        int getNumQueueFamilies() { return m_queues.size(); }
-        std::list<VknQueueFamily> &getQueues() { return m_queues; }
+        bool areQueuePrioritiesFiled();
+        int getNumQueueFamilies() { return s_queues.size(); }
+        std::list<VknQueueFamily> &getQueues() { return s_queues; }
         VknQueueFamily &getQueue(int idx);
         VknIdxs getPhysicalDeviceAbsIdxs() { return m_absIdxs; }
         VkPhysicalDeviceType getGPUType();
@@ -94,14 +92,15 @@ namespace vkn
 
         // Members
         static VknVector<VkPhysicalDeviceProperties> s_properties;
-        std::list<VknQueueFamily> m_queues{}; // Vector fine, this shouldn't change.
+        static std::list<VknQueueFamily> s_queues; // Vector fine, this shouldn't change.
+        static VknVector<uint_fast32_t> s_deviceQueuePropStartPos;
+        static VknVector<uint_fast32_t> s_numQueueFamilies;
 
         // State
-        uint32_t m_startAbsIdx{0};
         bool m_selectedPhysicalDevice{false};
         static bool s_enumeratedPhysicalDevices;
-        bool m_requestedQueues{false};
-        bool m_selectedQueues{false};
+        static bool s_requestedQueues;
+        static uint_fast32_t physDevCount;
         bool m_filedQueueCreateInfos{false};
         bool m_filedQueuePriorities{false};
 

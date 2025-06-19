@@ -6,16 +6,6 @@
 
 namespace vkn
 {
-    class VknFeatures
-    {
-    public:
-        VknFeatures() = default;
-        VkPhysicalDeviceFeatures2 createInfo();
-
-        VknFeatures1 features1{};
-        VknFeatures2 features2{};
-    };
-
     class VknFeatures1
     {
         std::unordered_map<std::string, bool> m_features{};
@@ -36,7 +26,7 @@ namespace vkn
         bool drawIndirectFirstInstance(bool toggle = false);
         bool depthClamp(bool toggle = false);
         bool depthBiasClamp(bool toggle = false);
-        bool fileModeNonSolid(bool toggle = false);
+        bool fillModeNonSolid(bool toggle = false);
         bool depthBounds(bool toggle = false);
         bool wideLines(bool toggle = false);
         bool largePoints(bool toggle = false);
@@ -99,5 +89,15 @@ namespace vkn
 
         // Enable Protected Memory.
         bool protectedMemory(bool toggle = false);
+    };
+
+    class VknFeatures
+    {
+    public:
+        VknFeatures() = default;
+        VkPhysicalDeviceFeatures2 createInfo();
+
+        VknFeatures1 features1{};
+        VknFeatures2 features2{};
     };
 }

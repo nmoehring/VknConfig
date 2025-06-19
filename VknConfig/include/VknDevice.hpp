@@ -63,14 +63,12 @@ namespace vkn
         VknDevice() = default;
         VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
 
-        // Features
-        VknFeatures features{};
-
         // Members
         VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
         VknCommandPool *addCommandPool(uint32_t newCommandPoolIdx);
         VmaAllocator *addAllocator();
+        VknFeatures *features{nullptr};
 
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);

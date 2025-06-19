@@ -14,7 +14,7 @@ namespace vkn
         VkShaderStageFlags stageFlags, const VkSampler *pImmutableSamplers)
     {
         VkDescriptorSetLayoutBinding &descSetLayoutBinding =
-            m_bindings.append(VkDescriptorSetLayoutBinding{});
+            m_bindings.appendOne(VkDescriptorSetLayoutBinding{});
         descSetLayoutBinding.binding = binding;
         descSetLayoutBinding.descriptorType = descriptorType;
         descSetLayoutBinding.descriptorCount = descriptorCount;

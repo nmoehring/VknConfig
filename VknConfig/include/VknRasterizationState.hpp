@@ -78,7 +78,7 @@ namespace vkn
         VknInfos *m_infos;
 
         // Members
-        VkPolygonMode m_polygonMode{VK_POLYGON_MODE_file};
+        VkPolygonMode m_polygonMode{VK_POLYGON_MODE_FILL};
         VkCullModeFlags m_cullMode{VK_CULL_MODE_BACK_BIT};
         VkFrontFace m_frontFace{VK_FRONT_FACE_CLOCKWISE};
         float m_lineWidth{1.0};
