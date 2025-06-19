@@ -5,6 +5,7 @@ message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CM
 
 # Option to enable/disable tests, can be configured from Android Studio's build.gradle
 option(ENABLE_TESTING "Enable GTest for the project" ON)
+set(ENABLE_SANITIZER TRUE)
 option(COMPILE_SHADERS "Compile shaders" OFF)
 
 # --- Platform detection ---
@@ -131,6 +132,10 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
 elseif(CMAKE_BUILD_TYPE MATCHES Debug)
     if(MSVC)
         target_compile_options(VknConfig_args INTERFACE /Od /Zi) # MSVC Debug optimization
+
+        if(ENABLE_SANITIZER)
+            target_compile_options(VknConfig_args INTERFACE /fsanitize=address)
+        endif()
     elseif(CMAKE_CXX_COMPILER_ID MATCHES " GNU ")
         target_compile_options(VknConfig_args INTERFACE -Og -g) # GCC Debug optimization
     elseif(CMAKE_CXX_COMPILER_ID MATCHES " Clang ")

@@ -469,8 +469,8 @@ namespace vkn
 
         VknVectorIterator<VecDataType> getSlice(uint_fast32_t startPos, uint_fast32_t length)
         {
-            if (startPos + length > m_posSize) // Also catches if startPos is too large
-                throw std::runtime_error("Slice range exceeds logical vector size.");
+            if (startPos + length > MAX_DATA_SIZE) // Also catches if startPos is too large
+                throw std::runtime_error("Slice range exceeds maximum data size.");
 
             return VknVectorIterator<VecDataType>{
                 this, startPos, length};

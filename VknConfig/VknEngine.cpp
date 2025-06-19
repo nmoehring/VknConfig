@@ -62,5 +62,17 @@ namespace vkn
 
         if (this->exists<uint32_t>())
             this->deleteVector<uint32_t>(); // i think it was num command buffers for each command pool
+
+        delete static_cast<VknVector<size_t> *>(m_emptyVec);
+        m_emptyVec = nullptr;
+
+        if (!m_objectVectors.empty())
+            throw std::runtime_error("Some keys were not deleted from m_objectVectors.");
+
+        if (!m_parentVectors.empty())
+            throw std::runtime_error("Some keys were not deleted from m_parentVectors.");
+
+        if (!m_allocations.empty())
+            throw std::runtime_error("Some keys were not deleted from m_allocations.");
     }
 }

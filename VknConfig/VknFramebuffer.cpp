@@ -85,9 +85,10 @@ namespace vkn
             return;
         }
 
-        m_imageViewStartIdx = m_engine->addNewVknObjects<VknImageView, VkImageView, VkDevice>(
-            descriptions->getDataSize(), m_attachViews, m_relIdxs, m_absIdxs, m_infos);
-        if (descriptions->getDataSize() > 1)
+        if (!m_recreatingFramebuffer)
+            m_imageViewStartIdx = m_engine->addNewVknObjects<VknImageView, VkImageView, VkDevice>(
+                descriptions->getDataSize(), m_attachViews, m_relIdxs, m_absIdxs, m_infos);
+        if ((this->hasSwapchainImage() && descriptions->getDataSize() > 1) || !this->hasSwapchainImage())
             m_imageStartIdx = m_engine->addNewVknObjects<VknImage, VkImage, VkDevice>(
                 this->hasSwapchainImage() ? descriptions->getDataSize() - 1u : descriptions->getDataSize(),
                 m_attachImages, m_relIdxs, m_absIdxs, m_infos);

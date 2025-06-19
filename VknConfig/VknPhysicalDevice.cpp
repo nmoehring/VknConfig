@@ -72,7 +72,7 @@ namespace vkn
             if (familyPropertyCount == 0)
                 throw std::runtime_error("No available queue families found.");
 
-            s_deviceQueuePropStartPos.appendOne(m_engine->addNewVknObjects<VknQueueFamily, VkQueueFamilyProperties, VkDevice>(
+            s_deviceQueuePropStartPos.appendOne(m_engine->addNewVknObjects<VknQueueFamily, VkQueueFamilyProperties>(
                 familyPropertyCount, s_queues, m_relIdxs, m_absIdxs, m_infos));
             s_numQueueFamilies.appendOne(familyPropertyCount);
 

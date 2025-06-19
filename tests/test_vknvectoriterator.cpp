@@ -50,11 +50,14 @@ TEST_F(VknVectorIteratorTest, Constructor_InvalidRange_Throws)
 {
     PopulateVector({{0, 10}, {1, 20}}); // Vector has 2 elements (physical indices 0, 1)
     // Try to create a slice starting beyond the end
-    ASSERT_THROW(vec_int.getSlice(2, 1), std::runtime_error);
+    ASSERT_NO_THROW(vec_int.getSlice(2, 1));
+    ASSERT_TRUE(vec_int.getSlice(2, 1).isEmpty());
     // Try to create a slice that goes beyond the end
-    ASSERT_THROW(vec_int.getSlice(1, 2), std::runtime_error);
+    ASSERT_NO_THROW(vec_int.getSlice(1, 2));
+    ASSERT_EQ(vec_int.getSlice(1, 2).getSize(), 1);
     // Try to create a slice with length 0 but from an empty vector (your getSlice throws)
-    // ASSERT_THROW(vkn::VknVector<int, uint32_t>().getSlice(0, 0), std::runtime_error); // This tests getSlice itself
+    ASSERT_NO_THROW(vkn::VknVector<int>().getSlice(0, 0)); // This tests getSlice itself
+    ASSERT_TRUE(vkn::VknVector<int>().getSlice(0, 0).isEmpty());
 }
 
 TEST_F(VknVectorIteratorTest, Constructor_ZeroLengthSlice_IsEmpty)

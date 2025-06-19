@@ -7,7 +7,7 @@ namespace vkn
         : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
     {
         m_instanceLock = this;
-        VknPhysicalDevice &physicalDevice = m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice, VkInstance>(
+        VknPhysicalDevice &physicalDevice = m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice>(
             m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice.getPhysicalDeviceAbsIdxs().get<VkPhysicalDevice>());
         m_absIdxs.add<VmaAllocator>(m_engine->getVectorSize<VmaAllocator>());

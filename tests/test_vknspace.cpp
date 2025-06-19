@@ -291,7 +291,9 @@ TEST_F(VknSpaceTest, GetSubspaceSlice_Empty)
 
 TEST_F(VknSpaceTest, GetSubspaceSlice_OutOfBounds_Throws)
 {
-    space_int_default[0];                                                       // One subspace at physical index 0
-    ASSERT_THROW(space_int_default.getSubspaceSlice(0, 2), std::runtime_error); // Length too long
-    ASSERT_THROW(space_int_default.getSubspaceSlice(1, 1), std::runtime_error); // Start too far
+    space_int_default[0];                                             // One subspace at physical index 0
+    ASSERT_NO_THROW(space_int_default.getSubspaceSlice(0, 2));        // Length too long
+    ASSERT_NO_THROW(space_int_default.getSubspaceSlice(1, 1));        // Start too far
+    ASSERT_EQ(space_int_default.getSubspaceSlice(0, 2).getSize(), 1); // Length too long
+    ASSERT_TRUE(space_int_default.getSubspaceSlice(1, 1).isEmpty());  // Start too far
 }
