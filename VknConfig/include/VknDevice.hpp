@@ -53,6 +53,7 @@
 #include "VknSwapchain.hpp"
 #include "VknData.hpp"
 #include "VknCommandPool.hpp"
+#include "VknBuffer.hpp"
 
 namespace vkn
 {
@@ -69,11 +70,18 @@ namespace vkn
         VknCommandPool *addCommandPool(uint32_t newCommandPoolIdx);
         VmaAllocator *addAllocator();
         VknFeatures *features{nullptr};
+        void addVertexBuffer(uint_fast32_t size);
+        void addIndexBuffer(uint_fast32_t size);
+        void addCpuUniformBuffer(uint_fast32_t size);
+        void addGpuUniformBuffer(uint_fast32_t size);
+        void addStorageBuffer(uint_fast32_t size);
+        void addIndirectBuffer(uint_fast32_t size);
 
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);
         uint32_t findGraphicsQueue();
         void addExtension(std::string extension);
+        void setPresentable(bool presentable) { m_presentable = presentable; }
 
         // Create
         VknResult createDevice();
@@ -106,6 +114,12 @@ namespace vkn
         std::list<VknPhysicalDevice> m_physicalDevices{};
         std::list<VknCommandPool> m_commandPools{};
         VkQueue m_lastUsedGraphicsQueue{}; // Store graphics queue handle
+        std::list<VertexBuffer> m_vertexBuffers;
+        std::list<IndexBuffer> m_indexBuffer;
+        std::list<CpuUniformBuffer> m_cpuUniformBuffer;
+        std::list<GpuUniformBuffer> m_gpuUniformBuffer;
+        std::list<StorageBuffer> m_storageBuffer;
+        std::list<IndirectBuffer> m_indirectBuffer;
 
         // Params
         const char *const *m_extensions{nullptr};
@@ -122,6 +136,7 @@ namespace vkn
         bool m_swapchainExtensionEnabled{false};
         bool m_allocatorAdded{false};
         bool m_addedVmaFunctions{false};
+        bool m_presentable{false};
 
         // For correct sync object retrieval
         uint32_t m_imageAvailableSemaphoreStartIdx{0};

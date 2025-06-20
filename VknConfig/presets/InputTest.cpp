@@ -2,10 +2,10 @@
 
 namespace vkn
 {
-    bool noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
+    bool inputTestConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
     {
         // Shallow Config members
-        config->setAppName("NoInputsTest");
+        config->setAppName("InputTest");
         config->setEngineName("MinVknConfig");
         config->addWindow();
         config->createInstance();
@@ -70,9 +70,6 @@ namespace vkn
         uint32_t queueFamilyIdx = device->findGraphicsQueue();
         commandPool->createCommandPool(queueFamilyIdx);
         commandPool->createCommandBuffers(swapchain->getNumImages());
-
-        // Set shader vertices
-        config->setNumHardCodedVertices(3);
 
         // Return true - ready to render
         return true;

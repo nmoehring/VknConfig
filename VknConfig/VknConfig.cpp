@@ -43,8 +43,11 @@ namespace vkn
     {
         if (!m_createdInstance)
             throw std::runtime_error("Can't add a device until an instance is created.");
+        if (!m_presentable.has_value())
+            throw std::runtime_error("No surface added. Call setNotPresentable() if there is to be no presentation.");
         return &m_engine->addNewVknObject<VknDevice, VkDevice, VkInstance>(
             deviceIdx, m_devices, m_relIdxs, m_absIdxs, m_infos);
+        m_devices.back().setPresentable(m_presentable.value());
     }
 
     void VknConfig::fileAppInfo()
@@ -154,6 +157,8 @@ namespace vkn
 
         getPlatformSpecificSurface(
             surface, surfaceIdx, m_engine->getObject<VkInstance>(0), m_vknWindow);
+
+        m_presentable = true;
 
         return surface;
     }

@@ -79,8 +79,6 @@ namespace vkn
         void addInstanceExtension(std::string &extension);
         void addLayer(std::string &layer);
         VkSurfaceKHR *createSurface(uint32_t surfaceIdx);
-        VkSurfaceKHR *createWindowSurface_GLFW(uint32_t surfaceIdx);
-        VkSurfaceKHR *createWindowSurface_Android(uint32_t surfaceIdx);
         void setValidationEnabled() { m_validationLayerAdded = true; }
         VkDebugUtilsMessengerCreateInfoEXT &populateDebugMessengerCreateInfo();
         void setInstanceCreateFlags(VkInstanceCreateFlags flags) { m_flags = flags; }
@@ -88,6 +86,7 @@ namespace vkn
         void setEngineName(std::string engineName);
         void setApiVersion(unsigned int apiVersion);
         void setNumHardCodedVertices(uint32_t numVertices) { m_numHardCodedVertices = numVertices; }
+        void setNotPresentable() { m_presentable = false; }
 
         // Create
         VknResult createInstance();
@@ -139,9 +138,9 @@ namespace vkn
         bool m_validationLayerAdded{false};
         bool m_createdSurface{false};
         bool m_setPlatformExtensions{false};
+        std::optional<bool> m_presentable{};
 
-        void
-        fileAppInfo();
+        void fileAppInfo();
         void fileInstanceCreateInfo();
     };
 

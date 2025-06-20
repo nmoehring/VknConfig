@@ -240,4 +240,35 @@ namespace vkn
         res = vmaCreateAllocator(&allocatorInfo, &allocator);
         return &allocator;
     }
+
+    void VknDevice::addVertexBuffer(uint_fast32_t size)
+    {
+        m_vertexBuffers.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+    }
+
+    void VknDevice::addIndexBuffer(uint_fast32_t size)
+    {
+        m_indexBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+    }
+
+    void VknDevice::addCpuUniformBuffer(uint_fast32_t size)
+    {
+        m_cpuUniformBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+    }
+
+    void VknDevice::addGpuUniformBuffer(uint_fast32_t size)
+    {
+        m_gpuUniformBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+    }
+
+    void VknDevice::addStorageBuffer(uint_fast32_t size)
+    {
+        m_storageBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+    }
+
+    void VknDevice::addIndirectBuffer(uint_fast32_t size)
+    {
+        m_indirectBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+    }
+
 } // namespace vkn
