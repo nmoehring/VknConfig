@@ -243,7 +243,9 @@ namespace vkn
 
     void VknDevice::addVertexBuffer(uint_fast32_t size)
     {
-        m_vertexBuffers.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+        m_engine->addNewVknObject<VknVertexBuffer, VkBuffer, VkDevice>(
+            m_vertexBuffers.size(), m_vertexBuffers, m_relIdxs, m_absIdxs, m_infos);
+        m_vertexBuffers.setSize(size);
     }
 
     void VknDevice::addIndexBuffer(uint_fast32_t size)

@@ -29,12 +29,11 @@ namespace vkn
         // If VknDevice has a getVmaAllocator() method:
         // VmaAllocator vmaAllocator = m_engine->getDevice(m_absIdxs.get<VkDevice>())->getVmaAllocator();
         // For now, let's assume it's directly accessible via m_engine->getObject
-        VmaAllocator vmaAllocator = m_engine->getObject<VmaAllocator>(m_absIdxs);
 
-        VknResult res{vmaCreateImage(vmaAllocator,
+        VknResult res{vmaCreateImage(m_engine->getObject<VmaAllocator>(m_absIdxs),
                                      imageInfo, &allocInfo,
                                      &m_engine->getObject<VkImage>(m_absIdxs), // VknEngine stores the VkImage handle
-                                     &m_allocation,
+                                     &m_engine->addNewAllocation<VkImage>(m_absIdxs),
                                      nullptr), // Optional: VmaAllocationInfo
                       "VMA Create Image"};
 

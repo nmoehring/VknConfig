@@ -122,6 +122,8 @@ namespace vkn
             return "allocator";
         else if constexpr (std::is_same_v<T, VmaAllocation>)
             return "allocation";
+        else if constexpr (std::is_same_v<T, VkBuffer>)
+            return "buffer";
         else if constexpr (std::is_same_v<T, void>)
             return "VOID";
         else
@@ -419,6 +421,12 @@ namespace vkn
         VmaAllocation *getAllocation(uint_fast32_t pos)
         {
             return &(this->getAllocationVector<VkResourceType>()(pos));
+        }
+
+                template <typename VkResourceType>
+        VmaAllocation *getAllocation(VknIdxs &absIdxs)
+        {
+            return &(this->getAllocationVector<VkResourceType>()(absIdxs.get<VmaAllocation>()));
         }
 
         VkInstance *addVkInstance(VknIdxs &relIdxs, VknIdxs &absIdxs)

@@ -41,10 +41,10 @@ namespace vkn
         void demolish();
 
         VkBuffer getVkBuffer() const { return m_vkBuffer; }
-        VmaAllocation getVmaAllocation() const { return m_allocation; }
         VkDeviceSize getSize() const { return m_size; }
-        bool isHostVisible() const;
+        void *getDataArea();
         void *getMappedData() const { return m_mappedData; } // Valid if VMA_ALLOCATION_CREATE_MAPPED_BIT was used
+        void setSize(uint32_t size);
 
         // Manual mapping/unmapping if not persistently mapped
         void *map();
@@ -69,18 +69,26 @@ namespace vkn
         VknInfos *m_infos = nullptr; // For accessing VkBufferCreateInfo if needed, though VMA handles most
 
         // Params
-        // VkBufferCreateFlags m_flags = 0;
-        // VkDeviceSize m_size = 4096;                                                                        // Default to a 4KB buffer, adjust as needed
-        // VkBufferUsageFlags m_usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT; // Suitable for vertex data & uploads
+        VkDeviceSize m_size = 0;
+        VkMemoryPropertyFlags m_memFlags;
+        VmaAllocationInfo m_allocInfo;
 
+        // Members
         VkBuffer m_vkBuffer = VK_NULL_HANDLE;
         VmaAllocation m_allocation = VK_NULL_HANDLE;
-        VkDeviceSize m_size = 0;
-        void *m_mappedData = nullptr; // Stores pointer if persistently mapped by VMA
-        bool m_isPersistentlyMapped = false;
+        void *m_mappedData{nullptr}; // Stores pointer if persistently mapped by VMA
+        VknStagingBuffer *m_stagingBuffer{nullptr};
 
-        // VkBufferCreateInfo *fileBufferCreateInfo();
-        // VmaAllocationCreateInfo *fileAllocationCreateInfo();
+        // State
+        bool m_needStagingBuffer{false};
+        bool m_manualMapping{true};
+        bool m_isPersistentlyMapped{false};
+        bool m_mustFlushAndInvalidate{true};
+        bool m_setSize{false};
+        bool m_createdBuffer{false};
+        VknResult m_mapResult{"Mapping buffer memory."};
+        VknResult m_flushResult{"Flushing buffer memory."};
+        VknResult m_invalidateResult{"Invalidating buffer memory."};
     };
 
     /**
@@ -88,10 +96,10 @@ namespace vkn
      * Typically resides in device-local memory for fast GPU access.
      * Data is usually uploaded via a staging buffer.
      */
-    class VertexBuffer : public VknBuffer
+    class VknVertexBuffer : public VknBuffer
     {
     public:
-        VertexBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknVertexBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -108,10 +116,10 @@ namespace vkn
      * Typically resides in device-local memory for fast GPU access.
      * Data is usually uploaded via a staging buffer.
      */
-    class IndexBuffer : public VknBuffer
+    class VknIndexBuffer : public VknBuffer
     {
     public:
-        IndexBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknIndexBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -127,10 +135,10 @@ namespace vkn
      * This implementation is optimized for CPU updates, making it host-visible and persistently mapped.
      * For UBOs that are rarely updated and primarily GPU-read, use GpuUniformBuffer
      */
-    class CpuUniformBuffer : public VknBuffer
+    class VknCpuUniformBuffer : public VknBuffer
     {
     public:
-        CpuUniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknCpuUniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -142,10 +150,10 @@ namespace vkn
     };
 
     // Doesn't change much, so don't plan to update often
-    class GpuUniformBuffer : public VknBuffer
+    class VknGpuUniformBuffer : public VknBuffer
     {
     public:
-        GpuUniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknGpuUniformBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -160,10 +168,10 @@ namespace vkn
      * between the CPU and GPU, or between GPU resources that aren't directly compatible.
      * This implementation is for CPU-to-GPU transfers (uploads).
      */
-    class StagingBuffer : public VknBuffer
+    class VknStagingBuffer : public VknBuffer
     {
     public:
-        StagingBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknStagingBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -182,10 +190,10 @@ namespace vkn
      * Useful for compute shaders, GPU-driven rendering techniques, and large data sets.
      * Typically resides in device-local memory.
      */
-    class StorageBuffer : public VknBuffer
+    class VknStorageBuffer : public VknBuffer
     {
     public:
-        StorageBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknStorageBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(
@@ -202,10 +210,10 @@ namespace vkn
      * Allows the GPU to determine rendering or compute parameters.
      * Often populated by compute shaders.
      */
-    class IndirectBuffer : public VknBuffer
+    class VknIndirectBuffer : public VknBuffer
     {
     public:
-        IndirectBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
+        VknIndirectBuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos, VkDeviceSize size)
             : VknBuffer(engine, relIdxs, absIdxs, infos)
         {
             create(

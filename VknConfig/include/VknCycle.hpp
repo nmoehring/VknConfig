@@ -38,8 +38,8 @@ namespace vkn
         VkSurfaceCapabilitiesKHR m_capabilities{};
 
         // Params
-        uint32_t MAX_FRAMES_IN_FLIGHT = 0;      // Should match the value used in createSyncObjects
-        uint64_t m_defaultTimeout = UINT64_MAX; // For vkAcquireNextImageKHR, timeout is uint64_t
+        uint_fast32_t MAX_FRAMES_IN_FLIGHT = 0;      // Should match the value used in createSyncObjects
+        uint_fast64_t m_defaultTimeout = UINT64_MAX; // For vkAcquireNextImageKHR, timeout is uint64_t
         int m_width{0};
         int m_height{0};
         VkExtent2D m_extent{0, 0};
@@ -59,13 +59,13 @@ namespace vkn
         VkResult m_presentResult{};
 
         // State
-        uint32_t m_currentFrame = 0;
-        uint32_t m_imageIndex;
+        uint_fast32_t m_currentFrame = 0;
+        uint_fast32_t m_imageIndex;
         std::vector<VkSemaphore> m_signalSemaphores;
         std::vector<VkFence *> m_imagesInFlight; // Fence for each swapchain image
         bool m_pipelineExpectsVertexInputs{false};
         VknIdxs m_devRelIdxs;
-        uint32_t verticesDrawnLastFrame{0};
+        uint_fast32_t verticesDrawnLastFrame{0};
         bool m_configLoaded{false};
     };
 }

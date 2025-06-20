@@ -38,6 +38,8 @@ namespace vkn
 
         this->demolishObjects<VkImageView, VkDevice>(vkDestroyImageView);
         this->demolishAllocations<VkImage>(vmaDestroyImage);
+        this->demolishAllocations<VkBuffer>(vmaDestroyBuffer);
+
         this->demolishCommandBuffers();
         this->demolishObjects<VkCommandPool, VkDevice>(vkDestroyCommandPool);
         this->demolishObjects<VkSwapchainKHR, VkDevice>(vkDestroySwapchainKHR);
