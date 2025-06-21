@@ -86,28 +86,22 @@ namespace vkn
         return *this;
     }
 
-    void VknBuffer::create(
-        VkDeviceSize size,
-        VkBufferUsageFlags bufferUsage,
-        VmaMemoryUsage memoryUsage,
-        VmaAllocationCreateFlags allocationFlags)
+    void VknBuffer::create()
     {
         if (m_vkBuffer != VK_NULL_HANDLE)
             throw std::runtime_error("VknBuffer already created.");
         if (!m_setSize)
             throw std::runtime_error("Size not set before creating buffer.");
 
-        m_size = size;
-
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = m_size;
-        bufferInfo.usage = bufferUsage;
+        bufferInfo.usage = m_bufferUsage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; // Default, can be configured if needed
 
         VmaAllocationCreateInfo allocCreateInfo{};
-        allocCreateInfo.usage = memoryUsage;
-        allocCreateInfo.flags = allocationFlags;
+        allocCreateInfo.usage = m_memoryUsage;
+        allocCreateInfo.flags = m_allocationFlags;
 
         // The VknDevice factory method should have already called addNewObject<VkBuffer,...>
         // which reserves a spot in VknEngine's vector. We just need to create the buffer into that spot.
@@ -127,12 +121,21 @@ namespace vkn
             m_isPersistentlyMapped = true;
         else
         {
-            m_uploadBuffer = new VknUploadBuffer(m_relIdxs, m_absIdxs);
-            m_uploadBuffer->setSize(m_size);
-            m_hasUploadBuffer = true;
+            if (m_uploadable)
+            {
+                m_uploadBuffer = new VknUploadBuffer(m_relIdxs, m_absIdxs);
+                m_uploadBuffer->setSize(m_size);
+                m_hasUploadBuffer = true;
+            }
+            if (m_downloadable)
+            {
+                m_downloadBuffer = new VknDownloadBuffer(m_relIdxs, m_absIdxs);
+                m_downloadBuffer->setSize(m_size);
+                m_hasDownloadBuffer = true;
+            }
         }
 
-        if (allocationFlags & VMA_ALLOCATION_CREATE_MAPPED_BIT)
+        if (m_allocationFlags & VMA_ALLOCATION_CREATE_MAPPED_BIT)
         {
             m_manualMapping = false;
             m_mappedData = m_allocInfo.pMappedData;
@@ -214,6 +217,8 @@ namespace vkn
             throw std::runtime_error("Buffer not created, cannot upload data.");
         if (offset + dataSize > m_size)
             throw std::out_of_range("Upload data size + offset exceeds buffer's logical size.");
+        if (!m_uploadable)
+            throw std::runtime_error("Uploading to buffer that is not uploadable.");
         if (!m_isPersistentlyMapped)
         {
             m_copyRegion->srcOffset = offset; // Data is at the start of the staging buffer
@@ -231,6 +236,8 @@ namespace vkn
             throw std::runtime_error("Buffer not created, cannot download data.");
         if (offset + dataSize > m_size)
             throw std::out_of_range("Download data size + offset exceeds buffer's logical size.");
+        if (!m_downloadable)
+            throw std::runtime_error("Downloading to buffer that is not downloadable.");
         if (!m_isPersistentlyMapped)
         {
             m_copyRegion->srcOffset = offset; // Data is at the start of the staging buffer
@@ -257,13 +264,14 @@ namespace vkn
     {
         m_size = size;
         m_setSize = true;
+        this->create();
     }
 
     void *VknBuffer::getDataArea()
     {
-        if (m_hasUploadBuffer)
+        if (m_hasUploadBuffer && m_uploading)
             return m_uploadBuffer->getDataArea();
-        else if (m_hasDownloadBuffer)
+        else if (m_hasDownloadBuffer && !m_uploading)
             return m_downloadBuffer->getDataArea();
         return m_mappedData;
     }

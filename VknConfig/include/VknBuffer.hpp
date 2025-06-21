@@ -29,13 +29,7 @@ namespace vkn
         VknBuffer(VknBuffer &&other) noexcept;
         VknBuffer &operator=(VknBuffer &&other) noexcept;
 
-        void create(
-            VkDeviceSize size,
-            VkBufferUsageFlags bufferUsage,
-            VmaMemoryUsage memoryUsage,
-            VmaAllocationCreateFlags allocationFlags = 0 // e.g., VMA_ALLOCATION_CREATE_MAPPED_BIT
-        );
-
+        void create();
         void demolish();
 
         VkBuffer getVkBuffer() const { return m_vkBuffer; }
@@ -43,6 +37,18 @@ namespace vkn
         VkDeviceSize getSize() const { return m_size; }
         void *getMappedData() const { return m_mappedData; } // Valid if VMA_ALLOCATION_CREATE_MAPPED_BIT was used
         void *getDataArea();
+        VkBuffer getUploadVkBuffer() const { return m_uploadBuffer->getVkBuffer(); }
+        VkBuffer getDownloadVkBuffer() const { return m_downloadBuffer->getVkBuffer(); }
+        void setUploading()
+        {
+            if (m_uploadable)
+                m_uploading = true;
+        }
+        void setDownloading()
+        {
+            if (m_downloadable)
+                m_uploading = false;
+        }
         void setSize(uint32_t size);
 
         // Manual mapping/unmapping if not persistently mapped
@@ -64,7 +70,16 @@ namespace vkn
         VkDescriptorBufferInfo getDescriptorInfo(VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE) const;
 
     protected:
+        // args
         VkDeviceSize m_size = 0;
+        VkBufferUsageFlags m_bufferUsage{};
+        VmaMemoryUsage m_memoryUsage{};
+        VmaAllocationCreateFlags m_allocationFlags{0};
+
+        // state
+        bool m_uploadable{false};
+        bool m_downloadable{false};
+        bool m_uploading{true};
 
     private:
         // Params
@@ -103,11 +118,9 @@ namespace vkn
         VknVertexBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, // For GPU vertex input and as a destination for transfers
-                VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE                                   // Prefer fastest GPU memory
-            );
+            m_bufferUsage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            m_uploadable = true;
         }
     };
 
@@ -123,11 +136,9 @@ namespace vkn
         VknIndexBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, // For GPU index input and as a destination for transfers
-                VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE                                  // Prefer fastest GPU memory
-            );
+            m_bufferUsage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            m_uploadable = true;
         }
     };
 
@@ -142,11 +153,9 @@ namespace vkn
         VknCpuUniformBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VMA_MEMORY_USAGE_CPU_TO_GPU, // Optimized for CPU writes, GPU reads
-                VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+            m_bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+            m_allocationFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
         }
     };
 
@@ -157,10 +166,9 @@ namespace vkn
         VknGpuUniformBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+            m_bufferUsage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            m_uploadable = true;
         }
     };
 
@@ -175,12 +183,9 @@ namespace vkn
         VknUploadBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_TRANSFER_SRC_BIT, // Source for copy operations
-                VMA_MEMORY_USAGE_CPU_ONLY,        // CPU writes, GPU reads (for transfer)
-                                                  // VMA_MEMORY_USAGE_CPU_TO_GPU is also a good option
-                VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+            m_bufferUsage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
+            m_allocationFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
         }
     };
 
@@ -194,11 +199,9 @@ namespace vkn
         VknDownloadBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_TRANSFER_DST_BIT, // Destination for copy operations
-                VMA_MEMORY_USAGE_GPU_TO_CPU,      // Optimized for GPU writes, CPU reads
-                VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
+            m_bufferUsage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_GPU_TO_CPU;
+            m_allocationFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
         }
     };
 
@@ -213,12 +216,10 @@ namespace vkn
         VknStorageBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                // Can be source/destination for transfers if needed
-                VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE // Prefer fastest GPU memory
-            );
+            m_bufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            m_uploadable = true;
+            m_downloadable = true;
         }
     };
 
@@ -233,12 +234,10 @@ namespace vkn
         VknIndirectBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
             : VknBuffer(relIdxs, absIdxs)
         {
-            create(
-                m_size,
-                VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                // Storage bit if compute shaders write to it, transfer bit to upload initial data or copy from another buffer
-                VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE // Prefer fastest GPU memory
-            );
+            m_bufferUsage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            m_memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+            m_uploadable = true;
+            m_downloadable = true;
         }
     };
 
