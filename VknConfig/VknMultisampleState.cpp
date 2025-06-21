@@ -2,9 +2,8 @@
 
 namespace vkn
 {
-    VknMultisampleState::VknMultisampleState(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknMultisampleState::VknMultisampleState(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
     }
 
@@ -42,9 +41,9 @@ namespace vkn
     {
         if (m_filed)
             throw std::runtime_error("Multisample state create info already filed.");
-        m_infos->fileMultisampleStateCreateInfo(m_relIdxs, m_minSampleShading, &m_sampleMask,
-                                                m_rasterizationSamples, m_sampleShadingEnable,
-                                                m_alphaToCoverageEnable, m_alphaToOneEnable);
+        s_infos.fileMultisampleStateCreateInfo(m_relIdxs, m_minSampleShading, &m_sampleMask,
+                                               m_rasterizationSamples, m_sampleShadingEnable,
+                                               m_alphaToCoverageEnable, m_alphaToOneEnable);
         m_filed = true;
     }
 }

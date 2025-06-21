@@ -48,18 +48,18 @@
 
 #include <vulkan/vulkan.h>
 
+#include "VknObject.hpp"
 #include "VknImage.hpp"
-#include "VknInfos.hpp"
 #include "VknResult.hpp"
 
 namespace vkn
 {
-    class VknImageView
+    class VknImageView : public VknObject
     {
     public:
         // Overloads
         VknImageView() = default;
-        VknImageView(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknImageView(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Config
         void setCreateFlags(VkImageViewCreateFlags);
@@ -79,12 +79,6 @@ namespace vkn
         VkImage *getVkImage();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         uint32_t m_vkImageIdx{0};
         VkImage *m_image{nullptr};

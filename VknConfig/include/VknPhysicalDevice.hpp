@@ -51,20 +51,20 @@
 #include <vulkan/vulkan.h>
 #include "VknQueueFamily.hpp"
 #include "VknData.hpp"
+#include "VknObject.hpp"
 
 namespace vkn
 {
     class VknDevice;
 
-    class VknPhysicalDevice
+    class VknPhysicalDevice : public VknObject
     {
     public:
         friend VknDevice;
 
         // Constructor now takes VkSurfaceKHR for selection
         VknPhysicalDevice() = default;
-        VknPhysicalDevice(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknPhysicalDevice(VknIdxs relIdxs, VknIdxs absIdxs);
         ~VknPhysicalDevice();
 
         VkPhysicalDevice *getVkPhysicalDevice();
@@ -84,12 +84,6 @@ namespace vkn
         VkPhysicalDeviceType getGPUType();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         static VknVector<VkPhysicalDeviceProperties> s_properties;
         static std::list<VknQueueFamily> s_queues; // Vector fine, this shouldn't change.

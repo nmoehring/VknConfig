@@ -24,6 +24,17 @@ namespace vkn
         for (auto &queue : device->getPhysicalDevice()->getQueues())
         {
             std::cout << "============================================" << std::endl;
+            std::cout << "x" << queue.getNumAvailable();
+            if (queue.supportsGraphics())
+                std::cout << " Graphics ";
+            else if (queue.supportsCompute())
+                std::cout << " Compute ";
+            else if (queue.supportsTransfer())
+                std::cout << " Transfer ";
+            else if (queue.supportsSparseBinding())
+                std::cout << " Sparse Binding ";
+            else if (queue.supportsMemoryProtection())
+                std::cout << " Memory Protection ";
             std::cout << "Queue " << idx << ": " << std::endl;
             std::cout << "Graphics: " << queue.supportsGraphics() << std::endl;
             std::cout << "Compute: " << queue.supportsCompute() << std::endl;

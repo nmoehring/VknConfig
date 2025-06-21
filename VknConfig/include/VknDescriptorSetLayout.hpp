@@ -46,19 +46,17 @@
 
 #pragma once
 
-#include "VknEngine.hpp"
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 #include "VknResult.hpp"
 
 namespace vkn
 {
-    class VknDescriptorSetLayout
+    class VknDescriptorSetLayout : public VknObject
     {
     public:
         // Overloads
         VknDescriptorSetLayout() = default;
-        VknDescriptorSetLayout(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknDescriptorSetLayout(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Config
         void addBinding(
@@ -73,12 +71,6 @@ namespace vkn
         VkDescriptorSetLayout *getVkDescriptorSetLayout();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         VknVector<VkDescriptorSetLayoutBinding> m_bindings{};
         VkDescriptorSetLayoutCreateFlags m_createFlags{0};

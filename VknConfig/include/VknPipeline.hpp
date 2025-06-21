@@ -54,6 +54,7 @@
 #include <filesystem>
 #include <iterator>
 
+#include "VknObject.hpp"
 #include "VknData.hpp"
 #include "VknVertexInputState.hpp"
 #include "VknInputAssemblyState.hpp"
@@ -67,12 +68,12 @@
 
 namespace vkn
 {
-    class VknPipeline
+    class VknPipeline : public VknObject
     {
     public:
         // Overloads
         VknPipeline() = default;
-        VknPipeline(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknPipeline(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Vkn Members
         VknShaderStage *addShaderStage(uint32_t newShaderStageIdx,
@@ -91,7 +92,7 @@ namespace vkn
         // Get
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         std::list<VknShaderStage> *getShaderStages() { return &m_shaderStages; }
-        VkPipeline *getVkPipeline() { return &m_engine->getObject<VkPipeline>(m_absIdxs); }
+        VkPipeline *getVkPipeline() { return &s_engine.getObject<VkPipeline>(m_absIdxs); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }
@@ -104,12 +105,6 @@ namespace vkn
         VknIdxs &getAbsIdxs() { return m_absIdxs; }
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         //  Members
         std::list<VknPipelineLayout> m_layouts{};
         std::optional<VknVertexInputState> m_vertexInputState = std::nullopt;

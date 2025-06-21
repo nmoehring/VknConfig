@@ -45,16 +45,15 @@
 #include <vulkan/vulkan.h>
 
 #include "VknData.hpp"
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 
 namespace vkn
 {
-    class VknRasterizationState
+    class VknRasterizationState : public VknObject
     {
     public:
         VknRasterizationState() = default;
-        VknRasterizationState(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknRasterizationState(VknIdxs relIdxs, VknIdxs absIdxs);
 
         void setPolygonMode(VkPolygonMode mode);
         void setCullMode(VkCullModeFlags mode);
@@ -70,13 +69,6 @@ namespace vkn
         void _fileRasterizationStateCreateInfo();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         VkPolygonMode m_polygonMode{VK_POLYGON_MODE_FILL};
         VkCullModeFlags m_cullMode{VK_CULL_MODE_BACK_BIT};

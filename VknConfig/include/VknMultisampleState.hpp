@@ -45,16 +45,15 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 
 namespace vkn
 {
-    class VknMultisampleState
+    class VknMultisampleState : public VknObject
     {
     public:
         VknMultisampleState() = default;
-        VknMultisampleState(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknMultisampleState(VknIdxs relIdxs, VknIdxs absIdxs);
 
         void setRasterizationSamples(VkSampleCountFlagBits rasterizationSamples);
         void setSampleShadingEnable(VkBool32 sampleShadingEnable);
@@ -66,13 +65,6 @@ namespace vkn
         void _fileMultisampleStateCreateInfo();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         VkSampleCountFlagBits m_rasterizationSamples{VK_SAMPLE_COUNT_1_BIT};
         VkBool32 m_sampleShadingEnable{VK_FALSE};

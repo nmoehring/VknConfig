@@ -2,8 +2,8 @@
 
 namespace vkn
 {
-    VknImage::VknImage(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknImage::VknImage(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
         m_instanceLock = this;
     }
@@ -13,7 +13,7 @@ namespace vkn
         if (m_createdVkImage)
             throw std::runtime_error("VknImage::createImage called but image already created.");
 
-        VkImageCreateInfo *imageInfo = m_infos->fileImageCreateInfo(
+        VkImageCreateInfo *imageInfo = s_infos.fileImageCreateInfo(
             m_relIdxs, m_imageType, m_format, m_extent, m_mipLevels, m_arrayLayers,
             m_samples, m_tiling, m_usage, m_initialLayout, m_flags);
 
@@ -24,16 +24,16 @@ namespace vkn
         allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE; // Or a more specific usage
         // Add flags like VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT if needed for certain image types/usages
 
-        // Assuming VknDevice stores the VmaAllocator and it's retrievable via m_engine and m_absIdxs
+        // Assuming VknDevice stores the VmaAllocator and it's retrievable via s_engine and m_absIdxs
         // This might need adjustment based on how you expose the VmaAllocator.
         // If VknDevice has a getVmaAllocator() method:
-        // VmaAllocator vmaAllocator = m_engine->getDevice(m_absIdxs.get<VkDevice>())->getVmaAllocator();
-        // For now, let's assume it's directly accessible via m_engine->getObject
+        // VmaAllocator vmaAllocator = s_engine.getDevice(m_absIdxs.get<VkDevice>())->getVmaAllocator();
+        // For now, let's assume it's directly accessible via s_engine.getObject
 
-        VknResult res{vmaCreateImage(m_engine->getObject<VmaAllocator>(m_absIdxs),
+        VknResult res{vmaCreateImage(s_engine.getObject<VmaAllocator>(m_absIdxs),
                                      imageInfo, &allocInfo,
-                                     &m_engine->getObject<VkImage>(m_absIdxs), // VknEngine stores the VkImage handle
-                                     &m_engine->addNewAllocation<VkImage>(m_absIdxs),
+                                     &s_engine.getObject<VkImage>(m_absIdxs), // VknEngine stores the VkImage handle
+                                     &s_engine.addNewAllocation<VkImage>(m_absIdxs),
                                      nullptr), // Optional: VmaAllocationInfo
                       "VMA Create Image"};
 
@@ -45,16 +45,16 @@ namespace vkn
         if (!m_createdVkImage)
             throw std::runtime_error("VknImage::demolishImage called before createImage().");
         ; // Or throw
-        VmaAllocator vmaAllocator = m_engine->getObject<VmaAllocator>(m_absIdxs);
-        vmaDestroyImage(vmaAllocator, m_engine->getObject<VkImage>(m_absIdxs), m_allocation);
-        m_infos->removeImageCreateInfo(m_relIdxs);
+        VmaAllocator vmaAllocator = s_engine.getObject<VmaAllocator>(m_absIdxs);
+        vmaDestroyImage(vmaAllocator, s_engine.getObject<VkImage>(m_absIdxs), m_allocation);
+        s_infos.removeImageCreateInfo(m_relIdxs);
         m_createdVkImage = false;
         m_allocation = VK_NULL_HANDLE; // Reset allocation handle
     }
 
     VkImage *VknImage::getVkImage()
     {
-        return &m_engine->getObject<VkImage>(m_absIdxs);
+        return &s_engine.getObject<VkImage>(m_absIdxs);
     }
 
     // Setters remain the same

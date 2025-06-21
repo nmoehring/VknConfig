@@ -2,9 +2,8 @@
 
 namespace vkn
 {
-    VknPipelineLayout::VknPipelineLayout(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknPipelineLayout::VknPipelineLayout(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
         m_instanceLock = this;
     }
@@ -13,10 +12,10 @@ namespace vkn
     VknDescriptorSetLayout *VknPipelineLayout::addDescriptorSetLayout()
     {
         m_instanceLock(this);
-        m_descriptorSetLayoutStartIdx = m_engine->getVectorSize<VkDescriptorSetLayout>();
-        return &m_engine->addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout, VkDevice>(
+        m_descriptorSetLayoutStartIdx = s_engine.getVectorSize<VkDescriptorSetLayout>();
+        return &s_engine.addNewVknObject<VknDescriptorSetLayout, VkDescriptorSetLayout, VkDevice>(
             uint32_t{0}, m_descriptorSetLayouts,
-            m_relIdxs, m_absIdxs, m_infos);
+            m_relIdxs, m_absIdxs);
     }
 
     void VknPipelineLayout::addPushConstantRange(VkShaderStageFlags stageFlags,
@@ -35,20 +34,20 @@ namespace vkn
             throw std::runtime_error("Already created the pipeline layout.");
         VknVector<VkDescriptorSetLayout> descriptorSetLayouts;
 
-        VkPipelineLayoutCreateInfo *createInfo = m_infos->filePipelineLayoutCreateInfo(
-            m_relIdxs, m_engine->getVectorSlice<VkDescriptorSetLayout>(m_descriptorSetLayoutStartIdx, m_descriptorSetLayouts.size()),
+        VkPipelineLayoutCreateInfo *createInfo = s_infos.filePipelineLayoutCreateInfo(
+            m_relIdxs, s_engine.getVectorSlice<VkDescriptorSetLayout>(m_descriptorSetLayoutStartIdx, m_descriptorSetLayouts.size()),
             m_pushConstantRanges, m_createFlags);
 
         VknResult res{
             vkCreatePipelineLayout(
-                m_engine->getObject<VkDevice>(m_absIdxs), createInfo,
-                nullptr, &m_engine->getObject<VkPipelineLayout>(m_absIdxs)),
+                s_engine.getObject<VkDevice>(m_absIdxs), createInfo,
+                nullptr, &s_engine.getObject<VkPipelineLayout>(m_absIdxs)),
             "Create pipeline layout."};
         m_createdPipelineLayout = true;
     }
 
     VkPipelineLayout *VknPipelineLayout::getVkLayout()
     {
-        return &m_engine->getObject<VkPipelineLayout>(m_absIdxs);
+        return &s_engine.getObject<VkPipelineLayout>(m_absIdxs);
     }
 }

@@ -45,18 +45,17 @@
 
 #pragma once
 
-#include "VknEngine.hpp"
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 #include <vma/vk_mem_alloc.h> // Include VMA header
 
 namespace vkn
 {
-    class VknImage
+    class VknImage : public VknObject
     {
     public:
         // Overloads
         VknImage() = default;
-        VknImage(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknImage(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Create
         void createImage();
@@ -81,12 +80,6 @@ namespace vkn
         VkImageUsageFlags &getUsage() { return m_usage; }
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         // VkDeviceMemory is now managed by VmaAllocation
         VmaAllocation m_allocation = VK_NULL_HANDLE;

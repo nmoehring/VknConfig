@@ -46,7 +46,7 @@
 
 #include <filesystem>
 
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 #include "VknResult.hpp"
 #include "VknData.hpp"
 
@@ -60,12 +60,11 @@ namespace vkn
         VKN_FRAGMENT_STAGE = VK_SHADER_STAGE_FRAGMENT_BIT
     };
 
-    class VknShaderStage
+    class VknShaderStage : public VknObject
     {
     public:
         VknShaderStage() = default;
-        VknShaderStage(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknShaderStage(VknIdxs relIdxs, VknIdxs absIdxs);
 
         void setShaderStageType(VknShaderStageType);
         void setFilename(std::string filename);
@@ -82,13 +81,6 @@ namespace vkn
         VkShaderModule *getShaderModule();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         std::vector<char> m_code; /**< Stores the shader's SPIR-V bytecode. */
         VkShaderStageFlagBits m_shaderStageFlagBit{};

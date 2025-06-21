@@ -11,9 +11,8 @@ namespace vkn
     bool VknPhysicalDevice::s_requestedQueues{false};
     bool VknPhysicalDevice::s_enumeratedPhysicalDevices{false};
 
-    VknPhysicalDevice::VknPhysicalDevice(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknPhysicalDevice::VknPhysicalDevice(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
         ++s_physDevCount;
     }
@@ -37,7 +36,7 @@ namespace vkn
             throw std::runtime_error("Already filed queue priorities.");
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before setting queue priorities.");
-        m_infos->fileDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
+        s_infos.fileDeviceQueuePriorities(m_relIdxs, queueFamilyIdx, priorities);
         m_filedQueuePriorities = true;
     }
 
@@ -53,7 +52,7 @@ namespace vkn
         {
             queueFamilyPriorities.clear();
             queueFamilyPriorities.appendRepeat(1.0f, getListElement<VknQueueFamily>(i, s_queues)->getNumSelected());
-            m_infos->fileDeviceQueuePriorities(
+            s_infos.fileDeviceQueuePriorities(
                 m_relIdxs, i, queueFamilyPriorities);
         }
         m_filedQueuePriorities = true;
@@ -65,22 +64,22 @@ namespace vkn
             throw std::runtime_error("Queue properties already requested.");
 
         uint_fast32_t familyPropertyCount{0};
-        VknVector<VkPhysicalDevice> &physDevices = m_engine->getVector<VkPhysicalDevice>();
+        VknVector<VkPhysicalDevice> &physDevices = s_engine.getVector<VkPhysicalDevice>();
         for (uint_fast32_t i = 0; i < physDevices.getSize(); ++i)
         {
             vkGetPhysicalDeviceQueueFamilyProperties(physDevices(i), &familyPropertyCount, nullptr);
             if (familyPropertyCount == 0)
                 throw std::runtime_error("No available queue families found.");
 
-            s_deviceQueuePropStartPos.appendOne(m_engine->addNewVknObjects<VknQueueFamily, VkQueueFamilyProperties>(
-                familyPropertyCount, s_queues, m_relIdxs, m_absIdxs, m_infos));
+            s_deviceQueuePropStartPos.appendOne(s_engine.addNewVknObjects<VknQueueFamily, VkQueueFamilyProperties>(
+                familyPropertyCount, s_queues, m_relIdxs, m_absIdxs));
             s_numQueueFamilies.appendOne(familyPropertyCount);
 
             VknVectorIterator<VkQueueFamilyProperties> queuesIterator{
-                m_engine->getVectorSlice<VkQueueFamilyProperties>(s_deviceQueuePropStartPos(i), familyPropertyCount)};
+                s_engine.getVectorSlice<VkQueueFamilyProperties>(s_deviceQueuePropStartPos(i), familyPropertyCount)};
 
             vkGetPhysicalDeviceQueueFamilyProperties(
-                m_engine->getObject<VkPhysicalDevice>(i),
+                s_engine.getObject<VkPhysicalDevice>(i),
                 &familyPropertyCount,
                 queuesIterator.getData());
 
@@ -97,7 +96,7 @@ namespace vkn
         for (int i = 0; i < s_queues.size(); ++i)
         {
             VknQueueFamily *fam = getListElement<VknQueueFamily>(i, s_queues);
-            m_infos->fileDeviceQueueCreateInfo(
+            s_infos.fileDeviceQueueCreateInfo(
                 m_relIdxs, i, fam->getNumSelected(), fam->getFlags());
         }
         m_filedQueueCreateInfos = true;
@@ -109,14 +108,14 @@ namespace vkn
         {
             uint32_t deviceCount{};
             VknResult res1{vkEnumeratePhysicalDevices(
-                               m_engine->getObject<VkInstance>(0u), &deviceCount, nullptr),
+                               s_engine.getObject<VkInstance>(0u), &deviceCount, nullptr),
                            "Enumerate physical devices."};
 
             if (deviceCount == 0u)
                 throw std::runtime_error("No GPU's supporting Vulkan found.");
-            VknVector<VkPhysicalDevice> *physDevices = &m_engine->getVector<VkPhysicalDevice>();
+            VknVector<VkPhysicalDevice> *physDevices = &s_engine.getVector<VkPhysicalDevice>();
             VknResult res2{vkEnumeratePhysicalDevices(
-                               m_engine->getObject<VkInstance>(0u), &deviceCount,
+                               s_engine.getObject<VkInstance>(0u), &deviceCount,
                                physDevices->getData()),
                            "Enum physical devices and store."};
             for (auto &vkDevice : *physDevices)
@@ -138,10 +137,10 @@ namespace vkn
         uint_fast32_t bestScore{0};
         uint_fast32_t bestIdx{UINT32_MAX};
         uint_fast32_t score{0};
-        VknVector<VkPhysicalDevice> &allPhysicalDevices = m_engine->getVector<VkPhysicalDevice>();
+        VknVector<VkPhysicalDevice> &allPhysicalDevices = s_engine.getVector<VkPhysicalDevice>();
         VkPhysicalDevice currentDevice{};
         VkPhysicalDeviceProperties currentProps{};
-        bool graphicsNeeded = m_engine->getVectorSize<VkSurfaceKHR>();
+        bool graphicsNeeded = s_engine.getVectorSize<VkSurfaceKHR>();
         for (uint_fast32_t i{0}; i < allPhysicalDevices.getSize(); ++i)
         {
             score = 0;
@@ -149,12 +148,12 @@ namespace vkn
             currentProps = s_properties(i);
 
             if (graphicsNeeded)
-                for (uint_fast32_t q_idx = 0; q_idx < m_engine->getVectorSize<VkQueueFamilyProperties>(); ++q_idx)
+                for (uint_fast32_t q_idx = 0; q_idx < s_engine.getVectorSize<VkQueueFamilyProperties>(); ++q_idx)
                 {
-                    if (m_engine->getObject<VkQueueFamilyProperties>(q_idx).queueFlags & VK_QUEUE_GRAPHICS_BIT) // Must support graphics
+                    if (s_engine.getObject<VkQueueFamilyProperties>(q_idx).queueFlags & VK_QUEUE_GRAPHICS_BIT) // Must support graphics
                     {
                         VkBool32 presentSupport = VK_FALSE;
-                        vkGetPhysicalDeviceSurfaceSupportKHR(currentDevice, q_idx, m_engine->getObject<VkSurfaceKHR>(0), &presentSupport);
+                        vkGetPhysicalDeviceSurfaceSupportKHR(currentDevice, q_idx, s_engine.getObject<VkSurfaceKHR>(0), &presentSupport);
                         if (presentSupport)
                             score += 128;
                     }
@@ -215,7 +214,7 @@ namespace vkn
     {
         if (!m_selectedPhysicalDevice)
             throw std::runtime_error("Physical device not selected before getting VkPhysicalDevice.");
-        return &m_engine->getObject<VkPhysicalDevice>(m_absIdxs);
+        return &s_engine.getObject<VkPhysicalDevice>(m_absIdxs);
     }
 
     VkPhysicalDeviceProperties &VknPhysicalDevice::getProperties()

@@ -52,6 +52,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "VknObject.hpp"
 #include "VknPlatforms.hpp"
 #include "VknDevice.hpp"
 #include "VknData.hpp"
@@ -59,12 +60,11 @@
 
 namespace vkn
 {
-    class VknConfig
+    class VknConfig : public VknObject
     {
     public:
         // Overloads
-        VknConfig() = delete;
-        VknConfig(VknEngine *engine, VknInfos *infos);
+        VknConfig();
         VknConfig(const VknConfig &) = delete;
         VknConfig &operator=(const VknConfig &) = delete;
         VknConfig(VknConfig &&) = delete;
@@ -98,7 +98,7 @@ namespace vkn
         // Getters
         VkInstance *getInstance()
         {
-            return &m_engine->getObject<VkInstance>(0);
+            return &s_engine.getObject<VkInstance>(0);
         }
         bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
@@ -110,21 +110,15 @@ namespace vkn
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         VknVector<std::string> m_instanceExtensions{}; // Fine, because this list won't need to change
         VknWindow *m_vknWindow{nullptr};
         VkInstanceCreateFlags m_flags{0};
         std::string m_appName{"My App"};
-        std::string m_engineName{"void* Engine"};
+        std::string s_engineName{"void* Engine"};
         uint32_t m_apiVersion{VK_API_VERSION_1_1};
         uint32_t m_appVersion{0};
-        uint32_t m_engineVersion{0};
+        uint32_t s_engineVersion{0};
         uint32_t m_numHardCodedVertices{0};
 
         // Members

@@ -46,16 +46,15 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 
 namespace vkn
 {
-    class VknVertexInputState
+    class VknVertexInputState : public VknObject
     {
     public:
         VknVertexInputState() = default;
-        VknVertexInputState(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknVertexInputState(VknIdxs relIdxs, VknIdxs absIdxs);
 
         void fileVertexBindingDescription(uint32_t binding = 0, uint32_t stride = 0,
                                           VkVertexInputRate inputRate = VK_VERTEX_INPUT_RATE_VERTEX);
@@ -69,13 +68,6 @@ namespace vkn
         uint32_t getNumAttributes() const { return m_numAttributes; }
 
     private:
-        // Engine
-        VknEngine *m_engine;
-
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // State
         uint32_t m_numBindings{0};
         uint32_t m_numAttributes{0};

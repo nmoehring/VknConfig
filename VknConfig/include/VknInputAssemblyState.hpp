@@ -45,29 +45,20 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 
 namespace vkn
 {
-    class VknInputAssemblyState
+    class VknInputAssemblyState : public VknObject
     {
     public:
         VknInputAssemblyState() = default;
-        VknInputAssemblyState(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknInputAssemblyState(VknIdxs relIdxs, VknIdxs absIdxs);
 
         void setDetails(VkPrimitiveTopology topology, VkBool32 primitiveRestartEnable);
         void _fileInputAssemblyStateCreateInfo();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         VkPrimitiveTopology m_topology{VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
         VkBool32 m_primitiveRestartEnable{VK_FALSE};

@@ -48,6 +48,7 @@
 #include <memory>
 #include <vma/vk_mem_alloc.h>
 
+#include "VknObject.hpp"
 #include "VknRenderpass.hpp"
 #include "VknPhysicalDevice.hpp"
 #include "VknSwapchain.hpp"
@@ -57,25 +58,26 @@
 
 namespace vkn
 {
-    class VknDevice
+    class VknDevice : public VknObject
     {
     public:
         // Overloads
         VknDevice() = default;
-        VknDevice(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknDevice(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Members
         VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
         VknCommandPool *addCommandPool(uint32_t newCommandPoolIdx);
         VmaAllocator *addAllocator();
+        // Buffer creation methods now return pointers and take VkDeviceSize
+        VknVertexBuffer *addVertexBuffer(VkDeviceSize size);
+        VknIndexBuffer *addIndexBuffer(VkDeviceSize size);
+        VknCpuUniformBuffer *addCpuUniformBuffer(VkDeviceSize size);
+        VknGpuUniformBuffer *addGpuUniformBuffer(VkDeviceSize size);
+        VknStorageBuffer *addStorageBuffer(VkDeviceSize size);
+        VknIndirectBuffer *addIndirectBuffer(VkDeviceSize size);
         VknFeatures *features{nullptr};
-        void addVertexBuffer(uint_fast32_t size);
-        void addIndexBuffer(uint_fast32_t size);
-        void addCpuUniformBuffer(uint_fast32_t size);
-        void addGpuUniformBuffer(uint_fast32_t size);
-        void addStorageBuffer(uint_fast32_t size);
-        void addIndirectBuffer(uint_fast32_t size);
 
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);
@@ -102,24 +104,18 @@ namespace vkn
         VkFence &getFence(uint32_t frameInFlight);
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         std::list<VknRenderpass> m_renderpasses{};
         std::list<VknSwapchain> m_swapchains{};
         std::list<VknPhysicalDevice> m_physicalDevices{};
         std::list<VknCommandPool> m_commandPools{};
         VkQueue m_lastUsedGraphicsQueue{}; // Store graphics queue handle
-        std::list<VertexBuffer> m_vertexBuffers;
-        std::list<IndexBuffer> m_indexBuffer;
-        std::list<CpuUniformBuffer> m_cpuUniformBuffer;
-        std::list<GpuUniformBuffer> m_gpuUniformBuffer;
-        std::list<StorageBuffer> m_storageBuffer;
-        std::list<IndirectBuffer> m_indirectBuffer;
+        std::list<VknVertexBuffer> m_vertexBuffers;
+        std::list<VknIndexBuffer> m_indexBuffers;
+        std::list<VknCpuUniformBuffer> m_cpuUniformBuffers;
+        std::list<VknGpuUniformBuffer> m_gpuUniformBuffers;
+        std::list<VknStorageBuffer> m_storageBuffers;
+        std::list<VknIndirectBuffer> m_indirectBuffers;
 
         // Params
         const char *const *m_extensions{nullptr};

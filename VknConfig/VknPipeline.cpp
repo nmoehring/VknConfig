@@ -2,20 +2,19 @@
 
 namespace vkn
 {
-    VknPipeline::VknPipeline(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknPipeline::VknPipeline(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
         m_instanceLock = this;
-        m_engine->addNewVknObject<VknPipelineLayout, VkPipelineLayout, VkDevice>(
-            0, m_layouts, m_relIdxs, m_absIdxs, m_infos);
-        m_vertexInputState = VknVertexInputState{engine, relIdxs, absIdxs, infos};
-        m_inputAssemblyState = VknInputAssemblyState{engine, relIdxs, absIdxs, infos};
-        m_multisampleState = VknMultisampleState{engine, relIdxs, absIdxs, infos};
-        m_rasterizationState = VknRasterizationState{engine, relIdxs, absIdxs, infos};
-        m_colorBlendState = VknColorBlendState{engine, relIdxs, absIdxs, infos}; // Initialize
-        m_viewportState = VknViewportState{engine, relIdxs, absIdxs, infos};
-        m_dynamicState = VknDynamicState{engine, relIdxs, absIdxs, infos};
+        s_engine.addNewVknObject<VknPipelineLayout, VkPipelineLayout, VkDevice>(
+            0, m_layouts, m_relIdxs, m_absIdxs);
+        m_vertexInputState = VknVertexInputState{relIdxs, absIdxs};
+        m_inputAssemblyState = VknInputAssemblyState{relIdxs, absIdxs};
+        m_multisampleState = VknMultisampleState{relIdxs, absIdxs};
+        m_rasterizationState = VknRasterizationState{relIdxs, absIdxs};
+        m_colorBlendState = VknColorBlendState{relIdxs, absIdxs}; // Initialize
+        m_viewportState = VknViewportState{relIdxs, absIdxs};
+        m_dynamicState = VknDynamicState{relIdxs, absIdxs};
     }
 
     VknShaderStage *VknPipeline::addShaderStage(uint32_t shaderIdx,
@@ -23,8 +22,8 @@ namespace vkn
                                                 std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
         m_instanceLock(this);
-        VknShaderStage &shaderStage = m_engine->addNewVknObject<VknShaderStage, VkShaderModule, VkDevice>(
-            shaderIdx, m_shaderStages, m_relIdxs, m_absIdxs, m_infos);
+        VknShaderStage &shaderStage = s_engine.addNewVknObject<VknShaderStage, VkShaderModule, VkDevice>(
+            shaderIdx, m_shaderStages, m_relIdxs, m_absIdxs);
         shaderStage.setFilename(filename);
         shaderStage.setShaderStageType(stageType);
         shaderStage.setFlags(flags);
@@ -44,8 +43,8 @@ namespace vkn
     VkGraphicsPipelineCreateInfo *VknPipeline::_filePipelineCreateInfo()
     {
         VkPipelineLayout *layout = this->getLayout()->getVkLayout();
-        return m_infos->fileGfxPipelineCreateInfo(
-            m_relIdxs, m_engine->getObject<VkRenderPass>(m_absIdxs),
+        return s_infos.fileGfxPipelineCreateInfo(
+            m_relIdxs, s_engine.getObject<VkRenderPass>(m_absIdxs),
             layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
     }
 }

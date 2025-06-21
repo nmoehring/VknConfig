@@ -44,20 +44,17 @@
 
 #pragma once
 
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 
 #include "VknSwapchain.hpp"
 
 namespace vkn
 {
-    class VknViewportState
+    class VknViewportState : public VknObject
     {
     public:
         VknViewportState() = default;
-        VknViewportState(
-            VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
-        VknViewportState(VknEngine *engine, VknIdxs relIdxs, VknInfos *infos,
-                         VkExtent2D *swapchainExtent, const bool *swapchainCreated);
+        VknViewportState(VknIdxs relIdxs, VknIdxs absIdxs);
 
         void syncWithSwapchain(VknSwapchain &swapchain, uint32_t viewportIdx = 0, uint32_t scissorIdx = 0);
 
@@ -73,13 +70,6 @@ namespace vkn
         VkRect2D &getVkScissor(uint32_t idx) { return m_scissors(idx); }
 
     private:
-        // Engine
-        VknEngine *m_engine;
-
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         VkExtent2D *m_swapchainExtent{nullptr};
         VkOffset2D m_defaultOffset{0, 0};

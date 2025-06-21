@@ -48,15 +48,16 @@
 
 #include "VknData.hpp"
 #include "VknImageView.hpp"
+#include "VknObject.hpp"
 
 namespace vkn
 {
-    class VknSwapchain
+    class VknSwapchain : public VknObject
     {
     public:
         // Overloads
         VknSwapchain() = default;
-        VknSwapchain(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *m_infos);
+        VknSwapchain(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Config
         void setSurfaceFormat(VkFormat format, VkColorSpaceKHR colorSpace);
@@ -88,12 +89,6 @@ namespace vkn
         std::optional<uint32_t> getSurfaceIdx() { return m_surfaceIdx; }
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         std::list<VknImageView> m_imageViews{};
         VknVector<VkImage> m_vkSwapchainImages{};

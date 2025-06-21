@@ -46,9 +46,8 @@
 
 #include <vulkan/vulkan.h>
 
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 #include "VknResult.hpp"
-#include "VknEngine.hpp"
 #include "VknData.hpp"
 #include "VknFramebuffer.hpp"
 #include "VknImage.hpp"
@@ -57,7 +56,7 @@
 
 namespace vkn
 {
-    class VknFramebuffer
+    class VknFramebuffer : public VknObject
     {
     public:
         // Overloads
@@ -85,19 +84,13 @@ namespace vkn
         // Get
         VkFramebuffer *getVkFramebuffer()
         {
-            return &m_engine->getObject<VkFramebuffer>(m_absIdxs);
+            return &s_engine.getObject<VkFramebuffer>(m_absIdxs);
         } // Add getter
         bool isSwapchainImage(uint32_t i);
         bool hasSwapchainImage();
         VknVectorIterator<VkImageView> getAttachmentImageViews();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         std::list<VknImage> m_attachImages{};
         std::list<VknImageView> m_attachViews{};

@@ -267,7 +267,7 @@ namespace vkn
 
         template <typename VknObjectType, typename VkObjectType, typename VkParentType>
         VknObjectType &addNewVknObject(uint32_t idx, std::list<VknObjectType> &objList,
-                                       VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+                                       VknIdxs &relIdxs, VknIdxs &absIdxs)
         {
             if (idx != objList.size())
                 throw std::runtime_error("List index out of range or incorrect.");
@@ -282,12 +282,12 @@ namespace vkn
             VkParentType *parent = &this->getObject<VkParentType>(absIdxs);
             newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
             newRelIdxs.add<VkObjectType>(objList.size());
-            return objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+            return objList.emplace_back(newRelIdxs, newAbsIdxs);
         }
 
         template <typename VknObjectType, typename VkObjectType>
         VknObjectType &addNewVknObject(uint32_t idx, std::list<VknObjectType> &objList,
-                                       VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+                                       VknIdxs &relIdxs, VknIdxs &absIdxs)
         {
             if (idx != objList.size())
                 throw std::runtime_error("List index out of range or incorrect.");
@@ -299,12 +299,12 @@ namespace vkn
             VknIdxs newAbsIdxs = absIdxs;
             newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType>());
             newRelIdxs.add<VkObjectType>(objList.size());
-            return objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+            return objList.emplace_back(newRelIdxs, newAbsIdxs);
         }
 
         template <typename VknObjectType, typename VkObjectType, typename VkParentType>
         uint32_t addNewVknObjects(uint32_t count, std::list<VknObjectType> &objList,
-                                  VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+                                  VknIdxs &relIdxs, VknIdxs &absIdxs)
         {
             m_vkTypeStr = typeToStr<VkObjectType>();
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
@@ -323,14 +323,14 @@ namespace vkn
                 vkObjectVec.insert(startPos + m_iter, VkObjectType{});
                 newRelIdxs.add<VkObjectType>(objList.size());
                 vkParentVec.insert(startPos + m_iter, &this->getObject<VkParentType>(absIdxs));
-                objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+                objList.emplace_back(newRelIdxs, newAbsIdxs);
             }
             return startPos;
         }
 
         template <typename VknObjectType, typename VkObjectType>
         uint32_t addNewVknObjects(uint32_t count, std::list<VknObjectType> &objList,
-                                  VknIdxs &relIdxs, VknIdxs &absIdxs, VknInfos *infos)
+                                  VknIdxs &relIdxs, VknIdxs &absIdxs)
         {
             m_vkTypeStr = typeToStr<VkObjectType>();
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
@@ -345,7 +345,7 @@ namespace vkn
                 newAbsIdxs.add<VkObjectType>(startPos + m_iter);
                 vkObjectVec.insert(startPos + m_iter, VkObjectType{});
                 newRelIdxs.add<VkObjectType>(objList.size());
-                objList.emplace_back(this, newRelIdxs, newAbsIdxs, infos);
+                objList.emplace_back(newRelIdxs, newAbsIdxs);
             }
             return startPos;
         }
@@ -423,7 +423,7 @@ namespace vkn
             return &(this->getAllocationVector<VkResourceType>()(pos));
         }
 
-                template <typename VkResourceType>
+        template <typename VkResourceType>
         VmaAllocation *getAllocation(VknIdxs &absIdxs)
         {
             return &(this->getAllocationVector<VkResourceType>()(absIdxs.get<VmaAllocation>()));

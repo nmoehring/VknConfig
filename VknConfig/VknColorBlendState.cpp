@@ -3,8 +3,8 @@
 namespace vkn
 {
     VknColorBlendState::VknColorBlendState(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+        VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
         // Initialize with one default attachment state (overwrite)
         setDefaultAttachmentState();
@@ -60,7 +60,7 @@ namespace vkn
             setDefaultAttachmentState();
         }
 
-        m_infos->fileColorBlendStateCreateInfo(
+        s_infos.fileColorBlendStateCreateInfo(
             m_relIdxs.get<VkDevice>(),
             m_relIdxs.get<VkRenderPass>(),
             m_relIdxs.get<VkPipeline>(), // This is the subpass index for pipeline

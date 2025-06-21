@@ -47,17 +47,16 @@
 #pragma once
 
 #include "VknData.hpp"
-#include "VknEngine.hpp"
-#include "VknInfos.hpp"
+#include "VknObject.hpp"
 #include "VknDescriptorSetLayout.hpp"
 
 namespace vkn
 {
-    class VknPipelineLayout
+    class VknPipelineLayout : public VknObject
     {
     public:
         VknPipelineLayout() = default;
-        VknPipelineLayout(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknPipelineLayout(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Vkn Members
         VknDescriptorSetLayout *addDescriptorSetLayout();
@@ -74,12 +73,6 @@ namespace vkn
         VkPipelineLayout *getVkLayout();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         std::list<VknDescriptorSetLayout> m_descriptorSetLayouts{};
         VknVector<VkPushConstantRange> m_pushConstantRanges{};

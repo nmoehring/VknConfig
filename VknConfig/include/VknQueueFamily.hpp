@@ -48,17 +48,17 @@
 
 #include <vulkan/vulkan.h>
 
+#include "VknObject.hpp"
 #include "VknResult.hpp"
-#include "VknInfos.hpp"
 
 namespace vkn
 {
-    class VknQueueFamily
+    class VknQueueFamily : public VknObject
     {
     public:
         // Overloads
         VknQueueFamily() = default;
-        VknQueueFamily(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknQueueFamily(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Config
         void setNumSelected(int num);
@@ -75,12 +75,6 @@ namespace vkn
         bool supportsMemoryProtection();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params
         VkDeviceQueueCreateFlags m_createFlags{0};
 

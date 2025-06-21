@@ -2,8 +2,7 @@
 
 namespace vkn
 {
-    VknDynamicState::VknDynamicState(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknDynamicState::VknDynamicState(VknIdxs relIdxs, VknIdxs absIdxs) : VknObject(relIdxs, absIdxs)
     {
         m_dynamicStates.appendOne(VK_DYNAMIC_STATE_VIEWPORT);
         m_dynamicStates.appendOne(VK_DYNAMIC_STATE_SCISSOR);
@@ -35,7 +34,7 @@ namespace vkn
 
     VkPipelineDynamicStateCreateInfo *VknDynamicState::_fileDynamicStateCreateInfo()
     {
-        VkPipelineDynamicStateCreateInfo *result = m_infos->fileDynamicStateCreateInfo(
+        VkPipelineDynamicStateCreateInfo *result = s_infos.fileDynamicStateCreateInfo(
             m_relIdxs.get<VkDevice>(), m_relIdxs.get<VkRenderPass>(), m_relIdxs.get<VkPipeline>(), m_dynamicStates);
         m_filedCreateInfo = true;
         return result;

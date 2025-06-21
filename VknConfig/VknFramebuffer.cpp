@@ -2,8 +2,8 @@
 
 namespace vkn
 {
-    VknFramebuffer::VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknFramebuffer::VknFramebuffer(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
     }
 
@@ -50,16 +50,16 @@ namespace vkn
         if (!m_createdAttachments)
             this->createAttachments();
 
-        m_infos->fileFramebufferCreateInfo(
-            m_relIdxs, &m_engine->getObject<VkRenderPass>(m_absIdxs),
+        s_infos.fileFramebufferCreateInfo(
+            m_relIdxs, &s_engine.getObject<VkRenderPass>(m_absIdxs),
             this->getAttachmentImageViews(), m_width, m_height, m_numLayers, m_createFlags);
 
         VkFramebufferCreateInfo *createInfo =
-            m_infos->getFramebufferCreateInfo(m_relIdxs);
+            s_infos.getFramebufferCreateInfo(m_relIdxs);
         VknResult res{
             vkCreateFramebuffer(
-                m_engine->getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
-                &m_engine->getObject<VkFramebuffer>(m_absIdxs)),
+                s_engine.getObject<VkDevice>(m_absIdxs), createInfo, VK_NULL_HANDLE,
+                &s_engine.getObject<VkFramebuffer>(m_absIdxs)),
             "Create framebuffer."};
         m_createdFramebuffer = true;
     }
@@ -74,9 +74,9 @@ namespace vkn
         if (m_addedAttachments)
             throw std::runtime_error("Attachments already set on framebuffer.");
 
-        VknSpace<VkAttachmentReference> *refs = m_infos->getRenderpassAttachmentReferences(
+        VknSpace<VkAttachmentReference> *refs = s_infos.getRenderpassAttachmentReferences(
             m_relIdxs);
-        VknSpace<VkAttachmentDescription> *descriptions = m_infos->getRenderpassAttachmentDescriptions(
+        VknSpace<VkAttachmentDescription> *descriptions = s_infos.getRenderpassAttachmentDescriptions(
             m_relIdxs);
 
         if (descriptions->getDataSize() == 0)
@@ -86,12 +86,12 @@ namespace vkn
         }
 
         if (!m_recreatingFramebuffer)
-            m_imageViewStartIdx = m_engine->addNewVknObjects<VknImageView, VkImageView, VkDevice>(
-                descriptions->getDataSize(), m_attachViews, m_relIdxs, m_absIdxs, m_infos);
+            m_imageViewStartIdx = s_engine.addNewVknObjects<VknImageView, VkImageView, VkDevice>(
+                descriptions->getDataSize(), m_attachViews, m_relIdxs, m_absIdxs);
         if ((this->hasSwapchainImage() && descriptions->getDataSize() > 1) || !this->hasSwapchainImage())
-            m_imageStartIdx = m_engine->addNewVknObjects<VknImage, VkImage, VkDevice>(
+            m_imageStartIdx = s_engine.addNewVknObjects<VknImage, VkImage, VkDevice>(
                 this->hasSwapchainImage() ? descriptions->getDataSize() - 1u : descriptions->getDataSize(),
-                m_attachImages, m_relIdxs, m_absIdxs, m_infos);
+                m_attachImages, m_relIdxs, m_absIdxs);
 
         for (uint32_t i = 0; i < descriptions->getDataSize(); ++i) // Iterate descriptions
         {
@@ -196,10 +196,10 @@ namespace vkn
         if (!m_addedAttachments)
             throw std::runtime_error("Attachments not set before trying to get() them.");
 
-        if (m_infos->getRenderpassAttachmentDescriptions(m_relIdxs)->getDataSize() == 0)
-            return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, 0);
+        if (s_infos.getRenderpassAttachmentDescriptions(m_relIdxs)->getDataSize() == 0)
+            return s_engine.getVectorSlice<VkImageView>(m_imageViewStartIdx, 0);
         else
-            return m_engine->getVectorSlice<VkImageView>(m_imageViewStartIdx, m_attachViews.size());
+            return s_engine.getVectorSlice<VkImageView>(m_imageViewStartIdx, m_attachViews.size());
     }
 
     void VknFramebuffer::demolish()
@@ -211,10 +211,10 @@ namespace vkn
             {
                 getListElement(i, m_attachImages)->demolishImage();
             }
-            m_infos->removeFramebufferCreateInfo(m_relIdxs);
+            s_infos.removeFramebufferCreateInfo(m_relIdxs);
         }
         vkDestroyFramebuffer(
-            m_engine->getObject<VkDevice>(m_absIdxs), m_engine->getObject<VkFramebuffer>(m_absIdxs), nullptr);
+            s_engine.getObject<VkDevice>(m_absIdxs), s_engine.getObject<VkFramebuffer>(m_absIdxs), nullptr);
     }
 
     void VknFramebuffer::recreateFramebuffer()

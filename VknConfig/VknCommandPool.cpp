@@ -2,8 +2,8 @@
 
 namespace vkn
 {
-    VknCommandPool::VknCommandPool(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknCommandPool::VknCommandPool(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
     }
 
@@ -18,7 +18,7 @@ namespace vkn
         poolInfo.queueFamilyIndex = queueFamilyIndex;
 
         VknResult res{vkCreateCommandPool(
-                          m_engine->getObject<VkDevice>(m_absIdxs), &poolInfo, nullptr, &m_engine->getObject<VkCommandPool>(m_absIdxs)),
+                          s_engine.getObject<VkDevice>(m_absIdxs), &poolInfo, nullptr, &s_engine.getObject<VkCommandPool>(m_absIdxs)),
                       "Create command pool"};
         m_commandPoolCreated = true;
     }
@@ -30,16 +30,16 @@ namespace vkn
         if (!m_commandPoolCreated)
             throw std::runtime_error("Command pool not created before allocating command buffers.");
 
-        m_engine->addVkCommandBuffers(m_absIdxs, numSwapchainImages);
+        s_engine.addVkCommandBuffers(m_absIdxs, numSwapchainImages);
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = m_engine->getObject<VkCommandPool>(m_absIdxs);
+        allocInfo.commandPool = s_engine.getObject<VkCommandPool>(m_absIdxs);
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; // Primary can be submitted to queues
         allocInfo.commandBufferCount = numSwapchainImages;
 
         VknResult res{vkAllocateCommandBuffers(
-                          m_engine->getObject<VkDevice>(m_absIdxs), &allocInfo, m_engine->getObject<VkCommandBuffer *>(m_absIdxs)),
+                          s_engine.getObject<VkDevice>(m_absIdxs), &allocInfo, s_engine.getObject<VkCommandBuffer *>(m_absIdxs)),
                       "Allocate command buffers"};
         m_commandBuffersAllocated = true;
     }
@@ -48,6 +48,6 @@ namespace vkn
     {
         if (!m_commandBuffersAllocated)
             throw std::runtime_error("Command buffers not allocated yet.");
-        return &m_engine->getObject<VkCommandBuffer *>(m_absIdxs)[imageIdx];
+        return &s_engine.getObject<VkCommandBuffer *>(m_absIdxs)[imageIdx];
     }
 }

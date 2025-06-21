@@ -2,16 +2,14 @@
 
 namespace vkn
 {
-    VknDevice::VknDevice(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknDevice::VknDevice(VknIdxs relIdxs, VknIdxs absIdxs) : VknObject(relIdxs, absIdxs)
     {
         m_instanceLock = this;
-        VknPhysicalDevice &physicalDevice = m_engine->addNewVknObject<VknPhysicalDevice, VkPhysicalDevice>(
-            m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs, m_infos);
+        VknPhysicalDevice &physicalDevice = s_engine.addNewVknObject<VknPhysicalDevice, VkPhysicalDevice>(
+            m_relIdxs.get<VkDevice>(), m_physicalDevices, m_relIdxs, m_absIdxs);
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice.getPhysicalDeviceAbsIdxs().get<VkPhysicalDevice>());
-        m_absIdxs.add<VmaAllocator>(m_engine->getVectorSize<VmaAllocator>());
-        features = m_infos->getDeviceFeaturesObject();
+        m_absIdxs.add<VmaAllocator>(s_engine.getVectorSize<VmaAllocator>());
+        features = s_infos.getDeviceFeaturesObject();
     }
 
     VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
@@ -20,12 +18,12 @@ namespace vkn
             throw std::runtime_error("Swapchain extension not enabled before adding swapchain.");
         if (!m_createdVkDevice)
             throw std::runtime_error("Device not created before adding swapchain.");
-        if (m_engine->getVector<VkSurfaceKHR>().isEmpty())
+        if (s_engine.getVector<VkSurfaceKHR>().isEmpty())
             throw std::runtime_error("Surface not created before adding swapchain.");
 
         m_instanceLock(this);
-        VknSwapchain &swapchain = m_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
-            swapchainIdx, m_swapchains, m_relIdxs, m_absIdxs, m_infos);
+        VknSwapchain &swapchain = s_engine.addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
+            swapchainIdx, m_swapchains, m_relIdxs, m_absIdxs);
         return &swapchain;
     }
 
@@ -43,7 +41,7 @@ namespace vkn
     {
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before retrieving it.");
-        return &m_engine->getObject<VkDevice>(m_absIdxs);
+        return &s_engine.getObject<VkDevice>(m_absIdxs);
     }
 
     VknRenderpass *VknDevice::getRenderpass(uint32_t renderpassIdx)
@@ -55,7 +53,7 @@ namespace vkn
     {
         if (extension == VK_KHR_SWAPCHAIN_EXTENSION_NAME)
             m_swapchainExtensionEnabled = true;
-        m_infos->addDeviceExtension(extension, m_relIdxs);
+        s_infos.addDeviceExtension(extension, m_relIdxs);
     }
 
     uint32_t VknDevice::findGraphicsQueue()
@@ -82,8 +80,8 @@ namespace vkn
         m_instanceLock(this);
         if (!m_createdVkDevice)
             throw std::runtime_error("Logical device not created before creating command pool.");
-        return &m_engine->addNewVknObject<VknCommandPool, VkCommandPool, VkDevice>(
-            newCommandPoolIdx, m_commandPools, m_relIdxs, m_absIdxs, m_infos);
+        return &s_engine.addNewVknObject<VknCommandPool, VkCommandPool, VkDevice>(
+            newCommandPoolIdx, m_commandPools, m_relIdxs, m_absIdxs);
     }
 
     void VknDevice::createSyncObjects(uint32_t maxFramesInFlight)
@@ -97,14 +95,14 @@ namespace vkn
         m_maxFramesInFlightForSyncObjects = maxFramesInFlight; // Store for validation in getters
 
         // Record starting indices in the VknEngine's global vectors
-        m_imageAvailableSemaphoreStartIdx = m_engine->getVectorSize<VkSemaphore>();
-        m_inFlightFenceStartIdx = m_engine->getVectorSize<VkFence>();
+        m_imageAvailableSemaphoreStartIdx = s_engine.getVectorSize<VkSemaphore>();
+        m_inFlightFenceStartIdx = s_engine.getVectorSize<VkFence>();
 
         for (uint32_t i = 0; i < maxFramesInFlight; ++i)
         {
-            m_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
-            m_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
-            m_engine->addNewObject<VkFence, VkDevice>(m_absIdxs);
+            s_engine.addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            s_engine.addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            s_engine.addNewObject<VkFence, VkDevice>(m_absIdxs);
         }
 
         VkSemaphoreCreateInfo semaphoreInfo{};
@@ -118,15 +116,15 @@ namespace vkn
         {
             VknResult res1{vkCreateSemaphore(
                                *getVkDevice(), &semaphoreInfo, nullptr,
-                               &m_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + i * 2)),
+                               &s_engine.getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + i * 2)),
                            "Create image available semaphore"};
             VknResult res2{vkCreateSemaphore(
                                *getVkDevice(), &semaphoreInfo, nullptr,
-                               &m_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + i * 2 + 1)),
+                               &s_engine.getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + i * 2 + 1)),
                            "Create render finished semaphore"};
             VknResult res3{vkCreateFence(
                                *getVkDevice(), &fenceInfo, nullptr,
-                               &m_engine->getVector<VkFence>()(m_inFlightFenceStartIdx + i)),
+                               &s_engine.getVector<VkFence>()(m_inFlightFenceStartIdx + i)),
                            "Create in flight fence"};
         }
         m_syncObjectsCreated = true;
@@ -137,7 +135,7 @@ namespace vkn
         if (frameInFlight >= m_maxFramesInFlightForSyncObjects)
             throw std::out_of_range("frameInFlight out of range for getImageAvailableSemaphore");
         // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
-        return m_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + frameInFlight * 2);
+        return s_engine.getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + frameInFlight * 2);
     }
 
     VkSemaphore &VknDevice::getRenderFinishedSemaphore(uint32_t frameInFlight)
@@ -145,14 +143,14 @@ namespace vkn
         if (frameInFlight >= m_maxFramesInFlightForSyncObjects)
             throw std::out_of_range("frameInFlight out of range for getRenderFinishedSemaphore");
         // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
-        return m_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + frameInFlight * 2 + 1);
+        return s_engine.getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + frameInFlight * 2 + 1);
     }
 
     VkFence &VknDevice::getFence(uint32_t frameInFlight)
     {
         if (frameInFlight >= m_maxFramesInFlightForSyncObjects)
             throw std::out_of_range("frameInFlight out of range for getFence");
-        return m_engine->getVector<VkFence>()(m_inFlightFenceStartIdx + frameInFlight);
+        return s_engine.getVector<VkFence>()(m_inFlightFenceStartIdx + frameInFlight);
     }
 
     VknResult VknDevice::createDevice()
@@ -164,15 +162,15 @@ namespace vkn
             physicalDevice->fileDeviceQueuePrioritiesDefault(); // Subtle initiation of chain-reaction default configurations
         physicalDevice->fileQueueCreateInfos();
         m_absIdxs.add<VkPhysicalDevice>(physicalDevice->getPhysicalDeviceAbsIdx());
-        m_infos->fileDeviceFeaturesInfo();
+        s_infos.fileDeviceFeaturesInfo();
 
-        m_infos->fileDeviceCreateInfo(m_relIdxs.get<VkDevice>());
+        s_infos.fileDeviceCreateInfo(m_relIdxs.get<VkDevice>());
         VknResult res{
             vkCreateDevice(
                 *(getListElement(0, m_physicalDevices)->getVkPhysicalDevice()),
-                m_infos->getDeviceCreateInfo(m_relIdxs.get<VkDevice>()),
+                s_infos.getDeviceCreateInfo(m_relIdxs.get<VkDevice>()),
                 nullptr,
-                &m_engine->getObject<VkDevice>(m_absIdxs)),
+                &s_engine.getObject<VkDevice>(m_absIdxs)),
             "Create device"};
 
         m_createdVkDevice = true;
@@ -212,8 +210,8 @@ namespace vkn
             throw std::runtime_error("Swapchain not created before adding renderpass.");
 
         m_instanceLock(this);
-        return &m_engine->addNewVknObject<VknRenderpass, VkRenderPass, VkDevice>(
-            renderpassIdx, m_renderpasses, m_relIdxs, m_absIdxs, m_infos);
+        return &s_engine.addNewVknObject<VknRenderpass, VkRenderPass, VkDevice>(
+            renderpassIdx, m_renderpasses, m_relIdxs, m_absIdxs);
     }
 
     VknCommandPool *VknDevice::getCommandPool(uint32_t commandPoolIdx)
@@ -228,49 +226,65 @@ namespace vkn
         if (!m_createdVkDevice)
             throw std::runtime_error("Device must be created before adding allocator.");
 
-        VmaAllocator &allocator = m_engine->addNewObject<VmaAllocator, VkDevice>(m_absIdxs);
+        VmaAllocator &allocator = s_engine.addNewObject<VmaAllocator, VkDevice>(m_absIdxs);
         VmaAllocatorCreateInfo allocatorInfo{};
         // allocatorInfo.pVulkanFunctions = &m_vmaVulkanFunctions; //This needs to come back if volk ever gets used.
-        allocatorInfo.physicalDevice = m_engine->getObject<VkPhysicalDevice>(m_absIdxs);
-        allocatorInfo.device = m_engine->getObject<VkDevice>(m_absIdxs);
-        allocatorInfo.instance = m_engine->getObject<VkInstance>(m_absIdxs);
-        allocatorInfo.vulkanApiVersion = m_infos->getAppInfo()->apiVersion;
+        allocatorInfo.physicalDevice = s_engine.getObject<VkPhysicalDevice>(m_absIdxs);
+        allocatorInfo.device = s_engine.getObject<VkDevice>(m_absIdxs);
+        allocatorInfo.instance = s_engine.getObject<VkInstance>(m_absIdxs);
+        allocatorInfo.vulkanApiVersion = s_infos.getAppInfo()->apiVersion;
 
         VknResult res{"Create VMA allocator."};
         res = vmaCreateAllocator(&allocatorInfo, &allocator);
         return &allocator;
     }
 
-    void VknDevice::addVertexBuffer(uint_fast32_t size)
+    VknVertexBuffer *VknDevice::addVertexBuffer(VkDeviceSize size)
     {
-        m_engine->addNewVknObject<VknVertexBuffer, VkBuffer, VkDevice>(
-            m_vertexBuffers.size(), m_vertexBuffers, m_relIdxs, m_absIdxs, m_infos);
-        m_vertexBuffers.setSize(size);
+        s_engine.addNewVknObject<VknVertexBuffer, VkBuffer, VkDevice>(
+            m_vertexBuffers.size(), m_vertexBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setSize(size);
+        return &m_vertexBuffers.back();
     }
 
-    void VknDevice::addIndexBuffer(uint_fast32_t size)
+    VknIndexBuffer *VknDevice::addIndexBuffer(VkDeviceSize size)
     {
-        m_indexBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+        s_engine.addNewVknObject<VknIndexBuffer, VkBuffer, VkDevice>(
+            m_indexBuffers.size(), m_indexBuffers, m_relIdxs, m_absIdxs);
+        m_indexBuffers.back().setSize(size);
+        return &m_indexBuffers.back();
     }
 
-    void VknDevice::addCpuUniformBuffer(uint_fast32_t size)
+    VknCpuUniformBuffer *VknDevice::addCpuUniformBuffer(VkDeviceSize size)
     {
-        m_cpuUniformBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+        s_engine.addNewVknObject<VknCpuUniformBuffer, VkBuffer, VkDevice>(
+            m_cpuUniformBuffers.size(), m_cpuUniformBuffers, m_relIdxs, m_absIdxs);
+        m_cpuUniformBuffers.back().setSize(size);
+        return &m_cpuUniformBuffers.back();
     }
 
-    void VknDevice::addGpuUniformBuffer(uint_fast32_t size)
+    VknGpuUniformBuffer *VknDevice::addGpuUniformBuffer(VkDeviceSize size)
     {
-        m_gpuUniformBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+        s_engine.addNewVknObject<VknGpuUniformBuffer, VkBuffer, VkDevice>(
+            m_gpuUniformBuffers.size(), m_gpuUniformBuffers, m_relIdxs, m_absIdxs);
+        m_gpuUniformBuffers.back().setSize(size);
+        return &m_gpuUniformBuffers.back();
     }
 
-    void VknDevice::addStorageBuffer(uint_fast32_t size)
+    VknStorageBuffer *VknDevice::addStorageBuffer(VkDeviceSize size)
     {
-        m_storageBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+        s_engine.addNewVknObject<VknStorageBuffer, VkBuffer, VkDevice>(
+            m_storageBuffers.size(), m_storageBuffers, m_relIdxs, m_absIdxs);
+        m_storageBuffers.back().setSize(size);
+        return &m_storageBuffers.back();
     }
 
-    void VknDevice::addIndirectBuffer(uint_fast32_t size)
+    VknIndirectBuffer *VknDevice::addIndirectBuffer(VkDeviceSize size)
     {
-        m_indirectBuffer.emplace_back(m_engine, m_relIdxs, m_absIdxs, m_infos, size);
+        s_engine.addNewVknObject<VknIndirectBuffer, VkBuffer, VkDevice>(
+            m_indirectBuffers.size(), m_indirectBuffers, m_relIdxs, m_absIdxs);
+        m_indirectBuffers.back().setSize(size);
+        return &m_indirectBuffers.back();
     }
 
 } // namespace vkn

@@ -2,9 +2,8 @@
 
 namespace vkn
 {
-    VknRasterizationState::VknRasterizationState(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
+    VknRasterizationState::VknRasterizationState(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
     }
 
@@ -12,7 +11,7 @@ namespace vkn
     {
         if (m_filed)
             throw std::runtime_error("RasterizationStateCreateInfo already filed.");
-        m_infos->fileRasterizationStateCreateInfo(
+        s_infos.fileRasterizationStateCreateInfo(
             m_relIdxs, m_polygonMode, m_cullMode, m_frontFace, m_depthBiasConstantFactor,
             m_depthBiasClamp, m_depthBiasSlopeFactor, m_lineWidth,
             m_depthClampEnable, m_rasterizerDiscardEnable, m_depthBiasEnable);

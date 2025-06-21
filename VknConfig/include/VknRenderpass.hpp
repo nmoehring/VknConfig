@@ -44,19 +44,21 @@
 
 #pragma once
 
+#include "VknObject.hpp"
 #include "VknPipeline.hpp"
 #include "VknFramebuffer.hpp"
 #include "VknData.hpp"
 #include "VknSwapchain.hpp"
+#include "VknInfos.hpp"
 
 namespace vkn
 {
-    class VknRenderpass
+    class VknRenderpass : public VknObject
     {
     public:
         // Overloads
         VknRenderpass() = default;
-        VknRenderpass(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknRenderpass(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Members
         void addSubpass(
@@ -97,19 +99,13 @@ namespace vkn
         void recreateFramebuffers(VknSwapchain &swapchain);
 
         // Getters
-        VkRenderPass *getVkRenderPass() { return &m_engine->getObject<VkRenderPass>(m_absIdxs); }
+        VkRenderPass *getVkRenderPass() { return &s_engine.getObject<VkRenderPass>(m_absIdxs); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
         std::list<VknFramebuffer> *getFramebuffers() { return &m_framebuffers; }
         VknIdxs &getRelIdxs() { return m_relIdxs; }
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Members
         std::list<VknPipeline> m_pipelines{};
         std::list<VknFramebuffer> m_framebuffers{};

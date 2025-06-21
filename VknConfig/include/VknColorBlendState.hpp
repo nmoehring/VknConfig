@@ -1,16 +1,16 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
-#include "VknInfos.hpp" // For VknEngine, VknIdxs, VknInfos
-#include "VknData.hpp"  // For VknVector
+#include "VknObject.hpp"
+#include "VknData.hpp" // For VknVector
 
 namespace vkn
 {
-    class VknColorBlendState
+    class VknColorBlendState : public VknObject
     {
     public:
         VknColorBlendState() = default;
-        VknColorBlendState(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknColorBlendState(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Configuration
         void setLogicOpEnable(VkBool32 enable);
@@ -34,12 +34,6 @@ namespace vkn
         void _fileColorBlendStateCreateInfo();
 
     private:
-        // Engine
-        VknEngine *m_engine;
-        VknIdxs m_relIdxs;
-        VknIdxs m_absIdxs;
-        VknInfos *m_infos;
-
         // Params for VkPipelineColorBlendStateCreateInfo
         VkBool32 m_logicOpEnable{VK_FALSE};
         VkLogicOp m_logicOp{VK_LOGIC_OP_COPY}; // Default if logicOpEnable is true

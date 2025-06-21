@@ -2,17 +2,8 @@
 
 namespace vkn
 {
-    VknViewportState::VknViewportState(
-        VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_absIdxs{absIdxs}, m_infos{infos}
-    {
-    }
-
-    VknViewportState::VknViewportState(VknEngine *engine, VknIdxs relIdxs,
-                                       VknInfos *infos, VkExtent2D *swapchainExtent,
-                                       const bool *swapchainCreated)
-        : m_engine{engine}, m_relIdxs{relIdxs}, m_infos{infos},
-          m_swapchainExtent{swapchainExtent}
+    VknViewportState::VknViewportState(VknIdxs relIdxs, VknIdxs absIdxs)
+        : VknObject(relIdxs, absIdxs)
     {
     }
 
@@ -20,7 +11,7 @@ namespace vkn
     {
         if (m_filedCreateInfo)
             throw std::runtime_error("ViewportStateCreateInfo already filed.");
-        m_infos->fileViewportStateCreateInfo(
+        s_infos.fileViewportStateCreateInfo(
             m_relIdxs, &m_viewports, &m_scissors);
         m_filedCreateInfo = true;
     }
@@ -63,7 +54,7 @@ namespace vkn
 
     void VknViewportState::removeCreateInfo()
     {
-        m_infos->removeViewportStateCreateInfo(m_relIdxs);
+        s_infos.removeViewportStateCreateInfo(m_relIdxs);
         m_filedCreateInfo = false;
     }
 
