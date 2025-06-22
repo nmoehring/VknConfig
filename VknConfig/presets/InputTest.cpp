@@ -2,17 +2,17 @@
 
 namespace vkn
 {
-    bool inputTestConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
+    bool inputTestConfig(VknConfig &config)
     {
         // Shallow Config members
-        config->setAppName("InputTest");
-        config->setEngineName("MinVknConfig");
-        config->addWindow();
-        config->createInstance();
-        config->createSurface(0);
+        config.setAppName("InputTest");
+        config.setEngineName("MinVknConfig");
+        config.addWindow();
+        config.createInstance();
+        config.createSurface(0);
 
         // Config=>Devices
-        auto *device = config->addDevice(0);
+        auto *device = config.addDevice(0);
         device->addExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         // Config->Device->PhysicalDevice
         device->createDevice();

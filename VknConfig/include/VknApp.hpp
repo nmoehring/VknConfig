@@ -9,8 +9,8 @@
 namespace vkn
 {
     // Forward declarations for the presets
-    bool deviceInfoConfig(VknConfig *config, VknEngine *engine, VknInfos *infos);
-    bool noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos);
+    bool deviceInfoConfig(VknConfig &config);
+    bool noInputConfig(VknConfig &config);
 
     class VknApp
     {
@@ -18,7 +18,7 @@ namespace vkn
         VknApp();
 
         // Setup
-        void configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> func);
+        void configureWithPreset(std::function<bool(VknConfig &)> func);
         void enableValidationLayer();
 
         // Execute
@@ -33,8 +33,8 @@ namespace vkn
         // Engine
         VknConfig m_config;
         VknCycle m_cycle;
-        VknEngine m_engine{};
-        VknInfos m_infos{};
+        VknEngine *m_engine{nullptr};
+        VknInfos *m_infos{nullptr};
 
         // State
         bool m_readyToRun{false};

@@ -11,7 +11,7 @@ namespace vkn
     {
         if (m_filed)
             throw std::runtime_error("RasterizationStateCreateInfo already filed.");
-        s_infos.fileRasterizationStateCreateInfo(
+        s_infos->fileRasterizationStateCreateInfo(
             m_relIdxs, m_polygonMode, m_cullMode, m_frontFace, m_depthBiasConstantFactor,
             m_depthBiasClamp, m_depthBiasSlopeFactor, m_lineWidth,
             m_depthClampEnable, m_rasterizerDiscardEnable, m_depthBiasEnable);

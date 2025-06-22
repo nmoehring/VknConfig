@@ -65,6 +65,7 @@ namespace vkn
     public:
         // Overloads
         VknConfig();
+        ~VknConfig();
         VknConfig(const VknConfig &) = delete;
         VknConfig &operator=(const VknConfig &) = delete;
         VknConfig(VknConfig &&) = delete;
@@ -87,6 +88,7 @@ namespace vkn
         void setApiVersion(unsigned int apiVersion);
         void setNumHardCodedVertices(uint32_t numVertices) { m_numHardCodedVertices = numVertices; }
         void setNotPresentable() { m_presentable = false; }
+        void setPresentable() { m_presentable = true; }
 
         // Create
         VknResult createInstance();
@@ -98,7 +100,7 @@ namespace vkn
         // Getters
         VkInstance *getInstance()
         {
-            return &s_engine.getObject<VkInstance>(0);
+            return &s_engine->getObject<VkInstance>(0);
         }
         bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
@@ -106,6 +108,8 @@ namespace vkn
         uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
         bool hasWindow() { return m_vknWindow != nullptr; } // Generic check
         VknWindow *getWindow() { return m_vknWindow; }
+        VknEngine *getEngine() { return s_engine; }
+        VknInfos *getInfos() { return s_infos; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 

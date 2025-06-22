@@ -83,6 +83,8 @@ namespace vkn
         };
 
         VknInfos();
+        VknInfos &operator=(const VknInfos &other) = delete;
+        VknInfos &operator=(VknInfos &&other) = delete;
         //~VknInfos();
 
         // getters
@@ -184,6 +186,7 @@ namespace vkn
             VknIdxs &relIdxs, std::vector<char> *code);
         VkPipelineShaderStageCreateInfo *fileShaderStageCreateInfo(
             VknIdxs &relIdxs, VkShaderModule *module, VkShaderStageFlagBits *stage,
+            std::string &entryName,
             VkPipelineShaderStageCreateFlags *flags,
             VkSpecializationInfo *pSpecializationInfo);
         VkPipelineVertexInputStateCreateInfo *fileVertexInputStateCreateInfo(
@@ -391,8 +394,6 @@ namespace vkn
         VknSpace<VkMemoryAllocateInfo> m_deviceMemoryAllocateInfos{1u}; // Device>DeviceMemory#AllocateInfo
         VknSpace<VkBufferCreateInfo> m_bufferCreateInfos{1u};           // Device>Buffer#CreateInfo
         VknSpace<VmaAllocation> m_vmaAllocationInfos{1u};               // Device>VmaAllocation#Info
-
-        const char m_mainEntry[5] = "main";
 
         // Required file checklist
         bool m_filedAppInfo{false};

@@ -7,31 +7,31 @@ namespace vkn
 
     bool VknQueueFamily::supportsGraphics()
     {
-        VkQueueFamilyProperties *props = &s_engine.getObject<VkQueueFamilyProperties>(m_absIdxs);
+        VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);
         return ((props->queueFlags & VK_QUEUE_GRAPHICS_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsCompute()
     {
-        VkQueueFamilyProperties *props = &s_engine.getObject<VkQueueFamilyProperties>(m_absIdxs);
+        VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);
         return ((props->queueFlags & VK_QUEUE_COMPUTE_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsTransfer()
     {
-        VkQueueFamilyProperties *props = &s_engine.getObject<VkQueueFamilyProperties>(m_absIdxs);
+        VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);
         return ((props->queueFlags & VK_QUEUE_TRANSFER_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsSparseBinding()
     {
-        VkQueueFamilyProperties *props = &s_engine.getObject<VkQueueFamilyProperties>(m_absIdxs);
+        VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);
         return ((props->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) > 0);
     }
 
     bool VknQueueFamily::supportsMemoryProtection()
     {
-        VkQueueFamilyProperties *props = &s_engine.getObject<VkQueueFamilyProperties>(m_absIdxs);
+        VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);
         return ((props->queueFlags & VK_QUEUE_PROTECTED_BIT) > 0);
     }
 
@@ -62,7 +62,7 @@ namespace vkn
 
     uint32_t VknQueueFamily::getNumAvailable()
     {
-        VkQueueFamilyProperties *props = &s_engine.getObject<VkQueueFamilyProperties>(m_absIdxs);
+        VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);
         return props->queueCount;
     }
 }

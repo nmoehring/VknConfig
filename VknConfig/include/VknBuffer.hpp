@@ -11,6 +11,9 @@
 
 namespace vkn
 {
+    class VknUploadBuffer;
+    class VknDownloadBuffer;
+
     /**
      * @brief Manages a Vulkan VkBuffer and its associated memory using VMA.
      *
@@ -37,8 +40,8 @@ namespace vkn
         VkDeviceSize getSize() const { return m_size; }
         void *getMappedData() const { return m_mappedData; } // Valid if VMA_ALLOCATION_CREATE_MAPPED_BIT was used
         void *getDataArea();
-        VkBuffer getUploadVkBuffer() const { return m_uploadBuffer->getVkBuffer(); }
-        VkBuffer getDownloadVkBuffer() const { return m_downloadBuffer->getVkBuffer(); }
+        VkBuffer getUploadVkBuffer() const;
+        VkBuffer getDownloadVkBuffer() const;
         void setUploading()
         {
             if (m_uploadable)

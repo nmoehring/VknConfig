@@ -1,4 +1,7 @@
+#pragma once
+
 #include "VknEngine.hpp"
+#include "VknInfos.hpp"
 
 namespace vkn
 {
@@ -8,12 +11,14 @@ namespace vkn
         VknObject();
         VknObject(VknIdxs relIdxs, VknIdxs absIdxs);
         ~VknObject() = default;
+        void init();
+        void exit();
 
     protected:
         // Engine
-        static VknEngine s_engine;
+        static VknEngine *s_engine;
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
-        static VknInfos s_infos;
+        static VknInfos *s_infos;
     };
 }

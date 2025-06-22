@@ -4,11 +4,12 @@
 namespace vkn
 {
 
-    bool deviceInfoConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
+    bool deviceInfoConfig(VknConfig &config)
     {
-        config->createInstance();
+        config.setNotPresentable();
+        config.createInstance();
 
-        auto device = config->addDevice(0);
+        auto device = config.addDevice(0);
         device->createDevice();
 
         // auto renderpass = device->addRenderpass(0);

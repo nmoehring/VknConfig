@@ -6,7 +6,7 @@ namespace vkn
         : VknObject(relIdxs, absIdxs)
     {
         m_instanceLock = this;
-        s_engine.addNewVknObject<VknPipelineLayout, VkPipelineLayout, VkDevice>(
+        s_engine->addNewVknObject<VknPipelineLayout, VkPipelineLayout, VkDevice>(
             0, m_layouts, m_relIdxs, m_absIdxs);
         m_vertexInputState = VknVertexInputState{relIdxs, absIdxs};
         m_inputAssemblyState = VknInputAssemblyState{relIdxs, absIdxs};
@@ -22,7 +22,7 @@ namespace vkn
                                                 std::string filename, VkPipelineShaderStageCreateFlags flags)
     {
         m_instanceLock(this);
-        VknShaderStage &shaderStage = s_engine.addNewVknObject<VknShaderStage, VkShaderModule, VkDevice>(
+        VknShaderStage &shaderStage = s_engine->addNewVknObject<VknShaderStage, VkShaderModule, VkDevice>(
             shaderIdx, m_shaderStages, m_relIdxs, m_absIdxs);
         shaderStage.setFilename(filename);
         shaderStage.setShaderStageType(stageType);
@@ -43,8 +43,8 @@ namespace vkn
     VkGraphicsPipelineCreateInfo *VknPipeline::_filePipelineCreateInfo()
     {
         VkPipelineLayout *layout = this->getLayout()->getVkLayout();
-        return s_infos.fileGfxPipelineCreateInfo(
-            m_relIdxs, s_engine.getObject<VkRenderPass>(m_absIdxs),
+        return s_infos->fileGfxPipelineCreateInfo(
+            m_relIdxs, s_engine->getObject<VkRenderPass>(m_absIdxs),
             layout, m_basePipelineHandle, m_basePipelineIndex, m_createFlags);
     }
 }

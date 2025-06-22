@@ -11,7 +11,7 @@ namespace vkn
     {
         if (m_filedCreateInfo)
             throw std::runtime_error("ViewportStateCreateInfo already filed.");
-        s_infos.fileViewportStateCreateInfo(
+        s_infos->fileViewportStateCreateInfo(
             m_relIdxs, &m_viewports, &m_scissors);
         m_filedCreateInfo = true;
     }
@@ -54,7 +54,7 @@ namespace vkn
 
     void VknViewportState::removeCreateInfo()
     {
-        s_infos.removeViewportStateCreateInfo(m_relIdxs);
+        s_infos->removeViewportStateCreateInfo(m_relIdxs);
         m_filedCreateInfo = false;
     }
 

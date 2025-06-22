@@ -41,9 +41,9 @@ namespace vkn
     {
         if (m_filed)
             throw std::runtime_error("Multisample state create info already filed.");
-        s_infos.fileMultisampleStateCreateInfo(m_relIdxs, m_minSampleShading, &m_sampleMask,
-                                               m_rasterizationSamples, m_sampleShadingEnable,
-                                               m_alphaToCoverageEnable, m_alphaToOneEnable);
+        s_infos->fileMultisampleStateCreateInfo(m_relIdxs, m_minSampleShading, &m_sampleMask,
+                                                m_rasterizationSamples, m_sampleShadingEnable,
+                                                m_alphaToCoverageEnable, m_alphaToOneEnable);
         m_filed = true;
     }
 }

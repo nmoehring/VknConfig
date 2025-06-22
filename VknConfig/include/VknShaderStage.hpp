@@ -63,13 +63,16 @@ namespace vkn
     class VknShaderStage : public VknObject
     {
     public:
+        // Overloads
         VknShaderStage() = default;
         VknShaderStage(VknIdxs relIdxs, VknIdxs absIdxs);
 
+        // Config
         void setShaderStageType(VknShaderStageType);
         void setFilename(std::string filename);
         void setFlags(VkPipelineShaderStageCreateFlags createFlags);
         void setSpecialization(VkSpecializationInfo m_specializationInfo);
+        void setEntryName(std::string entryName);
 
         // Create
         /** @brief Creates the VkShaderModule object from the loaded shader code.*/
@@ -87,6 +90,7 @@ namespace vkn
         std::string m_filename{};
         VkPipelineShaderStageCreateFlags m_createFlags{0}; /**< Flags for shader stage creation */
         VkSpecializationInfo m_specializationInfo{};       /**< Specialization constants for the shader. */
+        std::string m_entryName{"main"};
 
         // State
         bool m_createdShaderModule{false}; /**< True if the shader module has been created. */

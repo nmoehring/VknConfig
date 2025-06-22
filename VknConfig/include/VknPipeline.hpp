@@ -92,7 +92,7 @@ namespace vkn
         // Get
         VknShaderStage *getShaderStage(uint32_t shaderIdx);
         std::list<VknShaderStage> *getShaderStages() { return &m_shaderStages; }
-        VkPipeline *getVkPipeline() { return &s_engine.getObject<VkPipeline>(m_absIdxs); }
+        VkPipeline *getVkPipeline() { return &s_engine->getObject<VkPipeline>(m_absIdxs); }
         VknVertexInputState *getVertexInputState() { return &m_vertexInputState.value(); }
         VknInputAssemblyState *getInputAssemblyState() { return &m_inputAssemblyState.value(); }
         VknMultisampleState *getMultisampleState() { return &m_multisampleState.value(); }

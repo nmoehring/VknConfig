@@ -169,7 +169,7 @@ namespace vkn
 
     VkPipelineShaderStageCreateInfo *VknInfos::fileShaderStageCreateInfo(
         VknIdxs &relIdxs,
-        VkShaderModule *module, VkShaderStageFlagBits *stage,
+        VkShaderModule *module, VkShaderStageFlagBits *stage, std::string &entryName,
         VkPipelineShaderStageCreateFlags *flags, VkSpecializationInfo *pSpecializationInfo)
     {
         VkPipelineShaderStageCreateInfo *info =
@@ -180,7 +180,7 @@ namespace vkn
         info->flags = *flags; // need file
         info->stage = *stage; // need file
         info->module = *module;
-        info->pName = m_mainEntry;
+        info->pName = entryName.c_str();
         info->pSpecializationInfo = pSpecializationInfo; // need file
         return info;
     }

@@ -34,7 +34,7 @@ namespace vkn
 
     VkPipelineDynamicStateCreateInfo *VknDynamicState::_fileDynamicStateCreateInfo()
     {
-        VkPipelineDynamicStateCreateInfo *result = s_infos.fileDynamicStateCreateInfo(
+        VkPipelineDynamicStateCreateInfo *result = s_infos->fileDynamicStateCreateInfo(
             m_relIdxs.get<VkDevice>(), m_relIdxs.get<VkRenderPass>(), m_relIdxs.get<VkPipeline>(), m_dynamicStates);
         m_filedCreateInfo = true;
         return result;

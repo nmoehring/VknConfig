@@ -60,7 +60,7 @@ namespace vkn
             setDefaultAttachmentState();
         }
 
-        s_infos.fileColorBlendStateCreateInfo(
+        s_infos->fileColorBlendStateCreateInfo(
             m_relIdxs.get<VkDevice>(),
             m_relIdxs.get<VkRenderPass>(),
             m_relIdxs.get<VkPipeline>(), // This is the subpass index for pipeline

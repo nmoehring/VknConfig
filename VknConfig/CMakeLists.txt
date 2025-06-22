@@ -10,7 +10,7 @@ add_library(VknConfig STATIC VknConfig.cpp VknDevice.cpp VknInfos.cpp
     VknDescriptorSetLayout.cpp VknImage.cpp VknFeatures.cpp
     VknColorBlendState.cpp VknCommandPool.cpp VknApp.cpp VknCycle.cpp
     presets/NoInput.cpp presets/DeviceInfo.cpp VknDynamicState.cpp
-    VknPlatforms.cpp)
+    VknPlatforms.cpp VknBuffer.cpp VknObject.cpp)
 
 if(ANDROID)
     message(STATUS "VknConfig Android: NativeActivity mode is ${VKNCONFIG_ANDROID_NATIVE_ACTIVITY}")

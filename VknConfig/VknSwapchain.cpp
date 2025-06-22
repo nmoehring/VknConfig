@@ -18,8 +18,8 @@ namespace vkn
             throw std::runtime_error("Already set swapchain image count.");
         VkSurfaceCapabilitiesKHR capabilities{};
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-            s_engine.getObject<VkPhysicalDevice>(m_absIdxs),
-            s_engine.getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            s_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
             &capabilities);
         m_imageCount = capabilities.minImageCount;
         m_setImageCount = true;
@@ -35,8 +35,8 @@ namespace vkn
         VkSurfaceCapabilitiesKHR capabilities{};
 
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-            s_engine.getObject<VkPhysicalDevice>(m_absIdxs),
-            s_engine.getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            s_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
             &capabilities);
         m_dimensions = {capabilities.currentExtent.width,
                         capabilities.currentExtent.height};
@@ -60,12 +60,12 @@ namespace vkn
         uint32_t surfaceFormatCount{0};
         VknVector<VkSurfaceFormatKHR> surfaceFormats{};
         vkGetPhysicalDeviceSurfaceFormatsKHR(
-            s_engine.getObject<VkPhysicalDevice>(m_absIdxs),
-            s_engine.getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            s_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
             &surfaceFormatCount, nullptr);
         vkGetPhysicalDeviceSurfaceFormatsKHR(
-            s_engine.getObject<VkPhysicalDevice>(m_absIdxs),
-            s_engine.getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+            s_engine->getObject<VkPhysicalDevice>(m_absIdxs),
+            s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
             &surfaceFormatCount, surfaceFormats.getData(surfaceFormatCount));
         bool formatFound{false};
         for (uint32_t i = 0; i < surfaceFormatCount; ++i)
@@ -133,7 +133,7 @@ namespace vkn
 
     VkSwapchainKHR *VknSwapchain::getVkSwapchain()
     {
-        return &s_engine.getObject<VkSwapchainKHR>(m_absIdxs);
+        return &s_engine->getObject<VkSwapchainKHR>(m_absIdxs);
     }
 
     VkSwapchainCreateInfoKHR *VknSwapchain::fileSwapchainCreateInfo()
@@ -142,12 +142,12 @@ namespace vkn
             throw std::runtime_error("Already filed swapchain create info.");
         if (!m_setSurface)
             throw std::runtime_error("Can't file swapchain create info until surface is added.");
-        VkSwapchainCreateInfoKHR *ci = s_infos.fileSwapchainCreateInfo(m_relIdxs,
-                                                                       &s_engine.getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
-                                                                       m_imageCount, m_dimensions, m_surfaceFormat,
-                                                                       m_numImageArrayLayers, m_usage, m_sharingMode,
-                                                                       m_preTransform, m_compositeAlpha, m_presentMode,
-                                                                       m_clipped, m_oldSwapchain);
+        VkSwapchainCreateInfoKHR *ci = s_infos->fileSwapchainCreateInfo(m_relIdxs,
+                                                                        &s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
+                                                                        m_imageCount, m_dimensions, m_surfaceFormat,
+                                                                        m_numImageArrayLayers, m_usage, m_sharingMode,
+                                                                        m_preTransform, m_compositeAlpha, m_presentMode,
+                                                                        m_clipped, m_oldSwapchain);
         m_filedCreateInfo = true;
         return ci;
     }
@@ -166,11 +166,11 @@ namespace vkn
 
         this->fileSwapchainCreateInfo();
         VkSwapchainCreateInfoKHR *createInfo{
-            s_infos.getSwapchainCreateInfo(m_relIdxs)};
+            s_infos->getSwapchainCreateInfo(m_relIdxs)};
         VknResult res{
-            vkCreateSwapchainKHR(s_engine.getObject<VkDevice>(m_absIdxs),
+            vkCreateSwapchainKHR(s_engine->getObject<VkDevice>(m_absIdxs),
                                  createInfo, nullptr,
-                                 &s_engine.getObject<VkSwapchainKHR>(m_absIdxs)),
+                                 &s_engine->getObject<VkSwapchainKHR>(m_absIdxs)),
             "Create swapchain"};
 
         m_createdSwapchain = true;
@@ -188,14 +188,14 @@ namespace vkn
             m_vkSwapchainImages.grow(m_imageCount);
 
         uint32_t imageCount{0};
-        vkGetSwapchainImagesKHR(s_engine.getObject<VkDevice>(m_absIdxs),
-                                s_engine.getObject<VkSwapchainKHR>(m_absIdxs),
+        vkGetSwapchainImagesKHR(s_engine->getObject<VkDevice>(m_absIdxs),
+                                s_engine->getObject<VkSwapchainKHR>(m_absIdxs),
                                 &imageCount, VK_NULL_HANDLE);
 
         if (imageCount != m_imageCount)
             throw std::runtime_error("Swapchain imageCount does not equal what should have been set.");
-        vkGetSwapchainImagesKHR(s_engine.getObject<VkDevice>(m_absIdxs),
-                                s_engine.getObject<VkSwapchainKHR>(m_absIdxs),
+        vkGetSwapchainImagesKHR(s_engine->getObject<VkDevice>(m_absIdxs),
+                                s_engine->getObject<VkSwapchainKHR>(m_absIdxs),
                                 &imageCount, m_vkSwapchainImages.getData());
 
         m_gotSwapchainImages = true;
@@ -255,8 +255,8 @@ namespace vkn
     {
         m_vkSwapchainImages.clear();
         vkDestroySwapchainKHR(
-            s_engine.getObject<VkDevice>(m_absIdxs),
-            s_engine.getObject<VkSwapchainKHR>(m_absIdxs),
+            s_engine->getObject<VkDevice>(m_absIdxs),
+            s_engine->getObject<VkSwapchainKHR>(m_absIdxs),
             nullptr);
 
         m_setImageDimensions = false;

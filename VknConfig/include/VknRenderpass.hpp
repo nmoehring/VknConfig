@@ -99,7 +99,7 @@ namespace vkn
         void recreateFramebuffers(VknSwapchain &swapchain);
 
         // Getters
-        VkRenderPass *getVkRenderPass() { return &s_engine.getObject<VkRenderPass>(m_absIdxs); }
+        VkRenderPass *getVkRenderPass() { return &s_engine->getObject<VkRenderPass>(m_absIdxs); }
         VknPipeline *getPipeline(uint32_t idx);
         VknFramebuffer *getFramebuffer(uint32_t idx);
         std::list<VknFramebuffer> *getFramebuffers() { return &m_framebuffers; }

@@ -42,6 +42,11 @@ namespace vkn
         m_filedSpecializationInfo = true;
     }
 
+    void VknShaderStage::setEntryName(std::string entryName)
+    {
+        m_entryName = entryName;
+    }
+
     void VknShaderStage::_fileShaderStageCreateInfo()
     {
         if (!m_setFilename || !m_setShaderStageType)
@@ -53,8 +58,8 @@ namespace vkn
             specialization = &m_specializationInfo;
         else
             specialization = VK_NULL_HANDLE;
-        s_infos.fileShaderStageCreateInfo(m_relIdxs, this->getShaderModule(),
-                                          &m_shaderStageFlagBit, &m_createFlags, specialization);
+        s_infos->fileShaderStageCreateInfo(m_relIdxs, this->getShaderModule(),
+                                           &m_shaderStageFlagBit, m_entryName, &m_createFlags, specialization);
     }
 
     void VknShaderStage::createShaderModule()
@@ -69,11 +74,11 @@ namespace vkn
         m_code = readBinaryFile(shaderDir / m_filename);
 #endif
         VkShaderModuleCreateInfo *shaderModuleCreateInfo =
-            s_infos.fileShaderModuleCreateInfo(m_relIdxs, &m_code);
+            s_infos->fileShaderModuleCreateInfo(m_relIdxs, &m_code);
         VknResult res{
-            vkCreateShaderModule(s_engine.getObject<VkDevice>(m_absIdxs),
+            vkCreateShaderModule(s_engine->getObject<VkDevice>(m_absIdxs),
                                  shaderModuleCreateInfo, VK_NULL_HANDLE,
-                                 &s_engine.getObject<VkShaderModule>(m_absIdxs)),
+                                 &s_engine->getObject<VkShaderModule>(m_absIdxs)),
             "Create shader module."};
         m_createdShaderModule = true;
     }
@@ -85,6 +90,6 @@ namespace vkn
 
     VkShaderModule *VknShaderStage::getShaderModule()
     {
-        return &s_engine.getObject<VkShaderModule>(m_absIdxs);
+        return &s_engine->getObject<VkShaderModule>(m_absIdxs);
     }
 }

@@ -23,13 +23,13 @@ namespace vkn
     // Create
     void VknDescriptorSetLayout::createDescriptorSetLayout()
     {
-        VkDescriptorSetLayoutCreateInfo *createInfo = s_infos.fileDescriptorSetLayoutCreateInfo(
+        VkDescriptorSetLayoutCreateInfo *createInfo = s_infos->fileDescriptorSetLayoutCreateInfo(
             m_bindings, m_createFlags);
         VknResult res{
             vkCreateDescriptorSetLayout(
-                s_engine.getObject<VkDevice>(m_absIdxs),
+                s_engine->getObject<VkDevice>(m_absIdxs),
                 createInfo, nullptr,
-                &s_engine.getObject<VkDescriptorSetLayout>(m_absIdxs)),
+                &s_engine->getObject<VkDescriptorSetLayout>(m_absIdxs)),
             "Create descriptor set layout."};
     }
 }

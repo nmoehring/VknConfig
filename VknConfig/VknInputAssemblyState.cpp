@@ -17,7 +17,7 @@ namespace vkn
     {
         if (m_filedCreateInfo)
             throw std::runtime_error("Input assembly state create info already filed.");
-        s_infos.fileInputAssemblyStateCreateInfo(m_relIdxs, m_topology, m_primitiveRestartEnable);
+        s_infos->fileInputAssemblyStateCreateInfo(m_relIdxs, m_topology, m_primitiveRestartEnable);
         m_filedCreateInfo = true;
     }
 }

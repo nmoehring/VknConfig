@@ -401,7 +401,7 @@ namespace vkn
             VknVector<VmaAllocation> &allocationVec = *static_cast<VknVector<VmaAllocation> *>(m_allocations[m_vkTypeStr]);
             VknVector<VmaAllocator *> &allocatorVec = *static_cast<VknVector<VmaAllocator *> *>(m_parentVectors[m_vkTypeStr]);
             if (!absIdxs.exists<VmaAllocation>())
-                absIdxs.add<VmaAllocation>(allocationVec.getDefragPos());
+                absIdxs.add<VmaAllocation>(allocationVec.getDefragPos(1u));
             allocationVec.insert(absIdxs.get<VmaAllocation>(), VmaAllocation{});
             allocatorVec.insert(absIdxs.get<VmaAllocation>(), &this->getObject<VmaAllocator>(absIdxs));
             return allocationVec(absIdxs.get<VmaAllocation>());
@@ -593,7 +593,8 @@ namespace vkn
 
         void demolishInstance()
         {
-            vkDestroyInstance(this->getObject<VkInstance>(0), nullptr);
+            if (this->exists<VkInstance>())
+                vkDestroyInstance(this->getObject<VkInstance>(0), nullptr);
             this->deleteVector<VkInstance>();
         }
 

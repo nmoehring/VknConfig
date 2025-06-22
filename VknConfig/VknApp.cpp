@@ -4,8 +4,10 @@ namespace vkn
 {
     uint32_t VknApp::m_numApps{0};
 
-    VknApp::VknApp() : m_config{&m_engine, &m_infos}, m_cycle{}
+    VknApp::VknApp() : m_config{}, m_cycle{}
     {
+        m_engine = m_config.getEngine();
+        m_infos = m_config.getInfos();
         if (m_numApps > 0)
             throw std::runtime_error("Previous VknApp() was not exited via VknApp::exit().");
         else
@@ -25,16 +27,16 @@ namespace vkn
 
     void VknApp::exit()
     {
-        m_engine.shutdown();
+        m_engine->shutdown();
         m_config.demolish();
         --m_numApps;
     }
 
-    void VknApp::configureWithPreset(std::function<bool(VknConfig *, VknEngine *, VknInfos *)> preset)
+    void VknApp::configureWithPreset(std::function<bool(VknConfig &)> preset)
     {
-        m_readyToRun = preset(&m_config, &m_engine, &m_infos);
+        m_readyToRun = preset(m_config);
         if (m_readyToRun)
-            m_cycle.loadConfig(&m_config, &m_engine);
+            m_cycle.loadConfig(&m_config, m_engine);
     }
 
     void VknApp::enableValidationLayer()

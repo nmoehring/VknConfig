@@ -61,7 +61,7 @@ namespace vkn
     public:
         // Overloads
         VknFramebuffer() = default;
-        VknFramebuffer(VknEngine *engine, VknIdxs relIdxs, VknIdxs absIdxs, VknInfos *infos);
+        VknFramebuffer(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Members
         void addAttachments();
@@ -84,7 +84,7 @@ namespace vkn
         // Get
         VkFramebuffer *getVkFramebuffer()
         {
-            return &s_engine.getObject<VkFramebuffer>(m_absIdxs);
+            return &s_engine->getObject<VkFramebuffer>(m_absIdxs);
         } // Add getter
         bool isSwapchainImage(uint32_t i);
         bool hasSwapchainImage();

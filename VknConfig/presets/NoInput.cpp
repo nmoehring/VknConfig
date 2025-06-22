@@ -2,17 +2,17 @@
 
 namespace vkn
 {
-    bool noInputConfig(VknConfig *config, VknEngine *engine, VknInfos *infos)
+    bool noInputConfig(VknConfig &config)
     {
         // Shallow Config members
-        config->setAppName("NoInputsTest");
-        config->setEngineName("MinVknConfig");
-        config->addWindow();
-        config->createInstance();
-        config->createSurface(0);
+        config.setAppName("NoInputsTest");
+        config.setEngineName("MinVknConfig");
+        config.addWindow();
+        config.createInstance();
+        config.createSurface(0);
 
         // Config=>Devices
-        auto *device = config->addDevice(0);
+        auto *device = config.addDevice(0);
         device->addExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         // Config->Device->PhysicalDevice
         device->createDevice();
@@ -72,7 +72,7 @@ namespace vkn
         commandPool->createCommandBuffers(swapchain->getNumImages());
 
         // Set shader vertices
-        config->setNumHardCodedVertices(3);
+        config.setNumHardCodedVertices(3);
 
         // Return true - ready to render
         return true;

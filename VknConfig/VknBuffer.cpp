@@ -105,17 +105,17 @@ namespace vkn
 
         // The VknDevice factory method should have already called addNewObject<VkBuffer,...>
         // which reserves a spot in VknEngine's vector. We just need to create the buffer into that spot.
-        VknResult res = {vmaCreateBuffer(s_engine.getObject<VmaAllocator>(m_absIdxs),
+        VknResult res = {vmaCreateBuffer(s_engine->getObject<VmaAllocator>(m_absIdxs),
                                          &bufferInfo,
                                          &allocCreateInfo,
-                                         &s_engine.getObject<VkBuffer>(m_absIdxs),        // VknEngine stores the VkBuffer
-                                         &s_engine.addNewAllocation<VkBuffer>(m_absIdxs), // And the allocation
-                                         &m_allocInfo),                                   // To get mapped data if VMA_ALLOCATION_CREATE_MAPPED_BIT is set
+                                         &s_engine->getObject<VkBuffer>(m_absIdxs),        // VknEngine stores the VkBuffer
+                                         &s_engine->addNewAllocation<VkBuffer>(m_absIdxs), // And the allocation
+                                         &m_allocInfo),                                    // To get mapped data if VMA_ALLOCATION_CREATE_MAPPED_BIT is set
                          "VMA Create Buffer"};
 
-        m_vkBuffer = s_engine.getObject<VkBuffer>(m_absIdxs); // Store local handle for convenience
-        m_allocation = s_engine.getObject<VmaAllocation>(m_absIdxs);
-        vmaGetMemoryTypeProperties(s_engine.getObject<VmaAllocator>(m_absIdxs), m_allocInfo.memoryType, &m_memFlags);
+        m_vkBuffer = s_engine->getObject<VkBuffer>(m_absIdxs); // Store local handle for convenience
+        m_allocation = s_engine->getObject<VmaAllocation>(m_absIdxs);
+        vmaGetMemoryTypeProperties(s_engine->getObject<VmaAllocator>(m_absIdxs), m_allocInfo.memoryType, &m_memFlags);
 
         if (m_memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
             m_isPersistentlyMapped = true;
@@ -174,7 +174,7 @@ namespace vkn
 
         // Retrieve the VmaAllocator using the absolute index stored in the buffer's VknIdxs
         // This assumes the VmaAllocator index was added to m_absIdxs when the parent VknDevice was created.
-        VmaAllocator allocator = s_engine.getObject<VmaAllocator>(m_absIdxs);
+        VmaAllocator allocator = s_engine->getObject<VmaAllocator>(m_absIdxs);
 
         m_mapResult = vmaMapMemory(allocator, m_allocation, &m_mappedData);
 
@@ -187,7 +187,7 @@ namespace vkn
             return; // Do not unmap buffers that VMA mapped persistently
         if (m_mappedData && m_allocation != VK_NULL_HANDLE)
         {
-            VmaAllocator allocator = s_engine.getObject<VmaAllocator>(m_absIdxs);
+            VmaAllocator allocator = s_engine->getObject<VmaAllocator>(m_absIdxs);
             vmaUnmapMemory(allocator, m_allocation);
             m_mappedData = nullptr;
         }
@@ -200,7 +200,7 @@ namespace vkn
         // VMA handles checking for HOST_COHERENT internally for vmaFlushAllocation.
         // If it's coherent, flush is a no-op.
         m_flushResult = vmaFlushAllocation(
-            s_engine.getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()), m_allocation, offset, size);
+            s_engine->getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()), m_allocation, offset, size);
     }
 
     void VknBuffer::invalidate(VkDeviceSize offset, VkDeviceSize size)
@@ -208,7 +208,7 @@ namespace vkn
         if (m_allocation == VK_NULL_HANDLE)
             throw std::runtime_error("Buffer not created, cannot invalidate.");
         m_invalidateResult = vmaInvalidateAllocation(
-            s_engine.getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()), m_allocation, offset, size);
+            s_engine->getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()), m_allocation, offset, size);
     }
 
     VkBufferCopy *VknBuffer::uploadData(const void *data, VkDeviceSize dataSize, VkDeviceSize offset)
@@ -274,6 +274,20 @@ namespace vkn
         else if (m_hasDownloadBuffer && !m_uploading)
             return m_downloadBuffer->getDataArea();
         return m_mappedData;
+    }
+
+    VkBuffer VknBuffer::getUploadVkBuffer() const
+    {
+        if (!m_uploadBuffer)
+            throw std::runtime_error("Buffer is not uploadable.");
+        return m_uploadBuffer->getVkBuffer();
+    }
+
+    VkBuffer VknBuffer::getDownloadVkBuffer() const
+    {
+        if (!m_downloadBuffer)
+            throw std::runtime_error("Buffer is not downloadable.");
+        return m_downloadBuffer->getVkBuffer();
     }
 
 } // namespace vkn
