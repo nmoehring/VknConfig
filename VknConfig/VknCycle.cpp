@@ -4,11 +4,6 @@
 
 namespace vkn
 {
-    void VknCycle::setMaxFramesInFlight(uint32_t maxFramesInFlight)
-    {
-        MAX_FRAMES_IN_FLIGHT = maxFramesInFlight;
-    }
-
     void VknCycle::setClearColor(float r, float g, float b, float a)
     {
         if (r < 0.0f || r > 1.0f || g < 0.0f || g > 1.0f || b < 0.0f || b > 1.0f || a < 0.0f || a > 1.0f)
@@ -24,7 +19,7 @@ namespace vkn
         m_transferPool = m_device->getCommandPool(TRANSFER);
         m_physicalDevice = m_device->getPhysicalDevice();
 
-        m_device->createSyncObjects(MAX_FRAMES_IN_FLIGHT); // Use 2 frames in flight for a simple demo
+        m_device->createSyncObjects();
 
         m_waitSemaphores.push_back(VkSemaphore{});
         m_waitStages.push_back(VkPipelineStageFlags{});
@@ -34,18 +29,15 @@ namespace vkn
 
     void VknCycle::loadGraphicsConfig(VknConfig *config, VknEngine *engine)
     {
-        m_swapchain = m_device->getSwapchain(0);
+        m_swapchain = m_device->getSwapchain();
         m_presentPool = m_device->getCommandPool(PRESENT); // ToDo: consider supporting multiple families returned
         m_renderpasses = m_device->getRenderpasses();
 
-        // Determine MAX_FRAMES_IN_FLIGHT based on user setting and available swapchain images.
         uint32_t actualSwapchainImageCount = m_swapchain->getNumImages();
         if (actualSwapchainImageCount == 0)
             throw std::runtime_error("Swapchain has 0 images in VknCycle::loadConfig. Ensure swapchain is created and has images.");
 
         m_vkSwapchains.push_back(*m_swapchain->getVkSwapchain());
-
-        MAX_FRAMES_IN_FLIGHT = actualSwapchainImageCount;
         m_imagesInFlight.assign(actualSwapchainImageCount, nullptr);
 
         m_graphicsConfigLoaded = true;
@@ -243,7 +235,7 @@ namespace vkn
 
         m_presentResult = vkQueuePresentKHR(*m_device->getQueue(QueueType::PRESENT), &m_presentInfo);
         m_signalSemaphores.clear();
-        m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // Move to the next frame
+        m_currentFrame = (m_currentFrame + 1) % m_swapchain->getNumImages(); // Move to the next frame
 
         if (m_presentResult == VK_ERROR_OUT_OF_DATE_KHR || m_presentResult == VK_SUBOPTIMAL_KHR)
             return this->recoverFromSwapchainError();
@@ -288,7 +280,12 @@ namespace vkn
 
     void VknCycle::recreateForWindowChange()
     {
+        for (auto &renderpass : *m_renderpasses)
+            renderpass.demolishFramebuffers();
+
         m_swapchain->recreateSwapchain();
+        m_vkSwapchains[0] = *m_swapchain->getVkSwapchain(); // Update
+        m_device->recreateSyncObjects();
 
         // Reset m_imagesInFlight for the new swapchain
         m_imagesInFlight.assign(m_swapchain->getNumImages(), nullptr);
@@ -297,7 +294,7 @@ namespace vkn
         {
             for (auto &pipeline : *renderpass.getPipelines())
                 pipeline.getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
-            renderpass.recreateFramebuffers(*m_swapchain);
+            renderpass.createFramebuffers(*m_swapchain);
         }
     }
 

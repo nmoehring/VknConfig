@@ -16,10 +16,7 @@ namespace vkn
         device->addExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         // Config->Device->PhysicalDevice
         device->createDevice();
-
-        // Config=>Device=>Swapchain
-        auto *swapchain = device->addSwapchain(0);
-        swapchain->createSwapchain();
+        VknSwapchain *swapchain{device->getSwapchain()};
 
         // Config=>Device=>Renderpass
         auto *renderpass = device->addRenderpass(0);

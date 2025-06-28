@@ -332,7 +332,7 @@ namespace vkn
             return m_debugMessengerCreateInfo;
         }
         void removeFramebufferCreateInfo(VknIdxs relIdxs);
-        void removeImageViewCreateInfo(VknIdxs relIdxs);
+        void removeImageViewCreateInfo(VknIdxs absIdxs);
         void removeImageCreateInfo(VknIdxs relIdxs);
         void removePipelineCreateInfo(VknIdxs relIdxs);
         void removeViewportStateCreateInfo(VknIdxs relIdxs);

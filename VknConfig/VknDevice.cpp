@@ -12,24 +12,9 @@ namespace vkn
         features = s_infos->getDeviceFeaturesObject();
     }
 
-    VknSwapchain *VknDevice::addSwapchain(uint32_t swapchainIdx)
+    VknSwapchain *VknDevice::getSwapchain()
     {
-        if (!m_swapchainExtensionEnabled)
-            throw std::runtime_error("Swapchain extension not enabled before adding swapchain.");
-        if (!m_createdVkDevice)
-            throw std::runtime_error("Device not created before adding swapchain.");
-        if (s_engine->getVector<VkSurfaceKHR>().isEmpty())
-            throw std::runtime_error("Surface not created before adding swapchain.");
-
-        m_instanceLock(this);
-        VknSwapchain &swapchain = s_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
-            swapchainIdx, m_swapchains, m_relIdxs, m_absIdxs);
-        return &swapchain;
-    }
-
-    VknSwapchain *VknDevice::getSwapchain(uint32_t swapchainIdx)
-    {
-        return getListElement(swapchainIdx, m_swapchains);
+        return &m_swapchain.front();
     }
 
     VknPhysicalDevice *VknDevice::getPhysicalDevice()
@@ -132,21 +117,21 @@ namespace vkn
         m_commandPoolCreated = true;
     }
 
-    void VknDevice::createSyncObjects(uint32_t maxFramesInFlight)
+    void VknDevice::createSyncObjects()
     {
         m_instanceLock(this);
         if (m_syncObjectsCreated)
             throw std::runtime_error("Synchronization objects already created.");
         if (!m_createdVkDevice)
-            throw std::runtime_error("Logical device not created before creating sync objects.");
+            throw std::runtime_error("Swapchain not created before creating synchronization objects.");
 
-        m_maxFramesInFlightForSyncObjects = maxFramesInFlight; // Store for validation in getters
+        m_maxFramesInFlightForSyncObjects = m_swapchain.front().getNumImages(); // Store for validation in getters
 
         // Record starting indices in the VknEngine's global vectors
         m_imageAvailableSemaphoreStartIdx = s_engine->getVectorSize<VkSemaphore>();
         m_inFlightFenceStartIdx = s_engine->getVectorSize<VkFence>();
 
-        for (uint32_t i = 0; i < maxFramesInFlight; ++i)
+        for (uint32_t i = 0; i < m_maxFramesInFlightForSyncObjects; ++i)
         {
             s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
             s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
@@ -160,7 +145,7 @@ namespace vkn
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; // Create fences in signaled state
 
-        for (size_t i = 0; i < maxFramesInFlight; ++i)
+        for (size_t i = 0; i < m_maxFramesInFlightForSyncObjects; ++i)
         {
             VknResult res1{vkCreateSemaphore(
                                *getVkDevice(), &semaphoreInfo, nullptr,
@@ -176,6 +161,14 @@ namespace vkn
                            "Create in flight fence"};
         }
         m_syncObjectsCreated = true;
+    }
+
+    void VknDevice::recreateSyncObjects()
+    {
+        s_engine->demolishObjects<VkSemaphore, VkDevice>(vkDestroySemaphore);
+        s_engine->demolishObjects<VkFence, VkDevice>(vkDestroyFence);
+        m_syncObjectsCreated = false;
+        createSyncObjects();
     }
 
     VkSemaphore &VknDevice::getImageAvailableSemaphore(uint32_t frameInFlight)
@@ -221,6 +214,13 @@ namespace vkn
                 &s_engine->getObject<VkDevice>(m_absIdxs)),
             "Create device"};
 
+        if (s_engine->getVectorSize<VkSurfaceKHR>() > 0)
+        {
+            s_engine->addNewVknObject<VknSwapchain, VkSwapchainKHR, VkDevice>(
+                0, m_swapchain, m_relIdxs, m_absIdxs);
+            m_swapchain.front().createSwapchain();
+        }
+
         m_createdVkDevice = true;
         return res;
     }
@@ -258,12 +258,6 @@ namespace vkn
     {
         if (!m_createdVkDevice)
             throw std::runtime_error("Device not created before adding renderpass.");
-        bool allSwapchainsCreated{true};
-        for (auto &swapchain : m_swapchains)
-            if (!swapchain.isSwapchainCreated())
-                allSwapchainsCreated = false;
-        if (!allSwapchainsCreated)
-            throw std::runtime_error("Swapchain not created before adding renderpass.");
 
         m_instanceLock(this);
         return &s_engine->addNewVknObject<VknRenderpass, VkRenderPass, VkDevice>(

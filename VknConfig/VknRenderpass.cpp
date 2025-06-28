@@ -212,29 +212,16 @@ namespace vkn
         m_recreatingPipelines = false;
     }
 
-    void VknRenderpass::demolishFramebuffers(VknSwapchain &swapchain)
+    void VknRenderpass::demolishFramebuffers()
     {
-        if (m_framebuffers.size() != swapchain.getNumImages())
-        {
-            s_engine->demolishVknObjects<VknFramebuffer, VkFramebuffer, VkDevice>(
-                m_framebufferStartPos, m_framebuffers.size(), m_framebuffers);
-            m_demolishedVknFramebuffers = true;
-        }
-        else
-            for (auto &framebuffer : m_framebuffers)
-                framebuffer.demolish();
+        for (auto &framebuffer : m_framebuffers)
+            framebuffer.demolish();
         m_addedFramebuffers = false;
     }
 
     void VknRenderpass::recreateFramebuffers(VknSwapchain &swapchain)
     {
-        if (m_framebuffers.size() == swapchain.getNumImages())
-            for (auto &framebuffer : m_framebuffers)
-                framebuffer.recreateFramebuffer();
-        else
-        {
-            this->demolishFramebuffers(swapchain);
-            this->createFramebuffers(swapchain);
-        }
+        for (auto &framebuffer : m_framebuffers)
+            framebuffer.recreateFramebuffer();
     }
 }

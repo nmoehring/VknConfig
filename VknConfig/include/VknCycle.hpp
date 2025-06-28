@@ -23,7 +23,6 @@ namespace vkn
         void loadGraphicsConfig(VknConfig *config, VknEngine *engine);
         void loadComputeConfig(VknConfig *config, VknEngine *engine);
         // Misc
-        void setMaxFramesInFlight(uint32_t maxFramesInFlight);
         void setClearColor(float r, float g, float b, float a = 1.0f);
         bool recoverFromSwapchainError();
         void recreateForWindowChange();
@@ -45,7 +44,6 @@ namespace vkn
         VkSurfaceCapabilitiesKHR m_capabilities{};
 
         // Params
-        uint_fast32_t MAX_FRAMES_IN_FLIGHT = 2;      // Should match the value used in createSyncObjects
         uint_fast64_t m_defaultTimeout = UINT64_MAX; // For vkAcquireNextImageKHR, timeout is uint64_t
         int m_width{0};
         int m_height{0};

@@ -20,5 +20,8 @@ namespace vkn
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         static VknInfos *s_infos;
+
+        // Params
+        static uint32_t s_maxFramesInFlight;
     };
 }

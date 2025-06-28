@@ -76,7 +76,6 @@ namespace vkn
         VknDevice(VknIdxs relIdxs, VknIdxs absIdxs);
 
         // Members
-        VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
         void addCommandPools();
         VmaAllocator *addAllocator();
@@ -90,7 +89,8 @@ namespace vkn
         VknFeatures *features{nullptr};
 
         // Config
-        void createSyncObjects(uint32_t maxFramesInFlight);
+        void createSyncObjects();
+        void recreateSyncObjects();
         uint32_t findQueueFamily(QueueType type);
         void addExtension(std::string extension);
         void setPresentable(bool presentable) { m_presentable = presentable; }
@@ -101,7 +101,7 @@ namespace vkn
         // Getters
         VkQueue *getQueue(QueueType type, uint32_t index = 0);
         VknPhysicalDevice *getPhysicalDevice();
-        VknSwapchain *getSwapchain(uint32_t swapchainIdx);
+        VknSwapchain *getSwapchain();
         VknRenderpass *getRenderpass(uint32_t renderpassIdx);
         VknCommandPool *getCommandPool(QueueType type);
         VkDevice *getVkDevice();
@@ -118,7 +118,7 @@ namespace vkn
     private:
         // Members
         std::list<VknRenderpass> m_renderpasses{};
-        std::list<VknSwapchain> m_swapchains{};
+        std::list<VknSwapchain> m_swapchain{};
         std::list<VknPhysicalDevice> m_physicalDevices{};
         std::list<VknCommandPool> m_commandPools{};
         std::map<QueueType, VknCommandPool *> m_commandPoolMap{};

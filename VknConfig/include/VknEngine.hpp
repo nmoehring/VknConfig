@@ -499,6 +499,28 @@ namespace vkn
             return m_objectVectors.count(m_vkTypeStr);
         }
 
+        template <typename VkObjectType, typename VkParentType>
+        void demolishObjects(std::function<void __stdcall(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
+        {
+            if (this->exists<VkObjectType>())
+            {
+                for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
+                    func(
+                        *this->getParentPointer<VkObjectType, VkParentType>(m_iter),
+                        this->getObject<VkObjectType>(m_iter), nullptr);
+                this->deleteVectors<VkObjectType, VkParentType>();
+            }
+        }
+
+        // Removes an object and its parent from tracking. Used for mid-lifecycle destruction.
+        void removeImageView(uint32_t position)
+        {
+            // Remove the handle from the main vector, freeing the slot.
+            getVector<VkImageView>().remove(position);
+            // Also remove the corresponding parent pointer to keep vectors in sync.
+            getParentVector<VkImageView, VkDevice>().remove(position);
+        }
+
     private:
         std::unordered_map<std::string, void *> m_objectVectors{};
         std::unordered_map<std::string, void *> m_parentVectors{};
@@ -543,19 +565,6 @@ namespace vkn
                 for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
                     func(this->getObject<VkObjectType>(m_iter));
                 this->deleteVector<VkObjectType>();
-            }
-        }
-
-        template <typename VkObjectType, typename VkParentType>
-        void demolishObjects(std::function<void __stdcall(VkParentType, VkObjectType, const VkAllocationCallbacks *)> func)
-        {
-            if (this->exists<VkObjectType>())
-            {
-                for (m_iter = 0; m_iter < this->getVectorSize<VkObjectType>(); ++m_iter)
-                    func(
-                        *this->getParentPointer<VkObjectType, VkParentType>(m_iter),
-                        this->getObject<VkObjectType>(m_iter), nullptr);
-                this->deleteVectors<VkObjectType, VkParentType>();
             }
         }
 

@@ -95,7 +95,7 @@ namespace vkn
         void createRenderpass();
         void createPipelines();
         void createFramebuffers(VknSwapchain &swapchain);
-        void demolishFramebuffers(VknSwapchain &swapchain);
+        void demolishFramebuffers();
         void recreatePipelines(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx);
         void recreateFramebuffers(VknSwapchain &swapchain);
 

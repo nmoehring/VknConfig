@@ -87,7 +87,13 @@ namespace vkn
         vkDestroyImageView(
             s_engine->getObject<VkDevice>(m_absIdxs),
             s_engine->getObject<VkImageView>(m_absIdxs), nullptr);
-        s_infos->removeImageViewCreateInfo(m_relIdxs);
+
+        // Remove the CreateInfo struct from the info manager.
+        s_infos->removeImageViewCreateInfo(m_absIdxs);
+
+        // CRITICAL: Remove the now-destroyed handle from the engine's master list to prevent a double-free on shutdown.
+        s_engine->removeImageView(m_absIdxs.get<VkImageView>());
+
         m_filedCreateInfo = false;
         m_createdImageView = false;
         m_setVkImage = false;

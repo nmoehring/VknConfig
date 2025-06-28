@@ -4,6 +4,7 @@ namespace vkn
 {
     VknEngine *VknObject::s_engine{nullptr};
     VknInfos *VknObject::s_infos{nullptr};
+    uint32_t VknObject::s_maxFramesInFlight{2};
 
     VknObject::VknObject() : m_relIdxs{}, m_absIdxs{}
     {

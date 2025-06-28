@@ -865,11 +865,11 @@ namespace vkn
             throw std::runtime_error("Framebuffer create info does not exist at that position.");
     }
 
-    void VknInfos::removeImageViewCreateInfo(VknIdxs relIdxs)
+    void VknInfos::removeImageViewCreateInfo(VknIdxs absIdxs)
     {
         VknVector<VkImageViewCreateInfo> &infos = m_imageViewCreateInfos;
-        if (infos.exists(relIdxs.get<VkImageView>()))
-            infos.remove(relIdxs.get<VkImageView>());
+        if (infos.exists(absIdxs.get<VkImageView>()))
+            infos.remove(absIdxs.get<VkImageView>());
         else
             throw std::runtime_error("Image view create info does not exist at that position.");
     }
