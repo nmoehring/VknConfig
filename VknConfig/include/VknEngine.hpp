@@ -328,6 +328,32 @@ namespace vkn
             return startPos;
         }
 
+        template <typename VknObjectType, typename VkObjectType, typename VkParentType>
+        uint32_t addNewVknObjects(uint32_t count, VknVector<VknObjectType> &objList,
+                                  VknIdxs &relIdxs, VknIdxs &absIdxs)
+        {
+            m_vkTypeStr = typeToStr<VkObjectType>();
+            if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
+                m_objectVectors[m_vkTypeStr] = new VknVector<VkObjectType>{};
+            if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
+                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType>{};
+
+            VknVector<VkObjectType> &vkObjectVec = this->getVector<VkObjectType>();
+            uint_fast32_t startPos{vkObjectVec.getDefragPos(count)};
+            VknVector<VkParentType *> &vkParentVec = this->getParentVector<VkObjectType, VkParentType>();
+            VknIdxs newRelIdxs = relIdxs;
+            VknIdxs newAbsIdxs = absIdxs;
+            for (m_iter = 0; m_iter < count; ++m_iter)
+            {
+                newAbsIdxs.add<VkObjectType>(startPos + m_iter);
+                vkObjectVec.insert(startPos + m_iter, VkObjectType{});
+                newRelIdxs.add<VkObjectType>(objList.size());
+                vkParentVec.insert(startPos + m_iter, &this->getObject<VkParentType>(absIdxs));
+                objList.appendOne(VknObjectType{newRelIdxs, newAbsIdxs});
+            }
+            return startPos;
+        }
+
         template <typename VknObjectType, typename VkObjectType>
         uint32_t addNewVknObjects(uint32_t count, std::list<VknObjectType> &objList,
                                   VknIdxs &relIdxs, VknIdxs &absIdxs)
@@ -355,10 +381,10 @@ namespace vkn
         {
             VknVector<VkObjectType> &vkObjectVec = this->getVector<VkObjectType>();
             VknVector<VkParentType *> &vkParentVec = this->getParentVector<VkObjectType, VkParentType>();
-            vkObjectVec.remove(startPos, count);
-            vkParentVec.remove(startPos, count);
             for (m_iter = 0; m_iter < objList.size(); ++m_iter)
                 getListElement(m_iter, objList)->demolish();
+            vkObjectVec.remove(startPos, count);
+            vkParentVec.remove(startPos, count);
             objList.clear();
         }
 

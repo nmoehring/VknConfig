@@ -5,6 +5,14 @@ namespace vkn
     VknQueueFamily::VknQueueFamily(VknIdxs relIdxs, VknIdxs absIdxs)
         : VknObject(relIdxs, absIdxs) {}
 
+    bool VknQueueFamily::supportsPresent()
+    {
+        VkBool32 presentSupport{false};
+        vkGetPhysicalDeviceSurfaceSupportKHR(
+            s_engine->getObject<VkPhysicalDevice>(m_absIdxs), m_familyIdx, s_engine->getObject<VkSurfaceKHR>(0), &presentSupport);
+        return presentSupport;
+    }
+
     bool VknQueueFamily::supportsGraphics()
     {
         VkQueueFamilyProperties *props = &s_engine->getObject<VkQueueFamilyProperties>(m_absIdxs);

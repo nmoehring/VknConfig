@@ -94,13 +94,15 @@ namespace vkn
         // Create
         void createRenderpass();
         void createPipelines();
-        void createFramebuffers();
+        void createFramebuffers(VknSwapchain &swapchain);
+        void demolishFramebuffers(VknSwapchain &swapchain);
         void recreatePipelines(VknSwapchain &swapchain, uint32_t viewportIdx, uint32_t scissorIdx);
         void recreateFramebuffers(VknSwapchain &swapchain);
 
         // Getters
         VkRenderPass *getVkRenderPass() { return &s_engine->getObject<VkRenderPass>(m_absIdxs); }
         VknPipeline *getPipeline(uint32_t idx);
+        std::list<VknPipeline> *getPipelines() { return &m_pipelines; }
         VknFramebuffer *getFramebuffer(uint32_t idx);
         std::list<VknFramebuffer> *getFramebuffers() { return &m_framebuffers; }
         VknIdxs &getRelIdxs() { return m_relIdxs; }
@@ -123,6 +125,9 @@ namespace vkn
         size_t m_pipelineStartAbsIdx{0};
         bool m_recreatingPipelines{false};
         uint32_t m_framebufferStartPos{0};
+        bool m_recreatingFramebuffers{false};
+        bool m_addedFramebuffers{false};
+        bool m_demolishedVknFramebuffers{true};
         VknInstanceLock<VknRenderpass> m_instanceLock;
 
         VknPipeline *addPipeline(uint32_t subpassIdx);

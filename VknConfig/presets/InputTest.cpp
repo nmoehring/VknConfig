@@ -66,9 +66,8 @@ namespace vkn
         renderpass->createPipelines();
 
         // Create command pool, command buffers, and sync objects
-        VknCommandPool *commandPool = device->addCommandPool(0);
-        uint32_t queueFamilyIdx = device->findGraphicsQueue();
-        commandPool->createCommandPool(queueFamilyIdx);
+        device->addCommandPools();
+        VknCommandPool *commandPool = device->getCommandPool(QueueType::PRESENT);
         commandPool->createCommandBuffers(swapchain->getNumImages());
 
         // Return true - ready to render

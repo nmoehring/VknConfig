@@ -86,7 +86,6 @@ namespace vkn
         void setAppName(std::string appName);
         void setEngineName(std::string engineName);
         void setApiVersion(unsigned int apiVersion);
-        void setNumHardCodedVertices(uint32_t numVertices) { m_numHardCodedVertices = numVertices; }
         void setNotPresentable() { m_presentable = false; }
         void setPresentable() { m_presentable = true; }
 
@@ -105,11 +104,12 @@ namespace vkn
         bool getInstanceCreated() { return m_createdInstance; }
         VknDevice *getDevice(uint32_t deviceIdx);
         std::list<VknDevice> &getDevices() { return m_devices; }
-        uint32_t getNumHardCodedVertices() { return m_numHardCodedVertices; }
         bool hasWindow() { return m_vknWindow != nullptr; } // Generic check
         VknWindow *getWindow() { return m_vknWindow; }
         VknEngine *getEngine() { return s_engine; }
         VknInfos *getInfos() { return s_infos; }
+        bool isRenderingGraphics();
+        bool isComputing() { return false; }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
@@ -123,7 +123,6 @@ namespace vkn
         uint32_t m_apiVersion{VK_API_VERSION_1_1};
         uint32_t m_appVersion{0};
         uint32_t s_engineVersion{0};
-        uint32_t m_numHardCodedVertices{0};
 
         // Members
         std::list<VknDevice> m_devices;

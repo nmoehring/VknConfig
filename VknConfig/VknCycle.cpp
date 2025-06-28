@@ -16,59 +16,52 @@ namespace vkn
         m_clearColor = {{{r, g, b, a}}};
     }
 
-    void VknCycle::loadConfig(VknConfig *config, VknEngine *engine)
+    void VknCycle::loadBasicConfig(VknConfig *config, VknEngine *engine)
     {
         m_config = config;
         m_engine = engine;
         m_device = m_config->getDevice(0);
-        m_swapchain = m_device->getSwapchain(0);
-        m_renderpass = m_device->getRenderpass(0);
-        m_pipeline = m_renderpass->getPipeline(0);
-        m_commandPool = m_device->getCommandPool(0);
+        m_transferPool = m_device->getCommandPool(TRANSFER);
         m_physicalDevice = m_device->getPhysicalDevice();
+
+        m_device->createSyncObjects(MAX_FRAMES_IN_FLIGHT); // Use 2 frames in flight for a simple demo
+
+        m_waitSemaphores.push_back(VkSemaphore{});
+        m_waitStages.push_back(VkPipelineStageFlags{});
+
+        m_basicConfigLoaded = true;
+    }
+
+    void VknCycle::loadGraphicsConfig(VknConfig *config, VknEngine *engine)
+    {
+        m_swapchain = m_device->getSwapchain(0);
+        m_presentPool = m_device->getCommandPool(PRESENT); // ToDo: consider supporting multiple families returned
+        m_renderpasses = m_device->getRenderpasses();
 
         // Determine MAX_FRAMES_IN_FLIGHT based on user setting and available swapchain images.
         uint32_t actualSwapchainImageCount = m_swapchain->getNumImages();
         if (actualSwapchainImageCount == 0)
-        {
-            // This case should ideally not happen if swapchain is successfully created before loadConfig.
-            // If it can, a more graceful handling or default might be needed.
             throw std::runtime_error("Swapchain has 0 images in VknCycle::loadConfig. Ensure swapchain is created and has images.");
-        }
 
-        if (MAX_FRAMES_IN_FLIGHT == 0)
-        { // If user hasn't called setMaxFramesInFlight
-            // Default to 2, but not more than available swapchain images.
-            // And ensure it's at least 1.
-            MAX_FRAMES_IN_FLIGHT = std::min(static_cast<uint32_t>(2u), static_cast<uint32_t>(actualSwapchainImageCount));
-        }
-        else
-        {
-            // User has set a value, cap it by actual swapchain images.
-            MAX_FRAMES_IN_FLIGHT = std::min(MAX_FRAMES_IN_FLIGHT, static_cast<uint32_t>(actualSwapchainImageCount));
-        }
-        MAX_FRAMES_IN_FLIGHT = std::max(static_cast<uint32_t>(1u), MAX_FRAMES_IN_FLIGHT); // Must be at least 1.
+        m_vkSwapchains.push_back(*m_swapchain->getVkSwapchain());
 
-        m_device->createSyncObjects(MAX_FRAMES_IN_FLIGHT); // Use 2 frames in flight for a simple demo
+        MAX_FRAMES_IN_FLIGHT = actualSwapchainImageCount;
         m_imagesInFlight.assign(actualSwapchainImageCount, nullptr);
-        m_waitSemaphores.push_back(VkSemaphore{});
-        m_waitStages.push_back(VkPipelineStageFlags{});
-        m_swapchains.push_back(VkSwapchainKHR{});
 
-        // Determine if the pipeline expects vertex inputs
-        m_vertexInputState = m_pipeline->getVertexInputState();
-        if (m_vertexInputState && (m_vertexInputState->getNumBindings() > 0 || m_vertexInputState->getNumAttributes() > 0))
-            m_pipelineExpectsVertexInputs = true;
-        else
-            m_pipelineExpectsVertexInputs = false;
-        m_devRelIdxs = m_device->getRelIdxs();
+        m_graphicsConfigLoaded = true;
+    }
 
-        m_configLoaded = true;
+    void VknCycle::loadComputeConfig(VknConfig *config, VknEngine *engine)
+    {
+        m_computePool = m_device->getCommandPool(COMPUTE); // TODO: consider supporting non-support graphics families
+        // TODO: load "compute passes"
+
+        m_computeConfigLoaded = true;
     }
 
     void VknCycle::wait()
     {
-        if (!m_configLoaded)
+        if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
         // 1. Wait for the previous frame to finish
         vkWaitForFences(
@@ -79,7 +72,7 @@ namespace vkn
 
     bool VknCycle::acquireImage()
     {
-        if (!m_configLoaded)
+        if (!m_graphicsConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
         // 2. Acquire an image from the swapchain
         m_acquireResult = vkAcquireNextImageKHR(
@@ -103,53 +96,95 @@ namespace vkn
         return true;
     }
 
-    void VknCycle::recordCommandBuffer()
+    void VknCycle::beginFrameRecording()
     {
-        if (!m_configLoaded)
+        m_commandBuffersToSubmit.clear();
+    }
+
+    void VknCycle::uploadData()
+    {
+    }
+
+    void VknCycle::recordGraphicsPass(uint_fast8_t renderpassIdx)
+    {
+        if (!m_graphicsConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
-        // 3. Record the command buffer
-        m_currentCommandBuffer = m_commandPool->getCommandBuffer(m_imageIndex);
-        vkResetCommandBuffer(*m_currentCommandBuffer, 0); // Optional: VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT allows this
+
+        VkCommandBuffer commandBuffer = *m_presentPool->getCommandBuffer(m_imageIndex);
+        vkResetCommandBuffer(commandBuffer, 0);
 
         m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-
-        m_resBegin = vkBeginCommandBuffer(*m_currentCommandBuffer, &m_beginInfo);
+        m_resBegin = vkBeginCommandBuffer(commandBuffer, &m_beginInfo);
 
         m_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        m_renderPassBeginInfo.renderPass = *m_renderpass->getVkRenderPass();
-        m_renderPassBeginInfo.framebuffer = *m_renderpass->getFramebuffer(m_imageIndex)->getVkFramebuffer(); // Need getVkFramebuffer on VknFramebuffer
+        VknRenderpass *renderpass = getListElement(renderpassIdx, *m_renderpasses);
+        VknPipeline *firstPipeline = renderpass->getPipeline(0);
+        m_renderPassBeginInfo.renderPass = *renderpass->getVkRenderPass();
+        m_renderPassBeginInfo.framebuffer = *renderpass->getFramebuffer(m_imageIndex)->getVkFramebuffer();
         m_renderPassBeginInfo.renderArea.offset = {0, 0};
-        m_renderPassBeginInfo.renderArea.extent = m_swapchain->getActualExtent(); // Use actual swapchain extent
+        m_renderPassBeginInfo.renderArea.extent = m_swapchain->getActualExtent();
 
         m_renderPassBeginInfo.clearValueCount = 1; // Assuming one color attachment, should be renderpass attachments that have loadOp=VK_ATTACHMENT_LOAD_OP_CLEAR
         m_renderPassBeginInfo.pClearValues = &m_clearColor;
 
-        vkCmdBeginRenderPass(*m_currentCommandBuffer, &m_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(commandBuffer, &m_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdSetViewport(*m_currentCommandBuffer, 0, 1, &m_pipeline->getViewportState()->getVkViewport(0));
-        vkCmdSetScissor(*m_currentCommandBuffer, 0, 1, &m_pipeline->getViewportState()->getVkScissor(0));
-        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_pipeline->getVkPipeline());
-
-        if (m_pipelineExpectsVertexInputs)
+        // Correctly iterate through pipelines: bind, set state, and draw for each one.
+        for (VknPipeline &pipeline : *renderpass->getPipelines())
         {
-            // TODO: This is where you would bind your vertex buffers
-            // vkCmdBindVertexBuffers(*m_currentCommandBuffer, ...);
-            // And then draw based on the count from those buffers or an index buffer
-            // vkCmdDraw(*m_currentCommandBuffer, vertexCountFromBuffer, 1, 0, 0);
-            throw std::runtime_error("Pipeline expects vertex inputs, but VknCycle input binding is not yet implemented.");
+            // 1. Bind the pipeline
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline.getVkPipeline());
+
+            // 2. Set dynamic states for this pipeline
+            VknViewportState *viewportState = pipeline.getViewportState();
+            if (viewportState)
+            {
+                vkCmdSetViewport(commandBuffer, 0, 1, &viewportState->getVkViewport(0));
+                vkCmdSetScissor(commandBuffer, 0, 1, &viewportState->getVkScissor(0));
+            }
+
+            // 3. Check how to draw for this pipeline
+            VknVertexInputState *vertexInputState = pipeline.getVertexInputState();
+            if (vertexInputState && (vertexInputState->getNumBindings() > 0 || vertexInputState->getNumAttributes() > 0))
+            {
+                // This pipeline expects vertex buffers to be bound.
+                throw std::runtime_error("Pipeline expects vertex inputs, but VknCycle input binding is not yet implemented.");
+            }
+            else if (pipeline.getNumHardCodedVertices() > 0)
+            {
+                // This pipeline uses hard-coded vertices in the shader.
+                vkCmdDraw(commandBuffer, pipeline.getNumHardCodedVertices(), 1, 0, 0);
+            }
         }
-        else // No vertex inputs expected, draw hardcoded vertices (e.g., a triangle)
-            vkCmdDraw(*m_currentCommandBuffer, m_config->getNumHardCodedVertices(), 1, 0, 0);
 
-        vkCmdEndRenderPass(*m_currentCommandBuffer);
+        vkCmdEndRenderPass(commandBuffer);
 
-        m_resEnd = vkEndCommandBuffer(*m_currentCommandBuffer);
+        m_resEnd = vkEndCommandBuffer(commandBuffer);
+        m_commandBuffersToSubmit.push_back(commandBuffer);
+    }
+
+    void VknCycle::recordComputePass(uint_fast8_t computePassIdx)
+    {
+        if (!m_computeConfigLoaded)
+            throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+        VkCommandBuffer commandBuffer = *m_computePool->getCommandBuffer(m_currentFrame); // Use m_currentFrame for compute buffers
+        vkResetCommandBuffer(commandBuffer, 0);
+
+        m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        m_beginInfo.flags = 0;
+        vkBeginCommandBuffer(commandBuffer, &m_beginInfo);
+
+        // TODO: Record compute pipeline binding, descriptor sets, and dispatch calls.
+        // TODO: Record a pipeline barrier to ensure compute writes are visible to the graphics pass.
+
+        vkEndCommandBuffer(commandBuffer);
+        m_commandBuffersToSubmit.push_back(commandBuffer);
     }
 
     void VknCycle::submitCommandBuffer()
     {
-        if (!m_configLoaded)
+        if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
         // 4. Submit the command buffer
         m_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -160,34 +195,53 @@ namespace vkn
         m_submitInfo.pWaitSemaphores = m_waitSemaphores.data();
         m_submitInfo.pWaitDstStageMask = m_waitStages.data();
 
-        m_submitInfo.commandBufferCount = 1;
-        m_submitInfo.pCommandBuffers = m_currentCommandBuffer;
+        m_submitInfo.commandBufferCount = static_cast<uint32_t>(m_commandBuffersToSubmit.size());
+        m_submitInfo.pCommandBuffers = m_commandBuffersToSubmit.data();
 
         m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrame));
         m_submitInfo.signalSemaphoreCount = 1;
         m_submitInfo.pSignalSemaphores = m_signalSemaphores.data();
 
         vkResetFences(*m_device->getVkDevice(), 1, &m_device->getFence(m_currentFrame)); // Reset the fence before submitting
-        m_resSubmit = vkQueueSubmit(*m_device->getGraphicsQueue(), 1, &m_submitInfo, m_device->getFence(m_currentFrame));
+
+        // The queue we submit to must match the queue family of the command pool
+        // from which the command buffers were allocated.
+        // For the simple case where we only record a graphics pass, it comes from the PRESENT pool.
+        // A more complex engine would need to track which queue each command buffer belongs to
+        // and potentially perform multiple submissions.
+        QueueType submissionQueue = m_graphicsConfigLoaded ? PRESENT : COMPUTE;
+        m_resSubmit = vkQueueSubmit(*m_device->getQueue(submissionQueue), 1, &m_submitInfo, m_device->getFence(m_currentFrame));
+    }
+
+    void VknCycle::downloadData()
+    {
     }
 
     bool VknCycle::presentImage()
     {
-        if (!m_configLoaded)
+        if (!m_graphicsConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+
+        // --- ADD THIS CHECK ---
+        if (m_config && m_config->getWindow() && !m_config->getWindow()->isActive())
+        {
+            // Window is minimized or not ready, skip presenting.
+            return false;
+        }
+        // --- END ADD ---
+
         // 5. Present the image
         m_presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
         m_presentInfo.waitSemaphoreCount = 1;
         m_presentInfo.pWaitSemaphores = m_signalSemaphores.data();
 
-        m_swapchains[0] = *m_swapchain->getVkSwapchain();
         m_presentInfo.swapchainCount = 1;
-        m_presentInfo.pSwapchains = m_swapchains.data();
+        m_presentInfo.pSwapchains = m_vkSwapchains.data();
         m_presentInfo.pImageIndices = &m_imageIndex;
         m_presentInfo.pResults = nullptr; // Optional: to check results per swapchain
 
-        m_presentResult = vkQueuePresentKHR(*m_device->getGraphicsQueue(), &m_presentInfo);
+        m_presentResult = vkQueuePresentKHR(*m_device->getQueue(QueueType::PRESENT), &m_presentInfo);
         m_signalSemaphores.clear();
         m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // Move to the next frame
 
@@ -239,8 +293,12 @@ namespace vkn
         // Reset m_imagesInFlight for the new swapchain
         m_imagesInFlight.assign(m_swapchain->getNumImages(), nullptr);
 
-        m_pipeline->getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
-        m_renderpass->recreateFramebuffers(*m_swapchain);
+        for (auto &renderpass : *m_renderpasses)
+        {
+            for (auto &pipeline : *renderpass.getPipelines())
+                pipeline.getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
+            renderpass.recreateFramebuffers(*m_swapchain);
+        }
     }
 
 } // namespace vkn

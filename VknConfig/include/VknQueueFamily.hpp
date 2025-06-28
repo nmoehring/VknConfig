@@ -63,11 +63,13 @@ namespace vkn
         // Config
         void setNumSelected(int num);
         void setMemoryProtection();
+        void setFamilyIdx(uint_fast32_t idx) { m_familyIdx = idx; }
 
         // Getters
         int getNumSelected();
         uint32_t getNumAvailable();
         VkDeviceQueueCreateFlags getFlags();
+        bool supportsPresent();
         bool supportsGraphics();
         bool supportsCompute();
         bool supportsTransfer();
@@ -77,6 +79,7 @@ namespace vkn
     private:
         // Params
         VkDeviceQueueCreateFlags m_createFlags{0};
+        uint_fast32_t m_familyIdx{0};
 
         // State
         int m_numSelected{0};

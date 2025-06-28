@@ -193,4 +193,12 @@ namespace vkn
         VknObject::exit();
         m_createdInstance = false;
     }
+
+    bool VknConfig::isRenderingGraphics()
+    {
+        for (auto &device : m_devices)
+            if (device.getRenderpasses()->size() > 0)
+                return true;
+        return false;
+    }
 }

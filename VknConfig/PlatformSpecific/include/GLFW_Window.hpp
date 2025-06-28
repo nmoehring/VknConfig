@@ -21,7 +21,9 @@ namespace vkn
         bool isClosed() override; // True if the window has been signaled to close or is demolished
         void *getNativeHandle() const override;
         void setNativeInterfaceObjectPointer(void *nativeInterfaceObjectPointer) override; // Initially for Android, but may be other uses?
-        void handleAppCmd(int32_t cmd) override;                                           // Initially for Android, but may be other uses?
+        void setFramebufferResized(bool resized) { m_framebufferResized = resized; }
+        void handleAppCmd(int32_t cmd) override; // Initially for Android, but may be other uses?
+        static void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 
     private:
         // Members
@@ -36,6 +38,7 @@ namespace vkn
         static uint32_t s_windowCount;
         static void glfwErrorCallback(int error, const char *description);                            // Must be static
         static void glfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods); // Must be static
+        bool m_framebufferResized{false};                                                             // Flag to indicate framebuffer resize
         void demolish();
 
         bool isWindowMinimized();

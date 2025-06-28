@@ -36,7 +36,11 @@ namespace vkn
     {
         m_readyToRun = preset(m_config);
         if (m_readyToRun)
-            m_cycle.loadConfig(&m_config, m_engine);
+            m_cycle.loadBasicConfig(&m_config, m_engine);
+        if (m_config.isRenderingGraphics())
+            m_cycle.loadGraphicsConfig(&m_config, m_engine);
+        if (m_config.isComputing())
+            m_cycle.loadComputeConfig(&m_config, m_engine);
     }
 
     void VknApp::enableValidationLayer()
@@ -57,7 +61,15 @@ namespace vkn
         m_cycle.wait();
         if (!m_cycle.acquireImage())
             return false;
-        m_cycle.recordCommandBuffer();
+
+        // This is the new, more flexible recording flow.
+        // You first begin recording, then record all the passes you need for this frame.
+        m_cycle.beginFrameRecording();
+        if (m_config.isComputing())
+            m_cycle.recordComputePass(0); // Record compute work first
+        if (m_config.isRenderingGraphics())
+            m_cycle.recordGraphicsPass(0); // Then record graphics work
+
         m_cycle.submitCommandBuffer();
         if (!m_cycle.presentImage())
             return false;

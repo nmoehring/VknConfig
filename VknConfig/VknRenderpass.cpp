@@ -161,8 +161,14 @@ namespace vkn
 
     std::list<VknFramebuffer> *VknRenderpass::addFramebuffers(VknSwapchain &swapchain)
     {
-        m_framebufferStartPos = s_engine->addNewVknObjects<VknFramebuffer, VkFramebuffer, VkDevice>(
-            swapchain.getNumImages(), m_framebuffers, m_relIdxs, m_absIdxs);
+        if (m_addedFramebuffers)
+            throw std::runtime_error("Framebuffers already added.");
+        if (m_demolishedVknFramebuffers)
+        {
+            m_framebufferStartPos = s_engine->addNewVknObjects<VknFramebuffer, VkFramebuffer, VkDevice>(
+                swapchain.getNumImages(), m_framebuffers, m_relIdxs, m_absIdxs);
+            m_demolishedVknFramebuffers = false;
+        }
         for (uint32_t i = 0; i < swapchain.getNumImages(); ++i)
         {
             VknFramebuffer *listElement = getListElement(i, m_framebuffers);
@@ -171,11 +177,14 @@ namespace vkn
             listElement->setSwapchainAttachmentDescriptionIndex(0);
             listElement->addAttachments();
         }
+        m_addedFramebuffers = true;
         return &m_framebuffers;
     }
 
-    void VknRenderpass::createFramebuffers()
+    void VknRenderpass::createFramebuffers(VknSwapchain &swapchain)
     {
+        if (!m_addedFramebuffers)
+            this->addFramebuffers(swapchain);
         if (m_framebuffers.size() == 0)
             throw std::runtime_error("No framebuffers to create.");
         for (auto &framebuffer : m_framebuffers)
@@ -203,19 +212,29 @@ namespace vkn
         m_recreatingPipelines = false;
     }
 
-    void VknRenderpass::recreateFramebuffers(VknSwapchain &swapchain)
+    void VknRenderpass::demolishFramebuffers(VknSwapchain &swapchain)
     {
-        uint32_t numSwapchainImages{swapchain.getNumImages()};
-        if (m_framebuffers.size() != numSwapchainImages)
+        if (m_framebuffers.size() != swapchain.getNumImages())
         {
             s_engine->demolishVknObjects<VknFramebuffer, VkFramebuffer, VkDevice>(
-                m_framebufferStartPos, numSwapchainImages, m_framebuffers);
-            m_framebuffers.clear();
-            this->addFramebuffers(swapchain);
-            this->createFramebuffers();
+                m_framebufferStartPos, m_framebuffers.size(), m_framebuffers);
+            m_demolishedVknFramebuffers = true;
         }
         else
             for (auto &framebuffer : m_framebuffers)
+                framebuffer.demolish();
+        m_addedFramebuffers = false;
+    }
+
+    void VknRenderpass::recreateFramebuffers(VknSwapchain &swapchain)
+    {
+        if (m_framebuffers.size() == swapchain.getNumImages())
+            for (auto &framebuffer : m_framebuffers)
                 framebuffer.recreateFramebuffer();
+        else
+        {
+            this->demolishFramebuffers(swapchain);
+            this->createFramebuffers(swapchain);
+        }
     }
 }

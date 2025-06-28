@@ -49,39 +49,87 @@ namespace vkn
         return getListElement(renderpassIdx, m_renderpasses);
     }
 
-    void VknDevice::addExtension(std::string extension)
+    uint32_t VknDevice::findQueueFamily(QueueType type)
     {
-        if (extension == VK_KHR_SWAPCHAIN_EXTENSION_NAME)
-            m_swapchainExtensionEnabled = true;
-        s_infos->addDeviceExtension(extension, m_relIdxs);
-    }
-
-    uint32_t VknDevice::findGraphicsQueue()
-    {
-        // Find a queue family that supports graphics operations.
-        // In a real application, you'd select the best queue family based on your needs.
-        // For this simple demo, we'll assume the first queue family with graphics support is sufficient.
-        uint32_t graphicsQueueFamilyIndex = -1; // Invalid index
+        // First pass: Look for ideal, dedicated queues or required queues.
         for (int i = 0; i < this->getPhysicalDevice()->getNumQueueFamilies(); ++i)
         {
-            if (getPhysicalDevice()->getQueue(i).supportsGraphics())
+            VknQueueFamily &queue = getPhysicalDevice()->getQueue(i);
+            switch (type)
             {
-                graphicsQueueFamilyIndex = i;
+            case QueueType::PRESENT:
+                if (queue.supportsPresent())
+                    return i;
+                break;
+            case QueueType::GRAPHICS:
+                if (queue.supportsGraphics())
+                    return i;
+                break;
+            case QueueType::COMPUTE:
+                // Prefer a queue that is compute but not graphics for async compute
+                if (queue.supportsCompute() && !queue.supportsGraphics())
+                    return i;
+                break; // Prevent fallthrough
+            case QueueType::TRANSFER:
+                // Prefer a dedicated transfer queue
+                if (queue.supportsTransfer() && !queue.supportsGraphics() && !queue.supportsCompute())
+                    return i;
                 break;
             }
         }
-        if (graphicsQueueFamilyIndex == -1)
-            throw std::runtime_error("Failed to find a graphics queue family.");
-        return graphicsQueueFamilyIndex;
+
+        // Second pass (fallback): If a dedicated queue wasn't found, find any suitable queue.
+        for (int i = 0; i < this->getPhysicalDevice()->getNumQueueFamilies(); ++i)
+        {
+            VknQueueFamily &queue = getPhysicalDevice()->getQueue(i);
+            switch (type)
+            {
+            case QueueType::COMPUTE:
+                if (queue.supportsCompute())
+                    return i; // Any compute-capable queue is fine.
+                break;
+            case QueueType::TRANSFER:
+                if (queue.supportsTransfer())
+                    return i; // Any transfer-capable queue is fine.
+                break;
+            default: // No simple fallback for GRAPHICS or PRESENT, they must be found in the first pass.
+                break;
+            }
+        }
+        return -1;
     }
 
-    VknCommandPool *VknDevice::addCommandPool(uint32_t newCommandPoolIdx)
+    void VknDevice::addCommandPools()
     {
-        m_instanceLock(this);
-        if (!m_createdVkDevice)
-            throw std::runtime_error("Logical device not created before creating command pool.");
-        return &s_engine->addNewVknObject<VknCommandPool, VkCommandPool, VkDevice>(
-            newCommandPoolIdx, m_commandPools, m_relIdxs, m_absIdxs);
+        if (m_commandPoolCreated)
+        {
+            return;
+        }
+
+        // This map ensures we only create one command pool per unique queue family index.
+        std::map<uint32_t, VknCommandPool *> uniquePools;
+
+        for (uint_fast32_t i = 0; i < NUM_QUEUE_TYPES; ++i)
+        {
+            QueueType type = static_cast<QueueType>(i);
+            uint32_t queueFamilyIdx = findQueueFamily(type);
+
+            if (queueFamilyIdx != static_cast<uint32_t>(-1))
+            {
+                if (uniquePools.find(queueFamilyIdx) == uniquePools.end())
+                {
+                    // This is a new queue family, create a pool for it.
+                    VknCommandPool &newPool = s_engine->addNewVknObject<VknCommandPool, VkCommandPool, VkDevice>(
+                        m_commandPools.size(), m_commandPools, m_relIdxs, m_absIdxs);
+                    newPool.createCommandPool(queueFamilyIdx);
+                    uniquePools[queueFamilyIdx] = &newPool;
+                }
+                // Map the QueueType to the (possibly shared) command pool.
+                m_commandPoolMap[type] = uniquePools[queueFamilyIdx];
+            }
+        }
+
+        m_commandPoolCreated = true;
     }
 
     void VknDevice::createSyncObjects(uint32_t maxFramesInFlight)
@@ -177,25 +225,33 @@ namespace vkn
         return res;
     }
 
-    VkQueue *VknDevice::getGraphicsQueue(uint32_t queueIdx)
+    VkQueue *VknDevice::getQueue(QueueType type, uint32_t index)
     {
-        // Get queue handles (assuming we selected at least one graphics queue)
-        // In a real app, you'd store these handles based on queue family index and type.
-        // For this demo, let's just get the first graphics queue.
-        uint32_t graphicsQueueFamilyIndex = -1;
-        for (int i = 0; i < this->getPhysicalDevice()->getNumQueueFamilies(); ++i)
-        {
-            if (this->getPhysicalDevice()->getQueue(i).supportsGraphics())
-            {
-                graphicsQueueFamilyIndex = i;
-                break;
-            }
-        }
-        if (graphicsQueueFamilyIndex == -1)
-            throw std::runtime_error("Failed to find a graphics queue family after device creation.");
+        // Check if we've already retrieved this queue
+        uint32_t queueTypeIndex = static_cast<uint32_t>(type);
+        if (m_queues.exists(queueTypeIndex))
+            return &m_queues(queueTypeIndex);
 
-        vkGetDeviceQueue(*getVkDevice(), graphicsQueueFamilyIndex, queueIdx, &m_lastUsedGraphicsQueue); // Store the graphics queue handle
-        return &m_lastUsedGraphicsQueue;
+        // If not, find its family, get the handle, store it, and return it
+        uint32_t familyIndex = findQueueFamily(type);
+        if (familyIndex == static_cast<uint32_t>(-1))
+        {
+            // Provide a more descriptive error message.
+            std::string q_type_str = "UNKNOWN";
+            if (type == GRAPHICS)
+                q_type_str = "GRAPHICS";
+            else if (type == COMPUTE)
+                q_type_str = "COMPUTE";
+            else if (type == TRANSFER)
+                q_type_str = "TRANSFER";
+            else if (type == PRESENT)
+                q_type_str = "PRESENT";
+            throw std::runtime_error("VknDevice::getQueue: Could not find a queue family for type: " + q_type_str);
+        }
+
+        VkQueue queueHandle = VK_NULL_HANDLE;
+        vkGetDeviceQueue(*getVkDevice(), familyIndex, index, &queueHandle);
+        return &m_queues.insert(queueTypeIndex, queueHandle);
     }
 
     VknRenderpass *VknDevice::addRenderpass(uint32_t renderpassIdx)
@@ -214,11 +270,20 @@ namespace vkn
             renderpassIdx, m_renderpasses, m_relIdxs, m_absIdxs);
     }
 
-    VknCommandPool *VknDevice::getCommandPool(uint32_t commandPoolIdx)
+    void VknDevice::addExtension(std::string extension)
     {
-        // getListElement is a template function, ensure it's accessible here
-        // (it's in VknData.hpp, which should be included by VknDevice.hpp or .cpp)
-        return getListElement(commandPoolIdx, m_commandPools);
+        if (extension == VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+            m_swapchainExtensionEnabled = true;
+        s_infos->addDeviceExtension(extension, m_relIdxs);
+    }
+
+    VknCommandPool *VknDevice::getCommandPool(QueueType type)
+    {
+        if (m_commandPoolMap.find(type) == m_commandPoolMap.end())
+        {
+            throw std::runtime_error("Command pool for the requested queue type not found or not created.");
+        }
+        return m_commandPoolMap.at(type);
     }
 
     VmaAllocator *VknDevice::addAllocator()

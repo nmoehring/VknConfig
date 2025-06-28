@@ -85,6 +85,7 @@ namespace vkn
         void setBasePipelineHandle(VkPipeline basePipelineHandle) { m_basePipelineHandle = basePipelineHandle; }
         void setBasePipelineIndex(int32_t basePipelineIndex) { m_basePipelineIndex = basePipelineIndex; }
         void setCreateFlags(VkPipelineCreateFlags createFlags) { m_createFlags = createFlags; }
+        void setNumHardCodedVertices(uint_fast32_t numVertices) { m_numHardcodedVertices = numVertices; }
 
         // Create
         VkGraphicsPipelineCreateInfo *_filePipelineCreateInfo();
@@ -103,6 +104,7 @@ namespace vkn
         VknPipelineLayout *getPipelineLayout() { return &m_layouts.front(); }
         VknIdxs &getRelIdxs() { return m_relIdxs; }
         VknIdxs &getAbsIdxs() { return m_absIdxs; }
+        uint_fast32_t getNumHardCodedVertices() { return m_numHardcodedVertices; }
 
     private:
         //  Members
@@ -124,7 +126,7 @@ namespace vkn
 
         // State
         bool m_createdPipeline{false};
-        VknInstanceLock<VknPipeline>
-            m_instanceLock;
+        uint_fast32_t m_numHardcodedVertices{0};
+        VknInstanceLock<VknPipeline> m_instanceLock;
     };
 }

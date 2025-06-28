@@ -83,8 +83,12 @@ namespace vkn
                 &familyPropertyCount,
                 queuesIterator.getData());
 
-            for (auto &queue : s_queues)
-                queue.setNumSelected(queue.getNumAvailable());
+            for (uint_fast32_t i{0}; i < s_queues.size(); ++i)
+            {
+                VknQueueFamily *queue{getListElement(i, s_queues)};
+                queue->setNumSelected(queue->getNumAvailable());
+                queue->setFamilyIdx(i);
+            }
         }
         s_requestedQueues = true;
     }
@@ -148,7 +152,7 @@ namespace vkn
             currentProps = s_properties(i);
 
             if (graphicsNeeded)
-                for (uint_fast32_t q_idx = 0; q_idx < s_engine->getVectorSize<VkQueueFamilyProperties>(); ++q_idx)
+                for (uint_fast32_t q_idx{s_deviceQueuePropStartPos(i)}; q_idx < s_numQueueFamilies(i) + s_deviceQueuePropStartPos(i); ++q_idx)
                 {
                     if (s_engine->getObject<VkQueueFamilyProperties>(q_idx).queueFlags & VK_QUEUE_GRAPHICS_BIT) // Must support graphics
                     {

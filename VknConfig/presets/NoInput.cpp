@@ -49,7 +49,7 @@ namespace vkn
         renderpass->createRenderpass();
         // Config=>Device=>Renderpass=>Framebuffer
         std::list<VknFramebuffer> *framebuffers = renderpass->addFramebuffers(*swapchain);
-        renderpass->createFramebuffers();
+        renderpass->createFramebuffers(*swapchain);
 
         // Config=>Device=>Renderpass=>Pipeline (subpass creates a pipeline)
         auto *pipeline = renderpass->getPipeline(0);
@@ -66,13 +66,12 @@ namespace vkn
         renderpass->createPipelines();
 
         // Create command pool, command buffers, and sync objects
-        VknCommandPool *commandPool = device->addCommandPool(0);
-        uint32_t queueFamilyIdx = device->findGraphicsQueue();
-        commandPool->createCommandPool(queueFamilyIdx);
+        device->addCommandPools();
+        VknCommandPool *commandPool = device->getCommandPool(QueueType::PRESENT);
         commandPool->createCommandBuffers(swapchain->getNumImages());
 
         // Set shader vertices
-        config.setNumHardCodedVertices(3);
+        pipeline->setNumHardCodedVertices(3);
 
         // Return true - ready to render
         return true;

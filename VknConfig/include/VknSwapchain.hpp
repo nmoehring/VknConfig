@@ -104,7 +104,7 @@ namespace vkn
         VkPresentModeKHR m_presentMode{VK_PRESENT_MODE_FIFO_KHR}; // FIFO ONLY
         VkBool32 m_clipped{VK_TRUE};
         VkSwapchainKHR m_oldSwapchain{VK_NULL_HANDLE};
-        uint32_t m_imageCount{1};
+        uint32_t m_imageCount{2};
         std::optional<uint32_t> m_surfaceIdx{};
 
         // State

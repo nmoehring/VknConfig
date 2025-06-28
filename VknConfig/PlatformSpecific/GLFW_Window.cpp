@@ -69,6 +69,15 @@ namespace vkn
         }
     }
 
+    // GLFW framebuffer size callback
+    void GLFW_Window::framebufferSizeCallback(GLFWwindow *window, int width, int height)
+    {
+        auto appWindow = reinterpret_cast<GLFW_Window *>(glfwGetWindowUserPointer(window));
+        appWindow->m_width = width;
+        appWindow->m_height = height;
+        appWindow->m_framebufferResized = true;
+    }
+
     bool GLFW_Window::init()
     {
         if (m_windowCreated)
@@ -91,6 +100,14 @@ namespace vkn
             throw std::runtime_error("Vulkan graphics API not supported by any of your devices.");
         glfwSetWindowUserPointer(m_window, this);
         glfwSetKeyCallback(m_window, glfwKeyCallback);
+        glfwSetFramebufferSizeCallback(m_window, framebufferSizeCallback);
+        // glfwSetCursorPosCallback(m_window, glfwCursorPosCallback);
+        // glfwSetMouseButtonCallback(m_window, glfwMouseButtonCallback);
+        // glfwSetScrollCallback(m_window, glfwScrollCallback);
+        // glfwSetCharCallback(m_window, glfwCharCallback);
+        // glfwSetDropCallback(m_window, glfwDropCallback);
+        // glfwSetJoystickCallback(glfwJoystickCallback);
+        // glfwSetMonitorCallback(glfwMonitorCallback)
 
         m_windowCreated = true;
         m_active = true;

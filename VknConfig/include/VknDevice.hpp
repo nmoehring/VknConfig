@@ -47,6 +47,7 @@
 
 #include <memory>
 #include <vma/vk_mem_alloc.h>
+#include <map>
 
 #include "VknObject.hpp"
 #include "VknRenderpass.hpp"
@@ -58,6 +59,15 @@
 
 namespace vkn
 {
+    enum QueueType : uint_fast32_t
+    {
+        GRAPHICS = 0,
+        COMPUTE = 1,
+        TRANSFER = 2,
+        PRESENT = 3, // A special case, often the same as Graphics
+        NUM_QUEUE_TYPES = 4
+    };
+
     class VknDevice : public VknObject
     {
     public:
@@ -68,7 +78,7 @@ namespace vkn
         // Members
         VknSwapchain *addSwapchain(uint32_t swapchainIdx);
         VknRenderpass *addRenderpass(uint32_t newRenderpassIdx);
-        VknCommandPool *addCommandPool(uint32_t newCommandPoolIdx);
+        void addCommandPools();
         VmaAllocator *addAllocator();
         // Buffer creation methods now return pointers and take VkDeviceSize
         VknVertexBuffer *addVertexBuffer(VkDeviceSize size);
@@ -81,7 +91,7 @@ namespace vkn
 
         // Config
         void createSyncObjects(uint32_t maxFramesInFlight);
-        uint32_t findGraphicsQueue();
+        uint32_t findQueueFamily(QueueType type);
         void addExtension(std::string extension);
         void setPresentable(bool presentable) { m_presentable = presentable; }
 
@@ -89,11 +99,11 @@ namespace vkn
         VknResult createDevice();
 
         // Getters
-        VkQueue *getGraphicsQueue(uint32_t index = 0);
+        VkQueue *getQueue(QueueType type, uint32_t index = 0);
         VknPhysicalDevice *getPhysicalDevice();
         VknSwapchain *getSwapchain(uint32_t swapchainIdx);
         VknRenderpass *getRenderpass(uint32_t renderpassIdx);
-        VknCommandPool *getCommandPool(uint32_t commandPoolIdx);
+        VknCommandPool *getCommandPool(QueueType type);
         VkDevice *getVkDevice();
         VkSemaphore &getImageAvailableSemaphores(uint32_t frameInFlight);
         VkSemaphore &getRenderFinishedSemaphores(uint32_t frameInFlight);
@@ -102,6 +112,8 @@ namespace vkn
         VkSemaphore &getImageAvailableSemaphore(uint32_t frameInFlight);
         VkSemaphore &getRenderFinishedSemaphore(uint32_t frameInFlight);
         VkFence &getFence(uint32_t frameInFlight);
+        std::list<VknRenderpass> *getRenderpasses() { return &m_renderpasses; }
+        std::list<VknCommandPool> *getCommandPools() { return &m_commandPools; }
 
     private:
         // Members
@@ -109,13 +121,16 @@ namespace vkn
         std::list<VknSwapchain> m_swapchains{};
         std::list<VknPhysicalDevice> m_physicalDevices{};
         std::list<VknCommandPool> m_commandPools{};
-        VkQueue m_lastUsedGraphicsQueue{}; // Store graphics queue handle
+        std::map<QueueType, VknCommandPool *> m_commandPoolMap{};
         std::list<VknVertexBuffer> m_vertexBuffers;
         std::list<VknIndexBuffer> m_indexBuffers;
         std::list<VknCpuUniformBuffer> m_cpuUniformBuffers;
         std::list<VknGpuUniformBuffer> m_gpuUniformBuffers;
         std::list<VknStorageBuffer> m_storageBuffers;
         std::list<VknIndirectBuffer> m_indirectBuffers;
+
+        // Store queue handles retrieved from the device
+        VknVector<VkQueue> m_queues;
 
         // Params
         const char *const *m_extensions{nullptr};
