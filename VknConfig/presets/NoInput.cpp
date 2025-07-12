@@ -73,4 +73,41 @@ namespace vkn
         // Return true - ready to render
         return true;
     }
+
+    bool noInputCycle(VknCycle &cycle)
+    {
+        // Begin recording a graphics command buffer
+        cycle.beginGraphicsPassRecording();
+
+        // Record a graphics pass (draw call)
+        cycle.recordGraphicsPass(0); // Assuming renderpass index 0
+
+        // Submit the recorded command buffer for execution
+        cycle.submitCommandBuffers();
+
+        // Present the rendered image
+        bool presented = cycle.presentImage();
+        if (!presented)
+            return false;
+
+        if (!m_readyToRun)
+            throw std::runtime_error("App Cycle not configured before being run.");
+
+        m_cycle.wait();
+        if (!m_cycle.acquireImage())
+            return false;
+
+        // This is the new, more flexible recording flow.
+        // You first begin recording, then record all the passes you need for this frame.
+        m_cycle.beginFrameRecording();
+        if (m_config.isComputing())
+            m_cycle.recordComputePass(0); // Record compute work first
+        if (m_config.isRenderingGraphics())
+            m_cycle.recordGraphicsPass(0); // Then record graphics work
+
+        m_cycle.submitCommandBuffer();
+        if (!m_cycle.presentImage())
+            return false;
+        return true;
+    }
 }

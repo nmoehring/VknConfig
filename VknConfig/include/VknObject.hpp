@@ -13,6 +13,10 @@ namespace vkn
         ~VknObject() = default;
         void init();
         void exit();
+        static bool s_recordingGfxCommandBuffer;
+        static bool s_recordingComputeCommandBuffer;
+        static bool s_recordingTransferCommandBuffer;
+        static VkCommandBuffer *s_transferCommandBuffer;
 
     protected:
         // Engine

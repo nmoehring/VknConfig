@@ -338,6 +338,7 @@ namespace vkn
         void removeViewportStateCreateInfo(VknIdxs relIdxs);
         VknFeatures *getDeviceFeaturesObject();
         void fileDeviceFeaturesInfo();
+        VmaVulkanFunctions *getVmaVulkanFunctions();
 
     private:
         std::string m_appName{};
@@ -394,6 +395,7 @@ namespace vkn
         VknSpace<VkMemoryAllocateInfo> m_deviceMemoryAllocateInfos{1u}; // Device>DeviceMemory#AllocateInfo
         VknSpace<VkBufferCreateInfo> m_bufferCreateInfos{1u};           // Device>Buffer#CreateInfo
         VknSpace<VmaAllocation> m_vmaAllocationInfos{1u};               // Device>VmaAllocation#Info
+        VmaVulkanFunctions m_vmaVulkanFunctions{};
 
         // Required file checklist
         bool m_filedAppInfo{false};

@@ -20,8 +20,6 @@ namespace vkn
           m_size(other.m_size),
           m_memFlags(other.m_memFlags),
           m_allocInfo(other.m_allocInfo),
-          m_vkBuffer(other.m_vkBuffer),
-          m_allocation(other.m_allocation),
           m_mappedData(other.m_mappedData),
           m_uploadBuffer(other.m_uploadBuffer),
           m_downloadBuffer(other.m_downloadBuffer),
@@ -34,8 +32,6 @@ namespace vkn
           m_setSize(other.m_setSize),
           m_createdBuffer(other.m_createdBuffer)
     {
-        other.m_vkBuffer = VK_NULL_HANDLE;
-        other.m_allocation = VK_NULL_HANDLE;
         other.m_mappedData = nullptr;
         other.m_size = 0;
         other.m_isPersistentlyMapped = false;
@@ -57,8 +53,6 @@ namespace vkn
             m_size = other.m_size;
             m_memFlags = other.m_memFlags;
             m_allocInfo = other.m_allocInfo;
-            m_vkBuffer = other.m_vkBuffer;
-            m_allocation = other.m_allocation;
             m_mappedData = other.m_mappedData;
             m_uploadBuffer = other.m_uploadBuffer;
             m_downloadBuffer = other.m_downloadBuffer;
@@ -71,8 +65,6 @@ namespace vkn
             m_setSize = other.m_setSize;
             m_createdBuffer = other.m_createdBuffer;
 
-            other.m_vkBuffer = VK_NULL_HANDLE;
-            other.m_allocation = VK_NULL_HANDLE;
             other.m_mappedData = nullptr;
             other.m_size = 0;
             other.m_isPersistentlyMapped = false;
@@ -88,10 +80,12 @@ namespace vkn
 
     void VknBuffer::create()
     {
-        if (m_vkBuffer != VK_NULL_HANDLE)
+        if (m_createdBuffer)
             throw std::runtime_error("VknBuffer already created.");
         if (!m_setSize)
             throw std::runtime_error("Size not set before creating buffer.");
+
+        m_bufferUsage = m_bufferType | m_transferType;
 
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -113,8 +107,6 @@ namespace vkn
                                          &m_allocInfo),                                    // To get mapped data if VMA_ALLOCATION_CREATE_MAPPED_BIT is set
                          "VMA Create Buffer"};
 
-        m_vkBuffer = s_engine->getObject<VkBuffer>(m_absIdxs); // Store local handle for convenience
-        m_allocation = s_engine->getObject<VmaAllocation>(m_absIdxs);
         vmaGetMemoryTypeProperties(s_engine->getObject<VmaAllocator>(m_absIdxs), m_allocInfo.memoryType, &m_memFlags);
 
         if (m_memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
@@ -123,13 +115,15 @@ namespace vkn
         {
             if (m_uploadable)
             {
-                m_uploadBuffer = new VknUploadBuffer(m_relIdxs, m_absIdxs);
+                s_engine->addNewVknObject<VknUploadBuffer, VkBuffer, VmaAllocator>(
+                    m_uploadBuffer, m_relIdxs, m_absIdxs);
                 m_uploadBuffer->setSize(m_size);
                 m_hasUploadBuffer = true;
             }
             if (m_downloadable)
             {
-                m_downloadBuffer = new VknDownloadBuffer(m_relIdxs, m_absIdxs);
+                s_engine->addNewVknObject<VknDownloadBuffer, VkBuffer, VmaAllocator>(
+                    m_downloadBuffer, m_relIdxs, m_absIdxs);
                 m_downloadBuffer->setSize(m_size);
                 m_hasDownloadBuffer = true;
             }
@@ -143,9 +137,9 @@ namespace vkn
         if (m_memFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
             m_mustFlushAndInvalidate = false;
 
+        m_createdBuffer = true;
         if (m_manualMapping)
             this->map();
-        m_createdBuffer = true;
     }
 
     void VknBuffer::demolish()
@@ -154,11 +148,20 @@ namespace vkn
             return;
 
         // If it was mapped manually (not persistently by VMA), unmap it
-        if (m_mappedData && !m_isPersistentlyMapped && m_allocation != VK_NULL_HANDLE)
+        if (m_mappedData && !m_isPersistentlyMapped)
             this->unmap();
 
-        m_vkBuffer = VK_NULL_HANDLE;
-        m_allocation = VK_NULL_HANDLE;
+        if (m_downloadBuffer)
+        {
+            delete m_downloadBuffer;
+            m_downloadBuffer = nullptr;
+        }
+        if (m_uploadBuffer)
+        {
+            delete m_uploadBuffer;
+            m_uploadBuffer = nullptr;
+        }
+
         m_mappedData = nullptr;
         m_size = 0;
         m_isPersistentlyMapped = false;
@@ -169,14 +172,14 @@ namespace vkn
     {
         if (m_mappedData) // Already mapped (either by VMA or manually)
             return m_mappedData;
-        if (m_allocation == VK_NULL_HANDLE)
-            throw std::runtime_error("Cannot map buffer: VMA allocation is null.");
+        if (!m_createdBuffer)
+            throw std::runtime_error("Cannot map buffer: buffer hasn't been created yet.");
 
         // Retrieve the VmaAllocator using the absolute index stored in the buffer's VknIdxs
         // This assumes the VmaAllocator index was added to m_absIdxs when the parent VknDevice was created.
         VmaAllocator allocator = s_engine->getObject<VmaAllocator>(m_absIdxs);
 
-        m_mapResult = vmaMapMemory(allocator, m_allocation, &m_mappedData);
+        m_mapResult = vmaMapMemory(allocator, *s_engine->getAllocation<VkBuffer>(m_absIdxs), &m_mappedData);
 
         return m_mappedData;
     }
@@ -185,76 +188,90 @@ namespace vkn
     {
         if (m_isPersistentlyMapped)
             return; // Do not unmap buffers that VMA mapped persistently
-        if (m_mappedData && m_allocation != VK_NULL_HANDLE)
+        if (m_mappedData)
         {
             VmaAllocator allocator = s_engine->getObject<VmaAllocator>(m_absIdxs);
-            vmaUnmapMemory(allocator, m_allocation);
+            vmaUnmapMemory(allocator, *s_engine->getAllocation<VkBuffer>(m_absIdxs));
             m_mappedData = nullptr;
         }
     }
 
     void VknBuffer::flush(VkDeviceSize offset, VkDeviceSize size)
     {
-        if (m_allocation == VK_NULL_HANDLE)
+        if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot flush.");
         // VMA handles checking for HOST_COHERENT internally for vmaFlushAllocation.
         // If it's coherent, flush is a no-op.
         m_flushResult = vmaFlushAllocation(
-            s_engine->getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()), m_allocation, offset, size);
+            s_engine->getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()),
+            *s_engine->getAllocation<VkBuffer>(m_absIdxs), offset, size);
     }
 
     void VknBuffer::invalidate(VkDeviceSize offset, VkDeviceSize size)
     {
-        if (m_allocation == VK_NULL_HANDLE)
+        if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot invalidate.");
         m_invalidateResult = vmaInvalidateAllocation(
-            s_engine->getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()), m_allocation, offset, size);
+            s_engine->getObject<VmaAllocator>(m_absIdxs.get<VkDevice>()),
+            *s_engine->getAllocation<VkBuffer>(m_absIdxs), offset, size);
     }
 
-    VkBufferCopy *VknBuffer::uploadData(const void *data, VkDeviceSize dataSize, VkDeviceSize offset)
+    void VknBuffer::uploadData(const void *data, VkDeviceSize offset, VkDeviceSize dataSize)
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot upload data.");
-        if (offset + dataSize > m_size)
-            throw std::out_of_range("Upload data size + offset exceeds buffer's logical size.");
-        if (!m_uploadable)
-            throw std::runtime_error("Uploading to buffer that is not uploadable.");
-        if (!m_isPersistentlyMapped)
+        if (m_hasUploadBuffer)
         {
-            m_copyRegion->srcOffset = offset; // Data is at the start of the staging buffer
-            m_copyRegion->dstOffset = offset;
+            m_uploadBuffer->uploadData(data, dataSize, offset);
             m_copyRegion->size = dataSize;
-            return m_copyRegion;
+            m_copyRegion->srcOffset = offset;
+            m_copyRegion->dstOffset = offset;
+            vkCmdCopyBuffer(
+                *VknObject::s_transferCommandBuffer,
+                *m_uploadBuffer->getVkBuffer(),
+                s_engine->getObject<VkBuffer>(m_absIdxs),
+                1, m_copyRegion);
         }
-        this->flush(offset, dataSize);
-        return nullptr;
+        else if (!m_mappedData)
+        {
+            std::memcpy(static_cast<char *>(m_mappedData) + offset, data, dataSize);
+            this->flush(offset, dataSize);
+        }
+        else
+            throw std::runtime_error("Buffer not mapped and has no upload staging buffer, cannot upload data.");
     }
 
-    VkBufferCopy *VknBuffer::downloadData(void *data, VkDeviceSize dataSize, VkDeviceSize offset)
+    void VknBuffer::downloadData(void *data, VkDeviceSize offset, VkDeviceSize dataSize)
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot download data.");
-        if (offset + dataSize > m_size)
-            throw std::out_of_range("Download data size + offset exceeds buffer's logical size.");
-        if (!m_downloadable)
-            throw std::runtime_error("Downloading to buffer that is not downloadable.");
-        if (!m_isPersistentlyMapped)
+        if (m_hasDownloadBuffer)
         {
-            m_copyRegion->srcOffset = offset; // Data is at the start of the staging buffer
-            m_copyRegion->dstOffset = offset;
             m_copyRegion->size = dataSize;
-            return m_copyRegion;
+            m_copyRegion->srcOffset = offset;
+            m_copyRegion->dstOffset = offset;
+            vkCmdCopyBuffer(
+                s_engine->getObject<VkCommandBuffer>(m_absIdxs),
+                s_engine->getObject<VkBuffer>(m_absIdxs),
+                *m_downloadBuffer->getVkBuffer(),
+                1, m_copyRegion);
+            m_downloadBuffer->downloadData(data, dataSize, offset);
         }
-        this->invalidate(offset, dataSize); // Ensure CPU sees GPU writes
-        return nullptr;
+        else if (m_mappedData)
+        {
+            this->invalidate(offset, dataSize); // Ensure CPU sees GPU writes
+            std::memcpy(data, static_cast<char *>(m_mappedData) + offset, dataSize);
+        }
+        else
+            throw std::runtime_error("Buffer not mapped and has no download staging buffer, cannot download data.");
     }
 
-    VkDescriptorBufferInfo VknBuffer::getDescriptorInfo(VkDeviceSize offset, VkDeviceSize range) const
+    VkDescriptorBufferInfo VknBuffer::getDescriptorInfo(VkDeviceSize offset, VkDeviceSize range)
     {
-        if (m_vkBuffer == VK_NULL_HANDLE)
+        if (!m_createdBuffer)
             throw std::runtime_error("Cannot get descriptor info, buffer is null.");
         VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = m_vkBuffer;
+        bufferInfo.buffer = s_engine->getObject<VkBuffer>(m_absIdxs);
         bufferInfo.offset = offset;
         bufferInfo.range = (range == VK_WHOLE_SIZE) ? m_size : range;
         return bufferInfo;
@@ -276,14 +293,14 @@ namespace vkn
         return m_mappedData;
     }
 
-    VkBuffer VknBuffer::getUploadVkBuffer() const
+    VkBuffer *VknBuffer::getUploadVkBuffer() const
     {
         if (!m_uploadBuffer)
             throw std::runtime_error("Buffer is not uploadable.");
         return m_uploadBuffer->getVkBuffer();
     }
 
-    VkBuffer VknBuffer::getDownloadVkBuffer() const
+    VkBuffer *VknBuffer::getDownloadVkBuffer() const
     {
         if (!m_downloadBuffer)
             throw std::runtime_error("Buffer is not downloadable.");

@@ -221,7 +221,10 @@ namespace vkn
             m_swapchain.front().createSwapchain();
         }
 
+        // Ensure allocator is created after the device and its index is stored
         m_createdVkDevice = true;
+        m_iGPU = physicalDevice->isIntegratedGPU();
+        this->addAllocator();
         return res;
     }
 
@@ -292,6 +295,7 @@ namespace vkn
         allocatorInfo.device = s_engine->getObject<VkDevice>(m_absIdxs);
         allocatorInfo.instance = s_engine->getObject<VkInstance>(m_absIdxs);
         allocatorInfo.vulkanApiVersion = s_infos->getAppInfo()->apiVersion;
+        allocatorInfo.pVulkanFunctions = s_infos->getVmaVulkanFunctions();
 
         VknResult res{"Create VMA allocator."};
         res = vmaCreateAllocator(&allocatorInfo, &allocator);
@@ -300,50 +304,65 @@ namespace vkn
 
     VknVertexBuffer *VknDevice::addVertexBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknVertexBuffer, VkBuffer, VkDevice>(
+        s_engine->addNewVknObject<VknVertexBuffer, VkBuffer, VmaAllocator>(
             m_vertexBuffers.size(), m_vertexBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
         m_vertexBuffers.back().setSize(size);
         return &m_vertexBuffers.back();
     }
 
     VknIndexBuffer *VknDevice::addIndexBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknIndexBuffer, VkBuffer, VkDevice>(
+        s_engine->addNewVknObject<VknIndexBuffer, VkBuffer, VmaAllocator>(
             m_indexBuffers.size(), m_indexBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
         m_indexBuffers.back().setSize(size);
         return &m_indexBuffers.back();
     }
 
     VknCpuUniformBuffer *VknDevice::addCpuUniformBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknCpuUniformBuffer, VkBuffer, VkDevice>(
+        s_engine->addNewVknObject<VknCpuUniformBuffer, VkBuffer, VmaAllocator>(
             m_cpuUniformBuffers.size(), m_cpuUniformBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
         m_cpuUniformBuffers.back().setSize(size);
         return &m_cpuUniformBuffers.back();
     }
 
     VknGpuUniformBuffer *VknDevice::addGpuUniformBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknGpuUniformBuffer, VkBuffer, VkDevice>(
+        s_engine->addNewVknObject<VknGpuUniformBuffer, VkBuffer, VmaAllocator>(
             m_gpuUniformBuffers.size(), m_gpuUniformBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
         m_gpuUniformBuffers.back().setSize(size);
         return &m_gpuUniformBuffers.back();
     }
 
     VknStorageBuffer *VknDevice::addStorageBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknStorageBuffer, VkBuffer, VkDevice>(
+        s_engine->addNewVknObject<VknStorageBuffer, VkBuffer, VmaAllocator>(
             m_storageBuffers.size(), m_storageBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
         m_storageBuffers.back().setSize(size);
         return &m_storageBuffers.back();
     }
 
     VknIndirectBuffer *VknDevice::addIndirectBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknIndirectBuffer, VkBuffer, VkDevice>(
+        s_engine->addNewVknObject<VknIndirectBuffer, VkBuffer, VmaAllocator>(
             m_indirectBuffers.size(), m_indirectBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
         m_indirectBuffers.back().setSize(size);
         return &m_indirectBuffers.back();
+    }
+
+    VknComputeVertexBuffer *VknDevice::addComputeVertexBuffer(VkDeviceSize size)
+    {
+        s_engine->addNewVknObject<VknComputeVertexBuffer, VkBuffer, VmaAllocator>(
+            m_computeVertexBuffers.size(), m_computeVertexBuffers, m_relIdxs, m_absIdxs);
+        m_vertexBuffers.back().setIntegrated(m_iGPU);
+        m_computeVertexBuffers.back().setSize(size);
+        return &m_computeVertexBuffers.back();
     }
 
 } // namespace vkn

@@ -275,7 +275,7 @@ namespace vkn
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
                 m_objectVectors[m_vkTypeStr] = new VknVector<VkObjectType>{};
             if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
-                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType>{};
+                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType *>{};
 
             VknIdxs newRelIdxs = relIdxs;
             VknIdxs newAbsIdxs = absIdxs;
@@ -283,6 +283,22 @@ namespace vkn
             newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
             newRelIdxs.add<VkObjectType>(objList.size());
             return objList.emplace_back(newRelIdxs, newAbsIdxs);
+        }
+
+        template <typename VknObjectType, typename VkObjectType, typename VkParentType>
+        void addNewVknObject(VknObjectType *&objPtr, VknIdxs &relIdxs, VknIdxs &absIdxs)
+        {
+            m_vkTypeStr = typeToStr<VkObjectType>();
+            if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
+                m_objectVectors[m_vkTypeStr] = new VknVector<VkObjectType>{};
+            if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
+                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType *>{};
+
+            VknIdxs newRelIdxs = relIdxs;
+            VknIdxs newAbsIdxs = absIdxs;
+            VkParentType *parent = &this->getObject<VkParentType>(absIdxs);
+            newAbsIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
+            objPtr = new VknObjectType{newRelIdxs, newAbsIdxs};
         }
 
         template <typename VknObjectType, typename VkObjectType>
@@ -310,7 +326,7 @@ namespace vkn
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
                 m_objectVectors[m_vkTypeStr] = new VknVector<VkObjectType>{};
             if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
-                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType>{};
+                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType *>{};
 
             VknVector<VkObjectType> &vkObjectVec = this->getVector<VkObjectType>();
             uint32_t startPos = vkObjectVec.getDefragPos(count);
@@ -336,7 +352,7 @@ namespace vkn
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
                 m_objectVectors[m_vkTypeStr] = new VknVector<VkObjectType>{};
             if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
-                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType>{};
+                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType *>{};
 
             VknVector<VkObjectType> &vkObjectVec = this->getVector<VkObjectType>();
             uint_fast32_t startPos{vkObjectVec.getDefragPos(count)};
@@ -395,7 +411,7 @@ namespace vkn
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
                 m_objectVectors[m_vkTypeStr] = new VknVector<VkObjectType>{};
             if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
-                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType>{};
+                m_parentVectors[m_vkTypeStr] = new VknVector<VkParentType *>{};
 
             VkParentType *parent = &this->getObject<VkParentType>(absIdxs);
             absIdxs.add<VkObjectType>(this->push_back<VkObjectType, VkParentType>(parent));
@@ -418,18 +434,14 @@ namespace vkn
         {
             m_vkTypeStr = typeToStr<VkResourceType>();
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
-                m_objectVectors[m_vkTypeStr] = new VknVector<VkResourceType>{};
-            if (m_parentVectors.find(m_vkTypeStr) == m_parentVectors.end())
-                m_parentVectors[m_vkTypeStr] = new VknVector<VmaAllocator>{};
+                throw std::runtime_error("Object vector not found for allocation!");
             if (m_allocations.find(m_vkTypeStr) == m_allocations.end())
                 m_allocations[m_vkTypeStr] = new VknVector<VmaAllocation>{};
 
             VknVector<VmaAllocation> &allocationVec = *static_cast<VknVector<VmaAllocation> *>(m_allocations[m_vkTypeStr]);
-            VknVector<VmaAllocator *> &allocatorVec = *static_cast<VknVector<VmaAllocator *> *>(m_parentVectors[m_vkTypeStr]);
-            if (!absIdxs.exists<VmaAllocation>())
-                absIdxs.add<VmaAllocation>(allocationVec.getDefragPos(1u));
+
+            absIdxs.add<VmaAllocation>(allocationVec.getDefragPos(1u));
             allocationVec.insert(absIdxs.get<VmaAllocation>(), VmaAllocation{});
-            allocatorVec.insert(absIdxs.get<VmaAllocation>(), &this->getObject<VmaAllocator>(absIdxs));
             return allocationVec(absIdxs.get<VmaAllocation>());
         }
 
@@ -444,7 +456,7 @@ namespace vkn
         }
 
         template <typename VkResourceType>
-        VmaAllocation *getAllocation(uint_fast32_t pos)
+        VmaAllocation *getAllocation(uint32_t pos)
         {
             return &(this->getAllocationVector<VkResourceType>()(pos));
         }
@@ -639,7 +651,7 @@ namespace vkn
             {
                 for (m_iter = 0; m_iter < this->getVectorSize<VmaAllocator>(); ++m_iter)
                     vmaDestroyAllocator(this->getObject<VmaAllocator>(m_iter));
-                this->deleteVector<VmaAllocator>();
+                this->deleteVectors<VmaAllocator, VkDevice>();
             }
         }
 

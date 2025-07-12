@@ -927,6 +927,18 @@ namespace vkn
 
         return &info;
     }
+
+    VmaVulkanFunctions *VknInfos::getVmaVulkanFunctions()
+    {
+        // When VMA_DYNAMIC_VULKAN_FUNCTIONS is 1 (which it is for this project),
+        // VMA only needs these two function pointers to dynamically load all the others.
+        // The other members of VmaVulkanFunctions should be left null.
+        // This avoids the linker errors for functions that are not in vulkan-1.lib.
+        m_vmaVulkanFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+        m_vmaVulkanFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+        return &m_vmaVulkanFunctions;
+    }
+
     /*
         VmaAllocationInfo *VknInfos::fileVmaAllocationInfo(VknIdxs &relIdxs, uint32_t memoryType, VkDeviceMemory deviceMemory, VkDeviceSize offset, VkDeviceSize size,
                                                            void *pMappedData, void *pUserData, const char *pName)

@@ -66,6 +66,8 @@ namespace vkn
     {
         if (!m_graphicsConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+
+        this->wait();
         // 2. Acquire an image from the swapchain
         m_acquireResult = vkAcquireNextImageKHR(
             *m_device->getVkDevice(), *m_swapchain->getVkSwapchain(), m_defaultTimeout,
@@ -93,21 +95,115 @@ namespace vkn
         m_commandBuffersToSubmit.clear();
     }
 
-    void VknCycle::uploadData()
+    void VknCycle::beginGraphicsPassRecording()
     {
+        if (m_currentGraphicsCommandBuffer)
+            throw std::runtime_error("Graphics command buffer already recording.");
+        m_currentGraphicsCommandBuffer = m_presentPool->getCommandBuffer(m_currentFrame);
+        if (m_currentTransferCommandBuffer == m_presentPool->getCommandBuffer(m_currentFrame))
+            m_currentGraphicsCommandBuffer = m_currentTransferCommandBuffer;
+        else if (m_currentComputeCommandBuffer == m_presentPool->getCommandBuffer(m_currentFrame))
+            m_currentGraphicsCommandBuffer = m_currentComputeCommandBuffer;
+        else
+        {
+            m_currentGraphicsCommandBuffer = m_presentPool->getCommandBuffer(m_currentFrame);
+            vkResetCommandBuffer(*m_currentGraphicsCommandBuffer, 0);
+
+            m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+            m_resBegin = vkBeginCommandBuffer(*m_currentGraphicsCommandBuffer, &m_beginInfo);
+        }
+        VknObject::s_recordingGfxCommandBuffer = true;
+    }
+
+    void VknCycle::beginComputePassRecording()
+    {
+        if (m_currentComputeCommandBuffer)
+            throw std::runtime_error("Compute command buffer already recording.");
+        if (m_currentTransferCommandBuffer == m_computePool->getCommandBuffer(m_currentFrame))
+            m_currentComputeCommandBuffer = m_currentTransferCommandBuffer;
+        else if (m_currentGraphicsCommandBuffer == m_computePool->getCommandBuffer(m_currentFrame))
+            m_currentComputeCommandBuffer = m_currentGraphicsCommandBuffer;
+        else
+        {
+            m_currentComputeCommandBuffer = m_computePool->getCommandBuffer(m_currentFrame);
+            vkResetCommandBuffer(*m_currentComputeCommandBuffer, 0);
+
+            m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+            m_resBegin = vkBeginCommandBuffer(*m_currentComputeCommandBuffer, &m_beginInfo);
+        }
+        VknObject::s_recordingComputeCommandBuffer = true;
+    }
+
+    void VknCycle::beginTransferRecording()
+    {
+        if (m_currentTransferCommandBuffer)
+            throw std::runtime_error("Transfer command buffer already recording.");
+        if (m_currentGraphicsCommandBuffer == m_transferPool->getCommandBuffer(m_currentFrame))
+            m_currentTransferCommandBuffer = m_currentGraphicsCommandBuffer;
+        else if (m_currentComputeCommandBuffer == m_transferPool->getCommandBuffer(m_currentFrame))
+            m_currentTransferCommandBuffer = m_currentComputeCommandBuffer;
+        else
+        {
+            m_currentTransferCommandBuffer = m_transferPool->getCommandBuffer(m_currentFrame); // Use m_currentFrame for transfer buffers
+            vkResetCommandBuffer(*m_currentTransferCommandBuffer, 0);
+
+            m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+            m_resBegin = vkBeginCommandBuffer(*m_currentTransferCommandBuffer, &m_beginInfo);
+        }
+
+        VknObject::s_transferCommandBuffer = m_currentTransferCommandBuffer;
+        VknObject::s_recordingTransferCommandBuffer = true;
+    }
+
+    void VknCycle::endGraphicsPassRecording()
+    {
+        if (!VknObject::s_recordingGfxCommandBuffer)
+            throw std::runtime_error("VknCycle::endGraphicsPassRecording called when not recording a graphics command buffer. Call beginGraphicsPassRecording first.");
+        if (!m_currentGraphicsCommandBuffer)
+            return;
+
+        m_resEnd = vkEndCommandBuffer(*m_currentGraphicsCommandBuffer);
+        m_commandBuffersToSubmit.push_back(*m_currentGraphicsCommandBuffer);
+        m_currentGraphicsCommandBuffer = nullptr;
+        VknObject::s_recordingGfxCommandBuffer = false;
+    }
+
+    void VknCycle::endComputePassRecording()
+    {
+        if (!VknObject::s_recordingComputeCommandBuffer)
+            throw std::runtime_error("VknCycle::endComputePassRecording called when not recording a compute command buffer. Call beginComputePassRecording first.");
+        if (!m_currentComputeCommandBuffer)
+            return;
+
+        m_resEnd = vkEndCommandBuffer(*m_currentComputeCommandBuffer);
+        m_commandBuffersToSubmit.push_back(*m_currentComputeCommandBuffer);
+        m_currentComputeCommandBuffer = nullptr;
+        VknObject::s_recordingComputeCommandBuffer = false;
+    }
+
+    void VknCycle::endTransferRecording()
+    {
+        if (!VknObject::s_recordingTransferCommandBuffer)
+            throw std::runtime_error("VknCycle::endTransferRecording called when not recording a transfer command buffer. Call beginTransferRecording first.");
+        if (!m_currentTransferCommandBuffer)
+            return;
+
+        m_resEnd = vkEndCommandBuffer(*m_currentTransferCommandBuffer);
+        m_commandBuffersToSubmit.push_back(*m_currentTransferCommandBuffer);
+        VknObject::s_transferCommandBuffer = nullptr;
+        m_currentTransferCommandBuffer = nullptr;
+        VknObject::s_recordingTransferCommandBuffer = false;
     }
 
     void VknCycle::recordGraphicsPass(uint_fast8_t renderpassIdx)
     {
         if (!m_graphicsConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
-
-        VkCommandBuffer commandBuffer = *m_presentPool->getCommandBuffer(m_imageIndex);
-        vkResetCommandBuffer(commandBuffer, 0);
-
-        m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-        m_resBegin = vkBeginCommandBuffer(commandBuffer, &m_beginInfo);
+        if (!VknObject::s_recordingGfxCommandBuffer)
+            throw std::runtime_error("VknCycle::recordGraphicsPass called when not recording a graphics command buffer. Call beginGraphicsPassRecording first.");
 
         m_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         VknRenderpass *renderpass = getListElement(renderpassIdx, *m_renderpasses);
@@ -120,20 +216,20 @@ namespace vkn
         m_renderPassBeginInfo.clearValueCount = 1; // Assuming one color attachment, should be renderpass attachments that have loadOp=VK_ATTACHMENT_LOAD_OP_CLEAR
         m_renderPassBeginInfo.pClearValues = &m_clearColor;
 
-        vkCmdBeginRenderPass(commandBuffer, &m_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(*m_currentGraphicsCommandBuffer, &m_renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         // Correctly iterate through pipelines: bind, set state, and draw for each one.
         for (VknPipeline &pipeline : *renderpass->getPipelines())
         {
             // 1. Bind the pipeline
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline.getVkPipeline());
+            vkCmdBindPipeline(*m_currentGraphicsCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline.getVkPipeline());
 
             // 2. Set dynamic states for this pipeline
             VknViewportState *viewportState = pipeline.getViewportState();
             if (viewportState)
             {
-                vkCmdSetViewport(commandBuffer, 0, 1, &viewportState->getVkViewport(0));
-                vkCmdSetScissor(commandBuffer, 0, 1, &viewportState->getVkScissor(0));
+                vkCmdSetViewport(*m_currentGraphicsCommandBuffer, 0, 1, &viewportState->getVkViewport(0));
+                vkCmdSetScissor(*m_currentGraphicsCommandBuffer, 0, 1, &viewportState->getVkScissor(0));
             }
 
             // 3. Check how to draw for this pipeline
@@ -146,20 +242,20 @@ namespace vkn
             else if (pipeline.getNumHardCodedVertices() > 0)
             {
                 // This pipeline uses hard-coded vertices in the shader.
-                vkCmdDraw(commandBuffer, pipeline.getNumHardCodedVertices(), 1, 0, 0);
+                vkCmdDraw(*m_currentGraphicsCommandBuffer, pipeline.getNumHardCodedVertices(), 1, 0, 0);
             }
         }
 
-        vkCmdEndRenderPass(commandBuffer);
-
-        m_resEnd = vkEndCommandBuffer(commandBuffer);
-        m_commandBuffersToSubmit.push_back(commandBuffer);
+        vkCmdEndRenderPass(*m_currentGraphicsCommandBuffer);
     }
 
     void VknCycle::recordComputePass(uint_fast8_t computePassIdx)
     {
         if (!m_computeConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+        if (!VknObject::s_recordingGfxCommandBuffer)
+            throw std::runtime_error("VknCycle::recordGraphicsPass called when not recording a graphics command buffer. Call beginGraphicsPassRecording first.");
+
         VkCommandBuffer commandBuffer = *m_computePool->getCommandBuffer(m_currentFrame); // Use m_currentFrame for compute buffers
         vkResetCommandBuffer(commandBuffer, 0);
 
@@ -174,10 +270,20 @@ namespace vkn
         m_commandBuffersToSubmit.push_back(commandBuffer);
     }
 
-    void VknCycle::submitCommandBuffer()
+    void VknCycle::submitCommandBuffers()
     {
         if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+
+        if (m_currentTransferCommandBuffer)
+            this->endTransferRecording(); // Ensure the current command buffer is ended before submission.
+        if (m_currentComputeCommandBuffer)
+            this->endComputePassRecording(); // Ensure the current command buffer is ended before submission.
+        if (m_currentGraphicsCommandBuffer)
+            this->endGraphicsPassRecording(); // Ensure the current command buffer is ended before submission.
+        if (m_commandBuffersToSubmit.empty())
+            throw std::runtime_error("No command buffers to submit.");
+
         // 4. Submit the command buffer
         m_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -203,10 +309,6 @@ namespace vkn
         // and potentially perform multiple submissions.
         QueueType submissionQueue = m_graphicsConfigLoaded ? PRESENT : COMPUTE;
         m_resSubmit = vkQueueSubmit(*m_device->getQueue(submissionQueue), 1, &m_submitInfo, m_device->getFence(m_currentFrame));
-    }
-
-    void VknCycle::downloadData()
-    {
     }
 
     bool VknCycle::presentImage()

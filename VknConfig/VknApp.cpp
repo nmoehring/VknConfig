@@ -39,8 +39,16 @@ namespace vkn
             m_cycle.loadBasicConfig(&m_config, m_engine);
         if (m_config.isRenderingGraphics())
             m_cycle.loadGraphicsConfig(&m_config, m_engine);
-        if (m_config.isComputing())
+        if (m_config.isComputing()) // isComputing() needs work
             m_cycle.loadComputeConfig(&m_config, m_engine);
+    }
+
+    void VknApp::setCycleFunction(std::function<bool(VknCycle &)> func)
+    {
+        if (!m_readyToRun)
+            throw std::runtime_error("App Cycle not configured before being run.");
+        m_cycleFunction = std::move(func);
+        func(m_cycle);
     }
 
     void VknApp::enableValidationLayer()
@@ -57,22 +65,9 @@ namespace vkn
     {
         if (!m_readyToRun)
             throw std::runtime_error("App Cycle not configured before being run.");
-
+        if (!m_cycleFunction)
+            throw std::runtime_error("No cycle function set for VknApp. Use VknApp::setCycleFunction().");
         m_cycle.wait();
-        if (!m_cycle.acquireImage())
-            return false;
-
-        // This is the new, more flexible recording flow.
-        // You first begin recording, then record all the passes you need for this frame.
-        m_cycle.beginFrameRecording();
-        if (m_config.isComputing())
-            m_cycle.recordComputePass(0); // Record compute work first
-        if (m_config.isRenderingGraphics())
-            m_cycle.recordGraphicsPass(0); // Then record graphics work
-
-        m_cycle.submitCommandBuffer();
-        if (!m_cycle.presentImage())
-            return false;
-        return true;
+        return m_cycleFunction(m_cycle);
     }
 }

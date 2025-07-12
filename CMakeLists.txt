@@ -6,7 +6,7 @@ message("Using CMake version: ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CM
 # Option to enable/disable tests, can be configured from Android Studio's build.gradle
 option(ENABLE_TESTING "Enable GTest for the project" ON)
 set(ENABLE_SANITIZER TRUE)
-option(COMPILE_SHADERS "Compile shaders" OFF)
+option(COMPILE_SHADERS "Compile shaders" ON)
 
 # --- Platform detection ---
 if(ANDROID)

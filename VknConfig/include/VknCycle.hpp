@@ -11,11 +11,17 @@ namespace vkn
         void wait();
         bool acquireImage();
         void beginFrameRecording();
+        void beginGraphicsPassRecording();
+        void beginComputePassRecording();
+        void beginTransferRecording();
+        void endGraphicsPassRecording();
+        void endComputePassRecording(); // Placeholder for compute pass logic
+        void endTransferRecording();
         void recordGraphicsPass(uint_fast8_t renderpassIdx);
         void recordComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
         void uploadData();
         void downloadData();
-        void submitCommandBuffer();
+        void submitCommandBuffers();
         bool presentImage();
 
         // Setup
@@ -72,5 +78,8 @@ namespace vkn
         bool m_basicConfigLoaded{false};
         bool m_graphicsConfigLoaded{false};
         bool m_computeConfigLoaded{false};
+        VkCommandBuffer *m_currentGraphicsCommandBuffer{nullptr};
+        VkCommandBuffer *m_currentComputeCommandBuffer{nullptr};
+        VkCommandBuffer *m_currentTransferCommandBuffer{nullptr};
     };
 }

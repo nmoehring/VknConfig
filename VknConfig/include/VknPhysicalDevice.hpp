@@ -82,6 +82,7 @@ namespace vkn
         VknQueueFamily &getQueue(int idx);
         VknIdxs getPhysicalDeviceAbsIdxs() { return m_absIdxs; }
         VkPhysicalDeviceType getGPUType();
+        bool isIntegratedGPU() { return m_integratedGraphics; }
 
     private:
         // Members
@@ -97,6 +98,7 @@ namespace vkn
         static uint_fast32_t physDevCount;
         bool m_filedQueueCreateInfos{false};
         bool m_filedQueuePriorities{false};
+        bool m_integratedGraphics{false};
 
         void enumeratePhysicalDevices();
         void requestQueueFamilyProperties();

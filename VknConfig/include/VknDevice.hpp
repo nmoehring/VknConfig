@@ -86,6 +86,7 @@ namespace vkn
         VknGpuUniformBuffer *addGpuUniformBuffer(VkDeviceSize size);
         VknStorageBuffer *addStorageBuffer(VkDeviceSize size);
         VknIndirectBuffer *addIndirectBuffer(VkDeviceSize size);
+        VknComputeVertexBuffer *addComputeVertexBuffer(VkDeviceSize size);
         VknFeatures *features{nullptr};
 
         // Config
@@ -128,6 +129,7 @@ namespace vkn
         std::list<VknGpuUniformBuffer> m_gpuUniformBuffers;
         std::list<VknStorageBuffer> m_storageBuffers;
         std::list<VknIndirectBuffer> m_indirectBuffers;
+        std::list<VknComputeVertexBuffer> m_computeVertexBuffers;
 
         // Store queue handles retrieved from the device
         VknVector<VkQueue> m_queues;
@@ -148,6 +150,7 @@ namespace vkn
         bool m_allocatorAdded{false};
         bool m_addedVmaFunctions{false};
         bool m_presentable{false};
+        bool m_iGPU{false};
 
         // For correct sync object retrieval
         uint32_t m_imageAvailableSemaphoreStartIdx{0};

@@ -20,6 +20,11 @@ int main()
     noInputApp.run();
     noInputApp.exit(); // Explicitly call exit
 
+    vkn::VknApp cpuGenApp{};
+    cpuGenApp.configureWithPreset(vkn::cpuGenTestConfig);
+    cpuGenApp.run();
+    cpuGenApp.exit();
+
     return EXIT_SUCCESS;
 }
 

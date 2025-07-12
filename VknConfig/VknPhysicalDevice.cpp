@@ -181,7 +181,9 @@ namespace vkn
         }
 
         if (bestIdx == UINT32_MAX)
-            throw std::runtime_error("Failed to find a suitable GPU that supports presentation to the given surface.");
+            throw std::runtime_error("Failed to find a suitable GPU.");
+        if (s_properties(bestIdx).deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+            m_integratedGraphics = true;
 
         m_absIdxs.add<VkPhysicalDevice>(bestIdx); // This is the index in VknEngine's global list
         // m_relIdxs.add<VkPhysicalDevice>(0); // Assuming VknDevice has only one VknPhysicalDevice, its relative index is 0.
