@@ -15,6 +15,7 @@ int main()
 
     vkn::VknApp noInputApp{};
     noInputApp.configureWithPreset(vkn::noInputConfig); // Configure before run
+    noInputApp.setCycleFunction(vkn::noInputCycle);
     // If validation layers are desired:
     // noInputApp.enableValidationLayer();
     noInputApp.run();
@@ -22,6 +23,7 @@ int main()
 
     vkn::VknApp cpuGenApp{};
     cpuGenApp.configureWithPreset(vkn::cpuGenTestConfig);
+    cpuGenApp.setCycleFunction(vkn::cpuGenTestCycle);
     cpuGenApp.run();
     cpuGenApp.exit();
 

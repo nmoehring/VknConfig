@@ -48,7 +48,6 @@ namespace vkn
         if (!m_readyToRun)
             throw std::runtime_error("App Cycle not configured before being run.");
         m_cycleFunction = std::move(func);
-        func(m_cycle);
     }
 
     void VknApp::enableValidationLayer()
@@ -68,6 +67,7 @@ namespace vkn
         if (!m_cycleFunction)
             throw std::runtime_error("No cycle function set for VknApp. Use VknApp::setCycleFunction().");
         m_cycle.wait();
+        m_cycle.beginFrameRecording();
         return m_cycleFunction(m_cycle);
     }
 }

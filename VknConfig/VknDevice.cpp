@@ -277,9 +277,7 @@ namespace vkn
     VknCommandPool *VknDevice::getCommandPool(QueueType type)
     {
         if (m_commandPoolMap.find(type) == m_commandPoolMap.end())
-        {
             throw std::runtime_error("Command pool for the requested queue type not found or not created.");
-        }
         return m_commandPoolMap.at(type);
     }
 
@@ -304,65 +302,93 @@ namespace vkn
 
     VknVertexBuffer *VknDevice::addVertexBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknVertexBuffer, VkBuffer, VmaAllocator>(
-            m_vertexBuffers.size(), m_vertexBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_vertexBuffers.back().setSize(size);
-        return &m_vertexBuffers.back();
+        uint32_t firstIdx = m_vertexBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknVertexBuffer, VkBuffer, VmaAllocator>(
+                m_vertexBuffers.size(), m_vertexBuffers, m_relIdxs, m_absIdxs);
+            m_vertexBuffers.back().setIntegrated(m_iGPU);
+            m_vertexBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_vertexBuffers);
     }
 
     VknIndexBuffer *VknDevice::addIndexBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknIndexBuffer, VkBuffer, VmaAllocator>(
-            m_indexBuffers.size(), m_indexBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_indexBuffers.back().setSize(size);
-        return &m_indexBuffers.back();
+        uint32_t firstIdx = m_indexBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknIndexBuffer, VkBuffer, VmaAllocator>(
+                m_indexBuffers.size(), m_indexBuffers, m_relIdxs, m_absIdxs);
+            m_indexBuffers.back().setIntegrated(m_iGPU);
+            m_indexBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_indexBuffers);
     }
 
     VknCpuUniformBuffer *VknDevice::addCpuUniformBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknCpuUniformBuffer, VkBuffer, VmaAllocator>(
-            m_cpuUniformBuffers.size(), m_cpuUniformBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_cpuUniformBuffers.back().setSize(size);
-        return &m_cpuUniformBuffers.back();
+        uint32_t firstIdx = m_cpuUniformBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknCpuUniformBuffer, VkBuffer, VmaAllocator>(
+                m_cpuUniformBuffers.size(), m_cpuUniformBuffers, m_relIdxs, m_absIdxs);
+            m_cpuUniformBuffers.back().setIntegrated(m_iGPU);
+            m_cpuUniformBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_cpuUniformBuffers);
     }
 
     VknGpuUniformBuffer *VknDevice::addGpuUniformBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknGpuUniformBuffer, VkBuffer, VmaAllocator>(
-            m_gpuUniformBuffers.size(), m_gpuUniformBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_gpuUniformBuffers.back().setSize(size);
-        return &m_gpuUniformBuffers.back();
+        uint32_t firstIdx = m_gpuUniformBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknGpuUniformBuffer, VkBuffer, VmaAllocator>(
+                m_gpuUniformBuffers.size(), m_gpuUniformBuffers, m_relIdxs, m_absIdxs);
+            m_gpuUniformBuffers.back().setIntegrated(m_iGPU);
+            m_gpuUniformBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_gpuUniformBuffers);
     }
 
     VknStorageBuffer *VknDevice::addStorageBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknStorageBuffer, VkBuffer, VmaAllocator>(
-            m_storageBuffers.size(), m_storageBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_storageBuffers.back().setSize(size);
-        return &m_storageBuffers.back();
+        uint32_t firstIdx = m_storageBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknStorageBuffer, VkBuffer, VmaAllocator>(
+                m_storageBuffers.size(), m_storageBuffers, m_relIdxs, m_absIdxs);
+            m_storageBuffers.back().setIntegrated(m_iGPU);
+            m_storageBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_storageBuffers);
     }
 
     VknIndirectBuffer *VknDevice::addIndirectBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknIndirectBuffer, VkBuffer, VmaAllocator>(
-            m_indirectBuffers.size(), m_indirectBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_indirectBuffers.back().setSize(size);
-        return &m_indirectBuffers.back();
+        uint32_t firstIdx = m_indirectBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknIndirectBuffer, VkBuffer, VmaAllocator>(
+                m_indirectBuffers.size(), m_indirectBuffers, m_relIdxs, m_absIdxs);
+            m_indirectBuffers.back().setIntegrated(m_iGPU);
+            m_indirectBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_indirectBuffers);
     }
 
     VknComputeVertexBuffer *VknDevice::addComputeVertexBuffer(VkDeviceSize size)
     {
-        s_engine->addNewVknObject<VknComputeVertexBuffer, VkBuffer, VmaAllocator>(
-            m_computeVertexBuffers.size(), m_computeVertexBuffers, m_relIdxs, m_absIdxs);
-        m_vertexBuffers.back().setIntegrated(m_iGPU);
-        m_computeVertexBuffers.back().setSize(size);
-        return &m_computeVertexBuffers.back();
+        uint32_t firstIdx = m_computeVertexBuffers.size();
+        for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
+        {
+            s_engine->addNewVknObject<VknComputeVertexBuffer, VkBuffer, VmaAllocator>(
+                m_computeVertexBuffers.size(), m_computeVertexBuffers, m_relIdxs, m_absIdxs);
+            m_computeVertexBuffers.back().setIntegrated(m_iGPU);
+            m_computeVertexBuffers.back().setSize(size);
+        }
+        return getListElement(firstIdx, m_computeVertexBuffers);
     }
 
 } // namespace vkn

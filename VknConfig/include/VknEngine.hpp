@@ -493,14 +493,14 @@ namespace vkn
             if (m_objectVectors.find(m_vkTypeStr) == m_objectVectors.end())
                 m_objectVectors[m_vkTypeStr] = new VknVector<uint32_t>{};
 
-            absIdxs.add<VkCommandBuffer *>(this->getVectorSize<VkCommandBuffer *>());
+            uint32_t poolIdx{absIdxs.get<VkCommandPool>()};
+            absIdxs.add<VkCommandBuffer *>(poolIdx);
             VknVector<VkCommandBuffer *> &cmdBufferVec{this->getVector<VkCommandBuffer *>()};
             VknVector<uint32_t> &numBuffersVec{this->getVector<uint32_t>()};
-            uint32_t poolIdx{absIdxs.get<VkCommandPool>()};
             numBuffersVec.insert(poolIdx, numCommandBuffers);
             cmdBufferVec.insert(poolIdx, new VkCommandBuffer[numCommandBuffers]);
             for (m_iter = 0; m_iter < numCommandBuffers; ++m_iter)
-                cmdBufferVec(poolIdx)[m_iter] = VK_NULL_HANDLE;
+                cmdBufferVec(poolIdx)[m_iter] = VkCommandBuffer{};
             return cmdBufferVec(poolIdx);
         }
 

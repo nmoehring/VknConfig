@@ -12,9 +12,8 @@ namespace vkn
     bool deviceInfoConfig(VknConfig &config);
     bool noInputConfig(VknConfig &config);
     bool cpuGenTestConfig(VknConfig &config);
-    void cpuGenTestCycle(VknCycle &cycle);
-    void noInputCycle(VknCycle &cycle);
-    void deviceInfoCycle(VknCycle &cycle);
+    bool cpuGenTestCycle(VknCycle &cycle);
+    bool noInputCycle(VknCycle &cycle);
 
     class VknApp
     {

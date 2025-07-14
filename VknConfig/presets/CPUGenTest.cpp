@@ -1,4 +1,5 @@
 #include "../include/VknConfig.hpp"
+#include "../include/VknCycle.hpp"
 #include "../include/VknBuffer.hpp"
 #include "../include/VknPipeline.hpp"
 #include "../include/VknVertexInputState.hpp"
@@ -8,6 +9,9 @@
 
 namespace vkn
 {
+    VknVertexBuffer *vertexBuffer{nullptr};
+    VknIndexBuffer *indexBuffer{nullptr};
+
     // A simple vertex structure with position and color
     struct Vertex
     {
@@ -90,18 +94,6 @@ namespace vkn
         device->createDevice();
         VknSwapchain *swapchain{device->getSwapchain()};
 
-        // --- Generate Mesh Data ---
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
-        generateWavyGrid(vertices, indices);
-
-        // --- Create and Upload Buffers ---
-        VknVertexBuffer *vertexBuffer = device->addVertexBuffer(vertices.size() * sizeof(Vertex));
-        vertexBuffer->uploadData(vertices.data());
-
-        VknIndexBuffer *indexBuffer = device->addIndexBuffer(indices.size() * sizeof(uint32_t));
-        indexBuffer->uploadData(indices.data());
-
         // Config => Device => Renderpass
         auto *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
@@ -131,13 +123,46 @@ namespace vkn
         renderpass->createPipelines();
 
         device->addCommandPools();
-        VknCommandPool *commandPool = device->getCommandPool(QueueType::PRESENT);
-        commandPool->createCommandBuffers(swapchain->getNumImages());
+        VknCommandPool *presentCommandPool = device->getCommandPool(QueueType::PRESENT);
+        presentCommandPool->createCommandBuffers(swapchain->getNumImages());
+        VknCommandPool *transferCommandPool = device->getCommandPool(QueueType::TRANSFER);
+        transferCommandPool->createCommandBuffers(swapchain->getNumImages());
+
+        vertexBuffer = device->addVertexBuffer(75000);
+        indexBuffer = device->addIndexBuffer(75000);
 
         return true;
     }
 
     bool cpuGenTestCycle(VknCycle &cycle)
     {
+        if (!cycle.acquireImage())
+            return false;
+
+        cycle.beginTransferRecording();
+
+        // --- Generate Mesh Data ---
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+        generateWavyGrid(vertices, indices);
+
+        // --- Create and Upload Buffers ---
+        vertexBuffer->uploadData(vertices.data());
+        indexBuffer->uploadData(indices.data());
+
+        // Begin recording a graphics command buffer
+        cycle.beginGraphicsPassRecording();
+
+        // Record a graphics pass (draw call)
+        cycle.recordGraphicsPass(0); // Assuming renderpass index 0
+
+        // Submit the recorded command buffer for execution
+        cycle.submitCommandBuffers();
+
+        // Present the rendered image
+        bool presented = cycle.presentImage();
+        if (!presented)
+            return false;
+        return true;
     }
 }

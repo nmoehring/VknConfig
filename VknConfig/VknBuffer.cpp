@@ -138,7 +138,9 @@ namespace vkn
             m_mustFlushAndInvalidate = false;
 
         m_createdBuffer = true;
-        if (m_manualMapping)
+        // Only attempt to map manually if we are supposed to AND the memory is actually mappable.
+        // If it's not host-visible, we must use the staging buffer.
+        if (m_manualMapping && (m_memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
             this->map();
     }
 
@@ -232,7 +234,7 @@ namespace vkn
                 s_engine->getObject<VkBuffer>(m_absIdxs),
                 1, m_copyRegion);
         }
-        else if (!m_mappedData)
+        else if (m_mappedData)
         {
             std::memcpy(static_cast<char *>(m_mappedData) + offset, data, dataSize);
             this->flush(offset, dataSize);

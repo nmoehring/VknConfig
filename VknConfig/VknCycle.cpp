@@ -207,7 +207,6 @@ namespace vkn
 
         m_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         VknRenderpass *renderpass = getListElement(renderpassIdx, *m_renderpasses);
-        VknPipeline *firstPipeline = renderpass->getPipeline(0);
         m_renderPassBeginInfo.renderPass = *renderpass->getVkRenderPass();
         m_renderPassBeginInfo.framebuffer = *renderpass->getFramebuffer(m_imageIndex)->getVkFramebuffer();
         m_renderPassBeginInfo.renderArea.offset = {0, 0};
