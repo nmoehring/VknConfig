@@ -6,9 +6,11 @@ namespace vkn
     VknInfos *VknObject::s_infos{nullptr};
     uint32_t VknObject::s_maxFramesInFlight{2};
     bool VknObject::s_recordingGfxCommandBuffer{false};
-    bool VknObject::s_recordingTransferCommandBuffer{false};
+    bool VknObject::s_recordingUploadCommandBuffer{false};
+    bool VknObject::s_recordingDownloadCommandBuffer{false};
     bool VknObject::s_recordingComputeCommandBuffer{false};
-    VkCommandBuffer *VknObject::s_transferCommandBuffer{nullptr};
+    VkCommandBuffer *VknObject::s_uploadCommandBuffer{nullptr};
+    VkCommandBuffer *VknObject::s_downloadCommandBuffer{nullptr};
 
     VknObject::VknObject() : m_relIdxs{}, m_absIdxs{}
     {

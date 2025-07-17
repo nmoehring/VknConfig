@@ -26,7 +26,7 @@ namespace vkn
     void VknCommandPool::createCommandBuffers(uint32_t numSwapchainImages)
     {
         if (m_commandBuffersAllocated)
-            throw std::runtime_error("Command buffers already allocated.");
+            return;
         if (!m_commandPoolCreated)
             throw std::runtime_error("Command pool not created before allocating command buffers.");
 

@@ -16,7 +16,12 @@ namespace vkn
         m_config = config;
         m_engine = engine;
         m_device = m_config->getDevice(0);
-        m_transferPool = m_device->getCommandPool(TRANSFER);
+        this->setVertexBufferIdx(m_device->getVertexBufferIdx());
+        this->setIndexBufferIdx(m_device->getIndexBufferIdx());
+        m_uploadPool = m_device->getCommandPool(TRANSFER);
+        m_downloadPool = m_device->getCommandPool(TRANSFER);
+        m_presentPool = m_device->getCommandPool(PRESENT);
+        m_computePool = m_device->getCommandPool(COMPUTE);
         m_physicalDevice = m_device->getPhysicalDevice();
 
         m_device->createSyncObjects();
@@ -30,7 +35,6 @@ namespace vkn
     void VknCycle::loadGraphicsConfig(VknConfig *config, VknEngine *engine)
     {
         m_swapchain = m_device->getSwapchain();
-        m_presentPool = m_device->getCommandPool(PRESENT); // ToDo: consider supporting multiple families returned
         m_renderpasses = m_device->getRenderpasses();
 
         uint32_t actualSwapchainImageCount = m_swapchain->getNumImages();
@@ -45,7 +49,7 @@ namespace vkn
 
     void VknCycle::loadComputeConfig(VknConfig *config, VknEngine *engine)
     {
-        m_computePool = m_device->getCommandPool(COMPUTE); // TODO: consider supporting non-support graphics families
+        // TODO: consider supporting non-support graphics families
         // TODO: load "compute passes"
 
         m_computeConfigLoaded = true;
@@ -57,7 +61,7 @@ namespace vkn
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
         // 1. Wait for the previous frame to finish
         vkWaitForFences(
-            *m_device->getVkDevice(), 1u, &m_device->getFence(m_currentFrame), VK_TRUE, m_defaultTimeout);
+            *m_device->getVkDevice(), 1u, &m_device->getFence(m_currentFrameNum), VK_TRUE, m_defaultTimeout);
 
         //*device->getVkDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
     }
@@ -71,7 +75,7 @@ namespace vkn
         // 2. Acquire an image from the swapchain
         m_acquireResult = vkAcquireNextImageKHR(
             *m_device->getVkDevice(), *m_swapchain->getVkSwapchain(), m_defaultTimeout,
-            m_device->getImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &m_imageIndex);
+            m_device->getImageAvailableSemaphore(m_currentFrameNum), VK_NULL_HANDLE, &m_imageIndex);
 
         if (m_acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -86,27 +90,27 @@ namespace vkn
             vkWaitForFences(*m_device->getVkDevice(), 1, m_imagesInFlight[m_imageIndex], VK_TRUE, m_defaultTimeout);
 
         // Mark the image as being in use by this frame
-        m_imagesInFlight[m_imageIndex] = &m_device->getFence(m_currentFrame);
+        m_imagesInFlight[m_imageIndex] = &m_device->getFence(m_currentFrameNum);
         return true;
     }
 
     void VknCycle::beginFrameRecording()
     {
-        m_commandBuffersToSubmit.clear();
+        this->beginUploadRecording();
+        this->beginDownloadRecording();
+        this->beginComputePassRecording();
+        this->beginGraphicsPassRecording();
     }
 
     void VknCycle::beginGraphicsPassRecording()
     {
         if (m_currentGraphicsCommandBuffer)
             throw std::runtime_error("Graphics command buffer already recording.");
-        m_currentGraphicsCommandBuffer = m_presentPool->getCommandBuffer(m_currentFrame);
-        if (m_currentTransferCommandBuffer == m_presentPool->getCommandBuffer(m_currentFrame))
-            m_currentGraphicsCommandBuffer = m_currentTransferCommandBuffer;
-        else if (m_currentComputeCommandBuffer == m_presentPool->getCommandBuffer(m_currentFrame))
-            m_currentGraphicsCommandBuffer = m_currentComputeCommandBuffer;
-        else
+        m_currentGraphicsCommandBuffer = m_presentPool->getCommandBuffer(m_currentFrameNum);
+        if (m_currentUploadCommandBuffer != m_currentGraphicsCommandBuffer &&
+            m_currentDownloadCommandBuffer != m_currentGraphicsCommandBuffer &&
+            m_currentComputeCommandBuffer != m_currentGraphicsCommandBuffer)
         {
-            m_currentGraphicsCommandBuffer = m_presentPool->getCommandBuffer(m_currentFrame);
             vkResetCommandBuffer(*m_currentGraphicsCommandBuffer, 0);
 
             m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -120,13 +124,11 @@ namespace vkn
     {
         if (m_currentComputeCommandBuffer)
             throw std::runtime_error("Compute command buffer already recording.");
-        if (m_currentTransferCommandBuffer == m_computePool->getCommandBuffer(m_currentFrame))
-            m_currentComputeCommandBuffer = m_currentTransferCommandBuffer;
-        else if (m_currentGraphicsCommandBuffer == m_computePool->getCommandBuffer(m_currentFrame))
-            m_currentComputeCommandBuffer = m_currentGraphicsCommandBuffer;
-        else
+        m_currentComputeCommandBuffer = m_computePool->getCommandBuffer(m_currentFrameNum);
+        if (m_currentUploadCommandBuffer != m_currentComputeCommandBuffer &&
+            m_currentDownloadCommandBuffer != m_currentComputeCommandBuffer &&
+            m_currentGraphicsCommandBuffer != m_currentComputeCommandBuffer)
         {
-            m_currentComputeCommandBuffer = m_computePool->getCommandBuffer(m_currentFrame);
             vkResetCommandBuffer(*m_currentComputeCommandBuffer, 0);
 
             m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -136,26 +138,64 @@ namespace vkn
         VknObject::s_recordingComputeCommandBuffer = true;
     }
 
-    void VknCycle::beginTransferRecording()
+    void VknCycle::beginDownloadRecording()
     {
-        if (m_currentTransferCommandBuffer)
-            throw std::runtime_error("Transfer command buffer already recording.");
-        if (m_currentGraphicsCommandBuffer == m_transferPool->getCommandBuffer(m_currentFrame))
-            m_currentTransferCommandBuffer = m_currentGraphicsCommandBuffer;
-        else if (m_currentComputeCommandBuffer == m_transferPool->getCommandBuffer(m_currentFrame))
-            m_currentTransferCommandBuffer = m_currentComputeCommandBuffer;
-        else
+        if (m_currentDownloadCommandBuffer)
+            throw std::runtime_error("Download command buffer already recording.");
+        m_currentDownloadCommandBuffer = m_downloadPool->getCommandBuffer(m_currentFrameNum); // Use m_currentFrameNum for download buffers
+        if (m_currentGraphicsCommandBuffer != m_currentDownloadCommandBuffer &&
+            m_currentComputeCommandBuffer != m_currentDownloadCommandBuffer &&
+            m_currentUploadCommandBuffer != m_currentDownloadCommandBuffer)
         {
-            m_currentTransferCommandBuffer = m_transferPool->getCommandBuffer(m_currentFrame); // Use m_currentFrame for transfer buffers
-            vkResetCommandBuffer(*m_currentTransferCommandBuffer, 0);
+            vkResetCommandBuffer(*m_currentDownloadCommandBuffer, 0);
 
             m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-            m_resBegin = vkBeginCommandBuffer(*m_currentTransferCommandBuffer, &m_beginInfo);
+            m_resBegin = vkBeginCommandBuffer(*m_currentDownloadCommandBuffer, &m_beginInfo);
         }
+        VknObject::s_recordingDownloadCommandBuffer = true;
+    }
 
-        VknObject::s_transferCommandBuffer = m_currentTransferCommandBuffer;
-        VknObject::s_recordingTransferCommandBuffer = true;
+    void VknCycle::beginUploadRecording()
+    {
+        if (m_currentUploadCommandBuffer)
+            throw std::runtime_error("Upload command buffer already recording.");
+        m_currentUploadCommandBuffer = m_uploadPool->getCommandBuffer(m_currentFrameNum); // Use m_currentFrameNum for upload buffers
+        if (m_currentGraphicsCommandBuffer != m_currentUploadCommandBuffer &&
+            m_currentComputeCommandBuffer != m_currentUploadCommandBuffer &&
+            m_currentDownloadCommandBuffer != m_currentUploadCommandBuffer)
+        {
+            vkResetCommandBuffer(*m_currentUploadCommandBuffer, 0);
+
+            m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            m_beginInfo.flags = 0; // Optional: VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+            m_resBegin = vkBeginCommandBuffer(*m_currentUploadCommandBuffer, &m_beginInfo);
+        }
+        VknObject::s_recordingUploadCommandBuffer = true;
+    }
+
+    void VknCycle::endUploadRecording()
+    {
+        if (!VknObject::s_recordingUploadCommandBuffer)
+            throw std::runtime_error("VknCycle::endUploadRecording called when not recording a transfer command buffer. Call beginTransferRecording first.");
+        if (!m_currentUploadCommandBuffer)
+            return;
+
+        m_resEnd = vkEndCommandBuffer(*m_currentUploadCommandBuffer);
+        m_currentUploadCommandBuffer = nullptr;
+        VknObject::s_recordingUploadCommandBuffer = false;
+    }
+
+    void VknCycle::endDownloadRecording()
+    {
+        if (!VknObject::s_recordingDownloadCommandBuffer)
+            throw std::runtime_error("VknCycle::endDownloadRecording called when not recording a transfer command buffer. Call beginTransferRecording first.");
+        if (!m_currentDownloadCommandBuffer)
+            return;
+
+        m_resEnd = vkEndCommandBuffer(*m_currentDownloadCommandBuffer);
+        m_currentDownloadCommandBuffer = nullptr;
+        VknObject::s_recordingDownloadCommandBuffer = false;
     }
 
     void VknCycle::endGraphicsPassRecording()
@@ -166,7 +206,6 @@ namespace vkn
             return;
 
         m_resEnd = vkEndCommandBuffer(*m_currentGraphicsCommandBuffer);
-        m_commandBuffersToSubmit.push_back(*m_currentGraphicsCommandBuffer);
         m_currentGraphicsCommandBuffer = nullptr;
         VknObject::s_recordingGfxCommandBuffer = false;
     }
@@ -179,23 +218,8 @@ namespace vkn
             return;
 
         m_resEnd = vkEndCommandBuffer(*m_currentComputeCommandBuffer);
-        m_commandBuffersToSubmit.push_back(*m_currentComputeCommandBuffer);
         m_currentComputeCommandBuffer = nullptr;
         VknObject::s_recordingComputeCommandBuffer = false;
-    }
-
-    void VknCycle::endTransferRecording()
-    {
-        if (!VknObject::s_recordingTransferCommandBuffer)
-            throw std::runtime_error("VknCycle::endTransferRecording called when not recording a transfer command buffer. Call beginTransferRecording first.");
-        if (!m_currentTransferCommandBuffer)
-            return;
-
-        m_resEnd = vkEndCommandBuffer(*m_currentTransferCommandBuffer);
-        m_commandBuffersToSubmit.push_back(*m_currentTransferCommandBuffer);
-        VknObject::s_transferCommandBuffer = nullptr;
-        m_currentTransferCommandBuffer = nullptr;
-        VknObject::s_recordingTransferCommandBuffer = false;
     }
 
     void VknCycle::recordGraphicsPass(uint_fast8_t renderpassIdx)
@@ -236,7 +260,11 @@ namespace vkn
             if (vertexInputState && (vertexInputState->getNumBindings() > 0 || vertexInputState->getNumAttributes() > 0))
             {
                 // This pipeline expects vertex buffers to be bound.
-                throw std::runtime_error("Pipeline expects vertex inputs, but VknCycle input binding is not yet implemented.");
+                VkDeviceSize offset = 0;
+                vkCmdBindVertexBuffers(
+                    *m_currentGraphicsCommandBuffer, 0, vertexInputState->getNumBindings(),
+                    &VknObject::s_engine->getObject<VkBuffer>(m_vertexBufferAbsIdx), &offset);
+                vkCmdDraw(*m_currentGraphicsCommandBuffer, vertexInputState->getNumAttributes(), 1, 0, 0);
             }
             else if (pipeline.getNumHardCodedVertices() > 0)
             {
@@ -255,18 +283,8 @@ namespace vkn
         if (!VknObject::s_recordingGfxCommandBuffer)
             throw std::runtime_error("VknCycle::recordGraphicsPass called when not recording a graphics command buffer. Call beginGraphicsPassRecording first.");
 
-        VkCommandBuffer commandBuffer = *m_computePool->getCommandBuffer(m_currentFrame); // Use m_currentFrame for compute buffers
-        vkResetCommandBuffer(commandBuffer, 0);
-
-        m_beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        m_beginInfo.flags = 0;
-        vkBeginCommandBuffer(commandBuffer, &m_beginInfo);
-
         // TODO: Record compute pipeline binding, descriptor sets, and dispatch calls.
         // TODO: Record a pipeline barrier to ensure compute writes are visible to the graphics pass.
-
-        vkEndCommandBuffer(commandBuffer);
-        m_commandBuffersToSubmit.push_back(commandBuffer);
     }
 
     void VknCycle::submitCommandBuffers()
@@ -274,40 +292,71 @@ namespace vkn
         if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
 
-        if (m_currentTransferCommandBuffer)
-            this->endTransferRecording(); // Ensure the current command buffer is ended before submission.
+        if (m_currentUploadCommandBuffer)
+            this->endUploadRecording();
+        if (m_currentDownloadCommandBuffer)
+            this->endDownloadRecording();
         if (m_currentComputeCommandBuffer)
-            this->endComputePassRecording(); // Ensure the current command buffer is ended before submission.
+            this->endComputePassRecording();
         if (m_currentGraphicsCommandBuffer)
-            this->endGraphicsPassRecording(); // Ensure the current command buffer is ended before submission.
-        if (m_commandBuffersToSubmit.empty())
-            throw std::runtime_error("No command buffers to submit.");
+            this->endGraphicsPassRecording();
 
-        // 4. Submit the command buffer
-        m_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        // Iterate through the possible queue types, submitting buffers as appropriate
+        // This assumes you want all the command buffers to run on the same queue... if different queues are needed
+        // some extra code will be needed.
 
-        m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrame);
-        m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        m_submitInfo.waitSemaphoreCount = 1;
-        m_submitInfo.pWaitSemaphores = m_waitSemaphores.data();
-        m_submitInfo.pWaitDstStageMask = m_waitStages.data();
+        for (uint32_t i = 0; i < QueueType::NUM_QUEUE_TYPES + 1; ++i)
+        {
+            this->clearSubmitInfo();
+            VkQueue *currentQueue = m_device->getQueue(static_cast<QueueType>(i));
 
-        m_submitInfo.commandBufferCount = static_cast<uint32_t>(m_commandBuffersToSubmit.size());
-        m_submitInfo.pCommandBuffers = m_commandBuffersToSubmit.data();
+            if (i == QueueType::GRAPHICS)
+                continue; // Graphics queue (as considered separate from PRESENT) is unhandled currently.
+            else if (i == QueueType::PRESENT)
+            {
+                m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
+                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
+                m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                m_submitInfo.pCommandBuffers = m_currentGraphicsCommandBuffer;
+            }
+            else if (i == QueueType::COMPUTE)
+            {
+                // m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
+                // m_waitStages[0] = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+                // m_submitInfo.commandBufferCount = static_cast<uint32_t>(m_computeCommandBuffersToSubmit.size());
+                // m_submitInfo.pCommandBuffers = m_computeCommandBuffersToSubmit.data();
+                m_submitInfo.pCommandBuffers = m_currentComputeCommandBuffer;
+            }
+            else if (i == QueueType::TRANSFER) // Upload
+            {
+                m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
+                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
+                m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                m_submitInfo.pCommandBuffers = m_currentUploadCommandBuffer;
+            }
+            else if (i == QueueType::TRANSFER + 1u) // Download
+            {
+                m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
+                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
+                m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                m_submitInfo.pCommandBuffers = m_currentDownloadCommandBuffer;
+            }
 
-        m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrame));
-        m_submitInfo.signalSemaphoreCount = 1;
-        m_submitInfo.pSignalSemaphores = m_signalSemaphores.data();
+            // no waits
+            m_submitInfo.waitSemaphoreCount = m_waitSemaphores.size();
+            m_submitInfo.pWaitSemaphores = m_waitSemaphores.data();
+            m_submitInfo.pWaitDstStageMask = m_waitStages.data();
 
-        vkResetFences(*m_device->getVkDevice(), 1, &m_device->getFence(m_currentFrame)); // Reset the fence before submitting
+            // signal when upload is done
+            m_submitInfo.signalSemaphoreCount = m_signalSemaphores.size();
+            m_submitInfo.pSignalSemaphores = m_signalSemaphores.data();
 
-        // The queue we submit to must match the queue family of the command pool
-        // from which the command buffers were allocated.
-        // For the simple case where we only record a graphics pass, it comes from the PRESENT pool.
-        // A more complex engine would need to track which queue each command buffer belongs to
-        // and potentially perform multiple submissions.
-        QueueType submissionQueue = m_graphicsConfigLoaded ? PRESENT : COMPUTE;
-        m_resSubmit = vkQueueSubmit(*m_device->getQueue(submissionQueue), 1, &m_submitInfo, m_device->getFence(m_currentFrame));
+            // your upload command buffer
+            m_submitInfo.commandBufferCount = 1u;
+
+            vkResetFences(*m_device->getVkDevice(), 1, &m_device->getFence(m_currentFrameNum)); // Reset the fence before submitting
+            vkQueueSubmit(*currentQueue, 1, &m_submitInfo, VK_NULL_HANDLE);
+        }
     }
 
     bool VknCycle::presentImage()
@@ -325,6 +374,7 @@ namespace vkn
 
         // 5. Present the image
         m_presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        m_presentInfo.pNext = nullptr;
 
         m_presentInfo.waitSemaphoreCount = 1;
         m_presentInfo.pWaitSemaphores = m_signalSemaphores.data();
@@ -336,7 +386,7 @@ namespace vkn
 
         m_presentResult = vkQueuePresentKHR(*m_device->getQueue(QueueType::PRESENT), &m_presentInfo);
         m_signalSemaphores.clear();
-        m_currentFrame = (m_currentFrame + 1) % m_swapchain->getNumImages(); // Move to the next frame
+        m_currentFrameNum = (m_currentFrameNum + 1) % m_swapchain->getNumImages(); // Move to the next frame
 
         if (m_presentResult == VK_ERROR_OUT_OF_DATE_KHR || m_presentResult == VK_SUBOPTIMAL_KHR)
             return this->recoverFromSwapchainError();
@@ -397,6 +447,24 @@ namespace vkn
                 pipeline.getViewportState()->syncWithSwapchain(*m_swapchain, 0, 0);
             renderpass.createFramebuffers(*m_swapchain);
         }
+    }
+
+    void VknCycle::clearSubmitInfo()
+    {
+        m_submitInfo = VkSubmitInfo{};
+        m_submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        m_submitInfo.pNext = nullptr;
+        m_submitInfo.waitSemaphoreCount = 0;
+        m_submitInfo.pWaitSemaphores = nullptr;
+        m_submitInfo.pWaitDstStageMask = nullptr;
+        m_submitInfo.commandBufferCount = 0;
+        m_submitInfo.pCommandBuffers = nullptr;
+        m_submitInfo.signalSemaphoreCount = 0;
+        m_submitInfo.pSignalSemaphores = nullptr;
+
+        m_waitSemaphores.clear();
+        m_signalSemaphores.clear();
+        m_waitStages.clear();
     }
 
 } // namespace vkn

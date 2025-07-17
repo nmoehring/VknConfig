@@ -15,10 +15,11 @@ namespace vkn
         void exit();
         static bool s_recordingGfxCommandBuffer;
         static bool s_recordingComputeCommandBuffer;
-        static bool s_recordingTransferCommandBuffer;
-        static VkCommandBuffer *s_transferCommandBuffer;
+        static bool s_recordingUploadCommandBuffer;
+        static bool s_recordingDownloadCommandBuffer;
+        static VkCommandBuffer *s_uploadCommandBuffer;
+        static VkCommandBuffer *s_downloadCommandBuffer;
 
-    protected:
         // Engine
         static VknEngine *s_engine;
         VknIdxs m_relIdxs;

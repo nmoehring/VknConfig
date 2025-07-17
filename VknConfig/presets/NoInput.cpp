@@ -65,8 +65,6 @@ namespace vkn
 
         // Create command pool, command buffers, and sync objects
         device->addCommandPools();
-        VknCommandPool *commandPool = device->getCommandPool(QueueType::PRESENT);
-        commandPool->createCommandBuffers(swapchain->getNumImages());
 
         // Set shader vertices
         pipeline->setNumHardCodedVertices(3);
@@ -77,22 +75,12 @@ namespace vkn
 
     bool noInputCycle(VknCycle &cycle)
     {
-        if (!cycle.acquireImage())
-            return false;
+        // The main loop in VknApp::cycleEngine now handles acquire, submit, and present.
+        // This function's only job is to record commands for the current frame.
 
-        // Begin recording a graphics command buffer
-        cycle.beginGraphicsPassRecording();
-
-        // Record a graphics pass (draw call)
+        // Record the configured graphics pass
         cycle.recordGraphicsPass(0); // Assuming renderpass index 0
 
-        // Submit the recorded command buffer for execution
-        cycle.submitCommandBuffers();
-
-        // Present the rendered image
-        bool presented = cycle.presentImage();
-        if (!presented)
-            return false;
-        return true;
+        return true; // Return true to signal that the main loop should continue.
     }
 }

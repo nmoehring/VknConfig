@@ -617,11 +617,15 @@ namespace vkn
             if (this->exists<VkCommandBuffer *>())
             {
                 for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
-                    vkFreeCommandBuffers(
-                        *this->getParentPointer<VkCommandPool, VkDevice>(m_iter),
-                        this->getObject<VkCommandPool>(m_iter),
-                        this->getObject<uint32_t>(m_iter),
-                        this->getObject<VkCommandBuffer *>(m_iter));
+                {
+                    uint32_t numBuffers = this->getObject<uint32_t>(m_iter);
+                    if (numBuffers > 0) // Check for valid buffer count
+                        vkFreeCommandBuffers(
+                            *this->getParentPointer<VkCommandPool, VkDevice>(m_iter),
+                            this->getObject<VkCommandPool>(m_iter),
+                            this->getObject<uint32_t>(m_iter),
+                            this->getObject<VkCommandBuffer *>(m_iter));
+                }
                 for (m_iter = 0; m_iter < this->getVectorSize<VkCommandBuffer *>(); ++m_iter)
                     delete[] this->getObject<VkCommandBuffer *>(m_iter);
                 this->deleteVector<VkCommandBuffer *>();

@@ -222,6 +222,8 @@ namespace vkn
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot upload data.");
+        if (!VknObject::s_recordingTransferCommandBuffer)
+            throw std::runtime_error("Transfer command buffer not recording, cannot upload data.");
         if (m_hasUploadBuffer)
         {
             m_uploadBuffer->uploadData(data, dataSize, offset);

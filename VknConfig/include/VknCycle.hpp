@@ -13,14 +13,14 @@ namespace vkn
         void beginFrameRecording();
         void beginGraphicsPassRecording();
         void beginComputePassRecording();
-        void beginTransferRecording();
+        void beginUploadRecording();
+        void beginDownloadRecording();
         void endGraphicsPassRecording();
         void endComputePassRecording(); // Placeholder for compute pass logic
-        void endTransferRecording();
+        void endDownloadRecording();
+        void endUploadRecording();
         void recordGraphicsPass(uint_fast8_t renderpassIdx);
         void recordComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
-        void uploadData();
-        void downloadData();
         void submitCommandBuffers();
         bool presentImage();
 
@@ -28,6 +28,16 @@ namespace vkn
         void loadBasicConfig(VknConfig *config, VknEngine *engine);
         void loadGraphicsConfig(VknConfig *config, VknEngine *engine);
         void loadComputeConfig(VknConfig *config, VknEngine *engine);
+        void setVertexBufferIdx(uint32_t idx) { m_vertexBufferAbsIdx = idx; }
+        void setIndexBufferIdx(uint32_t idx) { m_indexBufferAbsIdx = idx; }
+        void clearSubmitInfo();
+
+        // Getters
+        VknDevice *getDevice()
+        {
+            return m_device;
+        }
+
         // Misc
         void setClearColor(float r, float g, float b, float a = 1.0f);
         bool recoverFromSwapchainError();
@@ -44,8 +54,10 @@ namespace vkn
         std::list<VknRenderpass> *m_renderpasses{nullptr}; // Assuming renderpass 0
         VknCommandPool *m_presentPool{nullptr};
         VknCommandPool *m_computePool{nullptr};
-        VknCommandPool *m_transferPool{nullptr};
-        std::vector<VkCommandBuffer> m_commandBuffersToSubmit;
+        VknCommandPool *m_uploadPool{nullptr};
+        VknCommandPool *m_downloadPool{nullptr};
+        uint32_t m_vertexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
+        uint32_t m_indexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
         VknPhysicalDevice *m_physicalDevice{nullptr};
         VkSurfaceCapabilitiesKHR m_capabilities{};
 
@@ -69,7 +81,7 @@ namespace vkn
         VkResult m_presentResult{};
 
         // State
-        uint_fast32_t m_currentFrame = 0;
+        uint_fast32_t m_currentFrameNum = 0;
         uint_fast32_t m_imageIndex;
         std::vector<VkSemaphore> m_signalSemaphores;
         std::vector<VkFence *> m_imagesInFlight; // Fence for each swapchain image
@@ -80,6 +92,7 @@ namespace vkn
         bool m_computeConfigLoaded{false};
         VkCommandBuffer *m_currentGraphicsCommandBuffer{nullptr};
         VkCommandBuffer *m_currentComputeCommandBuffer{nullptr};
-        VkCommandBuffer *m_currentTransferCommandBuffer{nullptr};
+        VkCommandBuffer *m_currentUploadCommandBuffer{nullptr};
+        VkCommandBuffer *m_currentDownloadCommandBuffer{nullptr};
     };
 }

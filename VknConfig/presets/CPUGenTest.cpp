@@ -123,10 +123,6 @@ namespace vkn
         renderpass->createPipelines();
 
         device->addCommandPools();
-        VknCommandPool *presentCommandPool = device->getCommandPool(QueueType::PRESENT);
-        presentCommandPool->createCommandBuffers(swapchain->getNumImages());
-        VknCommandPool *transferCommandPool = device->getCommandPool(QueueType::TRANSFER);
-        transferCommandPool->createCommandBuffers(swapchain->getNumImages());
 
         vertexBuffer = device->addVertexBuffer(75000);
         indexBuffer = device->addIndexBuffer(75000);
@@ -136,33 +132,17 @@ namespace vkn
 
     bool cpuGenTestCycle(VknCycle &cycle)
     {
-        if (!cycle.acquireImage())
-            return false;
-
-        cycle.beginTransferRecording();
-
         // --- Generate Mesh Data ---
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
         generateWavyGrid(vertices, indices);
 
-        // --- Create and Upload Buffers ---
+        // --- Upload Buffers ---
         vertexBuffer->uploadData(vertices.data());
         indexBuffer->uploadData(indices.data());
 
-        // Begin recording a graphics command buffer
-        cycle.beginGraphicsPassRecording();
-
         // Record a graphics pass (draw call)
         cycle.recordGraphicsPass(0); // Assuming renderpass index 0
-
-        // Submit the recorded command buffer for execution
-        cycle.submitCommandBuffers();
-
-        // Present the rendered image
-        bool presented = cycle.presentImage();
-        if (!presented)
-            return false;
         return true;
     }
 }

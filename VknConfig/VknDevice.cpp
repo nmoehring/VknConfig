@@ -47,7 +47,7 @@ namespace vkn
                     return i;
                 break;
             case QueueType::GRAPHICS:
-                if (queue.supportsGraphics())
+                if (queue.supportsGraphics() && !queue.supportsPresent())
                     return i;
                 break;
             case QueueType::COMPUTE:
@@ -86,10 +86,8 @@ namespace vkn
 
     void VknDevice::addCommandPools()
     {
-        if (m_commandPoolCreated)
-        {
+        if (m_commandPoolsCreated)
             return;
-        }
 
         // This map ensures we only create one command pool per unique queue family index.
         std::map<uint32_t, VknCommandPool *> uniquePools;
@@ -107,6 +105,7 @@ namespace vkn
                     VknCommandPool &newPool = s_engine->addNewVknObject<VknCommandPool, VkCommandPool, VkDevice>(
                         m_commandPools.size(), m_commandPools, m_relIdxs, m_absIdxs);
                     newPool.createCommandPool(queueFamilyIdx);
+                    newPool.createCommandBuffers(VknObject::s_maxFramesInFlight);
                     uniquePools[queueFamilyIdx] = &newPool;
                 }
                 // Map the QueueType to the (possibly shared) command pool.
@@ -114,7 +113,7 @@ namespace vkn
             }
         }
 
-        m_commandPoolCreated = true;
+        m_commandPoolsCreated = true;
     }
 
     void VknDevice::createSyncObjects()
@@ -276,9 +275,14 @@ namespace vkn
 
     VknCommandPool *VknDevice::getCommandPool(QueueType type)
     {
-        if (m_commandPoolMap.find(type) == m_commandPoolMap.end())
-            throw std::runtime_error("Command pool for the requested queue type not found or not created.");
-        return m_commandPoolMap.at(type);
+        QueueType queueTypeTarget = type;
+        if (queueTypeTarget == QueueType::TRANSFER && m_commandPoolMap.find(queueTypeTarget) == m_commandPoolMap.end())
+            queueTypeTarget = QueueType::COMPUTE;
+        if (queueTypeTarget == QueueType::COMPUTE && m_commandPoolMap.find(queueTypeTarget) == m_commandPoolMap.end())
+            queueTypeTarget = QueueType::GRAPHICS;
+        if (queueTypeTarget == QueueType::GRAPHICS && m_commandPoolMap.find(queueTypeTarget) == m_commandPoolMap.end())
+            queueTypeTarget = QueueType::PRESENT;
+        return m_commandPoolMap.at(queueTypeTarget);
     }
 
     VmaAllocator *VknDevice::addAllocator()

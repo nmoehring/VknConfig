@@ -67,7 +67,24 @@ namespace vkn
         if (!m_cycleFunction)
             throw std::runtime_error("No cycle function set for VknApp. Use VknApp::setCycleFunction().");
         m_cycle.wait();
-        m_cycle.beginFrameRecording();
-        return m_cycleFunction(m_cycle);
+
+        // Acquire the next available image from the swap chain.
+        // If the swapchain is out of date or the window is minimized,
+        // acquireImage will return false and handle recovery internally.
+        // In that case, we skip rendering for this frame.
+        // First, use short-circuit evaluation to confirm rendering is enabled.
+        if (m_config.isRenderingGraphics() && !m_cycle.acquireImage())
+            return true; // Continue the app loop, but don't render this frame.
+
+        m_cycle.beginFrameRecording(); //
+        m_cycleFunction(m_cycle);      // Record commands for the frame.
+        m_cycle.submitCommandBuffers();
+
+        // Present the image. This also handles swapchain errors.
+        // The return value of presentImage is only for the app loop's immediate control,
+        // which we don't need here as window->update() handles it.
+        if (m_config.isRenderingGraphics()) // Works for now, but there may be cases where a render is downloaded and not presented.
+            return m_cycle.presentImage();
+        return true;
     }
 }

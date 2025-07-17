@@ -115,6 +115,18 @@ namespace vkn
         VkFence &getFence(uint32_t frameInFlight);
         std::list<VknRenderpass> *getRenderpasses() { return &m_renderpasses; }
         std::list<VknCommandPool> *getCommandPools() { return &m_commandPools; }
+        uint32_t getVertexBufferIdx()
+        {
+            if (m_vertexBuffers.empty())
+                return std::numeric_limits<uint32_t>::max();
+            return m_vertexBuffers.front().m_absIdxs.get<VkBuffer>();
+        }
+        uint32_t getIndexBufferIdx()
+        {
+            if (m_indexBuffers.empty())
+                return std::numeric_limits<uint32_t>::max();
+            return m_indexBuffers.front().m_absIdxs.get<VkBuffer>();
+        }
 
     private:
         // Members
@@ -141,7 +153,7 @@ namespace vkn
 
         // State
         bool m_createdVkDevice{false};
-        bool m_commandPoolCreated{false};
+        bool m_commandPoolsCreated{false};
         bool m_commandBuffersAllocated{false};
         bool m_syncObjectsCreated{false};
         bool m_filedQueueCreateInfos{false};
@@ -153,8 +165,11 @@ namespace vkn
         bool m_iGPU{false};
 
         // For correct sync object retrieval
+        uint32_t m_uploadFinishedSemaphoreStartIdx{0};
+        uint32_t m_computeFinishedSemaphoreStartIdx{0};
         uint32_t m_imageAvailableSemaphoreStartIdx{0};
         uint32_t m_renderFinishedSemaphoreStartIdx{0}; // Could combine with IA if strictly interleaved
+
         uint32_t m_inFlightFenceStartIdx{0};
         uint32_t m_maxFramesInFlightForSyncObjects{0};
     };
