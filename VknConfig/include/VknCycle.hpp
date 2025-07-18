@@ -12,15 +12,18 @@ namespace vkn
         bool acquireImage();
         void beginFrameRecording();
         void beginGraphicsPassRecording();
-        void beginComputePassRecording();
+        void beginPreComputePassRecording();
+        void beginPostComputePassRecording();
         void beginUploadRecording();
         void beginDownloadRecording();
         void endGraphicsPassRecording();
-        void endComputePassRecording(); // Placeholder for compute pass logic
+        void endPreComputePassRecording();  // Placeholder for compute pass logic
+        void endPostComputePassRecording(); // Placeholder for compute pass logic
         void endDownloadRecording();
         void endUploadRecording();
         void recordGraphicsPass(uint_fast8_t renderpassIdx);
-        void recordComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
+        void recordPreComputePass(uint_fast8_t computePassIdx);  // Placeholder for compute pass logic
+        void recordPostComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
         void submitCommandBuffers();
         bool presentImage();
 
@@ -53,7 +56,8 @@ namespace vkn
         VknSwapchain *m_swapchain{nullptr};                // Assuming swapchain 0
         std::list<VknRenderpass> *m_renderpasses{nullptr}; // Assuming renderpass 0
         VknCommandPool *m_presentPool{nullptr};
-        VknCommandPool *m_computePool{nullptr};
+        VknCommandPool *m_preComputePool{nullptr};
+        VknCommandPool *m_postComputePool{nullptr};
         VknCommandPool *m_uploadPool{nullptr};
         VknCommandPool *m_downloadPool{nullptr};
         uint32_t m_vertexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
@@ -91,7 +95,8 @@ namespace vkn
         bool m_graphicsConfigLoaded{false};
         bool m_computeConfigLoaded{false};
         VkCommandBuffer *m_currentGraphicsCommandBuffer{nullptr};
-        VkCommandBuffer *m_currentComputeCommandBuffer{nullptr};
+        VkCommandBuffer *m_currentPreComputeCommandBuffer{nullptr};
+        VkCommandBuffer *m_currentPostComputeCommandBuffer{nullptr};
         VkCommandBuffer *m_currentUploadCommandBuffer{nullptr};
         VkCommandBuffer *m_currentDownloadCommandBuffer{nullptr};
     };

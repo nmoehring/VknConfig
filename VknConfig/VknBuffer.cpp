@@ -222,7 +222,7 @@ namespace vkn
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot upload data.");
-        if (!VknObject::s_recordingTransferCommandBuffer)
+        if (!VknObject::s_recordingUploadCommandBuffer)
             throw std::runtime_error("Transfer command buffer not recording, cannot upload data.");
         if (m_hasUploadBuffer)
         {
@@ -231,7 +231,7 @@ namespace vkn
             m_copyRegion->srcOffset = offset;
             m_copyRegion->dstOffset = offset;
             vkCmdCopyBuffer(
-                *VknObject::s_transferCommandBuffer,
+                *VknObject::s_uploadCommandBuffer,
                 *m_uploadBuffer->getVkBuffer(),
                 s_engine->getObject<VkBuffer>(m_absIdxs),
                 1, m_copyRegion);
@@ -249,14 +249,16 @@ namespace vkn
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot download data.");
+        if (!VknObject::s_recordingDownloadCommandBuffer)
+            throw std::runtime_error("Transfer command buffer not recording, cannot download data.");
         if (m_hasDownloadBuffer)
         {
             m_copyRegion->size = dataSize;
             m_copyRegion->srcOffset = offset;
             m_copyRegion->dstOffset = offset;
             vkCmdCopyBuffer(
-                s_engine->getObject<VkCommandBuffer>(m_absIdxs),
-                s_engine->getObject<VkBuffer>(m_absIdxs),
+                *VknObject::s_downloadCommandBuffer,
+                *m_downloadBuffer->getVkBuffer(),
                 *m_downloadBuffer->getVkBuffer(),
                 1, m_copyRegion);
             m_downloadBuffer->downloadData(data, dataSize, offset);

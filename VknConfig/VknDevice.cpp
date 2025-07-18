@@ -36,52 +36,138 @@ namespace vkn
 
     uint32_t VknDevice::findQueueFamily(QueueType type)
     {
-        // First pass: Look for ideal, dedicated queues or required queues.
+        int score = -1;
+        int idx = 500;
         for (int i = 0; i < this->getPhysicalDevice()->getNumQueueFamilies(); ++i)
         {
             VknQueueFamily &queue = getPhysicalDevice()->getQueue(i);
+            if (queue.supportsPresent() && queue.supportsCompute() && queue.supportsTransfer())
+            {
+                if (8 > score)
+                {
+                    score = 8;
+                    idx = i;
+                }
+            }
             switch (type)
             {
             case QueueType::PRESENT:
-                if (queue.supportsPresent())
-                    return i;
+                if (queue.supportsPresent() && !queue.supportsCompute() && !queue.supportsTransfer())
+                {
+                    score = 1024;
+                    idx = i;
+                }
+                else if (queue.supportsPresent() && queue.supportsCompute() && !queue.supportsTransfer())
+                {
+                    if (128 > score)
+                    {
+                        score = 128;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsPresent() && !queue.supportsCompute() && queue.supportsTransfer())
+                {
+                    if (32 > score)
+                    {
+                        score = 32;
+                        idx = i;
+                    }
+                }
                 break;
             case QueueType::GRAPHICS:
-                if (queue.supportsGraphics() && !queue.supportsPresent())
-                    return i;
+                if (queue.supportsGraphics() && !queue.supportsPresent() && !queue.supportsCompute() && !queue.supportsTransfer())
+                {
+                    if (1024 > score)
+                    {
+                        score = 1024;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsGraphics() && !queue.supportsPresent() && queue.supportsCompute() && !queue.supportsTransfer())
+                {
+                    if (128 > score)
+                    {
+                        score = 128;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsGraphics() && !queue.supportsPresent() && !queue.supportsCompute() && queue.supportsTransfer())
+                {
+                    if (16 > score)
+                    {
+                        score = 16;
+                        idx = i;
+                    }
+                }
                 break;
             case QueueType::COMPUTE:
                 // Prefer a queue that is compute but not graphics for async compute
-                if (queue.supportsCompute() && !queue.supportsGraphics())
-                    return i;
+                if (queue.supportsCompute() && !queue.supportsGraphics() && !queue.supportsTransfer())
+                {
+                    score = 1024;
+                    idx = i;
+                }
+                else if (queue.supportsCompute() && queue.supportsGraphics() && !queue.supportsPresent() && !queue.supportsTransfer())
+                {
+                    if (128 > score)
+                    {
+                        score = 128;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsCompute() && queue.supportsPresent() && !queue.supportsTransfer())
+                {
+                    if (32 > score)
+                    {
+                        score = 32;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsCompute() && !queue.supportsGraphics() && queue.supportsTransfer())
+                {
+                    if (16 > score)
+                    {
+                        score = 16;
+                        idx = i;
+                    }
+                }
                 break; // Prevent fallthrough
             case QueueType::TRANSFER:
                 // Prefer a dedicated transfer queue
                 if (queue.supportsTransfer() && !queue.supportsGraphics() && !queue.supportsCompute())
-                    return i;
+                {
+                    score = 1024;
+                    idx = i;
+                }
+                else if (queue.supportsTransfer() && queue.supportsCompute() && !queue.supportsGraphics())
+                {
+                    if (32 > score)
+                    {
+                        score = 32;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsTransfer() && queue.supportsGraphics() && !queue.supportsPresent() && !queue.supportsCompute())
+                {
+                    if (128 > score)
+                    {
+                        score = 128;
+                        idx = i;
+                    }
+                }
+                else if (queue.supportsTransfer() && queue.supportsPresent() && !queue.supportsCompute())
+                {
+                    if (64 > score)
+                    {
+                        score = 64;
+                        idx = i;
+                    }
+                }
                 break;
             }
         }
 
-        // Second pass (fallback): If a dedicated queue wasn't found, find any suitable queue.
-        for (int i = 0; i < this->getPhysicalDevice()->getNumQueueFamilies(); ++i)
-        {
-            VknQueueFamily &queue = getPhysicalDevice()->getQueue(i);
-            switch (type)
-            {
-            case QueueType::COMPUTE:
-                if (queue.supportsCompute())
-                    return i; // Any compute-capable queue is fine.
-                break;
-            case QueueType::TRANSFER:
-                if (queue.supportsTransfer())
-                    return i; // Any transfer-capable queue is fine.
-                break;
-            default: // No simple fallback for GRAPHICS or PRESENT, they must be found in the first pass.
-                break;
-            }
-        }
-        return -1;
+        return idx;
     }
 
     void VknDevice::addCommandPools()
@@ -92,10 +178,25 @@ namespace vkn
         // This map ensures we only create one command pool per unique queue family index.
         std::map<uint32_t, VknCommandPool *> uniquePools;
 
-        for (uint_fast32_t i = 0; i < NUM_QUEUE_TYPES; ++i)
+        for (uint_fast32_t i = 0; i < CommandBufferType::NUM_CB_TYPE; ++i)
         {
-            QueueType type = static_cast<QueueType>(i);
-            uint32_t queueFamilyIdx = findQueueFamily(type);
+            QueueType type{QueueType::PRESENT};
+            if (i == CommandBufferType::GRAPHICS_CB)
+                continue; // Not implemented yet
+            else if (i == CommandBufferType::PRESENT_CB)
+                type = QueueType::PRESENT;
+            else if (i == CommandBufferType::PRECOMPUTE_CB)
+                type = QueueType::COMPUTE;
+            else if (i == CommandBufferType::POSTCOMPUTE_CB)
+                type = QueueType::COMPUTE;
+            else if (i == CommandBufferType::UPLOAD_CB)
+                type = QueueType::TRANSFER;
+            else if (i == CommandBufferType::DOWNLOAD_CB)
+                type = QueueType::TRANSFER;
+            else
+                throw std::runtime_error("Command buffer type not recognized.");
+
+            uint32_t queueFamilyIdx = this->findQueueFamily(type);
 
             if (queueFamilyIdx != static_cast<uint32_t>(-1))
             {
@@ -110,6 +211,7 @@ namespace vkn
                 }
                 // Map the QueueType to the (possibly shared) command pool.
                 m_commandPoolMap[type] = uniquePools[queueFamilyIdx];
+                m_queueFamilyMap[type] = queueFamilyIdx;
             }
         }
 
@@ -235,7 +337,7 @@ namespace vkn
             return &m_queues(queueTypeIndex);
 
         // If not, find its family, get the handle, store it, and return it
-        uint32_t familyIndex = findQueueFamily(type);
+        uint32_t familyIndex = m_queueFamilyMap.count(type) ? m_queueFamilyMap[type] : -1;
         if (familyIndex == static_cast<uint32_t>(-1))
         {
             // Provide a more descriptive error message.
@@ -275,14 +377,9 @@ namespace vkn
 
     VknCommandPool *VknDevice::getCommandPool(QueueType type)
     {
-        QueueType queueTypeTarget = type;
-        if (queueTypeTarget == QueueType::TRANSFER && m_commandPoolMap.find(queueTypeTarget) == m_commandPoolMap.end())
-            queueTypeTarget = QueueType::COMPUTE;
-        if (queueTypeTarget == QueueType::COMPUTE && m_commandPoolMap.find(queueTypeTarget) == m_commandPoolMap.end())
-            queueTypeTarget = QueueType::GRAPHICS;
-        if (queueTypeTarget == QueueType::GRAPHICS && m_commandPoolMap.find(queueTypeTarget) == m_commandPoolMap.end())
-            queueTypeTarget = QueueType::PRESENT;
-        return m_commandPoolMap.at(queueTypeTarget);
+        if (m_commandPoolMap.find(type) == m_commandPoolMap.end())
+            throw std::runtime_error("Command pool for requested queue type not found. Did you call addCommandPools()?");
+        return m_commandPoolMap.at(type);
     }
 
     VmaAllocator *VknDevice::addAllocator()
@@ -393,6 +490,13 @@ namespace vkn
             m_computeVertexBuffers.back().setSize(size);
         }
         return getListElement(firstIdx, m_computeVertexBuffers);
+    }
+
+    uint32_t VknDevice::getQueueFamilyIdxByType(QueueType type)
+    {
+        if (m_queueFamilyMap.find(type) == m_queueFamilyMap.end())
+            throw std::runtime_error("QueueType not found in queue family map.");
+        return m_queueFamilyMap.at(type);
     }
 
 } // namespace vkn

@@ -497,11 +497,21 @@ namespace vkn
             absIdxs.add<VkCommandBuffer *>(poolIdx);
             VknVector<VkCommandBuffer *> &cmdBufferVec{this->getVector<VkCommandBuffer *>()};
             VknVector<uint32_t> &numBuffersVec{this->getVector<uint32_t>()};
-            numBuffersVec.insert(poolIdx, numCommandBuffers);
-            cmdBufferVec.insert(poolIdx, new VkCommandBuffer[numCommandBuffers]);
-            for (m_iter = 0; m_iter < numCommandBuffers; ++m_iter)
+            if (!numBuffersVec.exists(poolIdx))
+                numBuffersVec.insert(poolIdx, numCommandBuffers);
+            else
+                numBuffersVec(poolIdx) += numCommandBuffers;
+            if (!cmdBufferVec.exists(poolIdx))
+                cmdBufferVec.insert(poolIdx, new VkCommandBuffer[numCommandBuffers]);
+            else
+            {
+                VkCommandBuffer *newArray = new VkCommandBuffer[numBuffersVec(poolIdx)];
+                for (m_iter = 0; m_iter < numBuffersVec(poolIdx) - numCommandBuffers; ++m_iter)
+                    newArray[m_iter] = cmdBufferVec(poolIdx)[m_iter];
+            }
+            for (m_iter = numBuffersVec(poolIdx) - numCommandBuffers; m_iter < numBuffersVec(poolIdx); ++m_iter)
                 cmdBufferVec(poolIdx)[m_iter] = VkCommandBuffer{};
-            return cmdBufferVec(poolIdx);
+            return &cmdBufferVec(poolIdx)[numBuffersVec(poolIdx) - numCommandBuffers];
         }
 
         template <typename T>

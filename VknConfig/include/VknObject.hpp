@@ -14,7 +14,8 @@ namespace vkn
         void init();
         void exit();
         static bool s_recordingGfxCommandBuffer;
-        static bool s_recordingComputeCommandBuffer;
+        static bool s_recordingPreComputeCommandBuffer;
+        static bool s_recordingPostComputeCommandBuffer;
         static bool s_recordingUploadCommandBuffer;
         static bool s_recordingDownloadCommandBuffer;
         static VkCommandBuffer *s_uploadCommandBuffer;

@@ -30,7 +30,7 @@ namespace vkn
         if (!m_commandPoolCreated)
             throw std::runtime_error("Command pool not created before allocating command buffers.");
 
-        s_engine->addVkCommandBuffers(m_absIdxs, numSwapchainImages);
+        VkCommandBuffer *newArr{s_engine->addVkCommandBuffers(m_absIdxs, numSwapchainImages)};
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -39,15 +39,17 @@ namespace vkn
         allocInfo.commandBufferCount = numSwapchainImages;
 
         VknResult res{vkAllocateCommandBuffers(
-                          s_engine->getObject<VkDevice>(m_absIdxs), &allocInfo, s_engine->getObject<VkCommandBuffer *>(m_absIdxs)),
+                          s_engine->getObject<VkDevice>(m_absIdxs), &allocInfo, newArr),
                       "Allocate command buffers"};
         m_commandBuffersAllocated = true;
     }
 
-    VkCommandBuffer *VknCommandPool::getCommandBuffer(uint32_t imageIdx)
+    VkCommandBuffer *VknCommandPool::getCommandBuffer(uint32_t frameNum, uint32_t imageIdx)
     {
         if (!m_commandBuffersAllocated)
             throw std::runtime_error("Command buffers not allocated yet.");
-        return &s_engine->getObject<VkCommandBuffer *>(m_absIdxs)[imageIdx];
+        if (frameNum >= VknObject::s_maxFramesInFlight)
+            throw std::runtime_error("Frame number out of bounds.");
+        return &s_engine->getObject<VkCommandBuffer *>(m_absIdxs)[(imageIdx * VknObject::s_maxFramesInFlight) + frameNum];
     }
 }

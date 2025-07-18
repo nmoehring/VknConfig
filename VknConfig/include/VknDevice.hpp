@@ -115,6 +115,7 @@ namespace vkn
         VkFence &getFence(uint32_t frameInFlight);
         std::list<VknRenderpass> *getRenderpasses() { return &m_renderpasses; }
         std::list<VknCommandPool> *getCommandPools() { return &m_commandPools; }
+        uint32_t getQueueFamilyIdxByType(QueueType type);
         uint32_t getVertexBufferIdx()
         {
             if (m_vertexBuffers.empty())
@@ -135,6 +136,7 @@ namespace vkn
         std::list<VknPhysicalDevice> m_physicalDevices{};
         std::list<VknCommandPool> m_commandPools{};
         std::map<QueueType, VknCommandPool *> m_commandPoolMap{};
+        std::map<QueueType, uint32_t> m_queueFamilyMap{};
         std::list<VknVertexBuffer> m_vertexBuffers;
         std::list<VknIndexBuffer> m_indexBuffers;
         std::list<VknCpuUniformBuffer> m_cpuUniformBuffers;
