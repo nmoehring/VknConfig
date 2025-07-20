@@ -9,6 +9,9 @@
 
 namespace vkn
 {
+    // 3rd test during development
+
+    // Global buffers so th
     VknVertexBuffer *vertexBuffer{nullptr};
     VknIndexBuffer *indexBuffer{nullptr};
 
@@ -81,6 +84,10 @@ namespace vkn
 
     bool cpuGenTestConfig(VknConfig &config)
     {
+        config.pipelineElements_graphicsEnabled = true;
+        config.pipelineElements_graphicsUploadEnabled = true;
+        config.pipelineElements_presentEnabled = true;
+
         // Shallow Config members
         config.setAppName("CPU-Gen-Test");
         config.setEngineName("MinVknConfig");

@@ -14,6 +14,19 @@ namespace vkn
     class VknUploadBuffer;
     class VknDownloadBuffer;
 
+    enum BufferType
+    {
+        VERTEX_BUFFER,
+        INDEX_BUFFER,
+        UNIFORM_BUFFER,
+        STORAGE_BUFFER,
+        INDIRECT_BUFFER,
+        UPLOAD_BUFFER,
+        DOWNLOAD_BUFFER,
+        COMPUTE_VERTEX_BUFFER,
+        BUFFER_TYPE_SIZE
+    };
+
     /**
      * @brief Manages a Vulkan VkBuffer and its associated memory using VMA.
      *

@@ -86,8 +86,6 @@ namespace vkn
         void setAppName(std::string appName);
         void setEngineName(std::string engineName);
         void setApiVersion(unsigned int apiVersion);
-        void setNotPresentable() { m_presentable = false; }
-        void setPresentable() { m_presentable = true; }
 
         // Create
         VknResult createInstance();
@@ -110,8 +108,19 @@ namespace vkn
         VknInfos *getInfos() { return s_infos; }
         bool isRenderingGraphics();
         bool isComputing() { return false; }
+        bool isPresentable();
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
+
+        bool pipelineElements_preComputeEnabled{false};
+        bool pipelineElements_postComputeEnabled{false};
+        bool pipelineElements_graphicsEnabled{false};
+        bool pipelineElements_presentEnabled{false};
+        bool pipelineElements_uploadEnabled{false};
+        bool pipelineElements_graphicsUploadEnabled{false};
+        bool pipelineElements_preComputeDownloadEnabled{false};
+        bool pipelineElements_graphicsDownloadEnabled{false};
+        bool pipelineElements_postComputeDownloadEnabled{false};
 
     private:
         // Params
@@ -135,7 +144,7 @@ namespace vkn
         bool m_validationLayerAdded{false};
         bool m_createdSurface{false};
         bool m_setPlatformExtensions{false};
-        std::optional<bool> m_presentable{};
+        std::optional<bool> m_presentable{std::nullopt}; // Need to know early whether presentation is going to be supported (no late surface creation/addition)
 
         void fileAppInfo();
         void fileInstanceCreateInfo();

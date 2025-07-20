@@ -3,17 +3,13 @@
 
 namespace vkn
 {
-
+    // First test during development
     bool deviceInfoConfig(VknConfig &config)
     {
-        config.setNotPresentable();
+        // Simple configuration just to probe device features
         config.createInstance();
-
         auto device = config.addDevice(0);
         device->createDevice();
-
-        // auto renderpass = device->addRenderpass(0);
-        // auto pipeline = renderpass->getPipeline(0);
 
         auto limits = device->getPhysicalDevice()->getLimits();
         std::cout << "maxVertexInputBindings=" << limits->maxVertexInputBindings << std::endl;

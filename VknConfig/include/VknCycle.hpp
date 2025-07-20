@@ -25,6 +25,7 @@ namespace vkn
         void recordPreComputePass(uint_fast8_t computePassIdx);  // Placeholder for compute pass logic
         void recordPostComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
         void submitCommandBuffers();
+        bool uploadData();
         bool presentImage();
 
         // Setup
@@ -33,6 +34,8 @@ namespace vkn
         void loadComputeConfig(VknConfig *config, VknEngine *engine);
         void setVertexBufferIdx(uint32_t idx) { m_vertexBufferAbsIdx = idx; }
         void setIndexBufferIdx(uint32_t idx) { m_indexBufferAbsIdx = idx; }
+        void setUploadData(void *data, size_t size);
+        void setUploadBufferType(BufferType type) { m_uploadBufferType = type; }
         void clearSubmitInfo();
 
         // Getters
@@ -99,5 +102,8 @@ namespace vkn
         VkCommandBuffer *m_currentPostComputeCommandBuffer{nullptr};
         VkCommandBuffer *m_currentUploadCommandBuffer{nullptr};
         VkCommandBuffer *m_currentDownloadCommandBuffer{nullptr};
+        std::vector<void *> m_uploadData{};
+        std::vector<size_t> m_uploadSize{};
+        BufferType m_uploadBufferType{BufferType::BUFFER_TYPE_SIZE};
     };
 }

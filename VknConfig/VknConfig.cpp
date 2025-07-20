@@ -50,7 +50,7 @@ namespace vkn
         if (!m_createdInstance)
             throw std::runtime_error("Can't add a device until an instance is created.");
         if (!m_presentable.has_value())
-            throw std::runtime_error("No surface added. Call setNotPresentable() if there is to be no presentation.");
+            m_presentable = false;
         return &s_engine->addNewVknObject<VknDevice, VkDevice, VkInstance>(
             deviceIdx, m_devices, m_relIdxs, m_absIdxs);
         m_devices.back().setPresentable(m_presentable.value());
@@ -157,6 +157,10 @@ namespace vkn
             throw std::runtime_error("No window configured for VknConfig::createSurface()");
         if (!m_createdInstance)
             throw std::runtime_error("Didn't create instance before trying to create window surface.");
+        if (m_presentable.has_value() && !m_presentable.value())
+            throw std::runtime_error("Surface has to be created before device is created.");
+        if (m_createdSurface)
+            throw std::runtime_error("Surface already created.");
 
         VkSurfaceKHR *surface = &s_engine->addNewObject<VkSurfaceKHR, VkInstance>(m_absIdxs);
         VknResult res{"Create window surface."};
@@ -165,6 +169,7 @@ namespace vkn
             surface, surfaceIdx, s_engine->getObject<VkInstance>(0), m_vknWindow);
 
         m_presentable = true;
+        m_createdSurface = true;
 
         return surface;
     }
@@ -201,4 +206,13 @@ namespace vkn
                 return true;
         return false;
     }
+
+    bool VknConfig::isPresentable()
+    {
+        if (!m_presentable.has_value())
+            return m_presentable.value();
+        else
+            return false; // Technically not presentable is no value has been set yet.
+    }
+
 }

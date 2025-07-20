@@ -31,6 +31,9 @@ namespace vkn
         m_waitSemaphores.push_back(VkSemaphore{});
         m_waitStages.push_back(VkPipelineStageFlags{});
 
+        m_uploadData.reserve(VknObject::s_maxFramesInFlight);
+        m_uploadSize.reserve(VknObject::s_maxFramesInFlight);
+
         m_basicConfigLoaded = true;
     }
 
@@ -199,6 +202,26 @@ namespace vkn
         VknObject::s_downloadCommandBuffer = nullptr;
     }
 
+    bool VknCycle::uploadData()
+    {
+        if (m_uploadBufferType == BufferType::BUFFER_TYPE_SIZE)
+            return;
+        if (m_uploadBufferType == BufferType::VERTEX_BUFFER)
+        {
+            if (m_uploadData[m_currentFrameNum])
+            {
+                m_device->getVertexBuffer(m_currentFrameNum)->uploadData(m_uploadData[m_currentFrameNum], m_uploadSize[m_currentFrameNum]);
+                m_uploadData[m_currentFrameNum] = nullptr;
+                m_uploadSize[m_currentFrameNum] = 0;
+                return true;
+            }
+            return false;
+        }
+        else if (m_uploadBufferType == BufferType::UNIFORM_BUFFER)
+        {
+        }
+    }
+
     void VknCycle::endGraphicsPassRecording()
     {
         if (!VknObject::s_recordingGfxCommandBuffer)
@@ -337,38 +360,42 @@ namespace vkn
             VkQueue *currentQueue = m_device->getQueue(static_cast<QueueType>(i));
 
             if (i == CommandBufferType::GRAPHICS_CB)
-                continue; // Graphics queue (as considered separate from PRESENT) is unhandled currently.
-            else if (i == CommandBufferType::PRESENT_CB)
+                continue;                               // Graphics queue (as considered separate from PRESENT) is unhandled currently.
+            else if (i == CommandBufferType::UPLOAD_CB) // Upload
             {
-                currentQueue = m_device->getQueue(PRESENT, 0);
+                currentQueue = m_device->getQueue(TRANSFER, 0);
                 m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
-                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
                 m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-                m_submitInfo.pCommandBuffers = m_currentGraphicsCommandBuffer;
+                m_signalSemaphores.push_back(m_device->getUploadsFinishedSemaphore(m_currentFrameNum));
+                m_submitInfo.pCommandBuffers = m_currentUploadCommandBuffer;
             }
             else if (i == CommandBufferType::PRECOMPUTE_CB)
             {
                 currentQueue = m_device->getQueue(COMPUTE, 0);
-                // m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
-                // m_waitStages[0] = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-                // m_submitInfo.commandBufferCount = static_cast<uint32_t>(m_computeCommandBuffersToSubmit.size());
-                // m_submitInfo.pCommandBuffers = m_computeCommandBuffersToSubmit.data();
+                m_waitSemaphores.push_back(m_device->getUploadsFinishedSemaphore(m_currentFrameNum));
+                m_waitStages.push_back(VK_PIPELINE_STAGE_TRANSFER_BIT);
+                m_signalSemaphores.push_back(m_device->getPreComputeStageFinishedSemaphore(m_currentFrameNum));
                 m_submitInfo.pCommandBuffers = m_currentPreComputeCommandBuffer;
+            }
+            else if (i == CommandBufferType::PRESENT_CB)
+            {
+                currentQueue = m_device->getQueue(PRESENT, 0);
+                m_waitSemaphores.push_back(m_device->getImageAvailableSemaphore(m_currentFrameNum));
+                m_waitSemaphores.push_back(m_device->getPreComputeStageFinishedSemaphore(m_currentFrameNum));
+                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
+                m_waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+                m_waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+                m_submitInfo.pCommandBuffers = m_currentGraphicsCommandBuffer;
             }
             else if (i == CommandBufferType::POSTCOMPUTE_CB)
             {
                 uint_fast32_t familyIdx = m_device->getQueueFamilyIdxByType(COMPUTE);
                 uint_fast32_t numQueues = m_physicalDevice->getQueue(familyIdx).getNumAvailable();
                 currentQueue = m_device->getQueue(COMPUTE, 1 % numQueues);
+                m_waitSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
+                m_waitStages.push_back(VK_PIPELINE_STAGE_);
+                m_signalSemaphores.push_back(m_device->getPostComputeFinishedSemaphore(m_currentFrameNum));
                 m_submitInfo.pCommandBuffers = m_currentPostComputeCommandBuffer;
-            }
-            else if (i == CommandBufferType::UPLOAD_CB) // Upload
-            {
-                currentQueue = m_device->getQueue(TRANSFER, 0);
-                m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
-                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
-                m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-                m_submitInfo.pCommandBuffers = m_currentUploadCommandBuffer;
             }
             else if (i == CommandBufferType::DOWNLOAD_CB) // Download
             {
@@ -376,13 +403,12 @@ namespace vkn
                 uint_fast32_t familyIdx = m_device->getQueueFamilyIdxByType(TRANSFER);
                 uint_fast32_t numQueues = m_physicalDevice->getQueue(familyIdx).getNumAvailable();
                 currentQueue = m_device->getQueue(TRANSFER, 1 % numQueues);
-                m_waitSemaphores[0] = m_device->getImageAvailableSemaphore(m_currentFrameNum);
-                m_signalSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
-                m_waitStages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                m_waitSemaphores.push_back(m_device->getPostComputeFinishedSemaphore(m_currentFrameNum));
+                m_waitStages.push_back(VK_PIPELINE_STAGE_TRANSFER_BIT);
+                m_signalSemaphores.push_back(m_device->getDownloadsFinishedSemaphore(m_currentFrameNum));
                 m_submitInfo.pCommandBuffers = m_currentDownloadCommandBuffer;
             }
 
-            // no waits
             m_submitInfo.waitSemaphoreCount = m_waitSemaphores.size();
             m_submitInfo.pWaitSemaphores = m_waitSemaphores.data();
             m_submitInfo.pWaitDstStageMask = m_waitStages.data();
@@ -505,6 +531,16 @@ namespace vkn
         m_waitSemaphores.clear();
         m_signalSemaphores.clear();
         m_waitStages.clear();
+    }
+
+    void VknCycle::setUploadData(void *data, size_t size)
+    {
+        if (m_uploadData.size() >= VknObject::s_maxFramesInFlight)
+            throw std::runtime_error("Exceeded maximum frames in flight for upload data.");
+        if (m_uploadData[m_currentFrameNum])
+            throw std::runtime_error("Upload data already set for the current frame.");
+        m_uploadData[m_currentFrameNum] = data;
+        m_uploadSize[m_currentFrameNum] = size;
     }
 
 } // namespace vkn

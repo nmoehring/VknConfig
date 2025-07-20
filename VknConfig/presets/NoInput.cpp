@@ -3,8 +3,13 @@
 
 namespace vkn
 {
+    // 2nd test during development
     bool noInputConfig(VknConfig &config)
     {
+        // Set overall pipeline structure
+        config.pipelineElements_graphicsEnabled = true;
+        config.pipelineElements_presentEnabled = true;
+
         // Shallow Config members
         config.setAppName("NoInputsTest");
         config.setEngineName("MinVknConfig");

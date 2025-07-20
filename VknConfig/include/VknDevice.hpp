@@ -106,12 +106,13 @@ namespace vkn
         VknRenderpass *getRenderpass(uint32_t renderpassIdx);
         VknCommandPool *getCommandPool(QueueType type);
         VkDevice *getVkDevice();
-        VkSemaphore &getImageAvailableSemaphores(uint32_t frameInFlight);
-        VkSemaphore &getRenderFinishedSemaphores(uint32_t frameInFlight);
-        VkFence &getInFlightFences(uint32_t frameInFlight);
         VknIdxs &getRelIdxs() { return m_relIdxs; }
+        VkSemaphore &getUploadsFinishedSemaphore(uint32_t frameInFlight);
+        VkSemaphore &getPreComputeStageFinishedSemaphore(uint32_t frameInFlight);
         VkSemaphore &getImageAvailableSemaphore(uint32_t frameInFlight);
         VkSemaphore &getRenderFinishedSemaphore(uint32_t frameInFlight);
+        VkSemaphore &getPostComputeFinishedSemaphore(uint32_t frameInFlight);
+        VkSemaphore &getDownloadsFinishedSemaphore(uint32_t frameInFlight);
         VkFence &getFence(uint32_t frameInFlight);
         std::list<VknRenderpass> *getRenderpasses() { return &m_renderpasses; }
         std::list<VknCommandPool> *getCommandPools() { return &m_commandPools; }
@@ -127,6 +128,18 @@ namespace vkn
             if (m_indexBuffers.empty())
                 return std::numeric_limits<uint32_t>::max();
             return m_indexBuffers.front().m_absIdxs.get<VkBuffer>();
+        }
+        VknVertexBuffer *getVertexBuffer(uint32_t idx)
+        {
+            if (idx >= m_vertexBuffers.size())
+                throw std::out_of_range("Vertex buffer index out of range.");
+            return getListElement(idx, m_vertexBuffers);
+        }
+        VknIndexBuffer *getIndexBuffer(uint32_t idx)
+        {
+            if (idx >= m_indexBuffers.size())
+                throw std::out_of_range("Index buffer index out of range.");
+            return getListElement(idx, m_indexBuffers);
         }
 
     private:
@@ -166,13 +179,7 @@ namespace vkn
         bool m_presentable{false};
         bool m_iGPU{false};
 
-        // For correct sync object retrieval
-        uint32_t m_uploadFinishedSemaphoreStartIdx{0};
-        uint32_t m_computeFinishedSemaphoreStartIdx{0};
-        uint32_t m_imageAvailableSemaphoreStartIdx{0};
-        uint32_t m_renderFinishedSemaphoreStartIdx{0}; // Could combine with IA if strictly interleaved
-
+        uint32_t m_semaphoreStartIdx{0};
         uint32_t m_inFlightFenceStartIdx{0};
-        uint32_t m_maxFramesInFlightForSyncObjects{0};
     };
 }

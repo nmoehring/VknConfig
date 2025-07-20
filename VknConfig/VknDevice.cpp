@@ -226,14 +226,18 @@ namespace vkn
         if (!m_createdVkDevice)
             throw std::runtime_error("Swapchain not created before creating synchronization objects.");
 
-        m_maxFramesInFlightForSyncObjects = m_swapchain.front().getNumImages(); // Store for validation in getters
+        VknObject::s_maxFramesInFlight = m_swapchain.front().getNumImages(); // Store for validation in getters
 
         // Record starting indices in the VknEngine's global vectors
-        m_imageAvailableSemaphoreStartIdx = s_engine->getVectorSize<VkSemaphore>();
+        m_semaphoreStartIdx = s_engine->getVectorSize<VkSemaphore>();
         m_inFlightFenceStartIdx = s_engine->getVectorSize<VkFence>();
 
-        for (uint32_t i = 0; i < m_maxFramesInFlightForSyncObjects; ++i)
+        for (uint32_t i = 0; i < VknObject::s_maxFramesInFlight; ++i)
         {
+            s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
+            s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
             s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
             s_engine->addNewObject<VkSemaphore, VkDevice>(m_absIdxs);
             s_engine->addNewObject<VkFence, VkDevice>(m_absIdxs);
@@ -246,17 +250,33 @@ namespace vkn
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT; // Create fences in signaled state
 
-        for (size_t i = 0; i < m_maxFramesInFlightForSyncObjects; ++i)
+        for (size_t i = 0; i < VknObject::s_maxFramesInFlight; ++i)
         {
             VknResult res1{vkCreateSemaphore(
                                *getVkDevice(), &semaphoreInfo, nullptr,
-                               &s_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + i * 2)),
+                               &s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + i * 6)),
                            "Create image available semaphore"};
             VknResult res2{vkCreateSemaphore(
                                *getVkDevice(), &semaphoreInfo, nullptr,
-                               &s_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + i * 2 + 1)),
+                               &s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + i * 6 + 1)),
                            "Create render finished semaphore"};
-            VknResult res3{vkCreateFence(
+            VknResult res3{vkCreateSemaphore(
+                               *getVkDevice(), &semaphoreInfo, nullptr,
+                               &s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + i * 6 + 2)),
+                           "Create uploads finished semaphore"};
+            VknResult res4{vkCreateSemaphore(
+                               *getVkDevice(), &semaphoreInfo, nullptr,
+                               &s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + i * 6 + 3)),
+                           "Create preCompute finished semaphore"};
+            VknResult res5{vkCreateSemaphore(
+                               *getVkDevice(), &semaphoreInfo, nullptr,
+                               &s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + i * 6 + 4)),
+                           "Create postCompute finished semaphore"};
+            VknResult res6{vkCreateSemaphore(
+                               *getVkDevice(), &semaphoreInfo, nullptr,
+                               &s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + i * 6 + 5)),
+                           "Create downloads finished semaphore"};
+            VknResult res7{vkCreateFence(
                                *getVkDevice(), &fenceInfo, nullptr,
                                &s_engine->getVector<VkFence>()(m_inFlightFenceStartIdx + i)),
                            "Create in flight fence"};
@@ -274,23 +294,55 @@ namespace vkn
 
     VkSemaphore &VknDevice::getImageAvailableSemaphore(uint32_t frameInFlight)
     {
-        if (frameInFlight >= m_maxFramesInFlightForSyncObjects)
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
             throw std::out_of_range("frameInFlight out of range for getImageAvailableSemaphore");
         // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
-        return s_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + frameInFlight * 2);
+        return s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + frameInFlight * 6);
     }
 
     VkSemaphore &VknDevice::getRenderFinishedSemaphore(uint32_t frameInFlight)
     {
-        if (frameInFlight >= m_maxFramesInFlightForSyncObjects)
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
             throw std::out_of_range("frameInFlight out of range for getRenderFinishedSemaphore");
         // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
-        return s_engine->getVector<VkSemaphore>()(m_imageAvailableSemaphoreStartIdx + frameInFlight * 2 + 1);
+        return s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + frameInFlight * 6 + 1);
+    }
+
+    VkSemaphore &VknDevice::getUploadsFinishedSemaphore(uint32_t frameInFlight)
+    {
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
+            throw std::out_of_range("frameInFlight out of range for getRenderFinishedSemaphore");
+        // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
+        return s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + frameInFlight * 6 + 2);
+    }
+
+    VkSemaphore &VknDevice::getPreComputeStageFinishedSemaphore(uint32_t frameInFlight)
+    {
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
+            throw std::out_of_range("frameInFlight out of range for getRenderFinishedSemaphore");
+        // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
+        return s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + frameInFlight * 6 + 3);
+    }
+
+    VkSemaphore &VknDevice::getPostComputeFinishedSemaphore(uint32_t frameInFlight)
+    {
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
+            throw std::out_of_range("frameInFlight out of range for getRenderFinishedSemaphore");
+        // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
+        return s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + frameInFlight * 6 + 4);
+    }
+
+    VkSemaphore &VknDevice::getDownloadsFinishedSemaphore(uint32_t frameInFlight)
+    {
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
+            throw std::out_of_range("frameInFlight out of range for getRenderFinishedSemaphore");
+        // Assumes ImageAvailable and RenderFinished semaphores are created interleaved for each frame
+        return s_engine->getVector<VkSemaphore>()(m_semaphoreStartIdx + frameInFlight * 6 + 5);
     }
 
     VkFence &VknDevice::getFence(uint32_t frameInFlight)
     {
-        if (frameInFlight >= m_maxFramesInFlightForSyncObjects)
+        if (frameInFlight >= VknObject::s_maxFramesInFlight)
             throw std::out_of_range("frameInFlight out of range for getFence");
         return s_engine->getVector<VkFence>()(m_inFlightFenceStartIdx + frameInFlight);
     }
