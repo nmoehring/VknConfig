@@ -218,37 +218,61 @@ namespace vkn
             *s_engine->getAllocation<VkBuffer>(m_absIdxs), offset, size);
     }
 
-    void VknBuffer::uploadData(const void *data, VkDeviceSize offset, VkDeviceSize dataSize)
+    void VknBuffer::copyUploadData(void *data, VkDeviceSize size, VkDeviceSize offset)
     {
         if (!m_createdBuffer)
-            throw std::runtime_error("Buffer not created, cannot upload data.");
+            throw std::runtime_error("Buffer not created, cannot copy upload data.");
+        if (m_hasUploadBuffer || !data)
+        {
+            m_copyRegion->size = m_uploadDataSize;
+            m_copyRegion->srcOffset = m_uploadDataOffset;
+            m_copyRegion->dstOffset = m_uploadDataOffset;
+        }
+
+        if (m_hasUploadBuffer) // try again but in upload buffer (dGPU)
+            m_uploadBuffer->copyUploadData(m_uploadData, m_uploadDataSize, m_uploadDataOffset);
+        else if (!data) // copying directly to buffer without staging (likely iGPU)
+        {
+            std::memcpy(static_cast<char *>(m_mappedData) + m_uploadDataOffset, m_uploadData, m_uploadDataSize);
+            this->flush(m_uploadDataOffset, m_uploadDataSize);
+        }
+        else // this is the upload buffer (dGPU)
+        {
+            std::memcpy(static_cast<char *>(m_mappedData) + offset, m_uploadData, size);
+            this->flush(offset, size);
+        }
+    }
+
+    void VknBuffer::uploadData(const void *data, VkDeviceSize offset, VkDeviceSize dataSize)
+    {
+
         if (!VknObject::s_recordingUploadCommandBuffer)
             throw std::runtime_error("Transfer command buffer not recording, cannot upload data.");
         if (m_hasUploadBuffer)
         {
-            m_uploadBuffer->uploadData(data, dataSize, offset);
-            m_copyRegion->size = dataSize;
-            m_copyRegion->srcOffset = offset;
-            m_copyRegion->dstOffset = offset;
             vkCmdCopyBuffer(
                 *VknObject::s_uploadCommandBuffer,
                 *m_uploadBuffer->getVkBuffer(),
-                s_engine->getObject<VkBuffer>(m_absIdxs),
+                *this->getVkBuffer(),
                 1, m_copyRegion);
         }
-        else if (m_mappedData)
-        {
-            std::memcpy(static_cast<char *>(m_mappedData) + offset, data, dataSize);
-            this->flush(offset, dataSize);
-        }
-        else
-            throw std::runtime_error("Buffer not mapped and has no upload staging buffer, cannot upload data.");
+    }
+
+    void VknBuffer::copyDownloadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0)
+    {
+        if (!m_createdBuffer)
+            throw std::runtime_error("Buffer not created, cannot copy download data.");
+        if (m_hasDownloadBuffer || !data)
+            m_copyRegion->size = size;
+        m_copyRegion->srcOffset = offset;
+        m_copyRegion->dstOffset = offset;
+
+        if (m_hasDownloadBuffer)
+            m_downloadBuffer->copyDownloadData() // buffer has size and offset, since this is output data?
     }
 
     void VknBuffer::downloadData(void *data, VkDeviceSize offset, VkDeviceSize dataSize)
     {
-        if (!m_createdBuffer)
-            throw std::runtime_error("Buffer not created, cannot download data.");
         if (!VknObject::s_recordingDownloadCommandBuffer)
             throw std::runtime_error("Transfer command buffer not recording, cannot download data.");
         if (m_hasDownloadBuffer)

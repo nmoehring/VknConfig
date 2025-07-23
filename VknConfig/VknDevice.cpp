@@ -226,7 +226,7 @@ namespace vkn
         if (!m_createdVkDevice)
             throw std::runtime_error("Swapchain not created before creating synchronization objects.");
 
-        VknObject::s_maxFramesInFlight = m_swapchain.front().getNumImages(); // Store for validation in getters
+        // VknObject::s_maxFramesInFlight = m_swapchain.front().getNumImages(); // Store for validation in getters
 
         // Record starting indices in the VknEngine's global vectors
         m_semaphoreStartIdx = s_engine->getVectorSize<VkSemaphore>();

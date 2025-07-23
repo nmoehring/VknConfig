@@ -105,6 +105,7 @@ namespace vkn
         VkBool32 m_clipped{VK_TRUE};
         VkSwapchainKHR m_oldSwapchain{VK_NULL_HANDLE};
         std::optional<uint32_t> m_surfaceIdx{};
+        uint32_t m_numImages{1};
 
         // State
         bool m_filedCreateInfo{false};

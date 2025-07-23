@@ -14,26 +14,31 @@ namespace vkn
             ++m_numApps;
     }
 
-    void VknApp::run()
+    void VknApp::loop()
     {
-        bool keepRunning{true};
-        while (keepRunning)
+        while (m_keepRunning)
         {
-            keepRunning = m_config.getWindow()->update();
-            if (keepRunning && m_config.getWindow()->isActive())
-                this->cycleEngine();
+            m_keepRunning = m_config.getWindow()->update();
+            if (m_keepRunning && m_config.getWindow()->isActive())
+                this->executePipeline();
         }
     }
 
-    bool VknApp::cycle()
+    bool VknApp::cycleOnce()
     {
-        bool keepRunning{true};
-        if (keepRunning)
+        if (m_keepRunning)
         {
-            keepRunning = m_config.getWindow()->update();
-            if (keepRunning && m_config.getWindow()->isActive())
-                keepRunning = this->cycleEngine();
+            m_keepRunning = m_config.getWindow()->update();
+            if (m_keepRunning && m_config.getWindow()->isActive())
+                m_keepRunning = this->executePipeline();
         }
+    }
+
+    void VknApp::setCycleFunction(std::function<bool(VknCycle &)> func)
+    {
+        if (!m_readyToRun)
+            throw std::runtime_error("App Cycle not configured before being run.");
+        m_cycleFunction = std::move(func);
     }
 
     bool VknApp::preComputeUpload(void *data, size_t size)
@@ -86,19 +91,19 @@ namespace vkn
         if (m_config.pipelineElements_presentEnabled && !m_config.isPresentable())
             throw std::runtime_error("Present enabled but surface not configured.");
 
+        if (!m_config.pipelineElements_preComputeEnabled && m_config.getPreComputeBuffers().size() > 0)
+            throw std::runtime_error("Precompute buffers configured but precompute stage not enabled.");
+        if (!m_config.pipelineElements_graphicsEnabled && m_config.getGraphicsBuffers().size() > 0)
+            throw std::runtime_error("Graphics buffers configured but graphics stage not enabled.");
+        if (!m_config.pipelineElements_postComputeEnabled && m_config.getPostComputeBuffers().size() > 0)
+            throw std::runtime_error("Postcompute buffers configured but postcompute stage not enabled.");
+
         if (m_readyToRun)
             m_cycle.loadBasicConfig(&m_config, m_engine);
         if (m_config.isRenderingGraphics())
             m_cycle.loadGraphicsConfig(&m_config, m_engine);
         if (m_config.isComputing()) // isComputing() needs work
             m_cycle.loadComputeConfig(&m_config, m_engine);
-    }
-
-    void VknApp::setCycleFunction(std::function<bool(VknCycle &)> func)
-    {
-        if (!m_readyToRun)
-            throw std::runtime_error("App Cycle not configured before being run.");
-        m_cycleFunction = std::move(func);
     }
 
     void VknApp::enableValidationLayer()
@@ -111,7 +116,7 @@ namespace vkn
         m_config.setValidationEnabled();
     }
 
-    bool VknApp::cycleEngine()
+    bool VknApp::executePipeline()
     {
         if (!m_readyToRun)
             throw std::runtime_error("App Cycle not configured before being run.");
@@ -119,6 +124,7 @@ namespace vkn
             throw std::runtime_error("No cycle function set for VknApp. Use VknApp::setCycleFunction().");
 
         m_cycle.wait();
+
         // Acquire the next available image from the swap chain.
         // If the swapchain is out of date or the window is minimized,
         // acquireImage will return false and handle recovery internally.
@@ -132,8 +138,29 @@ namespace vkn
         // Do something?
         {
         }
-
-        m_cycleFunction(m_cycle); // Record commands for the frame.
+        if (m_config.pipelineElements_preComputeEnabled && !m_cycle.preComputePass())
+        {
+        }
+        if (m_config.pipelineElements_graphicsEnabled && !m_cycle.graphicsPass())
+        {
+            // If graphics pass fails, we can still continue with precompute and postcompute.
+            // This is useful for compute-only applications.
+        }
+        if (m_config.pipelineElements_postComputeEnabled && !m_cycle.postComputePass())
+        {
+        }
+        if (m_config.pipelineElements_preComputeDownloadEnabled && !m_cycle.preComputeDownload())
+        {
+            // Handle precompute download failure
+        }
+        if (m_config.pipelineElements_graphicsDownloadEnabled && !m_cycle.graphicsDownload())
+        {
+            // Handle graphics download failure
+        }
+        if (m_config.pipelineElements_postComputeDownloadEnabled && !m_cycle.postComputeDownload())
+        {
+            // Handle postcompute download failure
+        }
         m_cycle.submitCommandBuffers();
 
         // Present the image. This also handles swapchain errors.

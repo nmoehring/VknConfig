@@ -8,7 +8,8 @@ namespace vkn
     bool VknObject::s_recordingGfxCommandBuffer{false};
     bool VknObject::s_recordingUploadCommandBuffer{false};
     bool VknObject::s_recordingDownloadCommandBuffer{false};
-    bool VknObject::s_recordingComputeCommandBuffer{false};
+    bool VknObject::s_recordingPreComputeCommandBuffer{false};
+    bool VknObject::s_recordingPostComputeCommandBuffer{false};
     VkCommandBuffer *VknObject::s_uploadCommandBuffer{nullptr};
     VkCommandBuffer *VknObject::s_downloadCommandBuffer{nullptr};
 

@@ -86,6 +86,9 @@ namespace vkn
         void setAppName(std::string appName);
         void setEngineName(std::string engineName);
         void setApiVersion(unsigned int apiVersion);
+        void addBufferToPreComputeStage(VknBuffer *buffer);
+        void addBufferToGraphicsStage(VknBuffer *buffer);
+        void addBufferToPostComputeStage(VknBuffer *buffer);
 
         // Create
         VknResult createInstance();
@@ -109,6 +112,18 @@ namespace vkn
         bool isRenderingGraphics();
         bool isComputing() { return false; }
         bool isPresentable();
+        std::vector<VknBuffer *> &getPreComputeBuffers()
+        {
+            return m_preComputeBuffers;
+        }
+        std::vector<VknBuffer *> &getGraphicsBuffers()
+        {
+            return m_graphicsBuffers;
+        }
+        std::vector<VknBuffer *> &getPostComputeBuffers()
+        {
+            return m_postComputeBuffers;
+        }
 
         VkDebugUtilsMessengerEXT m_debugMessenger = VK_NULL_HANDLE; // Add member for debug messenger
 
@@ -135,6 +150,9 @@ namespace vkn
 
         // Members
         std::list<VknDevice> m_devices;
+        std::vector<VknBuffer *> m_preComputeBuffers{};  // Buffers that are used in the pre-compute stagevb-65f/.,mnbxc,
+        std::vector<VknBuffer *> m_graphicsBuffers{};    // Buffers that are used in the graphics stage
+        std::vector<VknBuffer *> m_postComputeBuffers{}; // Buffers that are used in the post-compute stage
 
         // State
         bool m_selectedQueues{false};

@@ -5,6 +5,7 @@
 #include "VknConfig.hpp"
 #include "VknCycle.hpp"
 #include "VknWindow.hpp"
+#include "VknDispatch.hpp"
 
 namespace vkn
 {
@@ -26,9 +27,9 @@ namespace vkn
         void enableValidationLayer();
 
         // Execute
-        bool cycleEngine();
-        void run();
-        bool cycle();
+        bool executePipeline();
+        void loop();
+        bool cycleOnce();
         bool preComputeUpload(void *data, size_t size);
         bool preComputeDownload(void *data, size_t *size, BufferType type);
         bool graphicsUpload(void *data, size_t size);
@@ -48,10 +49,13 @@ namespace vkn
 
         // Members
         std::function<bool(VknCycle &)> m_cycleFunction;
+        VknDispatch m_dispatch{};
+        VknSharedQueue *m_sharedQueue{nullptr};
 
         // State
         bool m_readyToRun{false};
         static uint32_t m_numApps;
+        bool m_keepRunning{true};
     };
 
 } // namespace vkn

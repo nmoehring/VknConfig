@@ -55,16 +55,10 @@ namespace vkn
         void *getDataArea();
         VkBuffer *getUploadVkBuffer() const;
         VkBuffer *getDownloadVkBuffer() const;
-        void setUploading()
-        {
-            if (m_uploadable)
-                m_uploading = true;
-        }
-        void setDownloading()
-        {
-            if (m_downloadable)
-                m_uploading = false;
-        }
+        void setUploadData(void *data) { m_uploadData = data; }
+        void setDownloadData(void *data) { m_downloadData = data; }
+        void copyUploadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
+        void copyDownloadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
         void setIntegrated(bool integrated)
         {
             if (integrated)
@@ -105,6 +99,12 @@ namespace vkn
         VmaAllocationCreateFlags m_allocationFlags{0u};
         VkBufferUsageFlags m_bufferType{0u};
         VkBufferUsageFlags m_transferType{0u};
+        void *m_uploadData{nullptr};
+        VkDeviceSize m_uploadDataSize{0};
+        VkDeviceSize m_uploadDataOffset{0};
+        void *m_downloadData{nullptr};
+        VkDeviceSize m_downloadDataSize{0};
+        VkDeviceSize m_downloadDataSize{0};
 
         // state
         bool m_uploadable{false};

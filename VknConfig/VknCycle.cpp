@@ -64,11 +64,28 @@ namespace vkn
     {
         if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+
+        // Copy any download data from last frame
+        for (VknBuffer *buffer : m_config->getPreComputeBuffers())
+            buffer->copyDownloadData();
+        for (VknBuffer *buffer : m_config->getGraphicsBuffers())
+            buffer->copyDownloadData();
+        for (VknBuffer *buffer : m_config->getPostComputeBuffers())
+            buffer->copyDownloadData();
+
+        // Clear submit-related vectors
+        this->clearSubmitInfo();
+        m_currentFrameNum = (m_currentFrameNum + 1) % m_swapchain->getNumImages(); // Move to the next frame
+
+        // Copy any upload data for this frame
+        for (VknBuffer *buffer : m_config->getPreComputeBuffers())
+            buffer->copyUploadData();
+        for (VknBuffer *buffer : m_config->getGraphicsBuffers())
+            buffer->copyUploadData();
+
         // 1. Wait for the previous frame to finish
         vkWaitForFences(
             *m_device->getVkDevice(), 1u, &m_device->getFence(m_currentFrameNum), VK_TRUE, m_defaultTimeout);
-
-        //*device->getVkDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
     }
 
     bool VknCycle::acquireImage()
@@ -393,7 +410,7 @@ namespace vkn
                 uint_fast32_t numQueues = m_physicalDevice->getQueue(familyIdx).getNumAvailable();
                 currentQueue = m_device->getQueue(COMPUTE, 1 % numQueues);
                 m_waitSemaphores.push_back(m_device->getRenderFinishedSemaphore(m_currentFrameNum));
-                m_waitStages.push_back(VK_PIPELINE_STAGE_);
+                m_waitStages.push_back(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
                 m_signalSemaphores.push_back(m_device->getPostComputeFinishedSemaphore(m_currentFrameNum));
                 m_submitInfo.pCommandBuffers = m_currentPostComputeCommandBuffer;
             }
@@ -443,16 +460,13 @@ namespace vkn
         m_presentInfo.pNext = nullptr;
 
         m_presentInfo.waitSemaphoreCount = 1;
-        m_presentInfo.pWaitSemaphores = m_signalSemaphores.data();
-
+        m_presentInfo.pWaitSemaphores = &m_device->getRenderFinishedSemaphore(m_currentFrameNum);
         m_presentInfo.swapchainCount = 1;
         m_presentInfo.pSwapchains = m_vkSwapchains.data();
         m_presentInfo.pImageIndices = &m_imageIndex;
         m_presentInfo.pResults = nullptr; // Optional: to check results per swapchain
 
         m_presentResult = vkQueuePresentKHR(*m_device->getQueue(QueueType::PRESENT), &m_presentInfo);
-        m_signalSemaphores.clear();
-        m_currentFrameNum = (m_currentFrameNum + 1) % m_swapchain->getNumImages(); // Move to the next frame
 
         if (m_presentResult == VK_ERROR_OUT_OF_DATE_KHR || m_presentResult == VK_SUBOPTIMAL_KHR)
             return this->recoverFromSwapchainError();

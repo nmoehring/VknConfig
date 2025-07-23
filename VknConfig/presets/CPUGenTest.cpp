@@ -23,12 +23,12 @@ namespace vkn
     };
 
     // Generates vertices and indices for a wavy grid mesh
-    void generateWavyGrid(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices)
+    void generateWavyGrid(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float time)
     {
         const int gridWidth = 50;
         const int gridHeight = 50;
         const float spacing = 0.1f;
-        const float amplitude = 0.5f;
+        const float amplitude = 0.25f;
         const float frequency = 0.3f;
 
         vertices.clear();
@@ -47,7 +47,7 @@ namespace vkn
 
                 // Position
                 vertex.pos[0] = fx;
-                vertex.pos[1] = sin(fx * frequency * 10.0f) * cos(fz * frequency * 10.0f) * amplitude;
+                vertex.pos[1] = sin(fx * frequency * 10.0f + time) * cos(fz * frequency * 10.0f + time) * amplitude;
                 vertex.pos[2] = fz;
 
                 // Color based on height (y-position)
@@ -114,6 +114,13 @@ namespace vkn
         // Config => Device => Renderpass => Pipeline
         auto *pipeline = renderpass->getPipeline(0);
         pipeline->getRasterizationState()->setCullMode(VK_CULL_MODE_BACK_BIT);
+        // VknPipelineLayout *layout = pipeline->getPipelineLayout();
+        // layout->addPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float) * 4); // For MVP matrix
+        // VknDescriptorSetLayout *dsl0 = layout->addDescriptorSetLayout();
+        // dsl0->addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT);
+        // dsl0->createDescriptorSetLayout();
+        // layout->createPipelineLayout();
+        pipeline->getPipelineLayout()->_createPipelineLayout(); // Create a default empty layout
 
         // --- Configure Vertex Input State ---
         VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
@@ -134,22 +141,42 @@ namespace vkn
         vertexBuffer = device->addVertexBuffer(75000);
         indexBuffer = device->addIndexBuffer(75000);
 
+        // Calculate buffer sizes based on grid dimensions
+        const int gridWidth = 50;
+        const int gridHeight = 50;
+        const VkDeviceSize vertexBufferSize = gridWidth * gridHeight * sizeof(Vertex);
+        const VkDeviceSize indexBufferSize = (gridWidth - 1) * (gridHeight - 1) * 6 * sizeof(uint32_t);
+
+        // Add per-frame-in-flight buffers
+        device->addVertexBuffer(vertexBufferSize);
+        device->addIndexBuffer(indexBufferSize);
+
         return true;
     }
 
     bool cpuGenTestCycle(VknCycle &cycle)
     {
+        // --- Animate ---
+        static float totalTime = 0.0f;
+        totalTime += (1.0f / 60.0f); // Fixed time step for ~60fps animation
+
         // --- Generate Mesh Data ---
         std::vector<Vertex> vertices;
         std::vector<uint32_t> indices;
-        generateWavyGrid(vertices, indices);
+        generateWavyGrid(vertices, indices, totalTime);
 
         // --- Upload Buffers ---
-        vertexBuffer->uploadData(vertices.data());
-        indexBuffer->uploadData(indices.data());
+        // vertexBuffer->uploadData(vertices.data());
+        // indexBuffer->uploadData(indices.data());
+
+        // Note: Assumes VknCycle has a method like `getCurrentFrameIndex()`
+        uint32_t frameIdx = cycle.getCurrentFrameIndex(); // You'll need to add this getter to VknCycle
+        cycle.getDevice()->getVertexBuffer(frameIdx)->uploadData(vertices.data(), vertices.size() * sizeof(Vertex));
+        cycle.getDevice()->getIndexBuffer(frameIdx)->uploadData(indices.data(), indices.size() * sizeof(uint32_t));
 
         // Record a graphics pass (draw call)
-        cycle.recordGraphicsPass(0); // Assuming renderpass index 0
+        cycle.setNumIndices(static_cast<uint32_t>(indices.size())); // Tell the cycle how many indices to draw
+        cycle.recordGraphicsPass(0);                                // Assuming renderpass index 0
         return true;
     }
 }

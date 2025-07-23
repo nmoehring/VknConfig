@@ -21,10 +21,13 @@ namespace vkn
             s_engine->getObject<VkPhysicalDevice>(m_absIdxs),
             s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
             &capabilities);
-        if (capabilities.minImageCount > 2)
-            s_maxFramesInFlight = capabilities.minImageCount;
-        else if (capabilities.maxImageCount < 2)
-            s_maxFramesInFlight = capabilities.maxImageCount;
+        m_numImages = capabilities.minImageCount;
+        if (capabilities.minImageCount > VknObject::s_maxFramesInFlight)
+            VknObject::s_maxFramesInFlight = capabilities.minImageCount;
+        else if (capabilities.maxImageCount < VknObject::s_maxFramesInFlight)
+            VknObject::s_maxFramesInFlight = capabilities.maxImageCount;
+        else
+            m_numImages = VknObject::s_maxFramesInFlight;
         m_setImageCount = true;
     }
 
@@ -147,7 +150,7 @@ namespace vkn
             throw std::runtime_error("Can't file swapchain create info until surface is added.");
         VkSwapchainCreateInfoKHR *ci = s_infos->fileSwapchainCreateInfo(m_relIdxs,
                                                                         &s_engine->getObject<VkSurfaceKHR>(m_surfaceIdx.value()),
-                                                                        s_maxFramesInFlight, m_dimensions, m_surfaceFormat,
+                                                                        m_numImages, m_dimensions, m_surfaceFormat,
                                                                         m_numImageArrayLayers, m_usage, m_sharingMode,
                                                                         m_preTransform, m_compositeAlpha, m_presentMode,
                                                                         m_clipped, m_oldSwapchain);
@@ -188,10 +191,10 @@ namespace vkn
             throw std::runtime_error("Can't get swapchain image views before creating the swapchain.");
 
         VkImage *imagesPtr{nullptr};
-        if (m_vkSwapchainImages.size() != s_maxFramesInFlight)
+        if (m_vkSwapchainImages.size() != m_numImages)
         {
             m_vkSwapchainImages.clear();
-            imagesPtr = m_vkSwapchainImages.getData(s_maxFramesInFlight);
+            imagesPtr = m_vkSwapchainImages.getData(m_numImages);
         }
         else
             imagesPtr = m_vkSwapchainImages.getData();
@@ -201,7 +204,7 @@ namespace vkn
                                 s_engine->getObject<VkSwapchainKHR>(m_absIdxs),
                                 &imageCount, VK_NULL_HANDLE);
 
-        if (imageCount != s_maxFramesInFlight)
+        if (imageCount != m_numImages)
             throw std::runtime_error("Swapchain imageCount does not equal what should have been set.");
         vkGetSwapchainImagesKHR(s_engine->getObject<VkDevice>(m_absIdxs),
                                 s_engine->getObject<VkSwapchainKHR>(m_absIdxs),
@@ -212,13 +215,13 @@ namespace vkn
 
     void VknSwapchain::initializeSwapchainImageViewFromFramebuffer(VknImageView *imageView, uint32_t framebufferIdx)
     {
-        if (framebufferIdx >= s_maxFramesInFlight)
+        if (framebufferIdx >= m_numImages)
             throw std::runtime_error("Trying to create too many swapchain imageviews.");
 
         this->setSwapchainImageViewSettings(imageView, framebufferIdx);
         this->createImageView(imageView);
 
-        if (framebufferIdx == s_maxFramesInFlight - 1u)
+        if (framebufferIdx == m_numImages - 1u)
         {
             m_setImageViewSettings = true;
             m_createdImageViews = true;
@@ -257,7 +260,7 @@ namespace vkn
 
     uint32_t VknSwapchain::getNumImages()
     {
-        return s_maxFramesInFlight;
+        return m_numImages;
     }
 
     void VknSwapchain::demolishSwapchain()
