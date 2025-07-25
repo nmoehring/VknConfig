@@ -1,6 +1,4 @@
 #include "include/VknCycle.hpp"
-#include <algorithm> // For std::min and std::max
-#include <cstdint>   // For uint32_t, uint32_t
 
 namespace vkn
 {
@@ -221,7 +219,7 @@ namespace vkn
 
     bool VknCycle::uploadData()
     {
-        if (m_uploadBufferType == BufferType::BUFFER_TYPE_SIZE)
+        if (m_uploadBufferType == BufferType::BUFFER_TYPE_NULL)
             return;
         if (m_uploadBufferType == BufferType::VERTEX_BUFFER)
         {

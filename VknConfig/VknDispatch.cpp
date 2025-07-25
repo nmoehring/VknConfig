@@ -26,11 +26,19 @@ namespace vkn
                 m_registrar[messageDetails.dstThreadName][messageDetails.dstDataIndex].receiveDataSize->store(messageDetails.dataSize);
                 break;
             case VknThreadMessageType_Register:
+                uint32_t newIdx = m_registrar[messageDetails.srcThreadName].size();
                 m_registrar[messageDetails.srcThreadName].push_back(static_cast<VknDispatchRegistration>(messageDetails.extraData));
+                m_registrar[messageDetails.srcThreadName].back().receiveDataSize->store(newIdx);
+                break;
+            case VknThreadMessageType_ReadyForUpload:
+                m_registrar[messageDetails.dstThreadName][messageDetails.dstDataIndex].sendDataFlag->store(true);
                 break;
             default:
                 throw std::runtime_error("Unknown or unhandled VknThreadMessageType in VknTimer::wait().");
             }
+
+            if (messageDetails.finishedCallback)
+                messageDetails.finishedCallback();
         }
     }
 

@@ -34,4 +34,13 @@ namespace vkn
         s_engine = nullptr;
         s_infos = nullptr;
     }
+
+    void VknObject::sendMessage(VknMessage msg)
+    {
+        {
+            std::lock_guard<std::mutex> lock(s_dispatchQueue->queueMutex);
+            s_dispatchQueue->dispatchQueue.push(msg);
+        }
+        s_dispatchQueue->queueCV.notify_one();
+    }
 }

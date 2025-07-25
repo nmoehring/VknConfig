@@ -4,14 +4,21 @@ namespace vkn
 {
     uint32_t VknApp::m_numApps{0};
 
-    VknApp::VknApp() : m_config{}, m_cycle{}
+    VknApp::VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(VknCycle &)> func)
+        : m_config{}, m_cycle{}, m_dispatchQueue{m_dispatch.startThread()}
     {
         m_engine = m_config.getEngine();
         m_infos = m_config.getInfos();
+        m_cycle.setDispatchQueue(m_dispatchQueue);
+
+        this->configureWithPreset(std::move(configFunc));
+        this->setCycleFunction(std::move(func));
+
         if (m_numApps > 0)
             throw std::runtime_error("Previous VknApp() was not exited via VknApp::exit().");
         else
             ++m_numApps;
+        m_gpuThread = std::thread(&loop, this);
     }
 
     void VknApp::loop()
@@ -21,16 +28,6 @@ namespace vkn
             m_keepRunning = m_config.getWindow()->update();
             if (m_keepRunning && m_config.getWindow()->isActive())
                 this->executePipeline();
-        }
-    }
-
-    bool VknApp::cycleOnce()
-    {
-        if (m_keepRunning)
-        {
-            m_keepRunning = m_config.getWindow()->update();
-            if (m_keepRunning && m_config.getWindow()->isActive())
-                m_keepRunning = this->executePipeline();
         }
     }
 

@@ -5,6 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <map>
+#include <functional>
 
 namespace vkn
 {
@@ -12,16 +13,17 @@ namespace vkn
     {
         VknThreadMessageType_Transfer, // Transfer data between threads
         VknThreadMessageType_Register,
-        VknThreadMessageType_Signal, // Signal a condition or event
-        VknThreadMessageType_Custom, // Custom message type for user-defined actions
-        VknThreadMessageType_StopDispatcher,
+        VknThreadMessageType_ReadyForReceive,
+        VknThreadMessageType_ReadyForSend,
+        VknThreadMessageType_ClockSignal, // Signal a condition or event
+        VknThreadMessageType_StopDispatch,
         VknThreadMessageType_None // No message type
     };
 
     enum VknThreadName
     {
         MainThread,
-        RenderThread,
+        GpuThread,
         AppThread,
         NumThreadNames,
         NullThreadName
@@ -31,18 +33,20 @@ namespace vkn
     {
         void *sendPtr{nullptr};
         void *receivePtr{nullptr};
-        std::atomic<size_t> *receiveDataSize{nullptr};
+        std::atomic<bool> *sendDataFlag{nullptr};
+        std::atomic<uint32_t> *receiveDataSize{nullptr};
     };
 
     struct VknMessage
     {
-    public:
         VknMessageType type{VknThreadMessageType_None};
         VknThreadName srcThreadName{NullThreadName};
         VknThreadName dstThreadName{NullThreadName};
         size_t dataSize{0};
         size_t srcDataIndex{std::numeric_limits<size_t>::max()}; // Index for data pointers in m_data
         size_t dstDataIndex{std::numeric_limits<size_t>::max()}; // Index for data pointers in m_data
+        // pointer to void callback function with no parameters to be called when task is finished
+        std::function<void()> finishedCallback{nullptr};
         void *extraData{nullptr};
     };
 
@@ -57,6 +61,8 @@ namespace vkn
     {
     public:
         VknDispatch();
+        ~VknDispatch();
+        void stopThread();
         void dispatch();
         VknSharedQueue *startThread();
 

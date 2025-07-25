@@ -1,6 +1,8 @@
 #pragma once
-#include <cstdint> // For UINT32_MAX
+#include <cstdint>   // For UINT32_MAX
+#include <algorithm> // For std::min and std::max
 #include "VknConfig.hpp"
+#include "VknDispatch.hpp"
 
 namespace vkn
 {
@@ -37,6 +39,7 @@ namespace vkn
         void setUploadData(void *data, size_t size);
         void setUploadBufferType(BufferType type) { m_uploadBufferType = type; }
         void clearSubmitInfo();
+        void setDispatchQueue(VknSharedQueue *dispatchQueue) { m_dispatchQueue = dispatchQueue; }
 
         // Getters
         VknDevice *getDevice()
@@ -67,6 +70,7 @@ namespace vkn
         uint32_t m_indexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
         VknPhysicalDevice *m_physicalDevice{nullptr};
         VkSurfaceCapabilitiesKHR m_capabilities{};
+        VknSharedQueue *m_dispatchQueue{nullptr};
 
         // Params
         uint_fast64_t m_defaultTimeout = UINT64_MAX; // For vkAcquireNextImageKHR, timeout is uint64_t
@@ -104,6 +108,6 @@ namespace vkn
         VkCommandBuffer *m_currentDownloadCommandBuffer{nullptr};
         std::vector<void *> m_uploadData{};
         std::vector<size_t> m_uploadSize{};
-        BufferType m_uploadBufferType{BufferType::BUFFER_TYPE_SIZE};
+        BufferType m_uploadBufferType{BufferType::BUFFER_TYPE_NULL};
     };
 }

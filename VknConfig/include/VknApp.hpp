@@ -19,11 +19,11 @@ namespace vkn
     class VknApp
     {
     public:
-        VknApp();
+        VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(VknCycle &)> func);
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig &)> func);
-        void setCycleFunction(std::function<bool(VknCycle &)> func);
+        void setAppMain(VknSharedQueue *m_dispatchQueue);
         void enableValidationLayer();
 
         // Execute
@@ -38,19 +38,20 @@ namespace vkn
         void exit();
 
         VknConfig &getConfig() { return m_config; }
-        VknCycle &getCycle() { return m_cycle; }
+        VknCycle &getAppMain() { return m_appMain; }
 
     private:
         // Engine
         VknConfig m_config;
-        VknCycle m_cycle;
+        VknCycle m_appMain;
         VknEngine *m_engine{nullptr};
         VknInfos *m_infos{nullptr};
 
         // Members
         std::function<bool(VknCycle &)> m_cycleFunction;
         VknDispatch m_dispatch{};
-        VknSharedQueue *m_sharedQueue{nullptr};
+        VknSharedQueue *m_dispatchQueue;
+        std::thread m_gpuThread;
 
         // State
         bool m_readyToRun{false};

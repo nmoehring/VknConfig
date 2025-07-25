@@ -8,6 +8,7 @@
 
 #include "VknObject.hpp"
 #include "VknResult.hpp" // For VknResult
+#include "VknStagingBuffer.hpp"
 
 namespace vkn
 {
@@ -21,10 +22,9 @@ namespace vkn
         UNIFORM_BUFFER,
         STORAGE_BUFFER,
         INDIRECT_BUFFER,
-        UPLOAD_BUFFER,
-        DOWNLOAD_BUFFER,
         COMPUTE_VERTEX_BUFFER,
-        BUFFER_TYPE_SIZE
+        BUFFER_TYPE_SIZE,
+        BUFFER_TYPE_NULL
     };
 
     /**
@@ -57,8 +57,10 @@ namespace vkn
         VkBuffer *getDownloadVkBuffer() const;
         void setUploadData(void *data) { m_uploadData = data; }
         void setDownloadData(void *data) { m_downloadData = data; }
-        void copyUploadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
-        void copyDownloadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
+        void copyUploadData();
+        void copyDownloadData();
+        void registerWithDispatch();
+        void setRegistrationIdx();
         void setIntegrated(bool integrated)
         {
             if (integrated)
@@ -66,8 +68,8 @@ namespace vkn
                 m_memoryUsage = VMA_MEMORY_USAGE_AUTO;
                 m_transferType = 0u;
                 m_allocationFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-                m_uploadable = false;
-                m_downloadable = false;
+                m_uploadable = true;
+                m_downloadable = true;
                 m_integrated = true;
             }
         }
@@ -104,7 +106,7 @@ namespace vkn
         VkDeviceSize m_uploadDataOffset{0};
         void *m_downloadData{nullptr};
         VkDeviceSize m_downloadDataSize{0};
-        VkDeviceSize m_downloadDataSize{0};
+        VkDeviceSize m_downloadDataOffset{0};
 
         // state
         bool m_uploadable{false};
@@ -115,6 +117,9 @@ namespace vkn
         // Params
         VkMemoryPropertyFlags m_memFlags;
         VmaAllocationInfo m_allocInfo;
+        uint32_t m_msgIdx{std::numeric_limits<uint32_t>::max()};
+        std::atomic<uint32_t> m_msgSize{std::numeric_limits<uint32_t>::max()};
+        VknDispatchRegistration m_reg{};
 
         // Members
         void *m_mappedData{nullptr}; // Stores pointer if persistently mapped by VMA
@@ -205,39 +210,6 @@ namespace vkn
     };
 
     /**
-     * @brief A specialized buffer used as a temporary intermediary for transferring data
-     * between the CPU and GPU, or between GPU resources that aren't directly compatible.
-     * This implementation is for CPU-to-GPU transfers (uploads).
-     */
-    class VknUploadBuffer : public VknBuffer
-    {
-    public:
-        VknUploadBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
-            : VknBuffer(relIdxs, absIdxs)
-        {
-            m_transferType = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-            m_memoryUsage = VMA_MEMORY_USAGE_CPU_ONLY;
-            m_allocationFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-        }
-    };
-
-    /**
-     * @brief A specialized buffer used as a temporary intermediary for transferring data
-     * from the GPU to the CPU (downloads).
-     */
-    class VknDownloadBuffer : public VknBuffer
-    {
-    public:
-        VknDownloadBuffer(VknIdxs relIdxs, VknIdxs absIdxs)
-            : VknBuffer(relIdxs, absIdxs)
-        {
-            m_transferType = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-            m_memoryUsage = VMA_MEMORY_USAGE_GPU_TO_CPU;
-            m_allocationFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-        }
-    };
-
-    /**
      * @brief A specialized buffer for general-purpose storage that can be read and written by shaders.
      * Useful for compute shaders, GPU-driven rendering techniques, and large data sets.
      * Typically resides in device-local memory.
@@ -285,8 +257,7 @@ namespace vkn
             m_bufferType = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             m_transferType = VK_BUFFER_USAGE_TRANSFER_DST_BIT; // optional
             m_memoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-            m_uploadable = true;    // if you ever want to CPU upload
-            m_downloadable = false; // typically not needed here
+            m_uploadable = true; // if you ever want to CPU upload
         }
     };
 

@@ -2,6 +2,7 @@
 
 #include "VknEngine.hpp"
 #include "VknInfos.hpp"
+#include "VknDispatch.hpp"
 
 namespace vkn
 {
@@ -20,12 +21,16 @@ namespace vkn
         static bool s_recordingDownloadCommandBuffer;
         static VkCommandBuffer *s_uploadCommandBuffer;
         static VkCommandBuffer *s_downloadCommandBuffer;
+        static void sendMessage(VknMessage msg);
 
         // Engine
         static VknEngine *s_engine;
         VknIdxs m_relIdxs;
         VknIdxs m_absIdxs;
         static VknInfos *s_infos;
+
+        // Members
+        static VknSharedQueue *s_dispatchQueue;
 
         // Params
         static uint32_t s_maxFramesInFlight;
