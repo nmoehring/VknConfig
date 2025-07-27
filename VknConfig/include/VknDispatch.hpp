@@ -7,16 +7,17 @@
 #include <map>
 #include <functional>
 
+#include "VknTimer.hpp"
+
 namespace vkn
 {
     enum VknMessageType
     {
-        VknThreadMessageType_Transfer, // Transfer data between threads
-        VknThreadMessageType_Register,
-        VknThreadMessageType_ReadyForReceive,
-        VknThreadMessageType_ReadyForSend,
-        VknThreadMessageType_ClockSignal, // Signal a condition or event
+        VknThreadMessageType_Transfer,       // Transfer data between threads
+        VknThreadMessageType_ReadyToReceive, // Indicate that a thread is ready to receive data from another thread
+        VknThreadMessageType_Register,       // Register a thread for dispatch
         VknThreadMessageType_StopDispatch,
+        VknThreadMessageType_Tick,
         VknThreadMessageType_None // No message type
     };
 
@@ -33,8 +34,9 @@ namespace vkn
     {
         void *sendPtr{nullptr};
         void *receivePtr{nullptr};
-        std::atomic<bool> *sendDataFlag{nullptr};
-        std::atomic<uint32_t> *receiveDataSize{nullptr};
+        std::atomic<bool> readyToReceive{false};
+        std::atomic<uint32_t> receiveDataSize{0};
+        std::atomic<bool> lastDataReceived{false};
     };
 
     struct VknMessage
@@ -48,6 +50,7 @@ namespace vkn
         // pointer to void callback function with no parameters to be called when task is finished
         std::function<void()> finishedCallback{nullptr};
         void *extraData{nullptr};
+        uint32_t ticksToProcess{0};
     };
 
     struct VknSharedQueue
@@ -63,14 +66,19 @@ namespace vkn
         VknDispatch();
         ~VknDispatch();
         void stopThread();
-        void dispatch();
+        void loop();
         VknSharedQueue *startThread();
+        void completeTransfer(VknMessage messageDetails);
 
     private:
+        VknTimer m_timer{};
         std::thread m_thread;  // Thread to run the timer
         bool m_running{false}; // Flag to control the timer's running state
         // thread-safe queue for transfer details
         VknSharedQueue m_sharedQueue{};
-        std::map<VknThreadName, std::vector<VknDispatchRegistration>> m_registrar; // Map of thread names to threads
+        std::map<VknThreadName, std::vector<VknDispatchRegistration *>> m_registrar;
+        std::list<VknMessage> m_transferBacklog{};
+        std::list<VknMessage> m_receiveReadyBacklog{};
+        uint32_t m_ticksSinceLastUpload{0};
     };
 }

@@ -23,7 +23,7 @@ namespace vkn
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig &)> func);
-        void setAppMain(VknSharedQueue *m_dispatchQueue);
+        void setAppMainFun(VknSharedQueue *m_dispatchQueue);
         void enableValidationLayer();
 
         // Execute
