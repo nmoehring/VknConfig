@@ -354,8 +354,6 @@ namespace vkn
         msg.type = VknThreadMessageType_Register;
         msg.srcThreadName = VknThreadName::GpuThread;
         msg.extraData = &m_reg;
-        msg.finishedCallback = [this]()
-        { this->setRegistrationIdx(); };
         VknObject::sendMessage(msg);
     }
 

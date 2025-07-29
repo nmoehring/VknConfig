@@ -5,15 +5,15 @@ namespace vkn
     void VknTimer::getTickStats(uint32_t tickNum, VknTickStats &acc)
     {
         if (tickNum == 47)
-            acc.frequencyFlags |= 8; // 5 Hz
+            acc.frequencyFlags |= Freq5Hz; // 5 Hz
         else if ((tickNum + 1u) % 16u == 0)
-            acc.frequencyFlags |= 16; // 15 Hz
+            acc.frequencyFlags |= Freq15Hz; // 15 Hz
         else if ((tickNum + 1u) % 8u == 0)
-            acc.frequencyFlags |= 32; // 30 Hz
+            acc.frequencyFlags |= Freq30Hz; // 30 Hz
         else if ((tickNum + 1u) % 4u == 0)
-            acc.frequencyFlags |= 64; // 60 Hz
+            acc.frequencyFlags |= Freq60Hz; // 60 Hz
         else if ((tickNum + 1u) % 2u == 0)
-            acc.frequencyFlags |= 128; // 120 Hz
+            acc.frequencyFlags |= Freq120Hz; // 120 Hz
         ++acc.numTicks;
     }
 

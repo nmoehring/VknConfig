@@ -23,11 +23,14 @@ namespace vkn
         void endPostComputePassRecording(); // Placeholder for compute pass logic
         void endDownloadRecording();
         void endUploadRecording();
-        void recordGraphicsPass(uint_fast8_t renderpassIdx);
-        void recordPreComputePass(uint_fast8_t computePassIdx);  // Placeholder for compute pass logic
-        void recordPostComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
+        bool recordGraphicsPass(uint_fast8_t renderpassIdx);
+        bool recordPreComputePass(uint_fast8_t computePassIdx);  // Placeholder for compute pass logic
+        bool recordPostComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
         void submitCommandBuffers();
-        bool uploadData();
+        bool uploadData(uint_fast8_t threadBufferIdx, size_t size);
+        bool preComputeDownload();
+        bool graphicsDownload();
+        bool postComputeDownload();
         bool presentImage();
 
         // Setup
@@ -56,6 +59,7 @@ namespace vkn
         // Engine
         VknConfig *m_config{nullptr};
         VknEngine *m_engine{nullptr};
+        VknSharedQueue *m_dispatchQueue{nullptr};
 
         // Members
         VknDevice *m_device{nullptr};
@@ -70,7 +74,6 @@ namespace vkn
         uint32_t m_indexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
         VknPhysicalDevice *m_physicalDevice{nullptr};
         VkSurfaceCapabilitiesKHR m_capabilities{};
-        VknSharedQueue *m_dispatchQueue{nullptr};
 
         // Params
         uint_fast64_t m_defaultTimeout = UINT64_MAX; // For vkAcquireNextImageKHR, timeout is uint64_t

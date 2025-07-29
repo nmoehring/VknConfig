@@ -3,28 +3,22 @@
 
 #include "VknConfig/include/VknApp.hpp"
 #include "VknConfig/include/VknData.hpp"
-#include "VknConfig/include/VknData.hpp"
 
 #if defined(_WIN32) || defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS) || defined(__UNKNOWN_PLATFORM__)
 // Desktop main function
 int main()
 {
-    vkn::VknApp info_app{};
-    info_app.configureWithPreset(vkn::deviceInfoConfig);
+    vkn::VknApp info_app{vkn::deviceInfoConfig, nullptr};
     info_app.exit();
 
-    vkn::VknApp noInputApp{};
-    noInputApp.configureWithPreset(vkn::noInputConfig); // Configure before run
-    noInputApp.setCycleFunction(vkn::noInputCycle);
+    vkn::VknApp noInputApp{vkn::noInputConfig, vkn::noInputApp};
     // If validation layers are desired:
     // noInputApp.enableValidationLayer();
-    noInputApp.run();
+    noInputApp.loop();
     noInputApp.exit(); // Explicitly call exit
 
-    vkn::VknApp cpuGenApp{};
-    cpuGenApp.configureWithPreset(vkn::cpuGenTestConfig);
-    cpuGenApp.setCycleFunction(vkn::cpuGenTestCycle);
-    cpuGenApp.run();
+    vkn::VknApp cpuGenApp{vkn::cpuGenTestConfig, vkn::cpuGenTestApp};
+    cpuGenApp.loop();
     cpuGenApp.exit();
 
     return EXIT_SUCCESS;

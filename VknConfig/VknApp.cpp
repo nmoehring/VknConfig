@@ -4,7 +4,7 @@ namespace vkn
 {
     uint32_t VknApp::m_numApps{0};
 
-    VknApp::VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(VknCycle &)> func)
+    VknApp::VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(VknCycle &)> appMain)
         : m_config{}, m_cycle{}, m_dispatchQueue{m_dispatch.startThread()}
     {
         m_engine = m_config.getEngine();
@@ -12,17 +12,20 @@ namespace vkn
         m_cycle.setDispatchQueue(m_dispatchQueue);
 
         this->configureWithPreset(std::move(configFunc));
-        this->setCycleFunction(std::move(func));
+        this->setAppMain(appMain);
 
         if (m_numApps > 0)
             throw std::runtime_error("Previous VknApp() was not exited via VknApp::exit().");
         else
             ++m_numApps;
         m_gpuThread = std::thread(&loop, this);
+        m_appThread = std::thread(&m_appMain, this);
     }
 
     void VknApp::loop()
     {
+        if (!m_appMain)
+            throw std::runtime_error("No main app function set for VknApp. Use VknApp::setAppMain().");
         while (m_keepRunning)
         {
             m_keepRunning = m_config.getWindow()->update();
@@ -31,11 +34,11 @@ namespace vkn
         }
     }
 
-    void VknApp::setCycleFunction(std::function<bool(VknCycle &)> func)
+    void VknApp::setAppMain(std::function<bool(VknCycle &)> func)
     {
         if (!m_readyToRun)
             throw std::runtime_error("App Cycle not configured before being run.");
-        m_cycleFunction = std::move(func);
+        m_appMain = func;
     }
 
     bool VknApp::preComputeUpload(void *data, size_t size)
@@ -117,8 +120,8 @@ namespace vkn
     {
         if (!m_readyToRun)
             throw std::runtime_error("App Cycle not configured before being run.");
-        if (!m_cycleFunction)
-            throw std::runtime_error("No cycle function set for VknApp. Use VknApp::setCycleFunction().");
+        if (!m_appMain)
+            throw std::runtime_error("No main app function set for VknApp. Use VknApp::setAppMain().");
 
         m_cycle.wait();
 
@@ -135,15 +138,15 @@ namespace vkn
         // Do something?
         {
         }
-        if (m_config.pipelineElements_preComputeEnabled && !m_cycle.preComputePass())
+        if (m_config.pipelineElements_preComputeEnabled && !m_cycle.recordPreComputePass(0))
         {
         }
-        if (m_config.pipelineElements_graphicsEnabled && !m_cycle.graphicsPass())
+        if (m_config.pipelineElements_graphicsEnabled && !m_cycle.recordGraphicsPass(0))
         {
             // If graphics pass fails, we can still continue with precompute and postcompute.
             // This is useful for compute-only applications.
         }
-        if (m_config.pipelineElements_postComputeEnabled && !m_cycle.postComputePass())
+        if (m_config.pipelineElements_postComputeEnabled && !m_cycle.recordPostComputePass(1))
         {
         }
         if (m_config.pipelineElements_preComputeDownloadEnabled && !m_cycle.preComputeDownload())

@@ -29,6 +29,12 @@ namespace vkn
             else
                 return 240.0 / numTicks;
         }
+        VknTickStats operator+(const VknTickStats &other)
+        {
+            VknTickStats result{other};
+            result.frequencyFlags |= frequencyFlags;
+            result.numTicks += numTicks;
+        }
     };
 
     class VknTimer

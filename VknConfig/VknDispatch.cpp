@@ -34,6 +34,10 @@ namespace vkn
                     ++message.ticksToProcess;
                 for (auto message : m_receiveReadyBacklog)
                     ++message.ticksToProcess;
+                VknTickStats temp = m_tickStatsAtomics[VknThreadName::AppThread].load();
+                m_tickStatsAtomics[VknThreadName::AppThread].store(temp + tickStats);
+                temp = m_tickStatsAtomics[VknThreadName::GpuThread].load();
+                m_tickStatsAtomics[VknThreadName::GpuThread].store(temp + tickStats);
                 break;
             case VknThreadMessageType_Transfer:
                 for (auto iter = m_receiveReadyBacklog.begin(); iter != m_receiveReadyBacklog.end(); ++iter)
@@ -56,15 +60,14 @@ namespace vkn
                 m_receiveReadyBacklog.push_back(messageDetails);
                 break;
             case VknThreadMessageType_Register:
-                uint32_t newIdx = m_registrar[messageDetails.srcThreadName].size();
-                m_registrar[messageDetails.srcThreadName].push_back(static_cast<VknDispatchRegistration *>(messageDetails.extraData));
-                m_registrar[messageDetails.srcThreadName].back()->receiveDataSize.store(newIdx);
+                for (auto &reg : messageDetails.extraData)
+                    m_registrar[messageDetails.srcThreadName].push_back(static_cast<VknDispatchRegistration *>(reg));
                 break;
             case VknThreadMessageType_None:
                 continue;
             default:
                 throw std::runtime_error("Unknown or unhandled VknThreadMessageType in VknTimer::wait().");
-            }
+            } // Switch
 
             if (messageDetails.finishedCallback)
                 messageDetails.finishedCallback();

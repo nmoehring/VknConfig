@@ -9,18 +9,23 @@
 
 namespace vkn
 {
-    // 3rd test during development
-
-    // Global buffers so th
-    VknVertexBuffer *vertexBuffer{nullptr};
-    VknIndexBuffer *indexBuffer{nullptr};
-
     // A simple vertex structure with position and color
     struct Vertex
     {
         float pos[3];
         float color[3];
     };
+
+    // 3rd test during development
+    std::vector<Vertex> vertices{};
+    std::vector<uint32_t> indices{};
+    VknDispatchRegistration verticesRegistration{};
+    VknDispatchRegistration indicesRegistration{};
+
+    const int VERTEX_BUFFER_IDX = 0;
+    const int INDEX_BUFFER_IDX = 1;
+
+    uint32_t totalTime{0};
 
     // Generates vertices and indices for a wavy grid mesh
     void generateWavyGrid(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float time)
@@ -138,41 +143,34 @@ namespace vkn
 
         device->addCommandPools();
 
-        vertexBuffer = device->addVertexBuffer(75000);
-        indexBuffer = device->addIndexBuffer(75000);
+        VknVertexBuffer *vertexBuffer = device->addVertexBuffer(75000);
+        VknIndexBuffer *indexBuffer = device->addIndexBuffer(75000);
 
-        // Calculate buffer sizes based on grid dimensions
-        const int gridWidth = 50;
-        const int gridHeight = 50;
-        const VkDeviceSize vertexBufferSize = gridWidth * gridHeight * sizeof(Vertex);
-        const VkDeviceSize indexBufferSize = (gridWidth - 1) * (gridHeight - 1) * 6 * sizeof(uint32_t);
+        verticesRegistration.sendPtr = &vertices;
+        // verticesRegistration.lastDataReceived = false;
 
-        // Add per-frame-in-flight buffers
-        device->addVertexBuffer(vertexBufferSize);
-        device->addIndexBuffer(indexBufferSize);
+        indicesRegistration.sendPtr = &indices;
+        // indicesRegistration.lastDataReceived = false;
+
+        VknMessage msg;
+        msg.type = VknMessageType::VknThreadMessageType_Register;
+        msg.srcThreadName = VknThreadName::AppThread;
+        msg.dstThreadName = VknThreadName::GpuThread;
+        msg.extraData.push_back(&verticesRegistration);
+        msg.extraData.push_back(&indicesRegistration);
+        VknObject::sendMessage(msg);
 
         return true;
     }
 
-    bool cpuGenTestCycle(VknCycle &cycle)
+    bool cpuGenTestApp(VknCycle &cycle)
     {
-        // --- Animate ---
-        static float totalTime = 0.0f;
-        totalTime += (1.0f / 60.0f); // Fixed time step for ~60fps animation
-
         // --- Generate Mesh Data ---
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
         generateWavyGrid(vertices, indices, totalTime);
 
-        // --- Upload Buffers ---
-        // vertexBuffer->uploadData(vertices.data());
-        // indexBuffer->uploadData(indices.data());
-
-        // Note: Assumes VknCycle has a method like `getCurrentFrameIndex()`
-        uint32_t frameIdx = cycle.getCurrentFrameIndex(); // You'll need to add this getter to VknCycle
-        cycle.getDevice()->getVertexBuffer(frameIdx)->uploadData(vertices.data(), vertices.size() * sizeof(Vertex));
-        cycle.getDevice()->getIndexBuffer(frameIdx)->uploadData(indices.data(), indices.size() * sizeof(uint32_t));
+        // --- Upload Data ---
+        cycle.uploadData(VERTEX_BUFFER_IDX, vertices.size() * sizeof(Vertex)); // Upload to the first vertex buffer
+        cycle.uploadData(INDEX_BUFFER_IDX, indices.size() * sizeof(uint32_t)); // Upload to the first index
 
         // Record a graphics pass (draw call)
         cycle.setNumIndices(static_cast<uint32_t>(indices.size())); // Tell the cycle how many indices to draw

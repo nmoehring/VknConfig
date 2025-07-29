@@ -78,7 +78,7 @@ namespace vkn
         return true;
     }
 
-    bool noInputCycle(VknCycle &cycle)
+    bool noInputApp(VknCycle &cycle)
     {
         // The main loop in VknApp::cycleEngine now handles acquire, submit, and present.
         // This function's only job is to record commands for the current frame.

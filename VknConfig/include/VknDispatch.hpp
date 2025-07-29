@@ -37,6 +37,7 @@ namespace vkn
         std::atomic<bool> readyToReceive{false};
         std::atomic<uint32_t> receiveDataSize{0};
         std::atomic<bool> lastDataReceived{false};
+        std::atomic<VknTickStats> tickStats{VknTickStats{}};
     };
 
     struct VknMessage
@@ -49,7 +50,7 @@ namespace vkn
         size_t dstDataIndex{std::numeric_limits<size_t>::max()}; // Index for data pointers in m_data
         // pointer to void callback function with no parameters to be called when task is finished
         std::function<void()> finishedCallback{nullptr};
-        void *extraData{nullptr};
+        std::vector<void *> extraData{};
         uint32_t ticksToProcess{0};
     };
 
@@ -77,6 +78,7 @@ namespace vkn
         // thread-safe queue for transfer details
         VknSharedQueue m_sharedQueue{};
         std::map<VknThreadName, std::vector<VknDispatchRegistration *>> m_registrar;
+        std::map<VknThreadName, std::atomic<VknTickStats>> m_tickStatsAtomics;
         std::list<VknMessage> m_transferBacklog{};
         std::list<VknMessage> m_receiveReadyBacklog{};
         uint32_t m_ticksSinceLastUpload{0};

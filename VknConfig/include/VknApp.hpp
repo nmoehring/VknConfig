@@ -13,8 +13,8 @@ namespace vkn
     bool deviceInfoConfig(VknConfig &config);
     bool noInputConfig(VknConfig &config);
     bool cpuGenTestConfig(VknConfig &config);
-    bool cpuGenTestCycle(VknCycle &cycle);
-    bool noInputCycle(VknCycle &cycle);
+    bool cpuGenTestApp(VknCycle &cycle);
+    bool noInputApp(VknCycle &cycle);
 
     class VknApp
     {
@@ -23,7 +23,7 @@ namespace vkn
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig &)> func);
-        void setAppMainFun(VknSharedQueue *m_dispatchQueue);
+        void setAppMain(std::function<bool(VknCycle &)> appMain);
         void enableValidationLayer();
 
         // Execute
@@ -38,25 +38,26 @@ namespace vkn
         void exit();
 
         VknConfig &getConfig() { return m_config; }
-        VknCycle &getAppMain() { return m_appMain; }
 
     private:
         // Engine
         VknConfig m_config;
-        VknCycle m_appMain;
+        VknCycle m_cycle;
         VknEngine *m_engine{nullptr};
         VknInfos *m_infos{nullptr};
 
         // Members
-        std::function<bool(VknCycle &)> m_cycleFunction;
+        std::function<bool(VknCycle &)> m_appMain;
         VknDispatch m_dispatch{};
         VknSharedQueue *m_dispatchQueue;
         std::thread m_gpuThread;
+        std::thread m_appThread;
 
         // State
         bool m_readyToRun{false};
         static uint32_t m_numApps;
         bool m_keepRunning{true};
+        std::atomic<VknTickStats> m_tickStats{VknTickStats{}};
     };
 
 } // namespace vkn
