@@ -6,6 +6,30 @@ namespace vkn
     {
     }
 
+    VknDispatch::~VknDispatch()
+    {
+        stopThread();
+    }
+
+    void VknDispatch::stopThread()
+    {
+        if (m_running)
+        {
+            m_running = false;
+            m_thread.join();
+        }
+        for (auto &reg : m_registrations)
+        {
+            VknTickStats endTick{};
+            endTick.frequencyFlags = VknFrequencyFlag::Freq0Hz;
+            reg->tickStats.store(endTick);
+            reg->tickStats.notify_all();
+            reg->receiveDataSize.notify_all();
+            delete reg;
+        }
+        m_registrations.clear();
+    }
+
     void VknDispatch::loop()
     {
         // lock with mutex
@@ -19,7 +43,7 @@ namespace vkn
                                              { return m_timer.tick(tickStats).frequencyFlags || !m_sharedQueue.dispatchQueue.empty(); });
 
             VknMessage messageDetails{};
-            if (tickStats.numTicks > 0)
+            if (tickStats.numTicks > 0 && m_sharedQueue.dispatchQueue.back().type != VknThreadMessageType_StopDispatch)
                 messageDetails.type = VknThreadMessageType_Tick; // Handle tick, then loop back around for messages, if necessary
             else if (!m_sharedQueue.dispatchQueue.empty())
             {
@@ -65,6 +89,8 @@ namespace vkn
                 break;
             case VknThreadMessageType_None:
                 continue;
+            case VknThreadMessageType_StopDispatch:
+                this->stopThread();
             default:
                 throw std::runtime_error("Unknown or unhandled VknThreadMessageType in VknTimer::wait().");
             } // Switch
@@ -87,5 +113,11 @@ namespace vkn
         std::memcpy(m_registrar[messageDetails.srcThreadName][messageDetails.srcDataIndex]->receivePtr,
                     m_registrar[messageDetails.dstThreadName][messageDetails.dstDataIndex]->sendPtr, messageDetails.dataSize);
         m_registrar[messageDetails.dstThreadName][messageDetails.dstDataIndex]->receiveDataSize.store(messageDetails.dataSize);
+    }
+
+    VknDispatchRegistration *VknDispatch::getRegistration()
+    {
+        m_registrations.push_back(new VknDispatchRegistration());
+        return m_registrations.back();
     }
 }

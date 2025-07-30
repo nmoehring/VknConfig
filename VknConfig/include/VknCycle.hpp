@@ -12,25 +12,30 @@ namespace vkn
         // Execution steps
         void wait();
         bool acquireImage();
+
         void beginFrameRecording();
         void beginGraphicsPassRecording();
         void beginPreComputePassRecording();
         void beginPostComputePassRecording();
         void beginUploadRecording();
         void beginDownloadRecording();
+
         void endGraphicsPassRecording();
         void endPreComputePassRecording();  // Placeholder for compute pass logic
         void endPostComputePassRecording(); // Placeholder for compute pass logic
         void endDownloadRecording();
         void endUploadRecording();
-        bool recordGraphicsPass(uint_fast8_t renderpassIdx);
-        bool recordPreComputePass(uint_fast8_t computePassIdx);  // Placeholder for compute pass logic
-        bool recordPostComputePass(uint_fast8_t computePassIdx); // Placeholder for compute pass logic
-        void submitCommandBuffers();
+
+        bool recordGraphicsPass();
+        bool recordPreComputePass();
+        bool recordPostComputePass();
+
         bool uploadData(uint_fast8_t threadBufferIdx, size_t size);
         bool preComputeDownload();
         bool graphicsDownload();
         bool postComputeDownload();
+
+        void submitCommandBuffers();
         bool presentImage();
 
         // Setup
@@ -43,6 +48,7 @@ namespace vkn
         void setUploadBufferType(BufferType type) { m_uploadBufferType = type; }
         void clearSubmitInfo();
         void setDispatchQueue(VknSharedQueue *dispatchQueue) { m_dispatchQueue = dispatchQueue; }
+        void transferUploadData(uint32_t threadBufferIdx, uint32_t size);
 
         // Getters
         VknDevice *getDevice()
@@ -112,5 +118,6 @@ namespace vkn
         std::vector<void *> m_uploadData{};
         std::vector<size_t> m_uploadSize{};
         BufferType m_uploadBufferType{BufferType::BUFFER_TYPE_NULL};
+        std::vector<uint32_t> m_uploads{};
     };
 }

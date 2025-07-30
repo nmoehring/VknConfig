@@ -59,8 +59,9 @@ namespace vkn
         void setDownloadData(void *data) { m_downloadData = data; }
         void copyUploadData();
         void copyDownloadData();
-        void registerWithDispatch();
-        void setRegistrationIdx();
+        VknDispatchRegistration *getDispatchRegistration();
+        void enableUpload() { m_uploading = true; }
+        void enableDownload() { m_downloading = true; }
         void setIntegrated(bool integrated)
         {
             if (integrated)
@@ -86,10 +87,10 @@ namespace vkn
 
         // Helper to upload data. If buffer is host visible, maps and copies.
         // For DEVICE_LOCAL, this would typically involve a staging buffer (more complex, not shown here).
-        void uploadData(const void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        void uploadData();
         // Helper to download data. Only works for host-visible memory.
         // For DEVICE_LOCAL, use VknDevice::downloadDataFromBuffer.
-        void downloadData(void *data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+        void downloadData();
 
         VkDescriptorBufferInfo getDescriptorInfo(VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE);
 
@@ -111,7 +112,8 @@ namespace vkn
         // state
         bool m_uploadable{false};
         bool m_downloadable{false};
-        bool m_uploading{true};
+        bool m_uploading{false};
+        bool m_downloading{false};
 
     private:
         // Params
@@ -119,7 +121,7 @@ namespace vkn
         VmaAllocationInfo m_allocInfo;
         uint32_t m_msgIdx{std::numeric_limits<uint32_t>::max()};
         std::atomic<uint32_t> m_msgSize{std::numeric_limits<uint32_t>::max()};
-        VknDispatchRegistration m_reg{};
+        VknDispatchRegistration *m_reg{nullptr};
 
         // Members
         void *m_mappedData{nullptr}; // Stores pointer if persistently mapped by VMA

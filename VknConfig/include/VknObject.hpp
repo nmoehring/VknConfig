@@ -31,6 +31,7 @@ namespace vkn
 
         // Members
         static VknSharedQueue *s_dispatchQueue;
+        static VknDispatch s_dispatch;
 
         // Params
         static uint32_t s_maxFramesInFlight;

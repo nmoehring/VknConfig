@@ -253,7 +253,7 @@ namespace vkn
         VknObject::s_recordingPostComputeCommandBuffer = false;
     }
 
-    bool VknCycle::recordGraphicsPass(uint_fast8_t renderpassIdx)
+    bool VknCycle::recordGraphicsPass()
     {
         if (!m_graphicsConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
@@ -261,7 +261,7 @@ namespace vkn
             throw std::runtime_error("VknCycle::recordGraphicsPass called when not recording a graphics command buffer. Call beginGraphicsPassRecording first.");
 
         m_renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        VknRenderpass *renderpass = getListElement(renderpassIdx, *m_renderpasses);
+        VknRenderpass *renderpass = getListElement(0, *m_renderpasses);
         m_renderPassBeginInfo.renderPass = *renderpass->getVkRenderPass();
         m_renderPassBeginInfo.framebuffer = *renderpass->getFramebuffer(m_imageIndex)->getVkFramebuffer();
         m_renderPassBeginInfo.renderArea.offset = {0, 0};
@@ -307,7 +307,7 @@ namespace vkn
         vkCmdEndRenderPass(*m_currentGraphicsCommandBuffer);
     }
 
-    bool VknCycle::recordPreComputePass(uint_fast8_t computePassIdx)
+    bool VknCycle::recordPreComputePass()
     {
         if (!m_computeConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
@@ -318,7 +318,7 @@ namespace vkn
         // TODO: Record a pipeline barrier to ensure compute writes are visible to the graphics pass.
     }
 
-    bool VknCycle::recordPostComputePass(uint_fast8_t computePassIdx)
+    bool VknCycle::recordPostComputePass()
     {
         if (!m_computeConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
@@ -535,7 +535,23 @@ namespace vkn
         m_uploadSize[m_currentFrameNum] = size;
     }
 
-    bool VknCycle::uploadData(uint_fast8_t threadBufferIdx, size_t size)
+    bool VknCycle::uploadData()
+    {
+        if (!m_basicConfigLoaded)
+            throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+
+        for (VknBuffer *buffer : m_config->getPreComputeBuffers())
+            buffer->uploadData();
+        for (VknBuffer *buffer : m_config->getGraphicsBuffers())
+            buffer->uploadData();
+        for (uint_fast8_t threadBufferIdx = 0; threadBufferIdx < m_uploads.size(); ++threadBufferIdx)
+        {
+                }
+
+        return true;
+    }
+
+    void VknCycle::transferUploadData(uint32_t threadBufferIdx, uint32_t size)
     {
         if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
@@ -544,12 +560,10 @@ namespace vkn
         msg.type = VknMessageType::VknThreadMessageType_Transfer;
         msg.srcThreadName = VknThreadName::AppThread;
         msg.dstThreadName = VknThreadName::GpuThread;
-        msg.dataSize = size;
+        msg.dataSize = m_uploads[threadBufferIdx];
         msg.srcDataIndex = threadBufferIdx;
         msg.dstDataIndex = threadBufferIdx;
         VknObject::sendMessage(msg);
-
-        return true;
     }
 
 } // namespace vkn

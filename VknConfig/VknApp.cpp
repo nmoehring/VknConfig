@@ -138,15 +138,15 @@ namespace vkn
         // Do something?
         {
         }
-        if (m_config.pipelineElements_preComputeEnabled && !m_cycle.recordPreComputePass(0))
+        if (m_config.pipelineElements_preComputeEnabled && !m_cycle.recordPreComputePass())
         {
         }
-        if (m_config.pipelineElements_graphicsEnabled && !m_cycle.recordGraphicsPass(0))
+        if (m_config.pipelineElements_graphicsEnabled && !m_cycle.recordGraphicsPass())
         {
             // If graphics pass fails, we can still continue with precompute and postcompute.
             // This is useful for compute-only applications.
         }
-        if (m_config.pipelineElements_postComputeEnabled && !m_cycle.recordPostComputePass(1))
+        if (m_config.pipelineElements_postComputeEnabled && !m_cycle.recordPostComputePass())
         {
         }
         if (m_config.pipelineElements_preComputeDownloadEnabled && !m_cycle.preComputeDownload())

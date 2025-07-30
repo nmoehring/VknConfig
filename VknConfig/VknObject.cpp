@@ -12,6 +12,8 @@ namespace vkn
     bool VknObject::s_recordingPostComputeCommandBuffer{false};
     VkCommandBuffer *VknObject::s_uploadCommandBuffer{nullptr};
     VkCommandBuffer *VknObject::s_downloadCommandBuffer{nullptr};
+    VknDispatch VknObject::s_dispatch{};
+    VknSharedQueue *VknObject::s_dispatchQueue{s_dispatch.getSharedQueue()};
 
     VknObject::VknObject() : m_relIdxs{}, m_absIdxs{}
     {

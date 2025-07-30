@@ -13,7 +13,8 @@ namespace vkn
         Freq60Hz = 64,
         Freq30Hz = 32,
         Freq15Hz = 16,
-        Freq5Hz = 8
+        Freq5Hz = 8,
+        Freq0Hz = 32768, // Stopped engine
     };
 
     struct VknTickStats

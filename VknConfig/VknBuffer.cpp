@@ -222,27 +222,31 @@ namespace vkn
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot copy upload data.");
-        m_copyRegion->size = m_uploadDataSize;
-        m_copyRegion->srcOffset = m_uploadDataOffset;
-        m_copyRegion->dstOffset = m_uploadDataOffset;
+        if (!m_uploading)
+            return;
 
         if (m_hasUploadBuffer) // dGPU
             m_uploadBuffer->copyUploadData(m_uploadData, m_uploadDataSize, m_uploadDataOffset);
-        else // copying directly to buffer without staging (likely iGPU)
+        else // copying directly to buffer without staging (iGPU or upload staging buffer)
         {
-            uint32_t msgSize = m_msgSize.exchange(0);
-            if (!msgSize)
-                throw std::runtime_error("I need a better way to handle this!");
-            std::memcpy(static_cast<char *>(m_mappedData) + m_uploadDataOffset, m_uploadData, m_uploadDataSize);
+            m_msgSize.wait(0);
+            m_copyRegion->size = m_msgSize.exchange(0);
+            m_copyRegion->srcOffset = m_uploadDataOffset;
+            m_copyRegion->dstOffset = m_uploadDataOffset;
             this->flush(m_uploadDataOffset, m_uploadDataSize);
         }
     }
 
-    void VknBuffer::uploadData(const void *data, VkDeviceSize offset, VkDeviceSize dataSize)
+    void VknBuffer::uploadData()
     {
 
         if (!VknObject::s_recordingUploadCommandBuffer)
             throw std::runtime_error("Transfer command buffer not recording, cannot upload data.");
+        if (!m_uploading)
+            return;
+        // if getting data
+        // wait for data
+        // m_copyRegion stuff
         if (m_hasUploadBuffer)
         {
             vkCmdCopyBuffer(
@@ -257,6 +261,8 @@ namespace vkn
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot copy download data.");
+        if (!m_downloading)
+            return;
 
         if (m_hasDownloadBuffer)
             m_downloadBuffer->copyDownloadData(); // buffer has size and offset, since this is output data?
@@ -270,15 +276,17 @@ namespace vkn
             msg.dataSize = m_downloadDataSize;
             msg.srcDataIndex = m_msgIdx;
             msg.dstDataIndex = m_msgIdx;
-            // Have it call flush after the transfer
             VknObject::sendMessage(msg);
         }
     }
 
-    void VknBuffer::downloadData(void *data, VkDeviceSize offset, VkDeviceSize dataSize)
+    void VknBuffer::downloadData()
     {
         if (!VknObject::s_recordingDownloadCommandBuffer)
             throw std::runtime_error("Transfer command buffer not recording, cannot download data.");
+        if (!m_downloading)
+            return;
+
         if (m_hasDownloadBuffer)
         {
             m_copyRegion->size = dataSize;
@@ -340,14 +348,15 @@ namespace vkn
         return m_downloadBuffer->getVkBuffer();
     }
 
-    void VknBuffer::registerWithDispatch()
+    VknDispatchRegistration *VknBuffer::getDispatchRegistration()
     {
+        m_reg = VknObject::s_dispatch.getRegistration();
         if (m_downloadable)
-            m_reg.sendPtr = m_hasDownloadBuffer ? m_downloadBuffer->getMappedData() : m_mappedData;
+            m_reg->sendPtr = m_hasDownloadBuffer ? m_downloadBuffer->getMappedData() : m_mappedData;
         if (m_uploadable)
         {
-            m_reg.receivePtr = m_hasUploadBuffer ? m_uploadBuffer->getMappedData() : m_mappedData;
-            m_reg.receiveDataSize = &m_msgSize;
+            m_reg->receivePtr = m_hasUploadBuffer ? m_uploadBuffer->getMappedData() : m_mappedData;
+            m_reg->receiveDataSize = m_msgSize;
         }
 
         VknMessage msg{};
@@ -355,11 +364,6 @@ namespace vkn
         msg.srcThreadName = VknThreadName::GpuThread;
         msg.extraData = &m_reg;
         VknObject::sendMessage(msg);
-    }
-
-    void VknBuffer::setRegistrationIdx()
-    {
-        m_msgIdx = m_msgSize.exchange(0);
     }
 
 } // namespace vkn

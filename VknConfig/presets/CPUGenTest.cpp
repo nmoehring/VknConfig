@@ -26,6 +26,7 @@ namespace vkn
     const int INDEX_BUFFER_IDX = 1;
 
     uint32_t totalTime{0};
+    VknDispatchRegistration *dispatchRegistration{VknObject::s_dispatch.getRegistration()};
 
     // Generates vertices and indices for a wavy grid mesh
     void generateWavyGrid(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float time)
@@ -145,13 +146,11 @@ namespace vkn
 
         VknVertexBuffer *vertexBuffer = device->addVertexBuffer(75000);
         VknIndexBuffer *indexBuffer = device->addIndexBuffer(75000);
+        vertexBuffer->enableUpload();
+        indexBuffer->enableUpload();
 
         verticesRegistration.sendPtr = &vertices;
-        // verticesRegistration.lastDataReceived = false;
-
         indicesRegistration.sendPtr = &indices;
-        // indicesRegistration.lastDataReceived = false;
-
         VknMessage msg;
         msg.type = VknMessageType::VknThreadMessageType_Register;
         msg.srcThreadName = VknThreadName::AppThread;
@@ -169,8 +168,8 @@ namespace vkn
         generateWavyGrid(vertices, indices, totalTime);
 
         // --- Upload Data ---
-        cycle.uploadData(VERTEX_BUFFER_IDX, vertices.size() * sizeof(Vertex)); // Upload to the first vertex buffer
-        cycle.uploadData(INDEX_BUFFER_IDX, indices.size() * sizeof(uint32_t)); // Upload to the first index
+        cycle.transferUploadData(VERTEX_BUFFER_IDX, vertices.size() * sizeof(Vertex)); // Upload to the first vertex buffer
+        cycle.transferUploadData(INDEX_BUFFER_IDX, indices.size() * sizeof(uint32_t)); // Upload to the first index
 
         // Record a graphics pass (draw call)
         cycle.setNumIndices(static_cast<uint32_t>(indices.size())); // Tell the cycle how many indices to draw

@@ -34,7 +34,6 @@ namespace vkn
     {
         void *sendPtr{nullptr};
         void *receivePtr{nullptr};
-        std::atomic<bool> readyToReceive{false};
         std::atomic<uint32_t> receiveDataSize{0};
         std::atomic<bool> lastDataReceived{false};
         std::atomic<VknTickStats> tickStats{VknTickStats{}};
@@ -70,9 +69,12 @@ namespace vkn
         void loop();
         VknSharedQueue *startThread();
         void completeTransfer(VknMessage messageDetails);
+        VknDispatchRegistration *getRegistration();
+        VknSharedQueue *getSharedQueue() { return &m_sharedQueue; }
 
     private:
         VknTimer m_timer{};
+        std::vector<VknDispatchRegistration *> m_registrations;
         std::thread m_thread;  // Thread to run the timer
         bool m_running{false}; // Flag to control the timer's running state
         // thread-safe queue for transfer details
