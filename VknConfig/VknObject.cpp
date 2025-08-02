@@ -12,8 +12,7 @@ namespace vkn
     bool VknObject::s_recordingPostComputeCommandBuffer{false};
     VkCommandBuffer *VknObject::s_uploadCommandBuffer{nullptr};
     VkCommandBuffer *VknObject::s_downloadCommandBuffer{nullptr};
-    VknDispatch VknObject::s_dispatch{};
-    VknSharedQueue *VknObject::s_dispatchQueue{s_dispatch.getSharedQueue()};
+    VknSharedQueue *VknObject::s_dispatchQueue{nullptr};
 
     VknObject::VknObject() : m_relIdxs{}, m_absIdxs{}
     {
@@ -37,7 +36,7 @@ namespace vkn
         s_infos = nullptr;
     }
 
-    void VknObject::sendMessage(VknMessage msg)
+    void VknObject::sendMessage(VknMessage *msg)
     {
         {
             std::lock_guard<std::mutex> lock(s_dispatchQueue->queueMutex);

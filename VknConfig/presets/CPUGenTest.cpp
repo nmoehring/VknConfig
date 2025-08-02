@@ -19,14 +19,12 @@ namespace vkn
     // 3rd test during development
     std::vector<Vertex> vertices{};
     std::vector<uint32_t> indices{};
-    VknDispatchRegistration verticesRegistration{};
-    VknDispatchRegistration indicesRegistration{};
 
     const int VERTEX_BUFFER_IDX = 0;
     const int INDEX_BUFFER_IDX = 1;
 
     uint32_t totalTime{0};
-    VknDispatchRegistration *dispatchRegistration{VknObject::s_dispatch.getRegistration()};
+    std::atomic<VknTickStats> *tickStats{nullptr};
 
     // Generates vertices and indices for a wavy grid mesh
     void generateWavyGrid(std::vector<Vertex> &vertices, std::vector<uint32_t> &indices, float time)
@@ -90,24 +88,25 @@ namespace vkn
 
     bool cpuGenTestConfig(VknConfig &config)
     {
+        // Enable pipeline elements
         config.pipelineElements_graphicsEnabled = true;
         config.pipelineElements_graphicsUploadEnabled = true;
         config.pipelineElements_presentEnabled = true;
 
-        // Shallow Config members
+        // Set up the application name and engine name
         config.setAppName("CPU-Gen-Test");
         config.setEngineName("MinVknConfig");
         config.addWindow();
         config.createInstance();
         config.createSurface(0);
 
-        // Config => Device
+        // Set up the device
         auto *device = config.addDevice(0);
         device->addExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         device->createDevice();
         VknSwapchain *swapchain{device->getSwapchain()};
 
-        // Config => Device => Renderpass
+        // Set up the renderpass
         auto *renderpass = device->addRenderpass(0);
         renderpass->addAttachment(0);
         renderpass->addAttachmentRef(0, 0);
@@ -117,7 +116,7 @@ namespace vkn
         renderpass->createRenderpass();
         renderpass->createFramebuffers(*swapchain);
 
-        // Config => Device => Renderpass => Pipeline
+        // Set up the pipeline
         auto *pipeline = renderpass->getPipeline(0);
         pipeline->getRasterizationState()->setCullMode(VK_CULL_MODE_BACK_BIT);
         // VknPipelineLayout *layout = pipeline->getPipelineLayout();
@@ -128,12 +127,13 @@ namespace vkn
         // layout->createPipelineLayout();
         pipeline->getPipelineLayout()->_createPipelineLayout(); // Create a default empty layout
 
-        // --- Configure Vertex Input State ---
+        // Set up vertex input state
         VknVertexInputState *vertexInputState = pipeline->getVertexInputState();
         vertexInputState->fileVertexBindingDescription(0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
         vertexInputState->fileVertexAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos));
         vertexInputState->fileVertexAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color));
 
+        // Add shader stages
         VknShaderStage *vertShader = pipeline->addShaderStage(0, vkn::VKN_VERTEX_STAGE, "triangle.vert.spv");
         vertShader->createShaderModule();
         VknShaderStage *fragShader = pipeline->addShaderStage(1, vkn::VKN_FRAGMENT_STAGE, "triangle.frag.spv");
@@ -142,38 +142,37 @@ namespace vkn
         viewportState->syncWithSwapchain(*swapchain, 0, 0);
         renderpass->createPipelines();
 
+        // Create vertex and index buffers
+        VknVertexBuffer *vertexBuffer = device->addVertexBuffer(75000, vertices.data(), tickStats);
+        VknIndexBuffer *indexBuffer = device->addIndexBuffer(75000, indices.data(), tickStats);
+
         device->addCommandPools();
-
-        VknVertexBuffer *vertexBuffer = device->addVertexBuffer(75000);
-        VknIndexBuffer *indexBuffer = device->addIndexBuffer(75000);
-        vertexBuffer->enableUpload();
-        indexBuffer->enableUpload();
-
-        verticesRegistration.sendPtr = &vertices;
-        indicesRegistration.sendPtr = &indices;
-        VknMessage msg;
-        msg.type = VknMessageType::VknThreadMessageType_Register;
-        msg.srcThreadName = VknThreadName::AppThread;
-        msg.dstThreadName = VknThreadName::GpuThread;
-        msg.extraData.push_back(&verticesRegistration);
-        msg.extraData.push_back(&indicesRegistration);
-        VknObject::sendMessage(msg);
 
         return true;
     }
 
     bool cpuGenTestApp(VknCycle &cycle)
     {
-        // --- Generate Mesh Data ---
-        generateWavyGrid(vertices, indices, totalTime);
+        while (true)
+        {
+            tickStats->wait(VknTickStats{});
+            VknTickStats currentTick = tickStats->exchange(VknTickStats{});
+            if (currentTick.frequencyFlags & VknFrequencyFlag::Freq0Hz)
+                return false; // Exit if the tick frequency is 0
+            else if (currentTick.frequencyFlags & VknFrequencyFlag::Freq30Hz)
+                totalTime += 1; // Increment the time variable
+            // Wait on the tick stats atomic with 30Hz to accumulate the time variable to be used in generateWavyGrid
 
-        // --- Upload Data ---
-        cycle.transferUploadData(VERTEX_BUFFER_IDX, vertices.size() * sizeof(Vertex)); // Upload to the first vertex buffer
-        cycle.transferUploadData(INDEX_BUFFER_IDX, indices.size() * sizeof(uint32_t)); // Upload to the first index
+            // --- Generate Mesh Data ---
+            generateWavyGrid(vertices, indices, totalTime);
 
-        // Record a graphics pass (draw call)
-        cycle.setNumIndices(static_cast<uint32_t>(indices.size())); // Tell the cycle how many indices to draw
-        cycle.recordGraphicsPass(0);                                // Assuming renderpass index 0
-        return true;
+            // --- Upload Data ---
+            cycle.transferUploadData(VERTEX_BUFFER_IDX, vertices.size() * sizeof(Vertex)); // Upload to the first vertex buffer
+            cycle.transferUploadData(INDEX_BUFFER_IDX, indices.size() * sizeof(uint32_t)); // Upload to the first index
+
+            // Record a graphics pass (draw call)
+            cycle.setNumIndices(static_cast<uint32_t>(indices.size())); // Tell the cycle how many indices to draw
+            return true;
+        }
     }
 }

@@ -80,13 +80,17 @@ namespace vkn
         void addCommandPools();
         VmaAllocator *addAllocator();
         // Buffer creation methods now return pointers and take VkDeviceSize
-        VknVertexBuffer *addVertexBuffer(VkDeviceSize size);
-        VknIndexBuffer *addIndexBuffer(VkDeviceSize size);
+        VknVertexBuffer *addVertexBuffer(VkDeviceSize size, void *uploadData, std::atomic<VknTickStats> *tickStats);
+        VknIndexBuffer *addIndexBuffer(VkDeviceSize size, void *uploadData, std::atomic<VknTickStats> *tickStats);
+        uint32_t getNumVertexBuffers() { return m_vertexBuffers.size() / s_maxFramesInFlight; }
+        uint32_t getNumIndexBuffers() { return m_indexBuffers.size() / s_maxFramesInFlight; }
         VknCpuUniformBuffer *addCpuUniformBuffer(VkDeviceSize size);
         VknGpuUniformBuffer *addGpuUniformBuffer(VkDeviceSize size);
         VknStorageBuffer *addStorageBuffer(VkDeviceSize size);
         VknIndirectBuffer *addIndirectBuffer(VkDeviceSize size);
         VknComputeVertexBuffer *addComputeVertexBuffer(VkDeviceSize size);
+        void registerBuffer_App(
+            VknBuffer *buffer, void *uploadData, void *downloadData, std::atomic<uint32_t> *downloadDataSize, std::atomic<VknTickStats> *tickStats);
         VknFeatures *features{nullptr};
 
         // Config
@@ -129,17 +133,17 @@ namespace vkn
                 return std::numeric_limits<uint32_t>::max();
             return m_indexBuffers.front().m_absIdxs.get<VkBuffer>();
         }
-        VknVertexBuffer *getVertexBuffer(uint32_t idx)
+        VknVertexBuffer *getVertexBuffer(uint32_t idx, uint32_t frameInFlight)
         {
-            if (idx >= m_vertexBuffers.size())
+            if (idx >= m_vertexBuffers.size() / s_maxFramesInFlight)
                 throw std::out_of_range("Vertex buffer index out of range.");
-            return getListElement(idx, m_vertexBuffers);
+            return getListElement(idx * s_maxFramesInFlight + frameInFlight, m_vertexBuffers);
         }
-        VknIndexBuffer *getIndexBuffer(uint32_t idx)
+        VknIndexBuffer *getIndexBuffer(uint32_t idx, uint32_t frameInFlight)
         {
-            if (idx >= m_indexBuffers.size())
+            if (idx >= m_indexBuffers.size() / s_maxFramesInFlight)
                 throw std::out_of_range("Index buffer index out of range.");
-            return getListElement(idx, m_indexBuffers);
+            return getListElement(idx * s_maxFramesInFlight + frameInFlight, m_indexBuffers);
         }
 
     private:

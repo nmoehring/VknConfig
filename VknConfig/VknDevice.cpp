@@ -453,8 +453,10 @@ namespace vkn
         return &allocator;
     }
 
-    VknVertexBuffer *VknDevice::addVertexBuffer(VkDeviceSize size)
+    VknVertexBuffer *VknDevice::addVertexBuffer(VkDeviceSize size, void *uploadData, std::atomic<VknTickStats> *tickStats)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding vertex buffer.");
         uint32_t firstIdx = m_vertexBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -463,11 +465,15 @@ namespace vkn
             m_vertexBuffers.back().setIntegrated(m_iGPU);
             m_vertexBuffers.back().setSize(size);
         }
-        return getListElement(firstIdx, m_vertexBuffers);
+        VknVertexBuffer *buffer{getListElement(firstIdx, m_vertexBuffers)};
+        this->registerBuffer_App(buffer, uploadData, nullptr, nullptr, tickStats);
+        return buffer;
     }
 
-    VknIndexBuffer *VknDevice::addIndexBuffer(VkDeviceSize size)
+    VknIndexBuffer *VknDevice::addIndexBuffer(VkDeviceSize size, void *uploadData, std::atomic<VknTickStats> *tickStats)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding index buffer.");
         uint32_t firstIdx = m_indexBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -476,11 +482,15 @@ namespace vkn
             m_indexBuffers.back().setIntegrated(m_iGPU);
             m_indexBuffers.back().setSize(size);
         }
-        return getListElement(firstIdx, m_indexBuffers);
+        VknIndexBuffer *buffer{getListElement(firstIdx, m_indexBuffers)};
+        this->registerBuffer_App(buffer, uploadData, nullptr, nullptr, tickStats);
+        return buffer;
     }
 
     VknCpuUniformBuffer *VknDevice::addCpuUniformBuffer(VkDeviceSize size)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding CPU uniform buffer.");
         uint32_t firstIdx = m_cpuUniformBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -494,6 +504,8 @@ namespace vkn
 
     VknGpuUniformBuffer *VknDevice::addGpuUniformBuffer(VkDeviceSize size)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding GPU uniform buffer.");
         uint32_t firstIdx = m_gpuUniformBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -507,6 +519,8 @@ namespace vkn
 
     VknStorageBuffer *VknDevice::addStorageBuffer(VkDeviceSize size)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding storage buffer.");
         uint32_t firstIdx = m_storageBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -520,6 +534,8 @@ namespace vkn
 
     VknIndirectBuffer *VknDevice::addIndirectBuffer(VkDeviceSize size)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding indirect buffer.");
         uint32_t firstIdx = m_indirectBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -533,6 +549,8 @@ namespace vkn
 
     VknComputeVertexBuffer *VknDevice::addComputeVertexBuffer(VkDeviceSize size)
     {
+        if (!m_createdVkDevice)
+            throw std::runtime_error("Device must be created before adding compute vertex buffer.");
         uint32_t firstIdx = m_computeVertexBuffers.size();
         for (uint32_t i = 0; i < s_maxFramesInFlight; ++i)
         {
@@ -549,6 +567,30 @@ namespace vkn
         if (m_queueFamilyMap.find(type) == m_queueFamilyMap.end())
             throw std::runtime_error("QueueType not found in queue family map.");
         return m_queueFamilyMap.at(type);
+    }
+
+    void VknDevice::registerBuffer_App(
+        VknBuffer *buffer, void *uploadData, void *downloadData, std::atomic<uint32_t> *downloadDataSize, std::atomic<VknTickStats> *tickStats)
+    {
+        if (uploadData)
+            buffer->enableUpload();
+        if (downloadData)
+            buffer->enableDownload();
+        buffer->registerBuffer();
+        VknMessage registrationMsg{};
+        registrationMsg.type = VknMessageType::VknThreadMessageType_GetRegistration;
+        registrationMsg.srcThreadName = VknThreadName::AppThread;
+        VknObject::sendMessage(&registrationMsg);
+        registrationMsg.processed.wait(false);
+        VknDispatchRegistration *registration = static_cast<VknDispatchRegistration *>(registrationMsg.extraData[0]);
+        if (uploadData)
+            registration->sendPtr = uploadData;
+        if (downloadData)
+        {
+            registration->receivePtr = downloadData;
+            downloadDataSize = &registration->receiveDataSize;
+        }
+        tickStats = static_cast<std::atomic<VknTickStats> *>(registrationMsg.extraData[1]);
     }
 
 } // namespace vkn

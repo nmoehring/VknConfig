@@ -21,7 +21,7 @@ namespace vkn
         static bool s_recordingDownloadCommandBuffer;
         static VkCommandBuffer *s_uploadCommandBuffer;
         static VkCommandBuffer *s_downloadCommandBuffer;
-        static void sendMessage(VknMessage msg);
+        static void sendMessage(VknMessage *msg);
 
         // Engine
         static VknEngine *s_engine;

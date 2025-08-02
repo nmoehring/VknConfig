@@ -10,6 +10,7 @@ namespace vkn
         m_engine = m_config.getEngine();
         m_infos = m_config.getInfos();
         m_cycle.setDispatchQueue(m_dispatchQueue);
+        VknObject::s_dispatchQueue = m_dispatchQueue;
 
         this->configureWithPreset(std::move(configFunc));
         this->setAppMain(appMain);

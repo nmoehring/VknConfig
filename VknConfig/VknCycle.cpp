@@ -14,8 +14,10 @@ namespace vkn
         m_config = config;
         m_engine = engine;
         m_device = m_config->getDevice(0);
-        this->setVertexBufferIdx(m_device->getVertexBufferIdx());
-        this->setIndexBufferIdx(m_device->getIndexBufferIdx());
+        if (m_device->getNumVertexBuffers() > 0)
+            m_currentVertexBuffer = m_device->getVertexBuffer(0, m_currentFrameNum);
+        if (m_device->getNumIndexBuffers() > 0)
+            m_currentIndexBuffer = m_device->getIndexBuffer(0, m_currentFrameNum);
         m_uploadPool = m_device->getCommandPool(TRANSFER);
         m_downloadPool = m_device->getCommandPool(TRANSFER);
         m_presentPool = m_device->getCommandPool(PRESENT);
@@ -65,21 +67,26 @@ namespace vkn
 
         // Copy any download data from last frame
         for (VknBuffer *buffer : m_config->getPreComputeBuffers())
-            buffer->copyDownloadData();
+            buffer->msgToDownloadData();
         for (VknBuffer *buffer : m_config->getGraphicsBuffers())
-            buffer->copyDownloadData();
+            buffer->msgToDownloadData();
         for (VknBuffer *buffer : m_config->getPostComputeBuffers())
-            buffer->copyDownloadData();
+            buffer->msgToDownloadData();
 
         // Clear submit-related vectors
         this->clearSubmitInfo();
         m_currentFrameNum = (m_currentFrameNum + 1) % m_swapchain->getNumImages(); // Move to the next frame
 
+        if (m_device->getNumVertexBuffers() > 0)
+            m_currentVertexBuffer = m_device->getVertexBuffer(0, m_currentFrameNum);
+        if (m_device->getNumIndexBuffers() > 0)
+            m_currentIndexBuffer = m_device->getIndexBuffer(0, m_currentFrameNum);
+
         // Copy any upload data for this frame
         for (VknBuffer *buffer : m_config->getPreComputeBuffers())
-            buffer->copyUploadData();
+            buffer->waitOnUploadData();
         for (VknBuffer *buffer : m_config->getGraphicsBuffers())
-            buffer->copyUploadData();
+            buffer->waitOnUploadData();
 
         // 1. Wait for the previous frame to finish
         vkWaitForFences(
@@ -287,24 +294,45 @@ namespace vkn
             }
 
             // 3. Check how to draw for this pipeline
-            VknVertexInputState *vertexInputState = pipeline.getVertexInputState();
-            if (vertexInputState && (vertexInputState->getNumBindings() > 0 || vertexInputState->getNumAttributes() > 0))
+            if (m_currentIndexBuffer)
             {
-                // This pipeline expects vertex buffers to be bound.
+                // Indexed drawing
+                VknVertexInputState *vertexInputState = pipeline.getVertexInputState();
+                if (!vertexInputState || vertexInputState->getNumBindings() == 0)
+                {
+                    throw std::runtime_error("Indexed drawing requested, but no vertex input bindings are configured in the pipeline.");
+                }
+
                 VkDeviceSize offset = 0;
-                vkCmdBindVertexBuffers(
-                    *m_currentGraphicsCommandBuffer, 0, vertexInputState->getNumBindings(),
-                    &VknObject::s_engine->getObject<VkBuffer>(m_vertexBufferAbsIdx), &offset);
-                vkCmdDraw(*m_currentGraphicsCommandBuffer, vertexInputState->getNumAttributes(), 1, 0, 0);
+                vkCmdBindVertexBuffers(*m_currentGraphicsCommandBuffer, 0, 1, m_currentVertexBuffer->getVkBuffer(), &offset);
+                vkCmdBindIndexBuffer(*m_currentGraphicsCommandBuffer, *m_currentIndexBuffer->getVkBuffer(), 0, VK_INDEX_TYPE_UINT32);
+                vkCmdDrawIndexed(*m_currentGraphicsCommandBuffer, m_numIndices, 1, 0, 0, 0);
+                m_primitivesDrawnLastFrame = m_numIndices / 3;
+            }
+            else if (m_currentVertexBuffer)
+            {
+                // Non-indexed drawing from a vertex buffer
+                VknVertexInputState *vertexInputState = pipeline.getVertexInputState();
+                if (!vertexInputState || vertexInputState->getNumBindings() == 0)
+                {
+                    throw std::runtime_error("Non-indexed drawing from a buffer was requested, but no vertex input bindings are configured in the pipeline.");
+                }
+
+                VkDeviceSize offset = 0;
+                vkCmdBindVertexBuffers(*m_currentGraphicsCommandBuffer, 0, 1, m_currentVertexBuffer->getVkBuffer(), &offset);
+                vkCmdDraw(*m_currentGraphicsCommandBuffer, m_numVertices, 1, 0, 0);
+                m_primitivesDrawnLastFrame = m_numVertices / 3; // Assuming triangles
             }
             else if (pipeline.getNumHardCodedVertices() > 0)
             {
                 // This pipeline uses hard-coded vertices in the shader.
                 vkCmdDraw(*m_currentGraphicsCommandBuffer, pipeline.getNumHardCodedVertices(), 1, 0, 0);
+                m_primitivesDrawnLastFrame = pipeline.getNumHardCodedVertices() / 3; // Assuming triangles
             }
         }
 
         vkCmdEndRenderPass(*m_currentGraphicsCommandBuffer);
+        return true;
     }
 
     bool VknCycle::recordPreComputePass()
@@ -316,6 +344,7 @@ namespace vkn
 
         // TODO: Record compute pipeline binding, descriptor sets, and dispatch calls.
         // TODO: Record a pipeline barrier to ensure compute writes are visible to the graphics pass.
+        return true;
     }
 
     bool VknCycle::recordPostComputePass()
@@ -327,6 +356,7 @@ namespace vkn
 
         // TODO: Record post-compute pipeline binding, descriptor sets, and dispatch calls.
         // TODO: Record a pipeline barrier to ensure post-compute writes are visible to the graphics pass.
+        return true;
     }
 
     void VknCycle::submitCommandBuffers()
@@ -523,6 +553,14 @@ namespace vkn
         m_waitSemaphores.clear();
         m_signalSemaphores.clear();
         m_waitStages.clear();
+        m_numIndices = 0;
+        m_numVertices = 0;
+
+        for (VknMessage &msg : m_sentMessages[m_currentFrameNum].getDataVector())
+        {
+            msg.processed.wait(false);
+            msg.processed.store(false);
+        }
     }
 
     void VknCycle::setUploadData(void *data, size_t size)
@@ -544,9 +582,6 @@ namespace vkn
             buffer->uploadData();
         for (VknBuffer *buffer : m_config->getGraphicsBuffers())
             buffer->uploadData();
-        for (uint_fast8_t threadBufferIdx = 0; threadBufferIdx < m_uploads.size(); ++threadBufferIdx)
-        {
-                }
 
         return true;
     }
@@ -556,14 +591,29 @@ namespace vkn
         if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
 
-        VknMessage msg;
+        VknMessage &msg = m_sentMessages[m_currentFrameNum].append(VknMessage{});
         msg.type = VknMessageType::VknThreadMessageType_Transfer;
         msg.srcThreadName = VknThreadName::AppThread;
         msg.dstThreadName = VknThreadName::GpuThread;
         msg.dataSize = m_uploads[threadBufferIdx];
         msg.srcDataIndex = threadBufferIdx;
         msg.dstDataIndex = threadBufferIdx;
-        VknObject::sendMessage(msg);
+        VknObject::sendMessage(&msg);
+    }
+
+    bool VknCycle::downloadData()
+    {
+        if (!m_basicConfigLoaded)
+            throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+
+        for (VknBuffer *buffer : m_config->getPreComputeBuffers())
+            buffer->downloadData();
+        for (VknBuffer *buffer : m_config->getGraphicsBuffers())
+            buffer->downloadData();
+        for (VknBuffer *buffer : m_config->getPostComputeBuffers())
+            buffer->downloadData();
+
+        return true;
     }
 
 } // namespace vkn

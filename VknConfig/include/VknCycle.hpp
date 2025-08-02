@@ -30,7 +30,8 @@ namespace vkn
         bool recordPreComputePass();
         bool recordPostComputePass();
 
-        bool uploadData(uint_fast8_t threadBufferIdx, size_t size);
+        bool uploadData();
+        bool downloadData();
         bool preComputeDownload();
         bool graphicsDownload();
         bool postComputeDownload();
@@ -42,8 +43,8 @@ namespace vkn
         void loadBasicConfig(VknConfig *config, VknEngine *engine);
         void loadGraphicsConfig(VknConfig *config, VknEngine *engine);
         void loadComputeConfig(VknConfig *config, VknEngine *engine);
-        void setVertexBufferIdx(uint32_t idx) { m_vertexBufferAbsIdx = idx; }
-        void setIndexBufferIdx(uint32_t idx) { m_indexBufferAbsIdx = idx; }
+        void setNumIndices(uint32_t numIndices) { m_numIndices = numIndices; }
+        void setNumVertices(uint32_t numVertices) { m_numVertices = numVertices; }
         void setUploadData(void *data, size_t size);
         void setUploadBufferType(BufferType type) { m_uploadBufferType = type; }
         void clearSubmitInfo();
@@ -76,10 +77,10 @@ namespace vkn
         VknCommandPool *m_postComputePool{nullptr};
         VknCommandPool *m_uploadPool{nullptr};
         VknCommandPool *m_downloadPool{nullptr};
-        uint32_t m_vertexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
-        uint32_t m_indexBufferAbsIdx{std::numeric_limits<uint32_t>::max()};
         VknPhysicalDevice *m_physicalDevice{nullptr};
         VkSurfaceCapabilitiesKHR m_capabilities{};
+        VknVertexBuffer *m_currentVertexBuffer{nullptr};
+        VknIndexBuffer *m_currentIndexBuffer{nullptr};
 
         // Params
         uint_fast64_t m_defaultTimeout = UINT64_MAX; // For vkAcquireNextImageKHR, timeout is uint64_t
@@ -106,7 +107,7 @@ namespace vkn
         std::vector<VkSemaphore> m_signalSemaphores;
         std::vector<VkFence *> m_imagesInFlight; // Fence for each swapchain image
         VknIdxs m_devRelIdxs;
-        uint_fast32_t verticesDrawnLastFrame{0};
+        uint_fast32_t m_primitivesDrawnLastFrame{0};
         bool m_basicConfigLoaded{false};
         bool m_graphicsConfigLoaded{false};
         bool m_computeConfigLoaded{false};
@@ -119,5 +120,8 @@ namespace vkn
         std::vector<size_t> m_uploadSize{};
         BufferType m_uploadBufferType{BufferType::BUFFER_TYPE_NULL};
         std::vector<uint32_t> m_uploads{};
+        uint32_t m_numIndices{0};
+        uint32_t m_numVertices{0};
+        VknSpace<VknMessage> m_sentMessages{maxDepth = 1};
     };
 }

@@ -218,7 +218,7 @@ namespace vkn
             *s_engine->getAllocation<VkBuffer>(m_absIdxs), offset, size);
     }
 
-    void VknBuffer::copyUploadData()
+    void VknBuffer::waitOnUploadData()
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot copy upload data.");
@@ -229,8 +229,8 @@ namespace vkn
             m_uploadBuffer->copyUploadData(m_uploadData, m_uploadDataSize, m_uploadDataOffset);
         else // copying directly to buffer without staging (iGPU or upload staging buffer)
         {
-            m_msgSize.wait(0);
-            m_copyRegion->size = m_msgSize.exchange(0);
+            m_msgSize->wait(0);
+            m_copyRegion->size = m_msgSize->exchange(0);
             m_copyRegion->srcOffset = m_uploadDataOffset;
             m_copyRegion->dstOffset = m_uploadDataOffset;
             this->flush(m_uploadDataOffset, m_uploadDataSize);
@@ -257,7 +257,7 @@ namespace vkn
         }
     }
 
-    void VknBuffer::copyDownloadData()
+    void VknBuffer::msgToDownloadData()
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot copy download data.");
@@ -268,15 +268,18 @@ namespace vkn
             m_downloadBuffer->copyDownloadData(); // buffer has size and offset, since this is output data?
         else                                      // Copying directly from buffer (likely iGPU)
         {
-            this->invalidate(m_downloadDataOffset, m_downloadDataSize);
+            m_downloadMsg.processed.wait(false);
+            m_downloadMsg.processed.store(false);
+            uint32_t dataSize = static_cast<uint32_t *>(m_mappedData)[0];
+            this->invalidate(0, dataSize);
             VknMessage msg{};
-            msg.type = VknThreadMessageType_Transfer;
-            msg.srcThreadName = VknThreadName::GpuThread;
-            msg.dstThreadName = VknThreadName::AppThread;
-            msg.dataSize = m_downloadDataSize;
-            msg.srcDataIndex = m_msgIdx;
-            msg.dstDataIndex = m_msgIdx;
-            VknObject::sendMessage(msg);
+            m_downloadMsg.type = VknThreadMessageType_Transfer;
+            m_downloadMsg.srcThreadName = VknThreadName::GpuThread;
+            m_downloadMsg.dstThreadName = VknThreadName::AppThread;
+            m_downloadMsg.dataSize = dataSize;
+            m_downloadMsg.srcDataIndex = m_registrationIdx;
+            m_downloadMsg.dstDataIndex = m_registrationIdx;
+            VknObject::sendMessage(&msg);
         }
     }
 
@@ -289,22 +292,12 @@ namespace vkn
 
         if (m_hasDownloadBuffer)
         {
-            m_copyRegion->size = dataSize;
-            m_copyRegion->srcOffset = offset;
-            m_copyRegion->dstOffset = offset;
             vkCmdCopyBuffer(
                 *VknObject::s_downloadCommandBuffer,
                 *m_downloadBuffer->getVkBuffer(),
                 *m_downloadBuffer->getVkBuffer(),
                 1, m_copyRegion);
         }
-        else if (m_mappedData)
-        {
-            this->invalidate(offset, dataSize); // Ensure CPU sees GPU writes
-            std::memcpy(data, static_cast<char *>(m_mappedData) + offset, dataSize);
-        }
-        else
-            throw std::runtime_error("Buffer not mapped and has no download staging buffer, cannot download data.");
     }
 
     VkDescriptorBufferInfo VknBuffer::getDescriptorInfo(VkDeviceSize offset, VkDeviceSize range)
@@ -318,18 +311,11 @@ namespace vkn
         return bufferInfo;
     }
 
-    void VknBuffer::setSize(uint32_t size)
-    {
-        m_size = size;
-        m_setSize = true;
-        this->create();
-    }
-
     void *VknBuffer::getDataArea()
     {
         if (m_hasUploadBuffer && m_uploading)
             return m_uploadBuffer->getDataArea();
-        else if (m_hasDownloadBuffer && !m_uploading)
+        else if (m_hasDownloadBuffer && m_downloading)
             return m_downloadBuffer->getDataArea();
         return m_mappedData;
     }
@@ -348,22 +334,22 @@ namespace vkn
         return m_downloadBuffer->getVkBuffer();
     }
 
-    VknDispatchRegistration *VknBuffer::getDispatchRegistration()
+    void VknBuffer::registerBuffer_Gpu()
     {
-        m_reg = VknObject::s_dispatch.getRegistration();
-        if (m_downloadable)
-            m_reg->sendPtr = m_hasDownloadBuffer ? m_downloadBuffer->getMappedData() : m_mappedData;
-        if (m_uploadable)
+        VknMessage registrationMsg{};
+        registrationMsg.type = VknMessageType::VknThreadMessageType_GetRegistration;
+        registrationMsg.srcThreadName = VknThreadName::GpuThread;
+        VknObject::sendMessage(&registrationMsg);
+        registrationMsg.processed.wait(false);
+        VknDispatchRegistration *registration = static_cast<VknDispatchRegistration *>(registrationMsg.extraData[0]);
+        m_registrationIdx = registration->registrationIdx;
+        if (m_uploading)
+            registration->receivePtr = this->getDataArea();
+        if (m_downloading)
         {
-            m_reg->receivePtr = m_hasUploadBuffer ? m_uploadBuffer->getMappedData() : m_mappedData;
-            m_reg->receiveDataSize = m_msgSize;
+            registration->sendPtr = this->getDataArea();
+            m_msgSize = &registration->receiveDataSize;
         }
-
-        VknMessage msg{};
-        msg.type = VknThreadMessageType_Register;
-        msg.srcThreadName = VknThreadName::GpuThread;
-        msg.extraData = &m_reg;
-        VknObject::sendMessage(msg);
     }
 
 } // namespace vkn

@@ -57,11 +57,27 @@ namespace vkn
         VkBuffer *getDownloadVkBuffer() const;
         void setUploadData(void *data) { m_uploadData = data; }
         void setDownloadData(void *data) { m_downloadData = data; }
-        void copyUploadData();
-        void copyDownloadData();
-        VknDispatchRegistration *getDispatchRegistration();
-        void enableUpload() { m_uploading = true; }
-        void enableDownload() { m_downloading = true; }
+        void setSize(VkDeviceSize size)
+        {
+            m_size = size;
+            m_setSize = true;
+            this->create();
+        }
+        void waitOnUploadData();
+        void msgToDownloadData();
+        void registerBuffer_Gpu();
+        void enableUpload()
+        {
+            if (!m_uploadable)
+                throw std::runtime_error("Trying to enable upload on non-uploadable buffer!");
+            m_uploading = true;
+        }
+        void enableDownload()
+        {
+            if (!m_downloadable)
+                throw std::runtime_error("Trying to enable download on non-downloadable buffer!");
+            m_downloading = true;
+        }
         void setIntegrated(bool integrated)
         {
             if (integrated)
@@ -74,7 +90,6 @@ namespace vkn
                 m_integrated = true;
             }
         }
-        void setSize(uint32_t size);
 
         // Manual mapping/unmapping if not persistently mapped
         void *map();
@@ -103,11 +118,13 @@ namespace vkn
         VkBufferUsageFlags m_bufferType{0u};
         VkBufferUsageFlags m_transferType{0u};
         void *m_uploadData{nullptr};
+        VknMessage m_uploadMsg{};
         VkDeviceSize m_uploadDataSize{0};
         VkDeviceSize m_uploadDataOffset{0};
         void *m_downloadData{nullptr};
         VkDeviceSize m_downloadDataSize{0};
         VkDeviceSize m_downloadDataOffset{0};
+        VknMessage m_downloadMsg{};
 
         // state
         bool m_uploadable{false};
@@ -119,8 +136,8 @@ namespace vkn
         // Params
         VkMemoryPropertyFlags m_memFlags;
         VmaAllocationInfo m_allocInfo;
-        uint32_t m_msgIdx{std::numeric_limits<uint32_t>::max()};
-        std::atomic<uint32_t> m_msgSize{std::numeric_limits<uint32_t>::max()};
+        uint32_t m_registrationIdx{std::numeric_limits<uint32_t>::max()};
+        std::atomic<uint32_t> *m_msgSize{nullptr};
         VknDispatchRegistration *m_reg{nullptr};
 
         // Members
