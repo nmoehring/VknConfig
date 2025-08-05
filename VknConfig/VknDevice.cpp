@@ -198,6 +198,8 @@ namespace vkn
 
             uint32_t queueFamilyIdx = this->findQueueFamily(type);
 
+            // Might want to handle the case where there are  multiple queue families in findQueueFamily
+
             if (queueFamilyIdx != static_cast<uint32_t>(-1))
             {
                 if (uniquePools.find(queueFamilyIdx) == uniquePools.end())
@@ -213,7 +215,7 @@ namespace vkn
                 m_commandPoolMap[type] = uniquePools[queueFamilyIdx];
                 m_queueFamilyMap[type] = queueFamilyIdx;
             }
-        }
+        } // for(uint_fast32_t i = 0; i < CommandBufferType::NUM_CB_TYPE; ++i)
 
         m_commandPoolsCreated = true;
     }
@@ -576,12 +578,12 @@ namespace vkn
             buffer->enableUpload();
         if (downloadData)
             buffer->enableDownload();
-        buffer->registerBuffer();
+        buffer->registerBuffer_Gpu();
         VknMessage registrationMsg{};
         registrationMsg.type = VknMessageType::VknThreadMessageType_GetRegistration;
         registrationMsg.srcThreadName = VknThreadName::AppThread;
         VknObject::sendMessage(&registrationMsg);
-        registrationMsg.processed.wait(false);
+        registrationMsg.processed->wait(false);
         VknDispatchRegistration *registration = static_cast<VknDispatchRegistration *>(registrationMsg.extraData[0]);
         if (uploadData)
             registration->sendPtr = uploadData;

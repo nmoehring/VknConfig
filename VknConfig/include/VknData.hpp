@@ -158,7 +158,7 @@ namespace vkn
             return result;
         }
 
-        PosSearchResult getLargestPos(uint_fast32_t maxPos, uint_fast32_t minPos = MAX_POS)
+        PosSearchResult getLargestPos(uint_fast32_t maxPos = 256, uint_fast32_t minPos = MAX_POS)
         {
             PosSearchResult result{};
             result.found = false;
@@ -188,10 +188,12 @@ namespace vkn
             return result;
         }
 
-        VecDataType &_insert(uint_fast32_t pos, VecDataType newElement)
+        template <typename T>
+            requires std::convertible_to<T, VecDataType>
+        VecDataType &_insert(uint_fast32_t pos, T &&newElement)
         {
             this->grow(m_dataSize + 1u);
-            m_data[m_dataSize - 1u] = newElement;
+            m_data[m_dataSize - 1u] = std::forward<T>(newElement);
             m_positions[m_dataSize - 1u] = pos;
             return m_data[m_dataSize - 1u];
         }
@@ -330,20 +332,20 @@ namespace vkn
         {
             if (newSize < this->getSize() || newSize > MAX_DATA_SIZE)
                 throw std::runtime_error("Invalid size for VknVector.");
-            uint_fast32_t i{0u};
             VecDataType *newData = new VecDataType[newSize];
             uint_least8_t *newPositions = new uint_least8_t[newSize];
 
-            for (/*i=0*/; i < this->getSize(); ++i)
-            {
-                newData[i] = m_data[i];
-                newPositions[i] = m_positions[i];
-            }
-            for (i = this->getSize(); i < newSize; ++i)
-            {
-                newData[i] = VecDataType{};
-                newPositions[i] = 0;
-            }
+            if constexpr (std::is_copy_constructible_v<VecDataType>)
+                std::uninitialized_copy(m_data, m_data + m_dataSize, newData);
+            else if constexpr (std::is_move_constructible_v<VecDataType>)
+                std::uninitialized_move(m_data, m_data + m_dataSize, newData);
+            else
+                static_assert(std::is_move_constructible_v<VecDataType>,
+                              "VecDataType must be copyable or movable to grow");
+            // std::uninitialized_fill(newData + m_dataSize, newData + newSize, VecDataType{});
+            std::uninitialized_copy(m_positions, m_positions + m_posSize, newPositions);
+            std::uninitialized_fill(newPositions + m_posSize, newPositions + newSize, 0u);
+
             this->deleteArrays();
             m_data = newData;
             m_positions = newPositions;
@@ -368,6 +370,9 @@ namespace vkn
 
         VknVector(const VknVector &other)
         {
+            static_assert(std::is_copy_constructible_v<VecDataType>,
+                          "VecDataType not copy constructible.");
+
             m_dataSize = other.m_dataSize;
             m_posSize = other.m_posSize;
             if (!other.m_data)
@@ -377,20 +382,18 @@ namespace vkn
             }
             else
             {
-                uint_fast32_t i{0u};
                 m_positions = new uint_least8_t[m_dataSize];
                 m_data = new VecDataType[m_dataSize];
 
-                for (/*i = 0u*/; i < this->getSize(); ++i)
-                {
-                    this->setPosition(i, other.m_positions[i]);
-                    m_data[i] = other.m_data[i];
-                }
+                std::uninitialized_copy(other.m_data, other.m_data + other.m_dataSize, m_data);
+                std::uninitialized_copy(other.m_positions, other.m_positions + other.m_posSize, m_positions);
             }
         }
 
         VknVector &operator=(const VknVector &other)
         {
+            static_assert(std::is_copy_constructible_v<VecDataType>,
+                          "VecDataType must be copyable or movable to grow");
             uint_fast32_t otherSize{other.getSize()};
             this->deleteArrays();
             m_dataSize = other.m_dataSize;
@@ -403,15 +406,11 @@ namespace vkn
             }
             else
             {
-                uint_fast32_t i{0u};
                 m_positions = new uint_least8_t[otherSize];
                 m_data = new VecDataType[otherSize];
 
-                for (/*i = 0u*/; i < otherSize; ++i)
-                {
-                    m_positions[i] = other.m_positions[i];
-                    m_data[i] = other.m_data[i];
-                }
+                std::uninitialized_copy(other.m_data, other.m_data + other.m_dataSize, m_data);
+                std::uninitialized_copy(other.m_positions, other.m_positions + other.m_posSize, m_positions);
             }
             return *this; // Return a reference to the current object
         }
@@ -420,8 +419,8 @@ namespace vkn
         VknVector(VknVector &&other) noexcept // Add noexcept
         {
             // Steal resources
-            m_positions = other.m_positions;
-            m_data = other.m_data;
+            m_positions = std::move(other.m_positions);
+            m_data = std::move(other.m_data);
             m_dataSize = other.m_dataSize;
             m_posSize = other.m_posSize;
 
@@ -443,8 +442,8 @@ namespace vkn
                 this->deleteArrays();
 
                 // Steal resources from other
-                m_positions = other.m_positions;
-                m_data = other.m_data;
+                m_positions = std::move(other.m_positions);
+                m_data = std::move(other.m_data);
                 m_dataSize = other.m_dataSize;
                 m_posSize = other.m_posSize;
 
@@ -476,11 +475,13 @@ namespace vkn
                 this, startPos, length};
         }
 
-        VecDataType &appendOne(VecDataType newElement)
+        template <typename T>
+            requires std::convertible_to<T, VecDataType>
+        VecDataType &appendOne(T &&newElement)
         {
             this->grow(this->getSize() + 1u);
             m_positions[m_dataSize - 1u] = this->getNextPosition();
-            m_data[m_dataSize - 1u] = newElement;
+            m_data[m_dataSize - 1u] = std::forward<T>(newElement);
             return m_data[m_dataSize - 1u];
         }
 
@@ -541,10 +542,12 @@ namespace vkn
             return nullptr;
         }
 
-        uint_fast32_t defragInsert(VecDataType element)
+        template <typename T>
+            requires std::convertible_to<T, VecDataType>
+        uint_fast32_t defragInsert(T &&element)
         {
             uint_fast32_t pos = this->getDefragPos(1);
-            this->_insert(pos, element);
+            this->_insert(pos, std::forward<T>(element));
             return pos;
         }
 
@@ -569,14 +572,15 @@ namespace vkn
             return false;
         }
 
-        VecDataType &insert(uint_fast32_t position, VecDataType newElement)
+        template <typename T>
+            requires std::convertible_to<T, VecDataType>
+        VecDataType &insert(uint_fast32_t position, T &&newElement)
         {
-
             if (!this->exists(position) || !m_data)
             {
                 this->grow(m_dataSize + 1u);
                 this->setPosition(m_dataSize - 1u, position);
-                m_data[m_dataSize - 1u] = newElement;
+                m_data[m_dataSize - 1u] = std::forward<T>(newElement);
             }
             else
                 throw std::runtime_error("Tried to insert into a VknVector element that is already assigned.");
@@ -1175,27 +1179,36 @@ namespace vkn
             this->dataLeafTest();
             return m_data.getData(newSize);
         }
+
         VknVector<SpaceDataType> &getDataVector()
         {
             this->dataLeafTest();
             return m_data;
         }
         VknVector<VknSpace<SpaceDataType>> &getSubspaceVector() { return m_subspaces; }
-        SpaceDataType &append(SpaceDataType element)
+
+        template <typename T>
+            requires std::convertible_to<std::remove_reference_t<T>, SpaceDataType>
+        SpaceDataType &append(T &&element)
         {
             this->dataLeafTest();
-            return m_data.appendOne(element);
+            return m_data.appendOne(std::forward<T>(element));
         }
-        SpaceDataType &insert(SpaceDataType element, uint_fast32_t position)
+
+        template <typename T>
+            requires std::convertible_to<T, SpaceDataType>
+        SpaceDataType &insert(T &&element, uint_fast32_t position)
         {
             this->dataLeafTest();
-            return m_data.insert(position, element);
+            return m_data.insert(position, std::forward<T>(element));
         }
+
         uint_fast32_t getDataSize()
         {
             this->dataLeafTest();
             return m_data.getSize();
         }
+
         uint_fast32_t getDepth() { return m_depth; }
         uint_fast32_t getMaxDepth() { return m_maxDepth; }
     };

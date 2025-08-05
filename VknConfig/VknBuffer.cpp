@@ -225,14 +225,14 @@ namespace vkn
         if (!m_uploading)
             return;
 
+        m_copyRegion->size = m_msgSize->exchange(0);
+        m_copyRegion->srcOffset = m_uploadDataOffset;
+        m_copyRegion->dstOffset = m_uploadDataOffset;
         if (m_hasUploadBuffer) // dGPU
-            m_uploadBuffer->copyUploadData(m_uploadData, m_uploadDataSize, m_uploadDataOffset);
-        else // copying directly to buffer without staging (iGPU or upload staging buffer)
+            m_uploadBuffer->waitForUploadData(m_uploadData, m_uploadDataSize, m_uploadDataOffset);
+        else // copying directly to buffer without staging (iGPU)
         {
             m_msgSize->wait(0);
-            m_copyRegion->size = m_msgSize->exchange(0);
-            m_copyRegion->srcOffset = m_uploadDataOffset;
-            m_copyRegion->dstOffset = m_uploadDataOffset;
             this->flush(m_uploadDataOffset, m_uploadDataSize);
         }
     }
@@ -244,9 +244,6 @@ namespace vkn
             throw std::runtime_error("Transfer command buffer not recording, cannot upload data.");
         if (!m_uploading)
             return;
-        // if getting data
-        // wait for data
-        // m_copyRegion stuff
         if (m_hasUploadBuffer)
         {
             vkCmdCopyBuffer(
@@ -264,23 +261,21 @@ namespace vkn
         if (!m_downloading)
             return;
 
+        m_downloadMsg.processed->wait(false);
+        m_downloadMsg.processed->store(false);
+        uint32_t dataSize = static_cast<uint32_t *>(m_mappedData)[0]; // Can I do this before invalidating?
+
         if (m_hasDownloadBuffer)
-            m_downloadBuffer->copyDownloadData(); // buffer has size and offset, since this is output data?
-        else                                      // Copying directly from buffer (likely iGPU)
-        {
-            m_downloadMsg.processed.wait(false);
-            m_downloadMsg.processed.store(false);
-            uint32_t dataSize = static_cast<uint32_t *>(m_mappedData)[0];
-            this->invalidate(0, dataSize);
-            VknMessage msg{};
-            m_downloadMsg.type = VknThreadMessageType_Transfer;
-            m_downloadMsg.srcThreadName = VknThreadName::GpuThread;
-            m_downloadMsg.dstThreadName = VknThreadName::AppThread;
-            m_downloadMsg.dataSize = dataSize;
-            m_downloadMsg.srcDataIndex = m_registrationIdx;
-            m_downloadMsg.dstDataIndex = m_registrationIdx;
-            VknObject::sendMessage(&msg);
-        }
+            m_downloadBuffer->invalidate(0, dataSize); // buffer has size and offset, since this is output data?
+        else                                           // Copying directly from buffer (likely iGPU)
+            this->invalidate(0, dataSize);             // Invalidate before access, or just before copy? Ask AI!
+        m_downloadMsg.type = VknThreadMessageType_Transfer;
+        m_downloadMsg.srcThreadName = VknThreadName::GpuThread;
+        m_downloadMsg.dstThreadName = VknThreadName::AppThread;
+        m_downloadMsg.dataSize = dataSize;
+        m_downloadMsg.srcDataIndex = m_registrationIdx;
+        m_downloadMsg.dstDataIndex = m_registrationIdx;
+        VknObject::sendMessage(&m_downloadMsg);
     }
 
     void VknBuffer::downloadData()
@@ -340,16 +335,28 @@ namespace vkn
         registrationMsg.type = VknMessageType::VknThreadMessageType_GetRegistration;
         registrationMsg.srcThreadName = VknThreadName::GpuThread;
         VknObject::sendMessage(&registrationMsg);
-        registrationMsg.processed.wait(false);
+        registrationMsg.processed->wait(false);
         VknDispatchRegistration *registration = static_cast<VknDispatchRegistration *>(registrationMsg.extraData[0]);
         m_registrationIdx = registration->registrationIdx;
         if (m_uploading)
+        {
             registration->receivePtr = this->getDataArea();
+            this->setMsgSize(&registration->receiveDataSize);
+        }
         if (m_downloading)
         {
             registration->sendPtr = this->getDataArea();
-            m_msgSize = &registration->receiveDataSize;
         }
+    }
+
+    void VknBuffer::setMsgSize(std::atomic<uint32_t> *msgSize)
+    {
+        if (!m_createdBuffer)
+            throw std::runtime_error("Cannot set message size, buffer is null.");
+        if (m_uploading && m_hasUploadBuffer)
+            m_uploadBuffer->setMsgSize(msgSize);
+        else
+            m_msgSize = msgSize;
     }
 
 } // namespace vkn

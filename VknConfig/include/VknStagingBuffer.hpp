@@ -4,7 +4,7 @@
 
 namespace vkn
 {
-    class VknStagingBuffer: public VknObject
+    class VknStagingBuffer : public VknObject
     {
     public:
         VknStagingBuffer(VknIdxs relIdxs, VknIdxs absIdxs);
@@ -26,9 +26,9 @@ namespace vkn
         void *getDataArea();
         void setUploadData(void *data) { m_uploadData = data; }
         void setDownloadData(void *data) { m_downloadData = data; }
-        void copyUploadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
-        void copyDownloadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
+        void waitForUploadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0);
         void setSize(uint32_t size);
+        void setMsgSize(std::atomic<uint32_t> *msgSize);
 
         // Manual mapping/unmapping if not persistently mapped
         void *map();
@@ -52,9 +52,10 @@ namespace vkn
         void *m_uploadData{nullptr};
         VkDeviceSize m_uploadDataSize{0};
         VkDeviceSize m_uploadDataOffset{0};
+        VknMessage m_uploadMsg{};
         void *m_downloadData{nullptr};
         VkDeviceSize m_downloadDataSize{0};
-        VkDeviceSize m_downloadDataSize{0};
+        VknMessage m_downloadMsg{};
 
         // state
         bool m_uploadable{false};
@@ -66,7 +67,7 @@ namespace vkn
         VkMemoryPropertyFlags m_memFlags;
         VmaAllocationInfo m_allocInfo;
         uint32_t m_msgIdx{std::numeric_limits<uint32_t>::max()};
-        std::atomic<uint32_t> m_msgSize{std::numeric_limits<uint32_t>::max()};
+        std::atomic<uint32_t> *m_msgSize{nullptr};
         VknDispatchRegistration m_reg{};
 
         // Members

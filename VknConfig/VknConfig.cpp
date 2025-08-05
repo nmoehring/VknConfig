@@ -169,6 +169,8 @@ namespace vkn
             surface, surfaceIdx, s_engine->getObject<VkInstance>(0), m_vknWindow);
 
         m_presentable = true;
+        for (auto &device : m_devices)
+            device.setPresentable(m_presentable.value());
         m_createdSurface = true;
 
         return surface;
@@ -210,9 +212,8 @@ namespace vkn
     bool VknConfig::isPresentable()
     {
         if (!m_presentable.has_value())
-            return m_presentable.value();
-        else
-            return false; // Technically not presentable is no value has been set yet.
+            throw std::runtime_error("No presentable value set for VknConfig. Set it before checking.");
+        return m_presentable.value();
     }
 
 }

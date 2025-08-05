@@ -3,8 +3,6 @@
 #include <chrono>
 #include <cmath>
 
-#include "VknObject.hpp"
-
 namespace vkn
 {
     enum VknFrequencyFlag
@@ -24,7 +22,7 @@ namespace vkn
         uint32_t getActualFrequency()
         {
             if (!numTicks)
-                return;
+                return Freq0Hz;
             else if (numTicks <= 240)
                 return std::ceil(240.0 / numTicks);
             else
@@ -35,6 +33,7 @@ namespace vkn
             VknTickStats result{other};
             result.frequencyFlags |= frequencyFlags;
             result.numTicks += numTicks;
+            return result;
         }
     };
 
@@ -47,7 +46,6 @@ namespace vkn
         std::chrono::steady_clock::time_point getNextTickTime() { return m_nextTick; }
 
     private:
-        VknSharedQueue *m_dispatchQueue{nullptr};
         double m_baseFrequency{240.0};
         double m_lowestFrequency{5.0};
         std::chrono::microseconds m_basePeriod{static_cast<uint64_t>(1000000.0 / m_baseFrequency)}; // 240 Hz

@@ -170,32 +170,13 @@ namespace vkn
             *s_engine->getAllocation<VkBuffer>(m_absIdxs), offset, size);
     }
 
-    void VknStagingBuffer::copyUploadData(void *data, VkDeviceSize size, VkDeviceSize offset)
+    void VknStagingBuffer::waitForUploadData(void *data, VkDeviceSize size, VkDeviceSize offset)
     {
         if (!m_createdBuffer)
             throw std::runtime_error("Buffer not created, cannot copy upload data.");
 
-        uint32_t msgSize = m_msgSize.exchange(0);
-        if (!msgSize)
-            throw std::runtime_error("I need a better way to handle this!");
-        std::memcpy(static_cast<char *>(m_mappedData) + offset, m_uploadData, size);
-        this->flush(offset, size);
-    }
-
-    void VknStagingBuffer::copyDownloadData(void *data = nullptr, VkDeviceSize size = 0, VkDeviceSize offset = 0)
-    {
-        if (!m_createdBuffer)
-            throw std::runtime_error("Buffer not created, cannot copy download data.");
-
-        this->invalidate(offset, size);
-        VknMessage msg{};
-        msg.type = VknThreadMessageType_Transfer;
-        msg.srcThreadName = VknThreadName::GpuThread;
-        msg.dstThreadName = VknThreadName::AppThread;
-        msg.dataSize = size;
-        msg.srcDataIndex = m_msgIdx;
-        msg.dstDataIndex = m_msgIdx;
-        VknObject::sendMessage(msg);
+        m_msgSize->wait(0);
+        this->flush(m_uploadDataOffset, m_uploadDataSize);
     }
 
     VkDescriptorBufferInfo VknStagingBuffer::getDescriptorInfo(VkDeviceSize offset, VkDeviceSize range)
@@ -219,6 +200,13 @@ namespace vkn
     void *VknStagingBuffer::getDataArea()
     {
         return m_mappedData;
+    }
+
+    void VknStagingBuffer::setMsgSize(std::atomic<uint32_t> *msgSize)
+    {
+        if (!m_createdBuffer)
+            throw std::runtime_error("Cannot set message size, buffer is null.");
+        m_msgSize = msgSize;
     }
 
 } // namespace vkn

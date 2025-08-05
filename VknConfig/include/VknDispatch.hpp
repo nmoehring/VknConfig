@@ -48,9 +48,10 @@ namespace vkn
         uint32_t dataSize{0};
         uint32_t offset{0};
         uint32_t ticksToProcess{0};
-        uint8_t srcDataIndex{std::numeric_limits<size_t>::max()}; // Index for data pointers in m_data
-        uint8_t dstDataIndex{std::numeric_limits<size_t>::max()}; // Index for data pointers in m_data
-        std::atomic<bool> processed{false};                       // Flag to indicate if the message has been processed
+        uint8_t srcDataIndex{std::numeric_limits<uint8_t>::max()}; // Index for data pointers in m_data
+        uint8_t dstDataIndex{std::numeric_limits<uint8_t>::max()}; // Index for data pointers in m_data
+        std::shared_ptr<std::atomic<bool>> processed = std::make_shared<std::atomic<bool>>(false);
+        // Flag to indicate if the message has been processed
     };
 
     struct VknSharedQueue
@@ -66,14 +67,14 @@ namespace vkn
         VknDispatch();
         ~VknDispatch();
         void stopThread();
-        void loop();
+        void loop(std::stop_token stoken);
         VknSharedQueue *startThread();
         void completeTransfer(VknMessage *messageDetails);
         VknSharedQueue *getSharedQueue() { return &m_sharedQueue; }
 
     private:
         VknTimer m_timer{};
-        std::thread m_thread;  // Thread to run the timer
+        std::jthread m_thread; // Thread to run the timer
         bool m_running{false}; // Flag to control the timer's running state
         // thread-safe queue for transfer details
         VknSharedQueue m_sharedQueue{};

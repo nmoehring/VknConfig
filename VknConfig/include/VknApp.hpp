@@ -13,23 +13,23 @@ namespace vkn
     bool deviceInfoConfig(VknConfig &config);
     bool noInputConfig(VknConfig &config);
     bool cpuGenTestConfig(VknConfig &config);
-    bool cpuGenTestApp(VknCycle &cycle);
-    bool noInputApp(VknCycle &cycle);
+    bool cpuGenTestApp(std::stop_token stoken, VknCycle &cycle);
+    bool noInputApp(std::stop_token stoken, VknCycle &cycle);
 
     class VknApp
     {
     public:
-        VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(VknCycle &)> func);
+        VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(std::stop_token stoken, VknCycle &)> func);
 
         // Setup
         void configureWithPreset(std::function<bool(VknConfig &)> func);
-        void setAppMain(std::function<bool(VknCycle &)> appMain);
+        void setAppMain(std::function<bool(std::stop_token, VknCycle &)> appMain);
         void enableValidationLayer();
 
         // Execute
+        void run();
         bool executePipeline();
-        void loop();
-        bool cycleOnce();
+        void gpuLoop(std::stop_token stoken);
         bool preComputeUpload(void *data, size_t size);
         bool preComputeDownload(void *data, size_t *size, BufferType type);
         bool graphicsUpload(void *data, size_t size);
@@ -47,11 +47,10 @@ namespace vkn
         VknInfos *m_infos{nullptr};
 
         // Members
-        std::function<bool(VknCycle &)> m_appMain;
+        std::function<bool(std::stop_token stoken, VknCycle &)> m_appMain;
         VknDispatch m_dispatch{};
         VknSharedQueue *m_dispatchQueue;
-        std::thread m_gpuThread;
-        std::thread m_appThread;
+        std::atomic<bool> m_updateWindow{false};
 
         // State
         bool m_readyToRun{false};

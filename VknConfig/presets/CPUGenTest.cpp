@@ -151,9 +151,9 @@ namespace vkn
         return true;
     }
 
-    bool cpuGenTestApp(VknCycle &cycle)
+    bool cpuGenTestApp(std::stop_token stopToken, VknCycle &cycle)
     {
-        while (true)
+        while (!stopToken.stop_requested())
         {
             tickStats->wait(VknTickStats{});
             VknTickStats currentTick = tickStats->exchange(VknTickStats{});
@@ -174,5 +174,6 @@ namespace vkn
             cycle.setNumIndices(static_cast<uint32_t>(indices.size())); // Tell the cycle how many indices to draw
             return true;
         }
+        return false;
     }
 }

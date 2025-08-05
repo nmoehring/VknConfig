@@ -78,14 +78,8 @@ namespace vkn
         return true;
     }
 
-    bool noInputApp(VknCycle &cycle)
+    bool noInputApp(std::stop_token stopToken, VknCycle &cycle)
     {
-        // The main loop in VknApp::cycleEngine now handles acquire, submit, and present.
-        // This function's only job is to record commands for the current frame.
-
-        // Record the configured graphics pass
-        cycle.recordGraphicsPass(0); // Assuming renderpass index 0
-
         return true; // Return true to signal that the main loop should continue.
     }
 }

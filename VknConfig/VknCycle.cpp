@@ -15,9 +15,15 @@ namespace vkn
         m_engine = engine;
         m_device = m_config->getDevice(0);
         if (m_device->getNumVertexBuffers() > 0)
+        {
             m_currentVertexBuffer = m_device->getVertexBuffer(0, m_currentFrameNum);
+            m_hasAnyUploadableBuffers = true;
+        }
         if (m_device->getNumIndexBuffers() > 0)
+        {
             m_currentIndexBuffer = m_device->getIndexBuffer(0, m_currentFrameNum);
+            m_hasAnyUploadableBuffers = true;
+        }
         m_uploadPool = m_device->getCommandPool(TRANSFER);
         m_downloadPool = m_device->getCommandPool(TRANSFER);
         m_presentPool = m_device->getCommandPool(PRESENT);
@@ -558,8 +564,8 @@ namespace vkn
 
         for (VknMessage &msg : m_sentMessages[m_currentFrameNum].getDataVector())
         {
-            msg.processed.wait(false);
-            msg.processed.store(false);
+            msg.processed->wait(false);
+            msg.processed->store(false);
         }
     }
 
@@ -586,19 +592,25 @@ namespace vkn
         return true;
     }
 
-    void VknCycle::transferUploadData(uint32_t threadBufferIdx, uint32_t size)
+    void VknCycle::transferUploadData(uint32_t dispatchRegistrationIdx, uint32_t size)
     {
         if (!m_basicConfigLoaded)
             throw std::runtime_error("Can't execute VknCycle steps before a config is loaded.");
+        if (!m_hasAnyUploadableBuffers)
+            return;
 
-        VknMessage &msg = m_sentMessages[m_currentFrameNum].append(VknMessage{});
-        msg.type = VknMessageType::VknThreadMessageType_Transfer;
-        msg.srcThreadName = VknThreadName::AppThread;
-        msg.dstThreadName = VknThreadName::GpuThread;
-        msg.dataSize = m_uploads[threadBufferIdx];
-        msg.srcDataIndex = threadBufferIdx;
-        msg.dstDataIndex = threadBufferIdx;
-        VknObject::sendMessage(&msg);
+        VknMessage *msg{nullptr};
+        if (!m_sentMessages[m_currentFrameNum].getDataVector().exists(dispatchRegistrationIdx))
+            msg = &m_sentMessages[m_currentFrameNum].insert(VknMessage{}, dispatchRegistrationIdx);
+        else
+            msg = &m_sentMessages[m_currentFrameNum](dispatchRegistrationIdx);
+        msg->type = VknMessageType::VknThreadMessageType_Transfer;
+        msg->srcThreadName = VknThreadName::AppThread;
+        msg->dstThreadName = VknThreadName::GpuThread;
+        msg->dataSize = m_uploadSizes[dispatchRegistrationIdx];
+        msg->srcDataIndex = dispatchRegistrationIdx;
+        msg->dstDataIndex = dispatchRegistrationIdx;
+        VknObject::sendMessage(msg);
     }
 
     bool VknCycle::downloadData()
@@ -613,6 +625,21 @@ namespace vkn
         for (VknBuffer *buffer : m_config->getPostComputeBuffers())
             buffer->downloadData();
 
+        return true;
+    }
+
+    bool VknCycle::preComputeDownload()
+    {
+        return true;
+    }
+
+    bool VknCycle::graphicsDownload()
+    {
+        return true;
+    }
+
+    bool VknCycle::postComputeDownload()
+    {
         return true;
     }
 

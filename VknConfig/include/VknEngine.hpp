@@ -484,6 +484,7 @@ namespace vkn
             return &vec(m_pos);
         }
 
+        // Should append with each new call
         VkCommandBuffer *addVkCommandBuffers(VknIdxs &absIdxs, uint32_t numCommandBuffers)
         {
             m_vkTypeStr = typeToStr<VkCommandBuffer *>();

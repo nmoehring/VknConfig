@@ -4,7 +4,7 @@ namespace vkn
 {
     uint32_t VknApp::m_numApps{0};
 
-    VknApp::VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(VknCycle &)> appMain)
+    VknApp::VknApp(std::function<bool(VknConfig &)> configFunc, std::function<bool(std::stop_token, VknCycle &)> appMain)
         : m_config{}, m_cycle{}, m_dispatchQueue{m_dispatch.startThread()}
     {
         m_engine = m_config.getEngine();
@@ -19,49 +19,71 @@ namespace vkn
             throw std::runtime_error("Previous VknApp() was not exited via VknApp::exit().");
         else
             ++m_numApps;
-        m_gpuThread = std::thread(&loop, this);
-        m_appThread = std::thread(&m_appMain, this);
     }
 
-    void VknApp::loop()
+    void VknApp::run()
+    {
+        std::jthread dispatchThread = std::jthread([this](std::stop_token stoken)
+                                                   { m_dispatch.loop(stoken); });
+        std::jthread gpuThread = std::jthread([this](std::stop_token stoken)
+                                              { this->gpuLoop(stoken); });
+        std::jthread appThread = std::jthread([this](std::stop_token stoken)
+                                              { m_appMain(stoken, m_cycle); });
+
+        while (m_config.getWindow()->update() && m_config.getWindow()->isActive())
+        {
+            m_updateWindow.wait(false);
+            m_updateWindow.store(false);
+        }
+        dispatchThread.request_stop();
+        gpuThread.request_stop();
+        appThread.request_stop();
+    }
+
+    void VknApp::gpuLoop(std::stop_token stopToken)
     {
         if (!m_appMain)
             throw std::runtime_error("No main app function set for VknApp. Use VknApp::setAppMain().");
-        while (m_keepRunning)
+        while (m_keepRunning && !stopToken.stop_requested())
         {
-            m_keepRunning = m_config.getWindow()->update();
-            if (m_keepRunning && m_config.getWindow()->isActive())
-                this->executePipeline();
+            m_updateWindow.store(true);
+            m_updateWindow.notify_one();
+            this->executePipeline();
         }
     }
 
-    void VknApp::setAppMain(std::function<bool(VknCycle &)> func)
+    void VknApp::setAppMain(std::function<bool(std::stop_token, VknCycle &)> func)
     {
         if (!m_readyToRun)
-            throw std::runtime_error("App Cycle not configured before being run.");
+            return;
         m_appMain = func;
     }
 
     bool VknApp::preComputeUpload(void *data, size_t size)
     {
         m_cycle.setUploadData(data, size);
-    }
-
-    bool VknApp::preComputeDownload(void *data, size_t *size, BufferType type)
-    {
+        return true;
     }
 
     bool VknApp::graphicsUpload(void *data, size_t size)
     {
         m_cycle.setUploadData(data, size);
+        return true;
+    }
+
+    bool VknApp::preComputeDownload(void *data, size_t *size, BufferType type)
+    {
+        return true;
     }
 
     bool VknApp::graphicsDownload(void *data, size_t *size, BufferType type)
     {
+        return true;
     }
 
     bool VknApp::postComputeDownload(void *data, size_t *size, BufferType type)
     {
+        return true;
     }
 
     void VknApp::exit()
@@ -75,7 +97,10 @@ namespace vkn
     {
         m_readyToRun = preset(m_config);
 
-        if (!m_config.pipelineElements_preComputeEnabled && !m_config.pipelineElements_graphicsEnabled)
+        if (!m_config.pipelineElements_preComputeEnabled && !m_config.pipelineElements_graphicsEnabled &&
+            (m_config.pipelineElements_presentEnabled || m_config.pipelineElements_uploadEnabled ||
+             m_config.pipelineElements_graphicsDownloadEnabled || m_config.pipelineElements_preComputeDownloadEnabled ||
+             m_config.pipelineElements_postComputeDownloadEnabled || m_config.pipelineElements_postComputeEnabled))
             throw std::runtime_error("No main pipeline elements enabled. At least one of preCompute or graphics must be enabled.");
         if (m_config.pipelineElements_postComputeEnabled && !m_config.pipelineElements_graphicsEnabled)
             throw std::runtime_error("Cannot enable postCompute stage without graphics. Enable precompute for lone compute stage.");
@@ -139,29 +164,36 @@ namespace vkn
         // Do something?
         {
         }
+
         if (m_config.pipelineElements_preComputeEnabled && !m_cycle.recordPreComputePass())
         {
         }
+
         if (m_config.pipelineElements_graphicsEnabled && !m_cycle.recordGraphicsPass())
         {
             // If graphics pass fails, we can still continue with precompute and postcompute.
             // This is useful for compute-only applications.
         }
+
         if (m_config.pipelineElements_postComputeEnabled && !m_cycle.recordPostComputePass())
         {
         }
+
         if (m_config.pipelineElements_preComputeDownloadEnabled && !m_cycle.preComputeDownload())
         {
             // Handle precompute download failure
         }
+
         if (m_config.pipelineElements_graphicsDownloadEnabled && !m_cycle.graphicsDownload())
         {
             // Handle graphics download failure
         }
+
         if (m_config.pipelineElements_postComputeDownloadEnabled && !m_cycle.postComputeDownload())
         {
             // Handle postcompute download failure
         }
+
         m_cycle.submitCommandBuffers();
 
         // Present the image. This also handles swapchain errors.

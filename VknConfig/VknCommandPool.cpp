@@ -23,20 +23,21 @@ namespace vkn
         m_commandPoolCreated = true;
     }
 
-    void VknCommandPool::createCommandBuffers(uint32_t numSwapchainImages)
+    // return idx to the first of this type of command buffer
+    uint32_t VknCommandPool::createCommandBuffers(uint32_t numUniqueBuffers)
     {
         if (m_commandBuffersAllocated)
             return;
         if (!m_commandPoolCreated)
             throw std::runtime_error("Command pool not created before allocating command buffers.");
 
-        VkCommandBuffer *newArr{s_engine->addVkCommandBuffers(m_absIdxs, numSwapchainImages)};
+        VkCommandBuffer *newArr{s_engine->addVkCommandBuffers(m_absIdxs, numUniqueBuffers * VknObject::s_maxFramesInFlight)};
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = s_engine->getObject<VkCommandPool>(m_absIdxs);
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY; // Primary can be submitted to queues
-        allocInfo.commandBufferCount = numSwapchainImages;
+        allocInfo.commandBufferCount = numUniqueBuffers * VknObject::s_maxFramesInFlight;
 
         VknResult res{vkAllocateCommandBuffers(
                           s_engine->getObject<VkDevice>(m_absIdxs), &allocInfo, newArr),

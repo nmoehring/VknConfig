@@ -12,13 +12,13 @@ int main()
     info_app.exit();
 
     vkn::VknApp noInputApp{vkn::noInputConfig, vkn::noInputApp};
+    noInputApp.run();
     // If validation layers are desired:
     // noInputApp.enableValidationLayer();
-    noInputApp.loop();
     noInputApp.exit(); // Explicitly call exit
 
     vkn::VknApp cpuGenApp{vkn::cpuGenTestConfig, vkn::cpuGenTestApp};
-    cpuGenApp.loop();
+    cpuGenApp.run();
     cpuGenApp.exit();
 
     return EXIT_SUCCESS;

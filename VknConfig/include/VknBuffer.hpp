@@ -53,6 +53,7 @@ namespace vkn
         VkDeviceSize getSize() { return m_size; }
         void *getMappedData() { return m_mappedData; } // Valid if VMA_ALLOCATION_CREATE_MAPPED_BIT was used
         void *getDataArea();
+        void setMsgSize(std::atomic<uint32_t> *msgSize);
         VkBuffer *getUploadVkBuffer() const;
         VkBuffer *getDownloadVkBuffer() const;
         void setUploadData(void *data) { m_uploadData = data; }

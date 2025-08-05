@@ -24,7 +24,7 @@ namespace vkn
 
         // Members
         void createCommandPool(uint32_t queueFamilyIndex);
-        void createCommandBuffers(uint32_t numSwapchainImages);
+        uint32_t createCommandBuffers(uint32_t numUniqueBuffers = 1u);
 
         // Getters
         VkCommandBuffer *getCommandBuffer(uint32_t frameNum, uint32_t imageIdx);
@@ -33,5 +33,6 @@ namespace vkn
         // State
         bool m_commandPoolCreated{false};
         bool m_commandBuffersAllocated{false};
+        uint32_t m_numTotalCommandBuffers{0};
     };
 } // namespace vkn

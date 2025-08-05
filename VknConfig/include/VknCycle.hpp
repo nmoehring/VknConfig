@@ -119,9 +119,10 @@ namespace vkn
         std::vector<void *> m_uploadData{};
         std::vector<size_t> m_uploadSize{};
         BufferType m_uploadBufferType{BufferType::BUFFER_TYPE_NULL};
-        std::vector<uint32_t> m_uploads{};
+        std::vector<uint32_t> m_uploadSizes{};
         uint32_t m_numIndices{0};
         uint32_t m_numVertices{0};
-        VknSpace<VknMessage> m_sentMessages{maxDepth = 1};
+        VknSpace<VknMessage> m_sentMessages{1};
+        bool m_hasAnyUploadableBuffers{false};
     };
 }
